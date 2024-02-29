@@ -1,4 +1,24 @@
 
+<DungeonTile>:
+
+    size_hint: 1,None
+
+    height: self.width
+
+    #canvas:
+
+        #Color: 
+        
+            #rgba: self.colorize()
+
+        #Ellipse: 
+
+            #pos: self.center_x - self.width/2, self.center_y - self.height/2 
+
+            #size: self.size if self.text == "M" or self.text == "%" else (0,0)
+
+
+
 <BoxLayout>:
 
     orientation: "vertical"
@@ -9,12 +29,16 @@
 
         text: "Text here"
 
-
 <DungeonLayout>:
 
-    
-<Button>:
+    canvas:
 
-    size_hint: 1,None
+        Color: 
+        
+            rgba: 1,0,0,1 #self.colorize()
 
-    height: self.width
+        Ellipse: 
+
+            pos: self.center_x - self.width/2, self.center_y - self.height/2 
+
+            size: self.size #if self.text == "M" or self.text == "%" else (0,0)

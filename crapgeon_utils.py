@@ -3,7 +3,6 @@
 import random
 
 
-
 #define a random location in map
 
 def location(map):
@@ -58,7 +57,7 @@ def create_map (height, width):
 #If more than one item is placed and coordinates are passed, from second item on they will be placed ramdonly
 #Items do not overwrite each other in any case. If given coords are occupied, item is placed somewhere else.
 
-def place_single_items(map, item, number_of_items, coord = None):
+def place_single_items(map, item, number_of_items = 1, coord = None):
 
 	for number in range (int(number_of_items)):
 
@@ -73,10 +72,6 @@ def place_single_items(map, item, number_of_items, coord = None):
 				map [coord[0]][coord[1]] = item
 
 				break
-
-					#if item == 'M':
-
-						#record_monster (coordinates)
 
 
 
@@ -95,30 +90,7 @@ def place_items (map, item, frequency = 0.1, protected = ['%', ' ', 'o']):
 		
 			map [coord[0]][coord[1]] = item
 
-		#if item == 'M':
 
-		#record_monster (coordinates)
-			
-		#if overwritten item is monster, erase monter from Monster.data
-		
-
-
-#def record_monster (map, number = 1):
-	
-	#monster = 0
-	
-	#while monster < (number):
-		#coord= location(map)
-		
-		#if map [coord[0]][coord[1]] == '.':
-			
-			#new_monster = Monster(coord[0], coord[1])
-			#Monster.data.append (new_monster)
-			
-			#map [coord[0]][coord[1]] = 'M'
-			#monster += 1
-
-				
 '''
 #game setup
 

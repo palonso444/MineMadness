@@ -1,6 +1,8 @@
 
 
 class Character:
+
+    blueprint_ids = ['%', 'M']
     
     def __init__(self, position, speed):    #position as [y,x]
         

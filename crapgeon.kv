@@ -5,19 +5,6 @@
 
     height: self.width
 
-    #canvas:
-
-        #Color: 
-        
-            #rgba: self.colorize()
-
-        #Ellipse: 
-
-            #pos: self.center_x - self.width/2, self.center_y - self.height/2 
-
-            #size: self.size if self.text == "M" or self.text == "%" else (0,0)
-
-
 
 <BoxLayout>:
 
@@ -31,14 +18,14 @@
 
 <DungeonLayout>:
 
-    canvas:
+    #canvas.after:
 
-        Color: 
+        #Color: 
         
-            rgba: 1,0,0,1 #self.colorize()
+            #rgba: 1,0,0,1 #self.colorize()
 
-        Ellipse: 
+        #Ellipse: 
 
-            pos: self.center_x - self.width/2, self.center_y - self.height/2 
+            #pos: self.center_x - self.width/2, self.center_y - self.height/2 
 
-            size: self.size #if self.text == "M" or self.text == "%" else (0,0)
+            #size: self.size #if self.text == "M" or self.text == "%" else (0,0)

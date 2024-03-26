@@ -1,19 +1,6 @@
 
-<DungeonLayout>:
 
-
-<DungeonTile>:
-
-    size_hint: 1,None
-
-    height: self.width
-
-    disabled: True
-
-    on_release: app.dungeon.move_token(self)
-
-
-<BoxLayout>:
+<CrapgeonGame>:
 
     orientation: "vertical"
 
@@ -22,3 +9,12 @@
         size_hint: 1,0.4
 
         text: "Text here"
+
+
+<DungeonTile>:
+
+    size_hint: 1,None
+
+    height: self.width
+
+    disabled: True    

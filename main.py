@@ -70,8 +70,16 @@ class Token(Ellipse):   #Tokens have id that identifies them (as Monsters or Pla
 
             self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
 
+            print (self.id)
+
+            classes.Character.update_position(self.goal.row, self.goal.col, self.kind, self.id)
+
             #CHANGE TO FUNCTION UPDATE DATABASE MONSTERS AND PLAYER
-            classes.Player.players[0].position = (self.goal.row, self.goal.col)
+            #if self.kind == 'player':
+                #classes.Player.players[0].position = (self.goal.row, self.goal.col)
+
+            #if self.kind == 'monster':
+                #classes.Monster.monsters[0].position = (self.goal.row, self.goal.col)
 
             self.dungeon.parent.switch_turn()
 
@@ -195,18 +203,20 @@ class DungeonLayout(GridLayout):
 
         if token_kind == 'player':
             token_source = 'playertoken.png'
-            player = classes.Player (position = (tile.row, tile.col), moves = 4)    #create player object
+            token_id = len(classes.Player.players)
+            player = classes.Player (position = (tile.row, tile.col), moves = 2)    #create player object
             classes.Player.players.append (player)  #add player to players list
 
         elif token_kind == 'monster':
             token_source = 'monstertoken.png'
+            token_id = len(classes.Monster.monsters)
             monster = classes.Monster(position = (tile.row, tile.col), moves = 1)   #create monster object
             classes.Monster.monsters.append (monster)   #create monster to monsters list
 
         tile.token = Token(source = token_source, 
                                  position = (tile.row, tile.col),  
                                  kind = token_kind, 
-                                 id = len(classes.Player.players),
+                                 id = token_id,
                                  dungeon_instance = self)
         
         self.tokens.append(tile.token)    #add tokens to tokens list in DungeonLayout
@@ -284,42 +294,46 @@ class CrapgeonGame(BoxLayout):
 
         self.turn = True          #player starts
 
+        #print (len(classes.Monster.monsters))
+        #print (len(classes.Player.players))
+
     
     def switch_turn(self):
 
-        if self.turn == True:
-
-            self.turn = False
-
-        elif self.turn == False:
-
-            self.turn = True
+        #print ('TURN SWITCHED')
+        
+        self.turn = not self.turn
 
     
     def on_turn (self, instance, value):
 
         
-        #if value:   #if player turn
+        if value:   #if player turn
         
-        movement_range = classes.Player.players[0].get_movement_range(self.dungeon)
+            #print ('\n\nPLAYERS TURN')
 
-        self.dungeon.activate_tiles(movement_range)
+            #print (classes.Player.players[0].position)
 
-        #elif not value:       #if monsters turn
+            movement_range = classes.Player.players[0].get_movement_range(self.dungeon)
+
+            #print (movement_range)
+
+            self.dungeon.activate_tiles(movement_range)
+
+        elif not value:       #if monsters turn
         
-            #print ('MONSTERS TURN')
-        
-            #self.turn = True
+            #print ('\n\nMONSTERS TURN')
 
-            #for monster in classes.Monster.monsters:
 
-                #start_tile = self.dungeon.get_tile(monster.position[0], monster.position[1])
+            for monster in classes.Monster.monsters:
 
-                #monster.assess_move_direct(classes.Player.players[0])
+                start_tile = self.dungeon.get_tile(monster.position[0], monster.position[1])
 
-                #end_tile = self.dungeon.get_tile(monster.position[0], monster.position[1])
+                monster.assess_move_direct(classes.Player.players[0])
 
-                #end_tile.move_token(start_tile, end_tile)
+                end_tile = self.dungeon.get_tile(monster.position[0], monster.position[1])
+
+                end_tile.move_token(start_tile, end_tile)
         
 
 

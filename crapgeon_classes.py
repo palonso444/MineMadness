@@ -3,6 +3,16 @@
 class Character:
 
     blueprint_ids = ['%', 'M']
+
+
+    def update_position (y_position, x_position, kind, id):
+
+        if kind == 'player':
+            Player.players[id].position = (y_position, x_position)
+
+        elif kind == 'monster':
+            Monster.monsters[id].position = (y_position, x_position)
+
     
     def __init__(self, position, moves):    #position as tuple (y,x)
         
@@ -11,6 +21,7 @@ class Character:
 
 
     def get_movement_range(self, dungeon_layout):   #TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
+                                                    #TODO: better as method of Player Class
 
         
         mov_range = set()  #set of tuples (no repeated values)
@@ -49,7 +60,6 @@ class Character:
         return mov_range
 
 
-    
     def get_lateral_range(self, y_position, side_move, mov_range, dungeon_layout):
 
             

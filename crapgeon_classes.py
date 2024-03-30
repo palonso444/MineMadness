@@ -4,20 +4,14 @@ class Character:
 
     blueprint_ids = ['%', 'M']
 
-
-    def update_position (y_position, x_position, kind, id):
-
-        if kind == 'player':
-            Player.players[id].position = (y_position, x_position)
-
-        elif kind == 'monster':
-            Monster.monsters[id].position = (y_position, x_position)
-
     
-    def __init__(self, position, moves):    #position as tuple (y,x)
+    def __init__(self, position, moves, kind, token, id):    #position as tuple (y,x)
         
         self.position = position
         self.moves = moves
+        self.kind = kind
+        self.token = token
+        self.id = id
 
 
     def get_movement_range(self, dungeon_layout):   #TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
@@ -72,6 +66,14 @@ class Character:
 
                 mov_range.add((y_position, self.position [1] + side_move)) #one step right
 
+    
+    def update_position (self, y_position, x_position, kind):
+
+        if kind == 'player':
+            Player.players[self.id].position = (y_position, x_position)
+
+        elif kind == 'monster':
+            Monster.monsters[self.id].position = (y_position, x_position)
 
 
 class Player(Character):
@@ -79,8 +81,8 @@ class Player(Character):
     players = list ()
     blueprint_ids = ['%']
 
-    def __init__(self, position, moves):
-        super().__init__(position, moves)
+    def __init__(self, position, moves, kind, token, id):
+        super().__init__(position, moves, kind, token, id)
 
 
 
@@ -90,8 +92,9 @@ class Monster(Character):
     monsters = list()
     blueprint_ids = ['M']
 
-    def __init__(self, position, moves):
-        super().__init__(position, moves)
+    def __init__(self, position, moves, kind, token, id):
+        super().__init__(position, moves, kind, token, id)
+        self.kind = 'monster'
 
 
     def assess_move_direct(self, target):
@@ -125,7 +128,5 @@ class Monster(Character):
         #else:
             
             #new_position=self.position
-
-        return self.position
 
 

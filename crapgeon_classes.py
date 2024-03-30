@@ -84,3 +84,38 @@ class Monster(Character):
         super().__init__(position, moves)
 
 
+    def assess_move_direct(self, target):
+
+        
+        for move in range (self.moves):
+
+
+            if target.position[0] < self.position[0]: #and map[self.position[0]-1] [self.position[1]] == '.':
+				   
+                new_position = (self.position[0] -1, self.position [1])
+            
+            elif target.position[0] > self.position[0]: #and (map[self.position[0] +1][self.position[1]] == '.'):
+            
+                new_position = (self.position[0] +1, self.position [1])
+            
+            elif target.position[1] < self.position[1]: #and map[self.position[0]][self.position[1] -1] == '.':
+            
+                new_position = (self.position[0],self.position [1]-1)
+            
+            elif target.position[1] > self.position[1]: #and map[self.position[0]][self.position[1]+1] == '.':
+            
+                new_position = (self.position[0], self.position [1]+1)
+
+            
+            self.position = new_position    #update monster position
+
+            print (f'MONSTER{Monster.monsters[0].position}')
+            
+       
+        #else:
+            
+            #new_position=self.position
+
+        return self.position
+
+

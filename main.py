@@ -8,7 +8,7 @@ from kivy.uix.button import Button  # type: ignore
 #from kivy.uix.image import Image    # type: ignore
 from kivy.graphics import Ellipse   # type: ignore
 from kivy.uix.widget import Widget  # type: ignore
-from kivy.properties import ListProperty, NumericProperty, ObjectProperty, Clock   # type: ignore
+from kivy.properties import ListProperty, BooleanProperty, ObjectProperty, Clock   # type: ignore
 from kivy.animation import Animation
 
 
@@ -33,6 +33,7 @@ class Token(Ellipse):   #Tokens have id that identifies them (as Monsters or Pla
         self.id = id        #defines index in monsters or players lists
         self.position = position
         self.dungeon = dungeon_instance
+        self.start = None   #defined when token is moved by dungeon move_token
         self.goal = None    #defined when token is moved by dungeon move_token
 
     
@@ -49,41 +50,41 @@ class Token(Ellipse):   #Tokens have id that identifies them (as Monsters or Pla
             #int_goal = path.pop(0)
 
         #TO AVOID SMALL POSITION INACCURACIES. CAN BE REMOVED ONCE COMMENTED CODE IS IMPLEMENTED
-        if int(self.pos[0]) != int(self.goal[0]) or int(self.pos[1]) != int(self.goal[1]):
+        if int(self.pos[0]) != int(self.goal.pos[0]) or int(self.pos[1]) != int(self.goal.pos[1]):
 
             #SLIDE HORIZONTALLY
-            if self.pos[0] < self.goal [0]: #RIGHT
+            if self.pos[0] < self.goal.pos [0]: #RIGHT
                 self.pos = (self.pos[0]+speed, self.pos[1])
 
-            elif self.pos[0] > self.goal [0]: #LEFT
+            elif self.pos[0] > self.goal.pos [0]: #LEFT
                 self.pos = (self.pos[0]-speed, self.pos[1])
 
             #SLIDE VERTICALLY
-            elif self.pos[1] < self.goal [1]: #RIGHT
+            elif self.pos[1] < self.goal.pos [1]: #RIGHT
                 self.pos = (self.pos[0], self.pos[1]+speed)
 
-            elif self.pos[1] > self.goal [1]: #LEFT
+            elif self.pos[1] > self.goal.pos [1]: #LEFT
                 self.pos = (self.pos[0], self.pos[1]-speed)
 
         else:
 
-            self.on_position = True
+            self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
+
+            #CHANGE TO FUNCTION UPDATE DATABASE MONSTERS AND PLAYER
+            classes.Player.players[0].position = (self.goal.row, self.goal.col)
+
+            self.dungeon.parent.switch_turn()
 
             return False    #this prevents the event from rescheduling itself
 
+    
+    def update_on_tiles(self, start_tile, end_tile):
 
-    def display_movement(self):
+        start_tile.token = None
+        end_tile.token = self
 
-        pass
 
-        #print ('DISPLAY')
-
-        #movement_range = classes.Player.players[0].get_movement_range(self.dungeon)
-
-        #self.dungeon.activate_tiles(movement_range)      
   
-
-
 class DungeonTile(Button):
 
     
@@ -106,36 +107,32 @@ class DungeonTile(Button):
 
         start_position = (classes.Player.players[0].position[0], classes.Player.players[0].position[1])
         
-        self.move_token(start_pos = start_position, end_tile=self)
-
-        #movement_range = classes.Player.players[0].get_movement_range(self.dungeon)
-
-        #self.dungeon.activate_tiles(movement_range)
+        start_tile = self.dungeon.get_tile(start_position[0], start_position[1])
+        
+        self.move_token(start_tile = start_tile, end_tile=self)
         
 
-    def move_token(self, start_pos, end_tile):
+    def move_token(self, start_tile, end_tile):
 
         
-        start_tile = self.dungeon.get_tile(start_pos[0], start_pos[1])
+        start_tile.token.start = start_tile
 
-        start_tile.token.goal = end_tile.pos
+        start_tile.token.goal = end_tile
         
         Clock.schedule_interval(start_tile.token.slide, 1/60)   #60 fps
 
-        self.update_token(start_tile, end_tile)
+        #self.update_token(start_tile, end_tile)
 
-        classes.Player.players[0].position = (end_tile.row, end_tile.col)   #CHANGE TO FUNCTION UPDATE DATABASE
+
+
+    def update_tile_tokens (self, start_tile, end_tile):  #DEPRECATED
         
-        #end_tile.token.display_movement()
+        pass
 
-
-    def update_token (self, start_tile, end_tile):
-
-
-        temporal_token = start_tile.token # to avoid error if tile button where player is is clicked
+        #temporal_token = start_tile.token # to avoid error if tile button where player is is clicked
         
-        start_tile.token = None
-        end_tile.token = temporal_token
+        #start_tile.token = None
+        #end_tile.token = temporal_token
 
 
 
@@ -164,6 +161,7 @@ class DungeonLayout(GridLayout):
 
         dungeon_blueprint = utils.create_map(height, width)
 
+        utils.place_single_items(dungeon_blueprint,'M', 1, (0,0))
         utils.place_single_items(dungeon_blueprint,'%', 1, (3,3))
         utils.place_single_items(dungeon_blueprint,'o', 5)
         utils.place_single_items(dungeon_blueprint,' ', 1)
@@ -191,11 +189,6 @@ class DungeonLayout(GridLayout):
                     elif self.blueprint [tile.row][tile.col] == 'M':
 
                         self.place_tokens(tile, 'monster')
-
-                #tile.current_token = Token(source = tile.token.source,    #current_token is a copy of bound_token
-                                   #position = tile.token.position,  
-                                   #kind = tile.token.kind, 
-                                   #id = tile.token.id)
 
 
     def place_tokens(self, tile, token_kind):
@@ -275,21 +268,59 @@ class DungeonLayout(GridLayout):
 
 class CrapgeonGame(BoxLayout):
 
+    turn = BooleanProperty(None)    #TRUE for player, FALSE for monsters
+
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         print ('EXECUTING CRAPGEONGAME__INIT__')
         
-        dungeon = DungeonLayout(10,10) #dungeon is attribute of app so move_token() can be called from kv file.
+        self.dungeon = DungeonLayout(10,10) #dungeon is attribute of app so move_token() can be called from kv file.
 
-        dungeon.allocate_tokens()
+        self.dungeon.allocate_tokens()
       
-        self.add_widget(dungeon)
-        
-        movement_range = classes.Player.players[0].get_movement_range(dungeon)
+        self.add_widget(self.dungeon)
 
-        dungeon.activate_tiles(movement_range)
+        self.turn = True          #player starts
+
+    
+    def switch_turn(self):
+
+        if self.turn == True:
+
+            self.turn = False
+
+        elif self.turn == False:
+
+            self.turn = True
+
+    
+    def on_turn (self, instance, value):
+
+        
+        #if value:   #if player turn
+        
+        movement_range = classes.Player.players[0].get_movement_range(self.dungeon)
+
+        self.dungeon.activate_tiles(movement_range)
+
+        #elif not value:       #if monsters turn
+        
+            #print ('MONSTERS TURN')
+        
+            #self.turn = True
+
+            #for monster in classes.Monster.monsters:
+
+                #start_tile = self.dungeon.get_tile(monster.position[0], monster.position[1])
+
+                #monster.assess_move_direct(classes.Player.players[0])
+
+                #end_tile = self.dungeon.get_tile(monster.position[0], monster.position[1])
+
+                #end_tile.move_token(start_tile, end_tile)
+        
 
 
 class CrapgeonApp(App):

@@ -8,7 +8,7 @@ from kivy.uix.button import Button  # type: ignore
 #from kivy.uix.image import Image    # type: ignore
 from kivy.graphics import Ellipse   # type: ignore
 from kivy.uix.widget import Widget  # type: ignore
-from kivy.properties import ListProperty, BooleanProperty, ObjectProperty, Clock   # type: ignore
+from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, Clock   # type: ignore
 from kivy.animation import Animation
 
 
@@ -23,7 +23,7 @@ from collections import deque
 
 
 
-class Token(Ellipse):   #Tokens have id that identifies them (as Monsters or Player)
+class Token(Ellipse):
 
     
     def __init__(self, position, kind, dungeon_instance, character, **kwargs):
@@ -51,7 +51,7 @@ class Token(Ellipse):   #Tokens have id that identifies them (as Monsters or Pla
 
         speed = 4
 
-        self.dungeon.activate_tiles() #tiles inactivated while sliding
+        self.dungeon.activate_which_tiles() #tiles inactivated while sliding
 
         #path = self.dungeon.find_shortest_path(self.pos, self.goal)
 
@@ -76,13 +76,19 @@ class Token(Ellipse):   #Tokens have id that identifies them (as Monsters or Pla
             elif self.pos[1] > self.goal.pos [1]: #LEFT
                 self.pos = (self.pos[0], self.pos[1]-speed)
 
-        else:
+        else:   #movement is complete
 
+            if self.goal.token is not None:
+
+                self.check_collision(self.goal.token)
+
+                self.character.rearrange_ids
+            
             self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
 
-            self.character.update_position(self.goal.row, self.goal.col, self.kind)
+            self.character.update_position(self.goal.row, self.goal.col)
 
-            self.dungeon.parent.switch_turn(self.character) #switch turns if character last of character.characters list
+            self.dungeon.parent.next_character() #switch turns if character last of character.characters list
 
             return False    #this prevents the event from rescheduling itself
 
@@ -91,6 +97,41 @@ class Token(Ellipse):   #Tokens have id that identifies them (as Monsters or Pla
 
         start_tile.token = None
         end_tile.token = self
+
+    
+    def check_collision(self, other_token):
+
+        if self.kind == 'player':
+
+            if self.goal.token.kind == 'monster':
+
+                classes.Monster.data.remove(self.goal.token.character)
+
+                self.dungeon.canvas.remove(self.goal.token)
+
+                self.goal.token = None
+
+            else:
+
+                print ('PLAYERS GREET EACH OTHER')
+
+        elif self.kind == 'monster':
+
+            if self.goal.token.kind == 'player':
+
+                classes.Player.data.remove(self.goal.token.character)
+
+                print (len(classes.Player.data))
+
+                self.dungeon.canvas.remove(self.goal.token)
+
+                self.goal.token = None   
+
+            else:
+
+                print ('MONSTERS GREET EACH OTHER')
+
+
 
 
   
@@ -114,7 +155,9 @@ class DungeonTile(Button):
 
     def on_release(self):
 
-        start_position = (classes.Player.players[0].position[0], classes.Player.players[0].position[1])
+        active_character = self.dungeon.parent.active_character
+        
+        start_position = (active_character.position[0], active_character.position[1])
         
         start_tile = self.dungeon.get_tile(start_position[0], start_position[1])
 
@@ -132,7 +175,6 @@ class DungeonLayout(GridLayout):
         self.blueprint = self.generate_blueprint(rows, cols)
         self.rows = rows
         self.cols = cols
-        self.tokens = list()
 
         for y in range (self.rows):
               
@@ -147,8 +189,8 @@ class DungeonLayout(GridLayout):
 
         dungeon_blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(dungeon_blueprint,'M', 10)
-        utils.place_single_items(dungeon_blueprint,'%', 1, (0,0))
+        utils.place_single_items(dungeon_blueprint,'M', 3)
+        utils.place_single_items(dungeon_blueprint,'%', 2)
         utils.place_single_items(dungeon_blueprint,'o', 5)
         utils.place_single_items(dungeon_blueprint,' ', 1)
 
@@ -191,33 +233,26 @@ class DungeonLayout(GridLayout):
                                  kind = token_kind,
                                  dungeon_instance = self,
                                  character = None)
-    
         
         if token_kind == 'player':
-            player = classes.Player (position = (tile.row, tile.col), #create player object
-                                     moves = 2, 
-                                     kind = token_kind,
+            character = classes.Player (position = (tile.row, tile.col), #create player object
+                                     moves = 4,
                                      token = tile.token,
-                                     id = len(classes.Player.players))   
-            classes.Player.players.append (player)  #add player to players list
-            tile.token.character = player
+                                     id = len(classes.Player.data))
 
-        
         elif token_kind == 'monster':
-            monster = classes.Monster(position = (tile.row, tile.col), 
+            character = classes.Monster(position = (tile.row, tile.col), 
                                       moves = 1,
-                                      kind = token_kind,
                                       token = tile.token,
-                                      id = len(classes.Monster.monsters))   #create monster object
-            classes.Monster.monsters.append (monster)   #create monster to monsters list
-            tile.token.character = monster
+                                      id = len(classes.Monster.data))   #create monster object
+            
 
-        
-        self.tokens.append(tile.token)    #add tokens to tokens list in DungeonLayout
+        character.__class__.data.append (character)   #create monster to monsters list
+        tile.token.character = character
         tile.bind (pos = tile.bind_token, size = tile.bind_token)
 
 
-    def activate_tiles(self, tile_positions = None):
+    def activate_which_tiles(self, tile_positions = None):
 
         for tile in self.children:
 
@@ -272,7 +307,8 @@ class DungeonLayout(GridLayout):
 
 class CrapgeonGame(BoxLayout):
 
-    turn = BooleanProperty(None)    #TRUE for player, FALSE for monsters
+    
+    active_character_id = NumericProperty(None)
 
 
     def __init__(self, **kwargs):
@@ -285,53 +321,61 @@ class CrapgeonGame(BoxLayout):
         self.dungeon.allocate_tokens()
       
         self.add_widget(self.dungeon)
-        
-        self.turn = True          #player starts
 
-        #print (len(classes.Monster.monsters))
-        #print (len(classes.Player.players))
+        self.turn = True    #TRUE for players, FALSE for monsters. Player starts
+        
+        self.active_character_id = 0    #starts first character on players.data
+
+        print ('MONSTERS')
+        print (len(classes.Monster.data))
+        print ('\nPLAYERS')
+        print (len(classes.Player.data))
 
     
-    def switch_turn(self, character):
+    def next_character(self):
 
 
-        if character.kind == 'monster' and character.id == len(classes.Monster.monsters) - 1:
+        if self.active_character.id == len(self.active_character.__class__.data) - 1:  #if all players or monsters have moved
             
-            self.turn = not self.turn
-
-        elif character.kind == 'player' and character.id == len(classes.Player.players) - 1:
-
-            self.turn = not self.turn
-
-
-    def on_turn (self, instance, value):
+            self.turn = not self.turn   #turn changes
+            
+            self.active_character_id = 0
 
         
-        if value:   #if player turn
-        
-            print ('\n\nPLAYERS TURN')
+        else: 
+            
+            self.active_character_id += 1       # next character on list moves
 
-            print (classes.Player.players[0].position)
 
-            movement_range = classes.Player.players[0].get_movement_range(self.dungeon)
-
-            self.dungeon.activate_tiles(movement_range)
+    def on_active_character_id (self, *args):
 
         
-        elif not value:       #if monsters turn
+        if self.turn:   #if player turn
         
-            print ('\n\nMONSTERS TURN')
+            #print ('\n\nPLAYERS TURN')
 
+            #print (classes.Player.data[0].position)
 
-            for monster in classes.Monster.monsters:
+            self.active_character = classes.Player.data[self.active_character_id]
+            
+            movement_range = self.active_character.get_movement_range(self.dungeon)
 
-                start_tile = self.dungeon.get_tile(monster.position[0], monster.position[1])
+            self.dungeon.activate_which_tiles(movement_range)
 
-                monster.assess_move_direct(classes.Player.players[0])
+        
+        elif not self.turn:       #if monsters turn
+        
+            #print ('\n\nMONSTERS TURN')
 
-                end_tile = self.dungeon.get_tile(monster.position[0], monster.position[1])      
+            self.active_character = classes.Monster.data[self.active_character_id]
+                
+            start_tile = self.dungeon.get_tile(self.active_character.position[0], self.active_character.position[1])
+
+            self.active_character.assess_move_direct()    #CHANGE TARGET CLOSEST PLAYER
+
+            end_tile = self.dungeon.get_tile(self.active_character.position[0], self.active_character.position[1])      
     
-                monster.token.move(start_tile, end_tile)
+            self.active_character.token.move(start_tile, end_tile)
         
 
 

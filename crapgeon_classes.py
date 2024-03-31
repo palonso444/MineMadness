@@ -5,11 +5,10 @@ class Character:
     blueprint_ids = ['%', 'M']
 
     
-    def __init__(self, position, moves, kind, token, id):    #position as tuple (y,x)
+    def __init__(self, position, moves, token, id):    #position as tuple (y,x)
         
         self.position = position
         self.moves = moves
-        self.kind = kind
         self.token = token
         self.id = id
 
@@ -67,37 +66,43 @@ class Character:
                 mov_range.add((y_position, self.position [1] + side_move)) #one step right
 
     
-    def update_position (self, y_position, x_position, kind):
+    def update_position (self, y_position, x_position):
 
-        if kind == 'player':
-            Player.players[self.id].position = (y_position, x_position)
+        self.__class__.data[self.id].position = (y_position, x_position)
 
-        elif kind == 'monster':
-            Monster.monsters[self.id].position = (y_position, x_position)
+    
+    def rearrange_ids (self):
+
+        for character in self.__class__.data:
+
+            if character.id > self.id:
+
+                character.id -= 1
 
 
 class Player(Character):
 
-    players = list ()
+    data = list ()
     blueprint_ids = ['%']
 
-    def __init__(self, position, moves, kind, token, id):
-        super().__init__(position, moves, kind, token, id)
-
-
+    def __init__(self, position, moves, token, id):
+        super().__init__(position, moves, token, id)
 
 
 class Monster(Character):
 
-    monsters = list()
+    data = list()
     blueprint_ids = ['M']
 
-    def __init__(self, position, moves, kind, token, id):
-        super().__init__(position, moves, kind, token, id)
+    def __init__(self, position, moves, token, id):
+        super().__init__(position, moves, token, id)
         self.kind = 'monster'
 
 
-    def assess_move_direct(self, target):
+    def assess_move_direct(self):
+
+
+        target = self.find_closest_player()
 
         
         for move in range (self.moves):
@@ -122,11 +127,31 @@ class Monster(Character):
             
             self.position = new_position    #update monster position
 
-            print (f'MONSTER{Monster.monsters[0].position}')
+            #print (f'MONSTER{Monster.data[0].position}')
+
+            #else:
             
-       
-        #else:
+                #new_position=self.position
+
+
+    
+    def find_closest_player(self):
+
+
+        distances = list()
+        
+        for player in Player.data:
+        
+            distance = abs(self.position[0] - player.position[0]) + abs(self.position[1] - player.position[1])
             
-            #new_position=self.position
+            distances.append(distance)
+
+        shortest_distance = min(distances)
+
+        for distance in distances:
+
+            if distance == shortest_distance:
+
+                return Player.data[distances.index(distance)]
 
 

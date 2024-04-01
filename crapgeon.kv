@@ -1,4 +1,20 @@
+<DungeonLayout>:
 
+<DungeonTile>:
+
+    size_hint: 1,None
+
+    height: self.width
+
+    disabled: True 
+
+
+
+<ScrollView>:
+
+    #do_scroll_x: True
+
+    #do_scroll_y: True
 
 <CrapgeonGame>:
 
@@ -10,11 +26,18 @@
 
         text: "Text here"
 
+    #ScrollView:
 
-<DungeonTile>:
+        #size_hint: 1, 0.6
+    
+    DungeonLayout:
 
-    size_hint: 1,None
+        #size_hint: 1, None
 
-    height: self.width
+        #height: self.minimum_height
 
-    disabled: True    
+            #width: self.minimum_width
+
+        rows: 10
+
+        cols: 10

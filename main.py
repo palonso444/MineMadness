@@ -166,23 +166,34 @@ class DungeonTile(Button):
 
 
 
-class DungeonLayout(GridLayout):
+class DungeonLayout(GridLayout):    #initialized in kv file
 
 
-    def __init__(self, rows, cols, **kwargs):
-        super().__init__(**kwargs)
+    #def __init__(self, **kwargs):
+        #super().__init__(**kwargs)
         
-        self.blueprint = self.generate_blueprint(rows, cols)
-        self.rows = rows
-        self.cols = cols
+        #self.blueprint = self.generate_blueprint(height, width)
+        #self.rows = height
+        #self.cols = width
 
+    
+    def on_pos(self, *args):
+    
         for y in range (self.rows):
               
-            for x in range (self.cols):
+                for x in range (self.cols):
+                    
+                    tile = DungeonTile(row=y, col=x, dungeon_instance=self)
                 
-                tile = DungeonTile(row=y, col=x, dungeon_instance=self)
-                
-                self.add_widget(tile)
+                    self.add_widget(tile)
+
+                    print ('TILES ADDED')
+
+        
+        self.generate_blueprint(self.rows, self.cols)
+
+        self.parent.dungeon = self  #Adds dungeon as CrapgeonGame class attribute
+        
 
 
     def generate_blueprint (self, height, width):
@@ -198,7 +209,7 @@ class DungeonLayout(GridLayout):
         
             utils.place_items (dungeon_blueprint, item=key, frequency=value)
 
-        return dungeon_blueprint
+        self.blueprint = dungeon_blueprint
     
 
     def allocate_tokens (self):
@@ -305,22 +316,20 @@ class DungeonLayout(GridLayout):
 
 
 
-class CrapgeonGame(BoxLayout):
+class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
     
     active_character_id = NumericProperty(None)
 
+    dungeon = ObjectProperty(None)
+    
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
-        print ('EXECUTING CRAPGEONGAME__INIT__')
-        
-        self.dungeon = DungeonLayout(10,10) #dungeon is attribute of app so move_token() can be called from kv file.
+    def on_dungeon(self, *args):
+
+        print ('POPULATING DUNGEON')
 
         self.dungeon.allocate_tokens()
-      
-        self.add_widget(self.dungeon)
 
         self.turn = True    #TRUE for players, FALSE for monsters. Player starts
         

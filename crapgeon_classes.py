@@ -75,6 +75,8 @@ class Character:
 
         for character in self.__class__.data:
 
+            print (self.__class__)
+
             if character.id > self.id:
 
                 character.id -= 1

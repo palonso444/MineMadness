@@ -80,15 +80,15 @@ class Token(Ellipse):
 
             if self.goal.token is not None:
 
-                self.check_collision(self.goal.token)
+                if self.check_collision(self.goal.token):
 
-                self.character.rearrange_ids
+                    self.goal.token.character.rearrange_ids()
             
             self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
 
             self.character.update_position(self.goal.row, self.goal.col)
 
-            self.dungeon.parent.next_character() #switch turns if character last of character.characters list
+            self.dungeon.game.next_character() #switch turns if character last of character.characters list
 
             return False    #this prevents the event from rescheduling itself
 
@@ -109,11 +109,14 @@ class Token(Ellipse):
 
                 self.dungeon.canvas.remove(self.goal.token)
 
-                self.goal.token = None
+                #self.goal.token = None
+
+                return True
 
             else:
 
                 print ('PLAYERS GREET EACH OTHER')
+                return False
 
         elif self.kind == 'monster':
 
@@ -125,11 +128,14 @@ class Token(Ellipse):
 
                 self.dungeon.canvas.remove(self.goal.token)
 
-                self.goal.token = None   
+                #self.goal.token = None
+
+                return True 
 
             else:
 
                 print ('MONSTERS GREET EACH OTHER')
+                return False
 
 
 
@@ -155,7 +161,7 @@ class DungeonTile(Button):
 
     def on_release(self):
 
-        active_character = self.dungeon.parent.active_character
+        active_character = self.dungeon.game.active_character
         
         start_position = (active_character.position[0], active_character.position[1])
         
@@ -192,7 +198,11 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         
         self.generate_blueprint(self.rows, self.cols)
 
-        self.parent.dungeon = self  #Adds dungeon as CrapgeonGame class attribute
+        self.game = self.parent.parent
+
+        self.game.dungeon = self  #Adds dungeon as CrapgeonGame class attribute
+
+        #self.parent.parent.dungeon = self  #Adds dungeon as CrapgeonGame class attribute
         
 
 

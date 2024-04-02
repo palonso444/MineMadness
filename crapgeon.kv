@@ -2,19 +2,19 @@
 
 <DungeonTile>:
 
-    size_hint: 1,None
+    size_hint: None,None
+
+    width: '120dp'
 
     height: self.width
 
     disabled: True 
 
 
-
 <ScrollView>:
 
-    #do_scroll_x: True
+    effect_cls: 'ScrollEffect'  #this avoids bouncing when reaching end of scroll
 
-    #do_scroll_y: True
 
 <CrapgeonGame>:
 
@@ -26,18 +26,18 @@
 
         text: "Text here"
 
-    #ScrollView:
+    ScrollView:
 
-        #size_hint: 1, 0.6
+        size_hint: 1, 0.6
     
-    DungeonLayout:
+        DungeonLayout:
+            
+            size_hint: None, None
 
-        #size_hint: 1, None
+            height: self.minimum_height
 
-        #height: self.minimum_height
+            width: self.minimum_width
 
-            #width: self.minimum_width
+            rows: 10
 
-        rows: 10
-
-        cols: 10
+            cols: 10

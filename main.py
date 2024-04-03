@@ -33,8 +33,10 @@ class Token(Ellipse):
         self.position = position
         self.dungeon = dungeon_instance
         self.character = character      #links token with character object
-        self.start = None   #defined when token is moved by dungeon move_token
-        self.goal = None    #defined when token is moved by dungeon move_token
+        
+        self.start = None   #all defined when token is moved by move()
+        self.goal = None    
+        self.path = None    
 
 
     def move (self, start_tile, end_tile):
@@ -43,101 +45,108 @@ class Token(Ellipse):
         self.start = start_tile
 
         self.goal = end_tile
+
+        self.path = self.dungeon.find_shortest_path(self.start, self.goal)
+
+        self.dungeon.activate_which_tiles()     #tiles desactivated while moving
         
-        Clock.schedule_interval(self.slide, 1/60)   #60 fps
-
+        self.slide(self.path)
+          
     
-    def slide (self, dt):   #pos are computed here as (x, y), default kivy, reverse than usual
+    def slide (self, path):
 
-        speed = 4
+        
+        next_position = path.pop(0)
 
-        self.dungeon.activate_which_tiles() #tiles inactivated while sliding
+        next_pos = self.dungeon.get_tile(next_position[0],next_position[1]).pos
 
-        #path = self.dungeon.find_shortest_path(self.pos, self.goal)
+        animation = Animation (pos = next_pos, duration = 0.5)
+        
+        animation.bind (on_complete = self.on_slide_completed)
+        
+        animation.start(self)
 
-        #if len(path) > 0:
 
-            #int_goal = path.pop(0)
+    def on_slide_completed (self, *args):
 
-        #TO AVOID SMALL POSITION INACCURACIES. CAN BE REMOVED ONCE COMMENTED CODE IS IMPLEMENTED
-        if int(self.pos[0]) != int(self.goal.pos[0]) or int(self.pos[1]) != int(self.goal.pos[1]):
 
-            #SLIDE HORIZONTALLY
-            if self.pos[0] < self.goal.pos [0]: #RIGHT
-                self.pos = (self.pos[0]+speed, self.pos[1])
-
-            elif self.pos[0] > self.goal.pos [0]: #LEFT
-                self.pos = (self.pos[0]-speed, self.pos[1])
-
-            #SLIDE VERTICALLY
-            elif self.pos[1] < self.goal.pos [1]: #RIGHT
-                self.pos = (self.pos[0], self.pos[1]+speed)
-
-            elif self.pos[1] > self.goal.pos [1]: #LEFT
-                self.pos = (self.pos[0], self.pos[1]-speed)
-
-        else:   #movement is complete
-
+        if len(self.path) == 0:     #if goal is reached
+            
             if self.goal.token is not None:
 
-                if self.check_collision(self.goal.token):
-
-                    self.goal.token.character.rearrange_ids()
-            
+                self.check_collision()
+                
             self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
-
+        
             self.character.update_position(self.goal.row, self.goal.col)
 
-            self.dungeon.game.next_character() #switch turns if character last of character.characters list
+            print ('NEXT CHARACTER CALLED')
+            
+            self.dungeon.game.next_character() #switch turns if character last of character.characters
+        
+        
+        else:   # if goal is not reached, continue sliding
 
-            return False    #this prevents the event from rescheduling itself
+            self.slide(self.path)
 
-    
+        
     def update_on_tiles(self, start_tile, end_tile):
 
         start_tile.token = None
         end_tile.token = self
 
     
-    def check_collision(self, other_token):
+    def check_collision(self):
 
         if self.kind == 'player':
 
             if self.goal.token.kind == 'monster':
 
+                self.goal.token.character.rearrange_ids()
+
                 classes.Monster.data.remove(self.goal.token.character)
+
+                #print ('REMAINING MONSTERS')
+                #print (len(classes.Monster.data))
+                
+                #print ('REMAINING MONSTER IDS')
+                #for monster in classes.Monster.data:
+                    #print (monster.id)
 
                 self.dungeon.canvas.remove(self.goal.token)
 
-                #self.goal.token = None
+                self.goal.token = None
 
                 return True
 
             else:
 
-                print ('PLAYERS GREET EACH OTHER')
                 return False
 
         elif self.kind == 'monster':
 
             if self.goal.token.kind == 'player':
 
+                self.goal.token.character.rearrange_ids()
+                
                 classes.Player.data.remove(self.goal.token.character)
 
-                print (len(classes.Player.data))
+                #print ('REMAINING PLAYERS')
+                #print (len(classes.Player.data))
+
+                #print ('REMAINING PLAYER IDS')
+                #for monster in classes.Player.data:
+                    #print (monster.id)
 
                 self.dungeon.canvas.remove(self.goal.token)
 
-                #self.goal.token = None
+                self.goal.token = None
 
                 return True 
 
             else:
 
-                print ('MONSTERS GREET EACH OTHER')
                 return False
-
-
 
 
   
@@ -153,10 +162,10 @@ class DungeonTile(Button):
         self.dungeon = dungeon_instance     #need to pass the instance of the dungeon in order to cal dungeon.move_token from this class
 
 
-    def bind_token (self, *args):
+    #def bind_token (self, *args):
         
-        self.token.pos = self.pos
-        self.token.size = self.size
+        #self.token.pos = self.pos
+        #self.token.size = self.size
 
 
     def on_release(self):
@@ -169,6 +178,13 @@ class DungeonTile(Button):
 
         start_tile.token.move(start_tile, self)
 
+    
+    def on_pos(self, *args):
+
+        if self.token:
+        
+            self.token.pos = self.pos
+            self.token.size = self.size
 
 
 
@@ -193,16 +209,12 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                 
                     self.add_widget(tile)
 
-                    print ('TILES ADDED')
-
         
         self.generate_blueprint(self.rows, self.cols)
 
         self.game = self.parent.parent
 
         self.game.dungeon = self  #Adds dungeon as CrapgeonGame class attribute
-
-        #self.parent.parent.dungeon = self  #Adds dungeon as CrapgeonGame class attribute
         
 
 
@@ -253,7 +265,9 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                                  position = (tile.row, tile.col),  
                                  kind = token_kind,
                                  dungeon_instance = self,
-                                 character = None)
+                                 character = None,
+                                 pos = tile.pos,
+                                 size = tile.size)
         
         if token_kind == 'player':
             character = classes.Player (position = (tile.row, tile.col), #create player object
@@ -270,7 +284,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         character.__class__.data.append (character)   #create monster to monsters list
         tile.token.character = character
-        tile.bind (pos = tile.bind_token, size = tile.bind_token)
+        #tile.bind (pos = tile.bind_token, size = tile.bind_token)
 
 
     def activate_which_tiles(self, tile_positions = None):
@@ -329,7 +343,9 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
     
-    active_character_id = NumericProperty(None)
+    turn = BooleanProperty(None)
+    
+    active_character_id = NumericProperty(0)
 
     dungeon = ObjectProperty(None)
     
@@ -342,8 +358,6 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         self.dungeon.allocate_tokens()
 
         self.turn = True    #TRUE for players, FALSE for monsters. Player starts
-        
-        self.active_character_id = 0    #starts first character on players.data
 
         print ('MONSTERS')
         print (len(classes.Monster.data))
@@ -354,18 +368,33 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     def next_character(self):
 
 
-        if self.active_character.id == len(self.active_character.__class__.data) - 1:  #if all players or monsters have moved
+        if self.active_character.id == len(self.active_character.__class__.data) - 1: #if all players or monsters have moved
             
             self.turn = not self.turn   #turn changes
-            
-            self.active_character_id = 0
+
+            print ('TURN CHANGED. NOW MOVES ID')
+            print (self.active_character_id)
 
         
         else: 
             
             self.active_character_id += 1       # next character on list moves
+            print ('NOW MOVES ID')
+            print (self.active_character_id)
 
 
+    def on_turn (self, *args):
+        
+        
+        if self.active_character_id != 0:
+                
+            self.active_character_id = 0
+
+        else:
+
+            self.on_active_character_id ()  #must be called manually if self.active_character_id does not change
+
+    
     def on_active_character_id (self, *args):
 
         

@@ -1,14 +1,18 @@
 <DungeonLayout>:
 
+
 <DungeonTile>:
 
+    #token: None ---> this might allow set on_size() self.token.size = self.size on python file.
+    
     size_hint: None,None
 
-    width: '120dp'
+    width: '100dp'
 
     height: self.width
 
-    disabled: True 
+    disabled: True
+
 
 
 <ScrollView>:
@@ -22,9 +26,19 @@
 
     Label:
 
-        size_hint: 1,0.4
+        size_hint: 1, 0.2
 
-        text: "Text here"
+        text: "ACTIVE CHARACTER"
+
+        font_size: '50sp'
+
+    Label:
+
+        size_hint: 1, 0.2
+
+        text: str(root.active_character_id)
+
+        font_size: '50sp'
 
     ScrollView:
 

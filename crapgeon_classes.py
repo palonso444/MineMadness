@@ -36,11 +36,12 @@ class Player(Character):
     data = list ()
     blueprint_ids = ['%']
 
-    def __init__(self, position, moves, token, id, shovels = 0):
+    def __init__(self, position, moves, token, id, shovels = 0, weapons = 0):
         super().__init__(position, moves, token, id)
 
         self.remaining_moves = 0
         self.shovels = shovels
+        self.weapons = weapons
 
     
     

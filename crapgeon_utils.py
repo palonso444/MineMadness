@@ -30,6 +30,21 @@ def check_for_free_spots(map):
 	return False
 
 
+def are_nearby (item1, item2):	#check if two positions are nearby
+
+	directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+	for direction in directions:
+		
+		row, col = item1.position[0] + direction[0], item1.position[1] + direction[1]
+		
+		if (row,col) == item2.position:
+			
+			return True
+		
+	return False
+		
+
 
 #create map surface
 
@@ -89,20 +104,3 @@ def place_items (map, item, frequency = 0.1, protected = ['%', ' ', 'o', 'M']): 
 		if map [coord[0]][coord[1]] not in protected:
 		
 			map [coord[0]][coord[1]] = item
-
-
-'''
-#game setup
-
-map = create_map(2,2)
-place_walls(map, 5)
-place_weapons(map, 20)
-place_shovels(map, 30)
-player = Player(speed = 2, digging = 3, weapon = 3)
-player.place(map, 0, 0)
-define_monsters(speed=1, killer = True)
-place_monsters(map, 12)
-place_exit(map)
-place_coins(map, player, 5)
-place_potions(map, 3)
-'''

@@ -62,7 +62,7 @@ class CharacterToken(Ellipse):
 
         else:
 
-            self.path = self.dungeon.find_shortest_path(self.start, self.goal, ('wall'))
+            self.path = self.dungeon.find_shortest_path(self.start, self.goal, ('wall', 'monster'))
 
             self.dungeon.activate_which_tiles()     #tiles desactivated while moving
         
@@ -94,17 +94,17 @@ class CharacterToken(Ellipse):
 
         if len(self.path) == 0:     #if goal is reached
             
-            if self.goal.token is not None:
+            if self.goal.token:     #only weapons and shovels. Monsters and walls resolved within before moving, within on_release()
 
-                self.check_collision()
+                self.goal.clear_token(self.character)
                 
             self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
         
             self.character.update_position(self.goal.row, self.goal.col)
 
-            if isinstance(self.character, classes.Player) and self.character.remaining_moves > 0:
+            if isinstance(self.character, classes.Player):
 
-                self.dungeon.game.continue_player_turn()   #if player has still moves left can continue turn
+                self.dungeon.game.continue_player_turn()    #checks if player can still move
 
             else:
             
@@ -121,27 +121,6 @@ class CharacterToken(Ellipse):
 
         start_tile.token = None
         end_tile.token = self
-
-
-    def check_collision(self):
-
-        
-        if not self.goal.token:
-
-            return False
-         
-        
-        elif self.kind == 'player' and self.goal.token.kind == 'monster':
-
-            return False
-
-
-        elif self.kind == 'monster' and self.goal.token.kind ==  'player':
-
-            return False
-         
-        
-        return True
        
     
     def manage_collision(self):
@@ -199,25 +178,26 @@ class DungeonTile(Button):
 
         self.row = row
         self.col = col
+        self.position = (row,col)
         self.token = None   #defined later when token is placed on tile by DungeonLayout.place_tokens
         self.dungeon = dungeon_instance     #need to pass the instance of the dungeon in order to cal dungeon.move_token from this class
-
+        
 
     def on_release(self):
 
-        active_character = self.dungeon.game.active_character
-        
-        if not self.token or self.token == active_character.token:  #MOVE TO AN EMPTY SPOT OR STAY IN PLACE
+        active_character = self.dungeon.game.active_character    
+
+        if self.token and self.token.kind in ('wall', 'monster'):
+
+            self.clear_token(active_character)
+
+        else:
 
             start_position = (active_character.position[0], active_character.position[1])
         
             start_tile = self.dungeon.get_tile(start_position[0], start_position[1])
 
             start_tile.token.move(start_tile, self)
-
-        elif self.token.kind == 'wall':     #BREAK WALL
-
-            self.clear_token(active_character)
             
       
     def on_pos(self, *args):
@@ -231,10 +211,8 @@ class DungeonTile(Button):
     def is_activable(self):
             
         player = self.dungeon.game.active_character
-
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         
-        path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position[0], player.position[1]), self, ('wall'))
+        path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position[0], player.position[1]), self, ('wall', 'monster'))
 
         if self.token == player.token: #player tile is activable
 
@@ -242,13 +220,15 @@ class DungeonTile(Button):
         
         if self.token and self.token.kind == 'wall' and player.shovels > 0:
 
-            for direction in directions:
+            if utils.are_nearby(self, player):
 
-                row, col = self.row + direction[0], self.col + direction[1]
-
-                if (row,col) == player.position:
+                return True
             
-                    return True
+        if self.token and self.token.kind == 'monster' and player.weapons > 0:
+
+            if utils.are_nearby(self, player):
+
+                return True
         
         if path and len(path) <= player.remaining_moves:  #if tile is reachable 
 
@@ -259,21 +239,30 @@ class DungeonTile(Button):
 
     def clear_token(self, active_character):
         
+        
+        if self.token.kind == 'shovel':
+
+            active_character.shovels += 1
+
+        elif self.token.kind == 'weapon':
+
+            active_character.weapons += 1
+
+        elif self.token.kind == 'wall':
+
+            active_character.shovels -= 1
+            active_character.remaining_moves -=1
+
+        elif self.token.kind == 'monster':
+
+            active_character.weapons -= 1
+            active_character.remaining_moves -=1
+            self.token.character.rearrange_ids()
+            classes.Monster.data.remove(self.token.character)
+        
         self.dungeon.canvas.remove(self.token)
-
         self.token = None
-
-        active_character.remaining_moves -=1
-
-        active_character.shovels -= 1
-
-        if active_character.remaining_moves > 0:
-            
-            self.dungeon.game.continue_player_turn()
-
-        else:
-
-            self.dungeon.game.next_character()
+        self.dungeon.game.continue_player_turn()
 
 
 
@@ -294,7 +283,6 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         self.generate_blueprint(self.rows, self.cols)
 
         self.game = self.parent.parent
-
         self.game.dungeon = self  #Adds dungeon as CrapgeonGame class attribute
         
 
@@ -302,12 +290,12 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         dungeon_blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(dungeon_blueprint,'M', 1)
+        utils.place_single_items(dungeon_blueprint,'M', 3)
         utils.place_single_items(dungeon_blueprint,'%', 1)
         utils.place_single_items(dungeon_blueprint,'o', 5)
         utils.place_single_items(dungeon_blueprint,' ', 1)
 
-        for key,value in {'M': 0, '#': 0.6, 'p': 0.05, 'x': 0.05, 's': 0.02}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.3, 'p': 0.05, 'x': 0.05, 's': 0.02}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (dungeon_blueprint, item=key, frequency=value)
 
@@ -333,6 +321,16 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                 elif self.blueprint [tile.row][tile.col] == '#':
 
                     self.place_tokens(tile, 'wall')
+
+                
+                elif self.blueprint [tile.row][tile.col] == 'p':
+
+                    self.place_tokens(tile, 'shovel')
+
+                
+                elif self.blueprint [tile.row][tile.col] == 'x':
+
+                    self.place_tokens(tile, 'weapon')
 
 
     def place_tokens(self, tile, token_kind):
@@ -513,9 +511,15 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     
     def continue_player_turn(self):
 
-        movement_range = self.active_character.get_movement_range(self.dungeon)
+        if isinstance(self.active_character, classes.Player) and self.active_character.remaining_moves > 0:
+            
+            movement_range = self.active_character.get_movement_range(self.dungeon)
 
-        self.dungeon.activate_which_tiles(movement_range)
+            self.dungeon.activate_which_tiles(movement_range)
+
+        else:
+
+            self.dungeon.game.next_character()
 
 
     def on_active_character_id (self, *args):

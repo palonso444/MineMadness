@@ -8,7 +8,7 @@ from kivy.uix.button import Button  # type: ignore
 #from kivy.uix.image import Image    # type: ignore
 from kivy.graphics import Ellipse, Rectangle   # type: ignore
 from kivy.uix.widget import Widget  # type: ignore
-from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, Clock   # type: ignore
+from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty, Clock   # type: ignore
 from kivy.animation import Animation
 
 
@@ -81,7 +81,7 @@ class CharacterToken(Ellipse):
         
             self.character.remaining_moves -= 1
         
-        animation = Animation (pos = next_pos, duration = 0.5)
+        animation = Animation (pos = next_pos, duration = 0.3)
         
         animation.bind (on_complete = self.on_slide_completed)
         
@@ -94,27 +94,32 @@ class CharacterToken(Ellipse):
 
         if len(self.path) == 0:     #if goal is reached
             
-            if self.goal.token:     #only weapons and shovels. Monsters and walls resolved within before moving, within on_release()
+            if self.goal.kind == 'exit':
 
-                self.goal.clear_token(self.character)
-                
-            self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
-        
-            self.character.update_position(self.goal.row, self.goal.col)
-
-            if isinstance(self.character, classes.Player):
-
-                self.dungeon.game.continue_player_turn()    #checks if player can still move
-
-            else:
+                self.dungeon.game.dungeon_finished = True
             
-                self.dungeon.game.next_character() #switch turns if character last of character.characters
+            else:
+
+                if self.goal.token:     #only weapons and shovels. Monsters and walls resolved within before moving, within on_release()
+
+                    self.goal.clear_token(self.character)
+                
+                self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
+        
+                self.character.update_position(self.goal.row, self.goal.col)
+
+                if isinstance(self.character, classes.Player):
+
+                    self.dungeon.game.continue_player_turn()    #checks if player can still move
+
+                else:
+            
+                    self.dungeon.game.next_character() #switch turns if character last of character.characters
         
         
-        else:   # if goal is not reached, continue sliding
+        else:   # if len(path) > 0, goal is not reached, continue sliding
 
             self.slide(self.path)
-
 
 
     def update_on_tiles(self, start_tile, end_tile):
@@ -123,15 +128,15 @@ class CharacterToken(Ellipse):
         end_tile.token = self
        
     
-    def manage_collision(self):
+    def manage_collision(self):     #DEPRECATED! CODE USED IN clear_token()
 
-        if self.kind == 'player':
+        #if self.kind == 'player':
 
-            if self.goal.token.kind == 'monster':
+            #if self.goal.token.kind == 'monster':
 
-                self.goal.token.character.rearrange_ids()
+                #self.goal.token.character.rearrange_ids()
 
-                classes.Monster.data.remove(self.goal.token.character)
+                #classes.Monster.data.remove(self.goal.token.character)
 
                 #print ('REMAINING MONSTERS')
                 #print (len(classes.Monster.data))
@@ -140,17 +145,17 @@ class CharacterToken(Ellipse):
                 #for monster in classes.Monster.data:
                     #print (monster.id)
 
-                self.dungeon.canvas.remove(self.goal.token)
+                #self.dungeon.canvas.remove(self.goal.token)
 
-                self.goal.token = None
+                #self.goal.token = None
 
-                return True
+                #return True
 
-            else:
+            #else:
 
-                return False
+                #return False
 
-        elif self.kind == 'monster':
+        if self.kind == 'monster':
 
             if self.goal.token.kind == 'player':
 
@@ -170,18 +175,19 @@ class CharacterToken(Ellipse):
 
 
   
-class DungeonTile(Button):
+class Tile(Button):
 
     
-    def __init__(self, row, col, dungeon_instance, **kwargs):
+    def __init__(self, row, col, kind, dungeon_instance, **kwargs):
         super().__init__(**kwargs)
 
         self.row = row
         self.col = col
         self.position = (row,col)
+        self.kind = kind
         self.token = None   #defined later when token is placed on tile by DungeonLayout.place_tokens
         self.dungeon = dungeon_instance     #need to pass the instance of the dungeon in order to cal dungeon.move_token from this class
-        
+
 
     def on_release(self):
 
@@ -202,6 +208,7 @@ class DungeonTile(Button):
       
     def on_pos(self, *args):
 
+        
         if self.token:
         
             self.token.pos = self.pos
@@ -271,16 +278,24 @@ class DungeonLayout(GridLayout):    #initialized in kv file
     
     def on_pos(self, *args):
     
+        
+        self.generate_blueprint(self.rows, self.cols)   #initialize map of dungeon
+        
+        
         for y in range (self.rows):
               
                 for x in range (self.cols):
-                    
-                    tile = DungeonTile(row=y, col=x, dungeon_instance=self)
+
+                    if self.blueprint[y][x] == ' ':
+
+                        tile = Tile(row=y, col=x, kind ='exit', dungeon_instance=self)
+
+                    else:
+
+                        tile = Tile(row=y, col=x, kind ='floor', dungeon_instance=self)
                 
                     self.add_widget(tile)
 
-        
-        self.generate_blueprint(self.rows, self.cols)
 
         self.game = self.parent.parent
         self.game.dungeon = self  #Adds dungeon as CrapgeonGame class attribute
@@ -390,7 +405,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                 for position in tile_positions:
 
                     if tile.row == position[0] and tile.col == position[1] and tile.is_activable():
-
+                        
                         tile.disabled = False
 
     
@@ -462,13 +477,15 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
     dungeon = ObjectProperty(None)
 
+    dungeon_finished = BooleanProperty(False)
+
     #self.active_character is initialized and defined within on_active_character_id()
     
 
-
+    
     def on_dungeon(self, *args):
 
-
+        
         self.dungeon.allocate_tokens()
 
         self.turn = True    #TRUE for players, FALSE for monsters. Player starts
@@ -534,7 +551,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             self.continue_player_turn()
 
         
-        elif not self.turn:       #if monsters turn
+        elif not self.turn and len(classes.Monster.data) > 0:  #if monsters turn and monsters in the game
 
             self.active_character = classes.Monster.data[self.active_character_id]
                 
@@ -545,6 +562,12 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             end_tile = self.dungeon.get_tile(self.active_character.position[0], self.active_character.position[1])      
     
             self.active_character.token.move(start_tile, end_tile)
+
+
+    def on_dungeon_finished(self, *args):
+
+        print ('DUNGEON FINISHED!')
+
         
 
 

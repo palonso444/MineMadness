@@ -108,35 +108,44 @@ class Monster(Character):
     def __init__(self, position, moves, token, id):
         super().__init__(position, moves, token, id)
         self.kind = 'monster'
+        self.can_pass = ('shovel', 'weapon')
 
 
     def assess_move_direct(self):
 
 
         target = self.find_closest_player()
-
-        #allowed_tokens = [None, 'monster', 'player']
-
         
         for move in range (self.moves):
 
             #CHECKS WHICH DIRECION IS THE PLAYER AND CHECKS IF TILES ARE FREE
-            if target.position[0] < self.position[0] and not self.token.dungeon.get_tile(self.position[0] -1, self.position [1]).token:
+            if target.position[0] < self.position[0]:
                 
-                self.position = (self.position[0] -1, self.position [1])
-            
-            elif target.position[0] > self.position[0] and not self.token.dungeon.get_tile(self.position[0] +1, self.position [1]).token:
-                
-                self.position = (self.position[0] +1, self.position [1])
-            
-            elif target.position[1] < self.position[1] and not self.token.dungeon.get_tile(self.position[0], self.position [1]-1).token:
-                
-                self.position = (self.position[0],self.position [1]-1)
-            
-            elif target.position[1] > self.position[1] and not self.token.dungeon.get_tile(self.position[0], self.position [1]+1).token:
-                
-                self.position = (self.position[0], self.position [1]+1)
+                goal = self.token.dungeon.get_tile(self.position[0] -1, self.position [1])
 
+                if not goal.token or goal.token.kind in self.can_pass:
+                    self.position = (self.position[0] -1, self.position [1])
+            
+            elif target.position[0] > self.position[0]:
+                
+                goal = self.token.dungeon.get_tile(self.position[0] +1, self.position [1])
+
+                if not goal.token or goal.token.kind in self.can_pass:
+                    self.position = (self.position[0] +1, self.position [1])
+            
+            elif target.position[1] < self.position[1]:
+
+                goal = self.token.dungeon.get_tile(self.position[0], self.position [1] - 1)
+
+                if not goal.token or goal.token.kind in self.can_pass:
+                    self.position = (self.position[0],self.position [1]-1)
+            
+            elif target.position[1] > self.position[1]:
+                
+                goal = self.token.dungeon.get_tile(self.position[0], self.position [1] + 1)
+
+                if not goal.token or goal.token.kind in self.can_pass:
+                    self.position = (self.position[0], self.position [1]+1)
 
 
     

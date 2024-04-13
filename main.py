@@ -100,7 +100,8 @@ class CharacterToken(Ellipse):
             
             else:
 
-                if self.goal.token:     #only weapons and shovels. Monsters and walls resolved within before moving, within on_release()
+                
+                if self.goal.token and isinstance(self.character, classes.Player):   #weapons and shovels. Monsters and walls resolved within before moving, within on_release()
 
                     self.goal.clear_token(self.character)
                 
@@ -250,24 +251,24 @@ class Tile(Button):
         if self.token.kind == 'shovel':
 
             active_character.shovels += 1
-            self.dungeon.game.shovels = not self.dungeon.game.shovels
+            self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
 
         elif self.token.kind == 'weapon':
 
             active_character.weapons += 1
-            self.dungeon.game.weapons = not self.dungeon.game.weapons
+            self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
 
         elif self.token.kind == 'wall':
 
             active_character.shovels -= 1
             active_character.remaining_moves -=1
-            self.dungeon.game.shovels = not self.dungeon.game.shovels
+            self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
 
         elif self.token.kind == 'monster':
 
             active_character.weapons -= 1
             active_character.remaining_moves -=1
-            self.dungeon.game.weapons = not self.dungeon.game.weapons
+            self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
             self.token.character.rearrange_ids()
             classes.Monster.data.remove(self.token.character)
         

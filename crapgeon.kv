@@ -1,5 +1,13 @@
 <DungeonLayout>:
 
+<Label>:
+
+    text_size: self.size    #needed to make halign work
+    
+    halign: 'left'
+    
+    font_size: '25sp'
+
 
 <Tile>:
 
@@ -29,7 +37,7 @@
             
             pos: self.pos
             size: self.size
-            source: 'exitbackground.png' if self.kind == 'exit' else 'floorbackground.png'
+            source: self.kind + 'background.png' if self.kind else None
 
 
 
@@ -42,21 +50,52 @@
 
     orientation: "vertical"
 
-    Label:
+    on_health: health_label.text = 'Health: ' + str(root.active_character.health)
+    on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.shovels)
+    on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.weapons)
+    on_gems:   gems_label.text = 'Gems: ' + str(root.active_character.gems)
 
-        size_hint: 1, 0.2
+    GridLayout:     # to separate character picture and info
 
-        text: "SHOVELS"
+        size_hint: 1, 0.25
 
-        font_size: '50sp'
+        rows: 1
 
-    Label:
+        cols: 2
 
-        size_hint: 1, 0.2
+        Label:      #CHARACTER PICTURE HERE
 
-        text: str(root.active_character_id)
+            size_hint: 0.5, 1       #text: str(root.active_character_id)
 
-        font_size: '50sp'
+            text: "PICTURE \n HERE"
+
+            halign: 'center'
+
+        BoxLayout:
+            
+            orientation:'vertical'    
+        
+            Label:
+
+                halign: 'center'
+
+                text: 'Character name'
+
+            Label:
+
+                id: health_label
+
+            Label:
+                
+                id: shovels_label
+            
+            Label:
+
+                id: weapons_label
+
+            Label:
+                
+                id: gems_label
 
     ScrollView:
 

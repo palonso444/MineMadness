@@ -250,20 +250,24 @@ class Tile(Button):
         if self.token.kind == 'shovel':
 
             active_character.shovels += 1
+            self.dungeon.game.shovels = not self.dungeon.game.shovels
 
         elif self.token.kind == 'weapon':
 
             active_character.weapons += 1
+            self.dungeon.game.weapons = not self.dungeon.game.weapons
 
         elif self.token.kind == 'wall':
 
             active_character.shovels -= 1
             active_character.remaining_moves -=1
+            self.dungeon.game.shovels = not self.dungeon.game.shovels
 
         elif self.token.kind == 'monster':
 
             active_character.weapons -= 1
             active_character.remaining_moves -=1
+            self.dungeon.game.weapons = not self.dungeon.game.weapons
             self.token.character.rearrange_ids()
             classes.Monster.data.remove(self.token.character)
         
@@ -370,7 +374,9 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                                      moves = 4,
                                      token = tile.token,
                                      id = len(classes.Player.data),
-                                     shovels = 3)
+                                     shovels = 3,
+                                     weapons = 2,
+                                     health = 3)
 
             elif token_kind == 'monster':
                 character = classes.Monster(position = (tile.row, tile.col), 
@@ -471,29 +477,37 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
 class CrapgeonGame(BoxLayout):  #initlialized in kv file
     
-    turn = BooleanProperty(None)
     
     active_character_id = NumericProperty(0)
 
     dungeon = ObjectProperty(None)
 
     dungeon_finished = BooleanProperty(False)
+ 
+    turn = BooleanProperty(None)        #Those are switches to trigger change of turn and updating of info labels
+    health = BooleanProperty(None)      #defined in kv file upon changes in player properties
+    shovels = BooleanProperty(None)
+    weapons = BooleanProperty(None)
+    gems = BooleanProperty(None)
 
     #self.active_character is initialized and defined within on_active_character_id()
     
+    
+    def initialize_switches(self):
 
+        self.turn = True    #TRUE for players, FALSE for monsters. Player starts
+
+        self.health = False
+        self.shovels = False
+        self.weapons = False
+        self.gems = False
+    
     
     def on_dungeon(self, *args):
 
         
         self.dungeon.allocate_tokens()
-
-        self.turn = True    #TRUE for players, FALSE for monsters. Player starts
-
-        print ('MONSTERS')
-        print (len(classes.Monster.data))
-        print ('\nPLAYERS')
-        print (len(classes.Player.data))
+        self.initialize_switches()
 
     
     def next_character(self):
@@ -567,8 +581,6 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     def on_dungeon_finished(self, *args):
 
         print ('DUNGEON FINISHED!')
-
-        
 
 
 class CrapgeonApp(App):

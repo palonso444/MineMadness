@@ -16,7 +16,6 @@ def location(map):
 	return location
 
 
-
 def check_for_free_spots(map):
 
 	for y in range (len(map)):

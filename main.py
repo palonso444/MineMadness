@@ -140,12 +140,11 @@ class CharacterToken(Ellipse):
         # IF SECONDARY SLOT OCCUPIED IN START TILE, IT IS SET TO NONE. MAIN SLOT REMAINS UNTOUCHED
         if start_tile.monster_token:
                 
-            start_tile.token2 = None
+            start_tile.monster_token = None
 
         else:
 
             start_tile.token = None
-
 
     
     def manage_collision(self):     #DEPRECATED! CODE USED IN clear_token()
@@ -300,16 +299,13 @@ class Tile(Button):
             classes.Monster.data.remove(token.character)
         
         if not self.monster_token:
-
             self.dungeon.canvas.remove(self.token)
             self.token = None
-            self.dungeon.game.continue_player_turn()
-
         else:
-
             self.dungeon.canvas.remove(self.monster_token)
             self.monster_token = None
-            self.dungeon.game.continue_player_turn()
+            
+        self.dungeon.game.continue_player_turn()
 
 
 
@@ -498,10 +494,6 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         while queue:
   
             current_pos, path =  queue.popleft()
-            
-            #if current_pos == end_tile_pos:
-
-                #return (path)
             
             for direction in directions:
 

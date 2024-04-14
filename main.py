@@ -101,9 +101,11 @@ class CharacterToken(Ellipse):
             else:
 
                 
-                if self.goal.token and isinstance(self.character, classes.Player):   #weapons and shovels. Monsters and walls resolved within before moving, within on_release()
+                if self.goal.monster_token or self.goal.token:
+                    
+                    if isinstance(self.character, classes.Player):  #weapons and shovels. Monsters and walls resolved within before moving, within on_release()
 
-                    self.goal.clear_token(self.character)
+                        self.goal.clear_token(self.character)
                 
                 self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
         
@@ -125,9 +127,26 @@ class CharacterToken(Ellipse):
 
     def update_on_tiles(self, start_tile, end_tile):
 
-        start_tile.token = None
-        end_tile.token = self
-       
+        
+        #IF END_TILE OCCUPIED, MONSTERTOKEN IS STORED TO SPECIAL TOKEN SLOT
+        if end_tile.token and isinstance(self.character, classes.Monster):
+
+            end_tile.monster_token = self
+
+        else:
+
+            end_tile.token = self
+
+        # IF SECONDARY SLOT OCCUPIED IN START TILE, IT IS SET TO NONE. MAIN SLOT REMAINS UNTOUCHED
+        if start_tile.monster_token:
+                
+            start_tile.token2 = None
+
+        else:
+
+            start_tile.token = None
+
+
     
     def manage_collision(self):     #DEPRECATED! CODE USED IN clear_token()
 
@@ -187,6 +206,7 @@ class Tile(Button):
         self.position = (row,col)
         self.kind = kind
         self.token = None   #defined later when token is placed on tile by DungeonLayout.place_tokens
+        self.monster_token = None  #tiles can have up to 2 tokens (shovel + monster for instance). Special slot reserved for monsters in such cases
         self.dungeon = dungeon_instance     #need to pass the instance of the dungeon in order to cal dungeon.move_token from this class
 
 
@@ -194,7 +214,7 @@ class Tile(Button):
 
         active_character = self.dungeon.game.active_character    
 
-        if self.token and self.token.kind in ('wall', 'monster'):
+        if self.token and self.token.kind in ('wall', 'monster') or self.monster_token:
 
             self.clear_token(active_character)
 
@@ -222,21 +242,23 @@ class Tile(Button):
         
         path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position[0], player.position[1]), self, ('wall', 'monster'))
 
-        if self.token == player.token: #player tile is activable
-
-            return True
+        if self.token:
         
-        if self.token and self.token.kind == 'wall' and player.shovels > 0:
-
-            if utils.are_nearby(self, player):
+            if self.token == player.token: #player tile is activable
 
                 return True
+        
+            if self.token.kind == 'wall':
+
+                if utils.are_nearby(self, player) and player.shovels > 0:
+
+                    return True
             
-        if self.token and self.token.kind == 'monster' and player.weapons > 0:
+            if self.monster_token or self.token.kind == 'monster':
 
-            if utils.are_nearby(self, player):
+                if utils.are_nearby(self, player) and player.weapons > 0:
 
-                return True
+                    return True
         
         if path and len(path) <= player.remaining_moves:  #if tile is reachable 
 
@@ -248,12 +270,12 @@ class Tile(Button):
     def clear_token(self, active_character):
         
         
-        if self.token.kind == 'shovel':
+        if not self.monster_token and self.token.kind == 'shovel':
 
             active_character.shovels += 1
             self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
 
-        elif self.token.kind == 'weapon':
+        elif not self.monster_token and self.token.kind == 'weapon':
 
             active_character.weapons += 1
             self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
@@ -264,17 +286,32 @@ class Tile(Button):
             active_character.remaining_moves -=1
             self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
 
-        elif self.token.kind == 'monster':
+        elif self.monster_token or self.token.kind == 'monster':
+
+            if self.monster_token:
+                token = self.monster_token
+            else:
+                token = self.token
 
             active_character.weapons -= 1
             active_character.remaining_moves -=1
             self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
-            self.token.character.rearrange_ids()
-            classes.Monster.data.remove(self.token.character)
+            token.character.rearrange_ids()
+            classes.Monster.data.remove(token.character)
         
-        self.dungeon.canvas.remove(self.token)
-        self.token = None
-        self.dungeon.game.continue_player_turn()
+        if not self.monster_token:
+
+            self.dungeon.canvas.remove(self.token)
+            self.token = None
+            self.dungeon.game.continue_player_turn()
+
+        else:
+
+            self.dungeon.canvas.remove(self.monster_token)
+            self.monster_token = None
+            self.dungeon.game.continue_player_turn()
+
+
 
 
 
@@ -376,7 +413,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                                      token = tile.token,
                                      id = len(classes.Player.data),
                                      shovels = 3,
-                                     weapons = 2,
+                                     weapons = 0,
                                      health = 3)
 
             elif token_kind == 'monster':
@@ -433,6 +470,10 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         for tile in self.children:
 
             if tile.token and tile.token.kind in scenery:
+
+                found_tiles.add((tile.row, tile.col))
+
+            elif tile.monster_token and tile.monster_token.kind in scenery:
 
                 found_tiles.add((tile.row, tile.col))
 

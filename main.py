@@ -61,14 +61,13 @@ class CharacterToken(Ellipse):
             self.dungeon.game.next_character()
 
         else:
-
+            
             self.path = self.dungeon.find_shortest_path(self.start, self.goal, ('wall', 'monster'))
 
             self.dungeon.activate_which_tiles()     #tiles desactivated while moving
         
             self.slide(self.path)
-            
-          
+                    
     
     def slide (self, path):
 
@@ -86,7 +85,6 @@ class CharacterToken(Ellipse):
         animation.bind (on_complete = self.on_slide_completed)
         
         animation.start(self)
-
 
 
     def on_slide_completed (self, *args):
@@ -269,7 +267,7 @@ class Tile(Button):
             return True
         
         return False
-    
+
 
     def clear_token(self, active_character):
         
@@ -311,6 +309,11 @@ class Tile(Button):
             active_character.remaining_moves -=1
             self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
 
+        elif self.has_('gem'):
+
+            active_character.gems +=1
+            self.dungeon.game.gems = not self.dungeon.game.gems
+
         remove_token()
 
 
@@ -346,12 +349,12 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         dungeon_blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(dungeon_blueprint,'M', 1)
+        utils.place_single_items(dungeon_blueprint,'M', 6)
         utils.place_single_items(dungeon_blueprint,'%', 1)
         utils.place_single_items(dungeon_blueprint,'o', 5)
         utils.place_single_items(dungeon_blueprint,' ', 1)
 
-        for key,value in {'M': 0, '#': 0.4, 'p': 0.1, 'x': 0.1, 's': 0.02}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.5, 'p': 0.07, 'x': 0.07, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (dungeon_blueprint, item=key, frequency=value)
 
@@ -387,6 +390,11 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                 elif self.blueprint [tile.row][tile.col] == 'x':
 
                     self.place_tokens(tile, 'weapon')
+
+                
+                elif self.blueprint [tile.row][tile.col] == 'o':
+
+                    self.place_tokens(tile, 'gem')
 
 
     def place_tokens(self, tile, token_kind):

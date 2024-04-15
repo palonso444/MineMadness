@@ -11,6 +11,7 @@ class Character:
         self.position = position
         self.moves = moves
         self.token = token
+        self.dungeon = self.token.dungeon
         self.id = id
 
     
@@ -98,7 +99,6 @@ class Player(Character):
         
         return mov_range
 
-
     
 class Monster(Character):
 
@@ -108,45 +108,32 @@ class Monster(Character):
     def __init__(self, position, moves, token, id):
         super().__init__(position, moves, token, id)
         self.kind = 'monster'
-        self.can_pass = ('shovel', 'weapon')
+        self.blocked_by = ('wall', 'monster')
 
 
     def assess_move_direct(self):
 
 
-        target = self.find_closest_player()
+        target = self.find_closest_player() #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
         
         for move in range (self.moves):
 
             #CHECKS WHICH DIRECION IS THE PLAYER AND CHECKS IF TILES ARE FREE
-            if target.position[0] < self.position[0]:
+            if target.position[0] < self.position[0] and self.can_go_through(self.dungeon.get_tile(self.position[0] -1, self.position [1])):
                 
-                goal = self.token.dungeon.get_tile(self.position[0] -1, self.position [1])
-
-                if not goal.token or goal.token.kind in self.can_pass:
-                    self.position = (self.position[0] -1, self.position [1])
+                self.position = (self.position[0] -1, self.position [1])
             
-            elif target.position[0] > self.position[0]:
+            elif target.position[0] > self.position[0] and self.can_go_through(self.dungeon.get_tile(self.position[0] +1, self.position [1])):
                 
-                goal = self.token.dungeon.get_tile(self.position[0] +1, self.position [1])
-
-                if not goal.token or goal.token.kind in self.can_pass:
-                    self.position = (self.position[0] +1, self.position [1])
+                self.position = (self.position[0] +1, self.position [1])
             
-            elif target.position[1] < self.position[1]:
-
-                goal = self.token.dungeon.get_tile(self.position[0], self.position [1] - 1)
-
-                if not goal.token or goal.token.kind in self.can_pass:
-                    self.position = (self.position[0],self.position [1]-1)
+            elif target.position[1] < self.position[1] and self.can_go_through(self.dungeon.get_tile(self.position[0], self.position [1] - 1)):
+ 
+                self.position = (self.position[0],self.position [1]-1)
             
-            elif target.position[1] > self.position[1]:
+            elif target.position[1] > self.position[1] and self.can_go_through(self.dungeon.get_tile(self.position[0], self.position [1] + 1)):
                 
-                goal = self.token.dungeon.get_tile(self.position[0], self.position [1] + 1)
-
-                if not goal.token or goal.token.kind in self.can_pass:
-                    self.position = (self.position[0], self.position [1]+1)
-
+                self.position = (self.position[0], self.position [1]+1)
 
     
     def find_closest_player(self):
@@ -167,3 +154,13 @@ class Monster(Character):
             if distance == shortest_distance:
 
                 return Player.data[distances.index(distance)]
+            
+
+    def can_go_through(self, tile):
+        
+        if tile.token and tile.token.kind in self.blocked_by:
+            return False
+        if tile.monster_token and tile.monster_token.kind in self.blocked_by:
+            return False
+        
+        return True

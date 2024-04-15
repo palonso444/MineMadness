@@ -213,7 +213,7 @@ class Tile(Button):
 
         active_character = self.dungeon.game.active_character    
 
-        if self.token and self.token.kind in ('wall', 'monster') or self.monster_token:
+        if self.has_('wall') or self.has_('monster'):
 
             self.clear_token(active_character)
 
@@ -241,23 +241,17 @@ class Tile(Button):
         
         path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position[0], player.position[1]), self, ('wall', 'monster'))
 
-        if self.token:
+        if self.has_('player'):
+
+            return True
         
-            if self.token == player.token: #player tile is activable
+        if self.has_('wall') and utils.are_nearby(self, player) and player.shovels > 0:
 
-                return True
-        
-            if self.token.kind == 'wall':
-
-                if utils.are_nearby(self, player) and player.shovels > 0:
-
-                    return True
+            return True
             
-            if self.monster_token or self.token.kind == 'monster':
+        if self.has_('monster') and utils.are_nearby(self, player) and player.weapons > 0:
 
-                if utils.are_nearby(self, player) and player.weapons > 0:
-
-                    return True
+            return True
         
         if path and len(path) <= player.remaining_moves:  #if tile is reachable 
 
@@ -266,26 +260,29 @@ class Tile(Button):
         return False
     
 
+    def has_(self, token_kind):
+
+        if self.monster_token and self.monster_token.kind == token_kind:
+            return True
+        
+        if self.token and self.token.kind == token_kind:
+            return True
+        
+        return False
+    
+
     def clear_token(self, active_character):
         
+        def remove_token():
+            if self.monster_token:
+                self.dungeon.canvas.remove(self.monster_token)
+                self.monster_token = None
+            else:
+                self.dungeon.canvas.remove(self.token)
+                self.token = None
         
-        if not self.monster_token and self.token.kind == 'shovel':
 
-            active_character.shovels += 1
-            self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
-
-        elif not self.monster_token and self.token.kind == 'weapon':
-
-            active_character.weapons += 1
-            self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
-
-        elif self.token.kind == 'wall':
-
-            active_character.shovels -= 1
-            active_character.remaining_moves -=1
-            self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
-
-        elif self.monster_token or self.token.kind == 'monster':
+        if self.has_('monster'):
 
             if self.monster_token:
                 token = self.monster_token
@@ -297,18 +294,24 @@ class Tile(Button):
             self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
             token.character.rearrange_ids()
             classes.Monster.data.remove(token.character)
-        
-        if not self.monster_token:
-            self.dungeon.canvas.remove(self.token)
-            self.token = None
-        else:
-            self.dungeon.canvas.remove(self.monster_token)
-            self.monster_token = None
-            
-        self.dungeon.game.continue_player_turn()
 
+        elif self.has_('shovel'):
 
+            active_character.shovels += 1
+            self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
 
+        elif self.has_('weapon'):
+
+            active_character.weapons += 1
+            self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
+
+        elif self.has_('wall'):
+
+            active_character.shovels -= 1
+            active_character.remaining_moves -=1
+            self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
+
+        remove_token()
 
 
 class DungeonLayout(GridLayout):    #initialized in kv file
@@ -343,12 +346,12 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         dungeon_blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(dungeon_blueprint,'M', 3)
+        utils.place_single_items(dungeon_blueprint,'M', 1)
         utils.place_single_items(dungeon_blueprint,'%', 1)
         utils.place_single_items(dungeon_blueprint,'o', 5)
         utils.place_single_items(dungeon_blueprint,' ', 1)
 
-        for key,value in {'M': 0, '#': 0.3, 'p': 0.05, 'x': 0.05, 's': 0.02}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.4, 'p': 0.1, 'x': 0.1, 's': 0.02}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (dungeon_blueprint, item=key, frequency=value)
 
@@ -408,8 +411,8 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                                      moves = 4,
                                      token = tile.token,
                                      id = len(classes.Player.data),
-                                     shovels = 3,
-                                     weapons = 0,
+                                     shovels = 1,
+                                     weapons = 1,
                                      health = 3)
 
             elif token_kind == 'monster':
@@ -552,6 +555,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             self.turn = not self.turn   #turn changes
 
             print ('TURN CHANGED. NOW MOVES ID')
+            print (self.turn)
             print (self.active_character_id)
 
         
@@ -590,7 +594,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     def on_active_character_id (self, *args):
 
         
-        if self.turn:   #if player turn
+        if self.turn or len(classes.Monster.data) == 0:   #if player turn or no monsters (always players turn)
 
             self.active_character = classes.Player.data[self.active_character_id]
             
@@ -599,7 +603,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             self.continue_player_turn()
 
         
-        elif not self.turn and len(classes.Monster.data) > 0:  #if monsters turn and monsters in the game
+        elif not self.turn:  #if monsters turn and monsters in the game
 
             self.active_character = classes.Monster.data[self.active_character_id]
                 

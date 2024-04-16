@@ -49,26 +49,37 @@ class CharacterToken(Ellipse):
         self.path = None    
 
 
-    def move (self, start_tile, end_tile):
+    def move_player (self, start_tile, end_tile):
 
         
-        self.start = start_tile
-
-        self.goal = end_tile
-
-        if self.start == self.goal:     #if character stays in place
+        if start_tile == end_tile:     #if character stays in place
             
             self.dungeon.game.next_character()
-
+        
         else:
+        
+            self.start = start_tile
+
+            self.goal = end_tile
             
             self.path = self.dungeon.find_shortest_path(self.start, self.goal, ('wall', 'monster'))
 
             self.dungeon.activate_which_tiles()     #tiles desactivated while moving
-        
+            
             self.slide(self.path)
                     
     
+    def move_monster(self):
+
+        print(self.position)
+        self.start = self.dungeon.get_tile(self.position[0], self.position[1])
+
+        self.path = self.character.assess_path_direct()
+        self.goal = self.dungeon.get_tile(self.path[-1][0], self.path[-1][1])
+
+        self.slide(self.path)
+
+
     def slide (self, path):
 
             
@@ -76,7 +87,7 @@ class CharacterToken(Ellipse):
 
         next_pos = self.dungeon.get_tile(next_position[0],next_position[1]).pos
 
-        if isinstance(self.character, classes.Player):  #monsters always complete movement. Do not have remaining_moves attribute
+        if isinstance(self.character, classes.Player):  #monsters always complete movement.
         
             self.character.remaining_moves -= 1
         
@@ -92,26 +103,26 @@ class CharacterToken(Ellipse):
 
         if len(self.path) == 0:     #if goal is reached
             
-            if self.goal.kind == 'exit':
+            if self.goal.kind == 'exit' and self.token.kind == 'player':
 
                 self.dungeon.game.dungeon_finished = True
             
             else:
 
-                
-                if self.goal.monster_token or self.goal.token:
+                if isinstance(self.character, classes.Player):  #weapons and shovels. Monsters and walls resolved within before moving, within on_release()
                     
-                    if isinstance(self.character, classes.Player):  #weapons and shovels. Monsters and walls resolved within before moving, within on_release()
+                    if self.goal.monster_token or self.goal.token:
 
                         self.goal.clear_token(self.character)
                 
                 self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
-        
+                
+                print (self.goal.row, self.goal.col)
                 self.character.update_position(self.goal.row, self.goal.col)
 
-                if isinstance(self.character, classes.Player):
-
-                    self.dungeon.game.continue_player_turn()    #checks if player can still move
+                if isinstance(self.character, classes.Player) and self.character.remaining_moves > 0:
+                    
+                    self.dungeon.game.dynamic_movement_range()    #checks if player can still move
 
                 else:
             
@@ -125,23 +136,22 @@ class CharacterToken(Ellipse):
 
     def update_on_tiles(self, start_tile, end_tile):
 
-        
+        print (start_tile.position, end_tile.position)
+        print (start_tile, end_tile)
         #IF END_TILE OCCUPIED, MONSTERTOKEN IS STORED TO SPECIAL TOKEN SLOT
         if end_tile.token and isinstance(self.character, classes.Monster):
-
             end_tile.monster_token = self
-
         else:
-
+            #print ('RIGHT UPDATE')
             end_tile.token = self
 
         # IF SECONDARY SLOT OCCUPIED IN START TILE, IT IS SET TO NONE. MAIN SLOT REMAINS UNTOUCHED
         if start_tile.monster_token:
-                
+
+            #('WRONG UPDATE')
             start_tile.monster_token = None
-
         else:
-
+            ('RIGHT UPDATE')
             start_tile.token = None
 
     
@@ -211,7 +221,7 @@ class Tile(Button):
 
         active_character = self.dungeon.game.active_character    
 
-        if self.has_('wall') or self.has_('monster'):
+        if self.has_token('wall') or self.has_token('monster'):
 
             self.clear_token(active_character)
 
@@ -221,7 +231,7 @@ class Tile(Button):
         
             start_tile = self.dungeon.get_tile(start_position[0], start_position[1])
 
-            start_tile.token.move(start_tile, self)
+            start_tile.token.move_player(start_tile, self)
             
       
     def on_pos(self, *args):
@@ -239,15 +249,15 @@ class Tile(Button):
         
         path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position[0], player.position[1]), self, ('wall', 'monster'))
 
-        if self.has_('player'):
+        if self.has_token('player'):
 
             return True
         
-        if self.has_('wall') and utils.are_nearby(self, player) and player.shovels > 0:
+        if self.has_token('wall') and utils.are_nearby(self, player) and player.shovels > 0:
 
             return True
             
-        if self.has_('monster') and utils.are_nearby(self, player) and player.weapons > 0:
+        if self.has_token('monster') and utils.are_nearby(self, player) and player.weapons > 0:
 
             return True
         
@@ -258,7 +268,7 @@ class Tile(Button):
         return False
     
 
-    def has_(self, token_kind):
+    def has_token(self, token_kind):
 
         if self.monster_token and self.monster_token.kind == token_kind:
             return True
@@ -280,7 +290,7 @@ class Tile(Button):
                 self.token = None
         
 
-        if self.has_('monster'):
+        if self.has_token('monster'):
 
             if self.monster_token:
                 token = self.monster_token
@@ -293,23 +303,23 @@ class Tile(Button):
             token.character.rearrange_ids()
             classes.Monster.data.remove(token.character)
 
-        elif self.has_('shovel'):
+        elif self.has_token('shovel'):
 
             active_character.shovels += 1
             self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
 
-        elif self.has_('weapon'):
+        elif self.has_token('weapon'):
 
             active_character.weapons += 1
             self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
 
-        elif self.has_('wall'):
+        elif self.has_token('wall'):
 
             active_character.shovels -= 1
             active_character.remaining_moves -=1
             self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
 
-        elif self.has_('gem'):
+        elif self.has_token('gem'):
 
             active_character.gems +=1
             self.dungeon.game.gems = not self.dungeon.game.gems
@@ -349,12 +359,12 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         dungeon_blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(dungeon_blueprint,'M', 6)
-        utils.place_single_items(dungeon_blueprint,'%', 1)
-        utils.place_single_items(dungeon_blueprint,'o', 5)
-        utils.place_single_items(dungeon_blueprint,' ', 1)
+        utils.place_single_items(dungeon_blueprint,'M', 1, (0,0))
+        utils.place_single_items(dungeon_blueprint,'%', 1, (3,3))
+        utils.place_single_items(dungeon_blueprint,'o', 0)
+        utils.place_single_items(dungeon_blueprint,' ', 0)
 
-        for key,value in {'M': 0, '#': 0.5, 'p': 0.07, 'x': 0.07, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0, 'p': 0, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (dungeon_blueprint, item=key, frequency=value)
 
@@ -562,16 +572,16 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             
             self.turn = not self.turn   #turn changes
 
-            print ('TURN CHANGED. NOW MOVES ID')
-            print (self.turn)
-            print (self.active_character_id)
+            #print ('TURN CHANGED. NOW MOVES ID')
+            #print (self.turn)
+            #print (self.active_character_id)
 
         
         else: 
             
             self.active_character_id += 1       # next character on list moves
-            print ('NOW MOVES ID')
-            print (self.active_character_id)
+            #print ('NOW MOVES ID')
+            #print (self.active_character_id)
 
 
     def on_turn (self, *args):
@@ -586,17 +596,12 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             self.on_active_character_id ()  #must be called manually if self.active_character_id does not change
 
     
-    def continue_player_turn(self):
+    def dynamic_movement_range(self):
 
-        if isinstance(self.active_character, classes.Player) and self.active_character.remaining_moves > 0:
-            
-            movement_range = self.active_character.get_movement_range(self.dungeon)
+        
+        movement_range = self.active_character.get_movement_range(self.dungeon)
 
-            self.dungeon.activate_which_tiles(movement_range)
-
-        else:
-
-            self.dungeon.game.next_character()
+        self.dungeon.activate_which_tiles(movement_range)
 
 
     def on_active_character_id (self, *args):
@@ -608,20 +613,16 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             
             self.active_character.remaining_moves = self.active_character.moves
 
-            self.continue_player_turn()
+            self.dynamic_movement_range()
 
         
         elif not self.turn:  #if monsters turn and monsters in the game
 
+            self.dungeon.activate_which_tiles() #tiles deactivated in monster turn
+            
             self.active_character = classes.Monster.data[self.active_character_id]
                 
-            start_tile = self.dungeon.get_tile(self.active_character.position[0], self.active_character.position[1])
-
-            self.active_character.assess_move_direct()
-
-            end_tile = self.dungeon.get_tile(self.active_character.position[0], self.active_character.position[1])      
-    
-            self.active_character.token.move(start_tile, end_tile)
+            self.active_character.token.move_monster()
 
 
     def on_dungeon_finished(self, *args):

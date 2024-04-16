@@ -3,7 +3,7 @@
 
 class Character:
 
-    blueprint_ids = ['%', 'M']
+    blueprint_ids = ('%', 'R', 'H')
 
     
     def __init__(self, position, moves, token, id):    #position as tuple (y,x)
@@ -17,9 +17,6 @@ class Character:
     
     def update_position (self, y_position, x_position):
 
-        print (self.__class__)
-        print ('POSITION UPDATED')
-
         self.__class__.data[self.id].position = (y_position, x_position)
         self.__class__.data[self.id].token.position = (y_position, x_position)
 
@@ -27,9 +24,6 @@ class Character:
     def rearrange_ids (self):
 
         for character in self.__class__.data:
-
-            print (self.__class__)
-            print (self.id)
 
             if character.id > self.id:
 
@@ -107,7 +101,7 @@ class Player(Character):
 class Monster(Character):
 
     data = list()
-    blueprint_ids = ['M']
+    #blueprint_ids = ['M']
 
     def __init__(self, position, moves, token, id):
         super().__init__(position, moves, token, id)
@@ -138,7 +132,6 @@ class Monster(Character):
 
     def assess_path_direct(self):
 
-        print('ASSES PATH DIRECT')
         target = self.find_closest_player() #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
 
         path = list()
@@ -148,32 +141,27 @@ class Monster(Character):
         for moves in range (self.moves):
 
             #CHECKS WHICH DIRECION IS THE PLAYER AND CHECKS IF TILES ARE FREE
-            if target.position[0] < position[0] and self.goes_through(self.dungeon.get_tile(position[0] -1, position[1])):
+            if target.position[0] < position[0] and self.goes_through(self.dungeon.get_tile((position[0] -1, position[1]))):
                 
                 position = (position[0] -1, position [1])
                 path.append(position)
             
-            elif target.position[0] > position[0] and self.goes_through(self.dungeon.get_tile(position[0] +1, position[1])):
+            elif target.position[0] > position[0] and self.goes_through(self.dungeon.get_tile((position[0] +1, position[1]))):
                 
                 position = (position[0] +1, position [1])
                 path.append(position)
             
-            elif target.position[1] < position[1] and self.goes_through(self.dungeon.get_tile(position[0], position[1] - 1)):
+            elif target.position[1] < position[1] and self.goes_through(self.dungeon.get_tile((position[0], position[1] - 1))):
  
                 position = (position[0],position [1]-1)
                 path.append(position)
             
-            elif target.position[1] > position[1] and self.goes_through(self.dungeon.get_tile(position[0], position[1] + 1)):
+            elif target.position[1] > position[1] and self.goes_through(self.dungeon.get_tile((position[0], position[1] + 1))):
                 
                 position = (position[0], position[1]+1)
                 path.append(position)
-
-        
-        print (f'PATH BEFORE CHECK FREE LANDING: {path}')
         
         path = self.check_free_landing(path)
-
-        print (f'PATH AFTER CHECK FREE LANDING: {path}')
         
         if len(path) == 0:
             path = [self.position]
@@ -199,7 +187,7 @@ class Monster(Character):
         
             for token_kind in self.cannot_share_tile_with:
         
-                if len(path)>0 and self.dungeon.get_tile(path[-1][0], path[-1][1]).has_token(token_kind):
+                if len(path)>0 and self.dungeon.get_tile(path[-1]).has_token(token_kind):
 
                     path.remove(position)
 

@@ -28,7 +28,7 @@ class SceneryToken(Rectangle):
     def __init__(self, position, kind, dungeon_instance, **kwargs):
         super().__init__(**kwargs)
 
-        self.kind = kind    #defines if monster, player, wall, etc.
+        self.kind = kind    #defines if wall, shovel, etc.
         self.position = position
         self.dungeon = dungeon_instance
 
@@ -36,10 +36,11 @@ class SceneryToken(Rectangle):
 class CharacterToken(Ellipse):
 
     
-    def __init__(self, position, kind, dungeon_instance, character, **kwargs):
+    def __init__(self, position, kind, species, dungeon_instance, character, **kwargs):
         super().__init__(**kwargs)
 
         self.kind = kind    #defines if monster, player, wall, etc.
+        self.species = species
         self.position = position
         self.dungeon = dungeon_instance
         self.character = character      #links token with character object
@@ -71,11 +72,10 @@ class CharacterToken(Ellipse):
     
     def move_monster(self):
 
-        print(self.position)
-        self.start = self.dungeon.get_tile(self.position[0], self.position[1])
+        self.start = self.dungeon.get_tile(self.position)
 
         self.path = self.character.assess_path_direct()
-        self.goal = self.dungeon.get_tile(self.path[-1][0], self.path[-1][1])
+        self.goal = self.dungeon.get_tile(self.path[-1])
 
         self.slide(self.path)
 
@@ -85,7 +85,7 @@ class CharacterToken(Ellipse):
             
         next_position = path.pop(0)
 
-        next_pos = self.dungeon.get_tile(next_position[0],next_position[1]).pos
+        next_pos = self.dungeon.get_tile(next_position).pos
 
         if isinstance(self.character, classes.Player):  #monsters always complete movement.
         
@@ -140,16 +140,16 @@ class CharacterToken(Ellipse):
         if end_tile.token and isinstance(self.character, classes.Monster):
             end_tile.monster_token = self
         else:
-            #print ('RIGHT UPDATE')
+
             end_tile.token = self
 
         # IF SECONDARY SLOT OCCUPIED IN START TILE, IT IS SET TO NONE. MAIN SLOT REMAINS UNTOUCHED
         if start_tile.monster_token:
 
-            #('WRONG UPDATE')
             start_tile.monster_token = None
+        
         else:
-            ('RIGHT UPDATE')
+
             start_tile.token = None
 
     
@@ -227,7 +227,7 @@ class Tile(Button):
 
             start_position = (active_character.position[0], active_character.position[1])
         
-            start_tile = self.dungeon.get_tile(start_position[0], start_position[1])
+            start_tile = self.dungeon.get_tile(start_position)
 
             start_tile.token.move_player(start_tile, self)
             
@@ -245,7 +245,7 @@ class Tile(Button):
             
         player = self.dungeon.game.active_character
         
-        path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position[0], player.position[1]), self, ('wall', 'monster'))
+        path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position), self, ('wall', 'monster'))
 
         if self.has_token('player'):
 
@@ -355,18 +355,22 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
     def generate_blueprint (self, height, width):
 
-        dungeon_blueprint = utils.create_map(height, width)
+        self.blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(dungeon_blueprint,'M', 6, (0,0))
-        utils.place_single_items(dungeon_blueprint,'%', 1, (3,3))
-        utils.place_single_items(dungeon_blueprint,'o', 0)
-        utils.place_single_items(dungeon_blueprint,' ', 0)
+        utils.place_single_items(self.blueprint,'R', 2, (0,0))  #rats
+        utils.place_single_items(self.blueprint,'H', 6, (0,0))  #hellhound
+        utils.place_single_items(self.blueprint,'%', 1, (3,3))
+        utils.place_single_items(self.blueprint,'o', 5)
+        utils.place_single_items(self.blueprint,' ', 0)
 
-        for key,value in {'M': 0, '#': 0.6, 'p': 0.1, 'x': 0.1, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.3, 'p': 0.03, 'x': 0.03, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
-            utils.place_items (dungeon_blueprint, item=key, frequency=value)
+            utils.place_items (self.blueprint, item=key, frequency=value)
 
-        self.blueprint = dungeon_blueprint
+        
+        for y in range (len(self.blueprint)):
+                print (*self.blueprint[y])
+    
     
 
     def allocate_tokens (self):
@@ -380,9 +384,13 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                     self.place_tokens(tile, 'player')
                         
 
-                elif self.blueprint [tile.row][tile.col] == 'M':
+                elif self.blueprint [tile.row][tile.col] == 'R':
                         
-                    self.place_tokens(tile, 'monster')
+                    self.place_tokens(tile, 'monster', 'rat')
+
+                elif self.blueprint [tile.row][tile.col] == 'H':
+                        
+                    self.place_tokens(tile, 'monster', 'hound')
 
                     
                 elif self.blueprint [tile.row][tile.col] == '#':
@@ -405,10 +413,12 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                     self.place_tokens(tile, 'gem')
 
 
-    def place_tokens(self, tile, token_kind):
+    def place_tokens(self, tile, token_kind, token_species = None):
 
-        
-        token_source = token_kind + 'token.png'
+        if token_species:
+            token_source = token_species + 'token.png'
+        else:
+            token_source = token_kind + 'token.png'
         
         #PLACE CHARACTERS
         if self.blueprint [tile.row][tile.col] in classes.Character.blueprint_ids:
@@ -416,6 +426,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
             tile.token = CharacterToken(source = token_source,
                                  position = (tile.row, tile.col),  
                                  kind = token_kind,
+                                 species = token_species,
                                  dungeon_instance = self,
                                  character = None,
                                  pos = tile.pos,
@@ -432,7 +443,17 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                                      health = 3)
 
             elif token_kind == 'monster':
-                character = classes.Monster(position = (tile.row, tile.col), 
+
+                if token_species == 'rat':
+                
+                    character = classes.Monster(position = (tile.row, tile.col), 
+                                      moves = 3,
+                                      token = tile.token,
+                                      id = len(classes.Monster.data))   #create monster object
+                
+                elif token_species == 'hound':
+                
+                    character = classes.Monster(position = (tile.row, tile.col), 
                                       moves = 3,
                                       token = tile.token,
                                       id = len(classes.Monster.data))   #create monster object
@@ -468,11 +489,11 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                         tile.disabled = False
 
     
-    def get_tile(self, row, col):
+    def get_tile(self, position):
 
         for tile in self.children:
 
-            if tile.row == row and tile.col == col:
+            if tile.position == position:
                 
                 return tile
 
@@ -570,16 +591,10 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             
             self.turn = not self.turn   #turn changes
 
-            #print ('TURN CHANGED. NOW MOVES ID')
-            #print (self.turn)
-            #print (self.active_character_id)
-
         
         else: 
             
             self.active_character_id += 1       # next character on list moves
-            #print ('NOW MOVES ID')
-            #print (self.active_character_id)
 
 
     def on_turn (self, *args):

@@ -117,7 +117,6 @@ class CharacterToken(Ellipse):
                 
                 self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
                 
-                print (self.goal.row, self.goal.col)
                 self.character.update_position(self.goal.row, self.goal.col)
 
                 if isinstance(self.character, classes.Player) and self.character.remaining_moves > 0:
@@ -136,8 +135,7 @@ class CharacterToken(Ellipse):
 
     def update_on_tiles(self, start_tile, end_tile):
 
-        print (start_tile.position, end_tile.position)
-        print (start_tile, end_tile)
+
         #IF END_TILE OCCUPIED, MONSTERTOKEN IS STORED TO SPECIAL TOKEN SLOT
         if end_tile.token and isinstance(self.character, classes.Monster):
             end_tile.monster_token = self

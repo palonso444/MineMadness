@@ -21,6 +21,7 @@ class Character:
         print ('POSITION UPDATED')
 
         self.__class__.data[self.id].position = (y_position, x_position)
+        self.__class__.data[self.id].token.position = (y_position, x_position)
 
     
     def rearrange_ids (self):

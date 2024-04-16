@@ -357,12 +357,12 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         dungeon_blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(dungeon_blueprint,'M', 1, (0,0))
+        utils.place_single_items(dungeon_blueprint,'M', 6, (0,0))
         utils.place_single_items(dungeon_blueprint,'%', 1, (3,3))
         utils.place_single_items(dungeon_blueprint,'o', 0)
         utils.place_single_items(dungeon_blueprint,' ', 0)
 
-        for key,value in {'M': 0, '#': 0, 'p': 0, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.6, 'p': 0.1, 'x': 0.1, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (dungeon_blueprint, item=key, frequency=value)
 
@@ -433,7 +433,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
             elif token_kind == 'monster':
                 character = classes.Monster(position = (tile.row, tile.col), 
-                                      moves = 1,
+                                      moves = 3,
                                       token = tile.token,
                                       id = len(classes.Monster.data))   #create monster object
             

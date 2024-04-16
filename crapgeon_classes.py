@@ -113,33 +113,7 @@ class Monster(Character):
         super().__init__(position, moves, token, id)
         self.kind = 'monster'
         self.blocked_by = ('wall')
-        self.no_share_with = ('wall', 'monster')
-
-
-    def assess_move_direct(self):
-
-
-        #target = self.find_closest_player() #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
-        
-        #for move in range (self.moves):
-
-            #CHECKS WHICH DIRECION IS THE PLAYER AND CHECKS IF TILES ARE FREE
-            #if target.position[0] < self.position[0] and self.can_go_through(self.dungeon.get_tile(self.position[0] -1, self.position [1])):
-                
-                #self.position = (self.position[0] -1, self.position [1])
-            
-            #elif target.position[0] > self.position[0] and self.can_go_through(self.dungeon.get_tile(self.position[0] +1, self.position [1])):
-                
-                #self.position = (self.position[0] +1, self.position [1])
-            
-            #elif target.position[1] < self.position[1] and self.can_go_through(self.dungeon.get_tile(self.position[0], self.position [1] - 1)):
- 
-                #self.position = (self.position[0],self.position [1]-1)
-            
-            #elif target.position[1] > self.position[1] and self.can_go_through(self.dungeon.get_tile(self.position[0], self.position [1] + 1)):
-                
-                #self.position = (self.position[0], self.position [1]+1)
-        pass
+        self.cannot_share_tile_with = ('wall', 'monster', 'player')
 
     
     def find_closest_player(self):
@@ -160,17 +134,6 @@ class Monster(Character):
             if distance == shortest_distance:
 
                 return Player.data[distances.index(distance)]
-            
-
-    def can_go_through(self, tile):
-        
-        if tile.token and tile.token.kind in self.blocked_by:
-            return False
-        if tile.monster_token and tile.monster_token.kind in self.blocked_by:
-            return False
-        
-        return True
-    
 
 
     def assess_path_direct(self):
@@ -179,50 +142,65 @@ class Monster(Character):
         target = self.find_closest_player() #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
 
         path = list()
-        
-        for move in range (self.moves):
 
-            #rem_moves = self.moves - move
+        position = self.position
+        
+        for moves in range (self.moves):
 
             #CHECKS WHICH DIRECION IS THE PLAYER AND CHECKS IF TILES ARE FREE
-            if target.position[0] < self.position[0] and self.goes_through(self.dungeon.get_tile(self.position[0] -1, self.position [1])):
+            if target.position[0] < position[0] and self.goes_through(self.dungeon.get_tile(position[0] -1, position[1])):
                 
-                path.append((self.position[0] -1, self.position [1]))
+                position = (position[0] -1, position [1])
+                path.append(position)
             
-            elif target.position[0] > self.position[0] and self.goes_through(self.dungeon.get_tile(self.position[0] +1, self.position [1])):
+            elif target.position[0] > position[0] and self.goes_through(self.dungeon.get_tile(position[0] +1, position[1])):
                 
-                path.append((self.position[0] +1, self.position [1]))
+                position = (position[0] +1, position [1])
+                path.append(position)
             
-            elif target.position[1] < self.position[1] and self.goes_through(self.dungeon.get_tile(self.position[0], self.position [1] - 1)):
+            elif target.position[1] < position[1] and self.goes_through(self.dungeon.get_tile(position[0], position[1] - 1)):
  
-                path.append((self.position[0],self.position [1]-1))
+                position = (position[0],position [1]-1)
+                path.append(position)
             
-            elif target.position[1] > self.position[1] and self.goes_through(self.dungeon.get_tile(self.position[0], self.position [1] + 1)):
+            elif target.position[1] > position[1] and self.goes_through(self.dungeon.get_tile(position[0], position[1] + 1)):
                 
-                path.append((self.position[0], self.position [1]+1))
+                position = (position[0], position[1]+1)
+                path.append(position)
 
-        print (path)
+        
+        print (f'PATH BEFORE CHECK FREE LANDING: {path}')
+        
+        path = self.check_free_landing(path)
 
+        print (f'PATH AFTER CHECK FREE LANDING: {path}')
+        
         if len(path) == 0:
-            path = [(self.position[0], self.position[1])]
+            path = [self.position]
 
         return path
     
 
     def goes_through(self, tile):
         
-        #if rem_moves > 1:
         
         if tile.token and tile.token.kind in self.blocked_by:
             return False
         if tile.monster_token and tile.monster_token.kind in self.blocked_by:
             return False
-        
-        #else:
-
-            #if tile.token and tile.token.kind in self.no_share_with:
-                #return False
-            #if tile.monster_token and tile.monster_token.kind in self.no_share_with:
-                #return False
                
         return True
+    
+    
+    def check_free_landing(self, path):
+
+        
+        for position in reversed(path):
+        
+            for token_kind in self.cannot_share_tile_with:
+        
+                if len(path)>0 and self.dungeon.get_tile(path[-1][0], path[-1][1]).has_token(token_kind):
+
+                    path.remove(position)
+
+        return path

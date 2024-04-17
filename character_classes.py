@@ -1,18 +1,16 @@
-
+from random import randint
 
 
 class Character:
 
-    blueprint_ids = ('%', 'R', 'H')
-
+    blueprint_ids = ('%', 'K', 'H', 'W')
     
-    def __init__(self, position, moves, token, id):    #position as tuple (y,x)
+    def __init__(self):    #position as tuple (y,x)
         
-        self.position = position
-        self.moves = moves
-        self.token = token
-        self.dungeon = self.token.dungeon
-        self.id = id
+        self.position = None
+        self.token = None
+        self.dungeon = None
+        self.id = None
 
     
     def update_position (self, y_position, x_position):
@@ -33,17 +31,10 @@ class Character:
 class Player(Character):
 
     data = list ()
-    blueprint_ids = ['%']
 
-    def __init__(self, position, moves, token, id, health, shovels = 0, weapons = 0, gems = 0):
-        super().__init__(position, moves, token, id)
+    def __init__(self):
 
         self.remaining_moves = 0
-        self.health = health
-        self.shovels = shovels
-        self.weapons = weapons
-        self.gems = gems
-
     
     
     def get_movement_range(self, dungeon_layout):   #TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
@@ -95,19 +86,25 @@ class Player(Character):
                     get_lateral_range(self, self.position[0] + move, side_move, mov_range, dungeon_layout)
         
         
-        return mov_range
+        return mov_range   
 
-    
+
+class Vane(Player):
+
+    def __init__(self):
+        self.health = 3
+        self.moves = 4
+        self.shovels = 2
+        self.weapons = 2
+        self.gems = 0
+
+
 class Monster(Character):
 
     data = list()
-    #blueprint_ids = ['M']
 
-    def __init__(self, position, moves, token, id):
-        super().__init__(position, moves, token, id)
+    def __init__(self):
         self.kind = 'monster'
-        self.blocked_by = ('wall')
-        self.cannot_share_tile_with = ('wall', 'monster', 'player')
 
     
     def find_closest_player(self):
@@ -138,7 +135,7 @@ class Monster(Character):
 
         position = self.position
         
-        for moves in range (self.moves):
+        for move in range (self.moves):
 
             #CHECKS WHICH DIRECION IS THE PLAYER AND CHECKS IF TILES ARE FREE
             if target.position[0] < position[0] and self.goes_through(self.dungeon.get_tile((position[0] -1, position[1]))):
@@ -161,23 +158,82 @@ class Monster(Character):
                 position = (position[0], position[1]+1)
                 path.append(position)
         
-        path = self.check_free_landing(path)
+        path = self.trim_path(path)
+
+        return path
+    
+
+    def assess_path_random(self):
+
+        path = list()
+
+        position = self.position
         
-        if len(path) == 0:
-            path = [self.position]
+        for move in range (self.moves):
+        
+            trigger = randint(1,10)
+
+            if trigger <= self.motility:
+
+                direction = randint(1,4) #1: NORTH, 2: EAST, 3: SOUTH, 4: WEST
+
+                if direction == 1:
+
+                    if self.goes_through(self.dungeon.get_tile((position[0] -1, position[1]))):
+                    
+                        position = (position[0] -1, position [1])
+                        path.append(position)
+
+                    else:
+                        move -=1
+
+                elif direction == 2:
+                    
+                    if self.goes_through(self.dungeon.get_tile((position[0], position[1] +1))):
+                    
+                        position = (position[0], position[1]+1)
+                        path.append(position)
+
+                    else:
+                        move -=1
+
+                elif direction == 3:
+                    
+                    if self.goes_through(self.dungeon.get_tile((position[0] +1, position[1]))):
+                    
+                        position = (position[0] +1, position [1])
+                        path.append(position)
+
+                    else:
+                        move -=1
+
+                elif direction == 4:
+                    
+                    if self.goes_through(self.dungeon.get_tile((position[0], position[1] -1))):
+                    
+                        position = (position[0],position [1]-1)
+                        path.append(position)
+
+                    else:
+                        move -=1
+
+        path = self.trim_path(path)
 
         return path
     
 
     def goes_through(self, tile):
+
+        if tile:
         
-        
-        if tile.token and tile.token.kind in self.blocked_by:
-            return False
-        if tile.monster_token and tile.monster_token.kind in self.blocked_by:
-            return False
+            if tile.token and tile.token.kind in self.blocked_by:
+                return False
+            if tile.monster_token and tile.monster_token.kind in self.blocked_by:
+                return False
                
-        return True
+            return True
+        
+        return False
     
     
     def check_free_landing(self, path):
@@ -192,3 +248,78 @@ class Monster(Character):
                         path.remove(position)
 
         return path
+    
+
+    def trim_path(self, path):
+
+        path = self.check_free_landing(path)
+        
+        if len(path) == 0:
+            path = [self.position]
+
+        return path
+    
+
+
+class Kobold(Monster):
+    
+    def __init__(self):
+        self.moves = 4
+        self.blocked_by = ('wall', 'player')
+        self.cannot_share_tile_with = ('wall', 'monster', 'player')
+        self.motility = 8     #from 1 to 10. Rellevant in monsters with random movement
+
+
+    def move(self):
+
+        return self.assess_path_random()
+
+
+class HellHound(Monster):
+    
+    def __init__(self):
+        self.moves = 5
+        self.blocked_by = ('wall', 'player')
+        self.cannot_share_tile_with = ('wall', 'monster', 'player')
+
+
+    def move(self):
+
+        return self.assess_path_direct()
+
+
+class DepthsWisp(Monster):
+
+    def __init__(self):
+        self.moves = 3
+        self.blocked_by = ()
+        self.cannot_share_tile_with = ('monster', 'player')
+
+
+    def move(self):
+
+        return self.assess_path_direct()
+    
+
+class RockElemental(Monster):
+    pass
+
+    #moves randomly and slowly but extremely strong if hits
+
+
+class NightMare(Monster):
+    pass
+
+    #chases the player. Fast and strong
+
+
+class GreedyGnome(Monster):
+    pass
+
+    #chases the nearest gold and stays on top of it. Intermediate strength
+
+
+class DarkDwarf(Monster):
+    pass
+
+    #chases the player. Intermediate strength

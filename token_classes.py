@@ -56,7 +56,8 @@ class CharacterToken(Ellipse):
 
         self.start = self.dungeon.get_tile(self.position)
 
-        self.path = self.character.assess_path_direct()
+        self.path = self.character.move()
+        print (self.path)
         self.goal = self.dungeon.get_tile(self.path[-1])
 
         self.slide(self.path)

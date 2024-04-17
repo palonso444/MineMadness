@@ -40,19 +40,21 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         self.blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(self.blueprint,'R', 2, (0,0))  #rats
-        utils.place_single_items(self.blueprint,'H', 6, (0,0))  #hellhound
-        utils.place_single_items(self.blueprint,'%', 1, (3,3))
-        utils.place_single_items(self.blueprint,'o', 5)
+        utils.place_single_items(self.blueprint,'K', 2)  #rats
+        utils.place_single_items(self.blueprint,'H', 2)  #hellhound
+        utils.place_single_items(self.blueprint,'W', 2)  #djinn
+
+        utils.place_single_items(self.blueprint,'%', 1, (2,2))
+        utils.place_single_items(self.blueprint,'o', 0)
         utils.place_single_items(self.blueprint,' ', 0)
 
-        for key,value in {'M': 0, '#': 0.3, 'p': 0.03, 'x': 0.03, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.3, 'p': 0, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 
         
-        for y in range (len(self.blueprint)):
-                print (*self.blueprint[y])
+        #for y in range (len(self.blueprint)):
+                #print (*self.blueprint[y])
     
     
 
@@ -67,13 +69,17 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                     self.place_tokens(tile, 'player')
                         
 
-                elif self.blueprint [tile.row][tile.col] == 'R':
+                elif self.blueprint [tile.row][tile.col] == 'K':
                         
-                    self.place_tokens(tile, 'monster', 'rat')
+                    self.place_tokens(tile, 'monster', 'kobold')
 
                 elif self.blueprint [tile.row][tile.col] == 'H':
                         
                     self.place_tokens(tile, 'monster', 'hound')
+
+                elif self.blueprint [tile.row][tile.col] == 'W':
+                        
+                    self.place_tokens(tile, 'monster', 'wisp')
 
                     
                 elif self.blueprint [tile.row][tile.col] == '#':
@@ -85,7 +91,6 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
                     self.place_tokens(tile, 'shovel')
 
-                
                 elif self.blueprint [tile.row][tile.col] == 'x':
 
                     self.place_tokens(tile, 'weapon')
@@ -117,32 +122,30 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         
         
             if token_kind == 'player':
-                character = characters.Player (position = (tile.row, tile.col), #create player object
-                                     moves = 4,
-                                     token = tile.token,
-                                     id = len(characters.Player.data),
-                                     shovels = 1,
-                                     weapons = 1,
-                                     health = 3)
+                
+                character = characters.Vane()
 
+            
             elif token_kind == 'monster':
 
-                if token_species == 'rat':
+                if token_species == 'kobold':
                 
-                    character = characters.Monster(position = (tile.row, tile.col), 
-                                      moves = 3,
-                                      token = tile.token,
-                                      id = len(characters.Monster.data))   #create monster object
+                    character = characters.Kobold()
                 
                 elif token_species == 'hound':
                 
-                    character = characters.Monster(position = (tile.row, tile.col), 
-                                      moves = 3,
-                                      token = tile.token,
-                                      id = len(characters.Monster.data))   #create monster object
-            
+                    character = characters.HellHound()
 
-            character.__class__.data.append (character)   #create monster to monsters list
+                elif token_species == 'wisp':
+                
+                    character = characters.DepthsWisp()
+            
+            character.position = (tile.row, tile.col)   #Character attributes initialized here
+            character.token = tile.token
+            character.dungeon = self
+            character.id = len(character.__class__.data)
+            character.__class__.data.append (character)
+            
             tile.token.character = character
 
 

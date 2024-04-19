@@ -49,7 +49,7 @@ class Tile(Button):
             
         player = self.dungeon.game.active_character
         
-        path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position), self, ('wall', 'monster'))
+        path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position), self, (player.blocked_by))
 
         if self.has_token('player'):
 

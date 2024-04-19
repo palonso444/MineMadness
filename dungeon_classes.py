@@ -40,15 +40,16 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         self.blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(self.blueprint,'K', 2)  #rats
-        utils.place_single_items(self.blueprint,'H', 2)  #hellhound
-        utils.place_single_items(self.blueprint,'W', 2)  #djinn
+        utils.place_single_items(self.blueprint,'K', 0)  #rats
+        utils.place_single_items(self.blueprint,'H', 0)  #hellhound
+        utils.place_single_items(self.blueprint,'W', 0)  #wisp
+        utils.place_single_items(self.blueprint,'N', 7)  #nightmare
 
-        utils.place_single_items(self.blueprint,'%', 1, (2,2))
+        utils.place_single_items(self.blueprint,'%', 1)
         utils.place_single_items(self.blueprint,'o', 0)
         utils.place_single_items(self.blueprint,' ', 0)
 
-        for key,value in {'M': 0, '#': 0.3, 'p': 0, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.4, 'p': 0.05, 'x': 0.05, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 
@@ -66,7 +67,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
                 if self.blueprint [tile.row][tile.col] == '%':
 
-                    self.place_tokens(tile, 'player')
+                    self.place_tokens(tile, 'player', 'vane')
                         
 
                 elif self.blueprint [tile.row][tile.col] == 'K':
@@ -80,6 +81,10 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                 elif self.blueprint [tile.row][tile.col] == 'W':
                         
                     self.place_tokens(tile, 'monster', 'wisp')
+
+                elif self.blueprint [tile.row][tile.col] == 'N':
+                        
+                    self.place_tokens(tile, 'monster', 'nightmare')
 
                     
                 elif self.blueprint [tile.row][tile.col] == '#':
@@ -103,42 +108,36 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
     def place_tokens(self, tile, token_kind, token_species = None):
 
-        if token_species:
-            token_source = token_species + 'token.png'
-        else:
-            token_source = token_kind + 'token.png'
+
+        if token_kind == 'player' or token_kind == 'monster':
         
-        #PLACE CHARACTERS
-        if self.blueprint [tile.row][tile.col] in characters.Character.blueprint_ids:
-        
-            tile.token = tokens.CharacterToken(source = token_source,
-                                 position = (tile.row, tile.col),  
+            if token_kind == 'player':
+
+                if token_species == 'vane':
+                    character = characters.Vane()
+
+            
+            elif token_kind == 'monster':
+
+                if token_species == 'kobold':
+                    character = characters.Kobold()
+                
+                elif token_species == 'hound':
+                    character = characters.HellHound()
+
+                elif token_species == 'wisp':
+                    character = characters.DepthsWisp()
+
+                elif token_species == 'nightmare':
+                    character = characters.NightMare()
+
+            tile.token = tokens.CharacterToken(position = (tile.row, tile.col),  
                                  kind = token_kind,
                                  species = token_species,
                                  dungeon_instance = self,
                                  character = None,
                                  pos = tile.pos,
                                  size = tile.size)
-        
-        
-            if token_kind == 'player':
-                
-                character = characters.Vane()
-
-            
-            elif token_kind == 'monster':
-
-                if token_species == 'kobold':
-                
-                    character = characters.Kobold()
-                
-                elif token_species == 'hound':
-                
-                    character = characters.HellHound()
-
-                elif token_species == 'wisp':
-                
-                    character = characters.DepthsWisp()
             
             character.position = (tile.row, tile.col)   #Character attributes initialized here
             character.token = tile.token
@@ -149,11 +148,9 @@ class DungeonLayout(GridLayout):    #initialized in kv file
             tile.token.character = character
 
 
-        #PLACE SCENERY
         else:
 
-            tile.token = tokens.SceneryToken(source = token_source,
-                                 position = (tile.row, tile.col),  
+            tile.token = tokens.SceneryToken(position = (tile.row, tile.col),  
                                  kind = token_kind,
                                  dungeon_instance = self,
                                  pos = tile.pos,
@@ -184,52 +181,63 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                 return tile
 
     
-    def scan(self, scenery):    #pass scenery as tuple of token.kinds to look for (e.g. ('wall', 'shovel'))
+    def scan(self, scenery, exclude = False):    #pass scenery as tuple of token.kinds to look for (e.g. ('wall', 'shovel'))
 
         
         found_tiles = set()
+
+        if not exclude:
         
-        for tile in self.children:
+            for tile in self.children:
 
-            if tile.token and tile.token.kind in scenery:
+                if tile.token and tile.token.kind in scenery:
 
-                found_tiles.add((tile.row, tile.col))
+                    found_tiles.add(tile.position)
 
-            elif tile.monster_token and tile.monster_token.kind in scenery:
+                elif tile.monster_token and tile.monster_token.kind in scenery:
 
-                found_tiles.add((tile.row, tile.col))
+                    found_tiles.add(tile.position)
+
+        if exclude:
+
+            for tile in self.children:
+
+                if not tile.token or tile.token.kind not in scenery:
+
+                    found_tiles.add(tile.position)
+
+                if not tile.monster_token or tile.monster_token.kind not in scenery:
+
+                    found_tiles.add(tile.position)
 
         
         return found_tiles
 
 
-    def find_shortest_path(self, start_tile, end_tile, exclude = tuple()):     #USE WHEN GETTING MOVEMENT RANGE 
-                                                            #(if shortest path longer than moves, do not activate tile)
-        
-        start_tile_pos, end_tile_pos = (start_tile.row, start_tile.col), (end_tile.row, end_tile.col)
+    def find_shortest_path(self, start_tile, end_tile, exclude = tuple()):
+                                                            
 
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        queue = deque([(start_tile_pos, [])]) # start_tile_pos is not included in the path
-        excluded_tiles = set()
-        
-        for position in self.scan(exclude):  #scan dungeon for occupied tiles
-            excluded_tiles.add(position)
-        
-        excluded_tiles.add(start_tile_pos)
+        queue = deque([(start_tile.position, [])]) # start_tile_pos is not included in the path
+
+        excluded_tiles = self.scan(exclude)
+        excluded_tiles.add(start_tile.position)
 
         while queue:
   
-            current_pos, path =  queue.popleft()
+            current_position, path =  queue.popleft()
+
+            if current_position == end_tile.position:
+
+                return path
             
             for direction in directions:
 
-                row, col = current_pos[0] + direction[0], current_pos[1] + direction[1] # explore one step in all 4 directions
+                row, col = current_position[0] + direction[0], current_position[1] + direction[1] # explore one step in all 4 directions
 
-                if 0 <= row < self.rows and 0 <= col < self.cols and (row, col) not in excluded_tiles:
+                if 0 <= row < self.rows and 0 <= col < self.cols: 
                     
-                    excluded_tiles.add((row, col))
-                    queue.append(((row,col), path + [(row,col)]))
-
-            if current_pos == end_tile_pos:
-
-                return path
+                    if (row, col) not in excluded_tiles or (row,col) == end_tile.position:
+    
+                        excluded_tiles.add((row, col))
+                        queue.append(((row,col), path + [(row,col)]))

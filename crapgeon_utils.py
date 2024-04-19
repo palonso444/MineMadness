@@ -92,7 +92,7 @@ def place_single_items(map, item, number_of_items = 1, coord = None):
 #place items on map in an approximate way. Pass frequency value from 0 (no items) to 1 (map full of items).
 #If place coord are occupied, new item overwrites placed item unless placed item is passed as 'protected'. Default: player, exit and coins.
 
-def place_items (map, item, frequency = 0.1, protected = ('%', ' ', 'o', 'W', 'K', 'H')): #REMOVE WKH
+def place_items (map, item, frequency = 0.1, protected = ('%', ' ', 'o', 'W', 'K', 'H', 'N')): #REMOVE WKH
 
 	number_of_items = (len(map)* len (map[0])) * frequency
 

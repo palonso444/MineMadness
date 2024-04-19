@@ -13,6 +13,7 @@ class SceneryToken(Rectangle):
         self.kind = kind    #defines if wall, shovel, etc.
         self.position = position
         self.dungeon = dungeon_instance
+        self.source = self.kind + 'token.png'
 
 
 class CharacterToken(Ellipse):
@@ -26,7 +27,8 @@ class CharacterToken(Ellipse):
         self.position = position
         self.dungeon = dungeon_instance
         self.character = character      #links token with character object
-        
+        self.source = self.species + 'token.png'
+
         self.start = None   #all defined when token is moved by move()
         self.goal = None    
         self.path = None    
@@ -34,7 +36,6 @@ class CharacterToken(Ellipse):
 
     def move_player (self, start_tile, end_tile):
 
-        
         if start_tile == end_tile:     #if character stays in place
             
             self.dungeon.game.next_character()
@@ -45,7 +46,7 @@ class CharacterToken(Ellipse):
 
             self.goal = end_tile
             
-            self.path = self.dungeon.find_shortest_path(self.start, self.goal, ('wall', 'monster'))
+            self.path = self.dungeon.find_shortest_path(self.start, self.goal, (self.character.blocked_by))
 
             self.dungeon.activate_which_tiles()     #tiles desactivated while moving
             
@@ -57,7 +58,7 @@ class CharacterToken(Ellipse):
         self.start = self.dungeon.get_tile(self.position)
 
         self.path = self.character.move()
-        print (self.path)
+
         self.goal = self.dungeon.get_tile(self.path[-1])
 
         self.slide(self.path)
@@ -98,9 +99,11 @@ class CharacterToken(Ellipse):
 
                         self.goal.clear_token(self.character)
                 
-                self.update_on_tiles(self.start, self.goal) #updates tile.token of start and goal
+                if self.start != self.goal:
                 
-                self.character.update_position(self.goal.row, self.goal.col)
+                    self.update_on_tiles(self.start, self.goal) #updates tile.token
+                
+                    self.character.update_position(self.goal.row, self.goal.col)
 
                 if isinstance(self.character, characters.Player) and self.character.remaining_moves > 0:
                     
@@ -118,9 +121,10 @@ class CharacterToken(Ellipse):
 
     def update_on_tiles(self, start_tile, end_tile):
 
-
+        
         #IF END_TILE OCCUPIED, MONSTERTOKEN IS STORED TO SPECIAL TOKEN SLOT
         if end_tile.token and isinstance(self.character, characters.Monster):
+
             end_tile.monster_token = self
         else:
 

@@ -75,7 +75,7 @@ class CharacterToken(Ellipse):
         
             self.character.remaining_moves -= 1
         
-        animation = Animation (pos = next_pos, duration = 0.3)
+        animation = Animation (pos = next_pos, duration = 0.2)
         
         animation.bind (on_complete = self.on_slide_completed)
         

@@ -72,6 +72,7 @@ class Tile(Button):
 
     def has_token(self, token_kind):
 
+        
         if self.monster_token and self.monster_token.kind == token_kind:
             return True
         

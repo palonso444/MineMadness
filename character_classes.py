@@ -1,5 +1,7 @@
 from random import randint
 
+import crapgeon_utils as utils
+
 
 class Character:
     
@@ -163,79 +165,50 @@ class Monster(Character):
 
                     closest_player = player_path
 
-        
         return player_path
 
 
     def assess_path_smart(self):
-
-        '''target = self.find_closest_reachable_player()[0] #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
-        target_tile = self.dungeon.get_tile(target.position)
+        
+        target = self.find_closest_reachable_player()[0]
+        player_tile = self.dungeon.get_tile(target.position)
         
         paths = list()
         
-        #scanned = self.dungeon.scan(self.cannot_share_tile_with, exclude = True)   #look for free tiles in all dungeon
-
-        scanned = self.dungeon.scan(scenery = (), exclude = True)
-
+        #look which tiles are free in the dungeon
+        scanned = self.dungeon.scan(self.cannot_share_tile_with, exclude = True)
         
-        #FIND PATHS FROM PLAYER TO ALL FREE TILES AND MAKE A LIST OF PATHS
-        for position in scanned:
+        #find paths from player to all free tiles scanned
+        for tile_position in scanned:
 
-            scanned_tile = self.dungeon.get_tile(position)
-            path = self.dungeon.find_shortest_path(target_tile, scanned_tile, self.blocked_by)
+            scanned_tile = self.dungeon.get_tile(tile_position)
+            path = self.dungeon.find_shortest_path(player_tile, scanned_tile, self.blocked_by)
 
             if path:
+
                 paths.append(path)
-
-
-        #FIND SHORTEST PATH LENGTH IN LIST
-        shortest_path_length = None
-
-        for path in paths:
-
-            if not shortest_path_length or len(path) < shortest_path_length:
-                shortest_path_length = len(path)
-
-
-        shortest_paths = list()
         
-        for path in paths:
+        #sort paths from player to free tiles from shortest to longest
+        sorted_paths = sorted(paths, key=len)
 
-            if len(path) == shortest_path_length:
-                shortest_paths.append(path)
+        shortest_possible_path = None
+        for path in sorted_paths:
+            #check if monster can reach end_tile of each of sorted paths
+            possible_path = self.dungeon.find_shortest_path(self.token.start, self.dungeon.get_tile(path[-1]), self.blocked_by)
 
+            if possible_path:
+            
+                player_to_monster = self.dungeon.find_shortest_path(self.token.start, player_tile, self.blocked_by)
+                player_to_possible_path_end = self.dungeon.find_shortest_path(player_tile, self.dungeon.get_tile(possible_path[-1]), self.blocked_by)
+                #if end tile closer to player than monster is right now, take path to this end tile
+                if len(player_to_possible_path_end) < len(player_to_monster):
 
-        possible_paths_to_player = list ()
+                    shortest_possible_path = possible_path
+                    break
         
-        start = self.dungeon.get_tile(self.position)
-        
-        for path in shortest_paths:
-
-            goal = self.dungeon.get_tile(path[-1])
-
-            path = self.dungeon.find_shortest_path(start, goal, self.blocked_by)
-
-            possible_paths_to_player.append(path)
-
-        
-        shortest_path = None
-
-        for path in possible_paths_to_player:
-
-            if not shortest_path or len(path) < len(shortest_path):
-                shortest_path = path        
-        
-        
-        shortest_path = self.trim_path(shortest_path)
-'''
-        
-        path = self.find_closest_reachable_player()[1] #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
-
-        path = self.trim_path(path)
+        path = self.trim_path(shortest_possible_path)
         
         while len(path) > self.moves:
-
             path.pop()
 
         return path
@@ -411,7 +384,7 @@ class RockElemental(Monster):
 class NightMare(Monster):
     
     def __init__(self):
-        self.moves = 15
+        self.moves = 100
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
         self.motility = None

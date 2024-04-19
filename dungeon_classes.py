@@ -43,13 +43,13 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         utils.place_single_items(self.blueprint,'K', 0)  #rats
         utils.place_single_items(self.blueprint,'H', 0)  #hellhound
         utils.place_single_items(self.blueprint,'W', 0)  #wisp
-        utils.place_single_items(self.blueprint,'N', 7)  #nightmare
+        utils.place_single_items(self.blueprint,'N', 14)  #nightmare
 
-        utils.place_single_items(self.blueprint,'%', 1)
+        utils.place_single_items(self.blueprint,'%', 1, (0,0))
         utils.place_single_items(self.blueprint,'o', 0)
         utils.place_single_items(self.blueprint,' ', 0)
 
-        for key,value in {'M': 0, '#': 0.4, 'p': 0.05, 'x': 0.05, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.5, 'p': 0.3, 'x': 0.3, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 
@@ -186,41 +186,38 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         
         found_tiles = set()
 
-        if not exclude:
+        excluded_tiles = set()
         
-            for tile in self.children:
+        for tile in self.children:
 
-                if tile.token and tile.token.kind in scenery:
+            for token in scenery:
 
-                    found_tiles.add(tile.position)
-
-                elif tile.monster_token and tile.monster_token.kind in scenery:
+                if not exclude and tile.has_token(token):
 
                     found_tiles.add(tile.position)
+
+                elif exclude and tile.has_token(token):
+
+                    excluded_tiles.add(tile)
 
         if exclude:
 
             for tile in self.children:
 
-                if not tile.token or tile.token.kind not in scenery:
+                if tile not in excluded_tiles:
 
                     found_tiles.add(tile.position)
 
-                if not tile.monster_token or tile.monster_token.kind not in scenery:
-
-                    found_tiles.add(tile.position)
-
-        
         return found_tiles
 
 
-    def find_shortest_path(self, start_tile, end_tile, exclude = tuple()):
+    def find_shortest_path(self, start_tile, end_tile, excluded = tuple()):
                                                             
 
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         queue = deque([(start_tile.position, [])]) # start_tile_pos is not included in the path
 
-        excluded_tiles = self.scan(exclude)
+        excluded_tiles = self.scan(excluded)
         excluded_tiles.add(start_tile.position)
 
         while queue:
@@ -241,3 +238,27 @@ class DungeonLayout(GridLayout):    #initialized in kv file
     
                         excluded_tiles.add((row, col))
                         queue.append(((row,col), path + [(row,col)]))
+
+    def find_closest_free_tiles(self, target_tile, cannot_share, blocked_by): #excluded tokens as tuple
+
+        paths = list()
+        
+        #look for free tiles in the dungeon
+        scanned = self.scan(cannot_share, exclude = True)  
+
+        
+        #find paths from player to all free tiles scanned
+        for tile_position in scanned:
+
+            scanned_tile = self.get_tile(tile_position)
+            path = self.find_shortest_path(target_tile, scanned_tile, blocked_by)
+
+            if path:
+
+                end_tile = self.get_tile(path[-1])
+
+                if not end_tile.monster_token:
+                
+                    if not end_tile.token or end_tile.token.kind not in self.cannot_share_tile_with:
+                        paths.append(path)
+        pass

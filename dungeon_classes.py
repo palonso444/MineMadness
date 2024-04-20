@@ -41,15 +41,15 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         self.blueprint = utils.create_map(height, width)
 
         utils.place_single_items(self.blueprint,'K', 0)  #rats
-        utils.place_single_items(self.blueprint,'H', 0)  #hellhound
+        utils.place_single_items(self.blueprint,'H', 7)  #hellhound
         utils.place_single_items(self.blueprint,'W', 0)  #wisp
-        utils.place_single_items(self.blueprint,'N', 14)  #nightmare
+        utils.place_single_items(self.blueprint,'N', 5)  #nightmare
 
         utils.place_single_items(self.blueprint,'%', 1, (0,0))
         utils.place_single_items(self.blueprint,'o', 0)
         utils.place_single_items(self.blueprint,' ', 0)
 
-        for key,value in {'M': 0, '#': 0.5, 'p': 0.3, 'x': 0.3, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.6, 'p': 0.1, 'x': 0.1, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 
@@ -238,27 +238,3 @@ class DungeonLayout(GridLayout):    #initialized in kv file
     
                         excluded_tiles.add((row, col))
                         queue.append(((row,col), path + [(row,col)]))
-
-    def find_closest_free_tiles(self, target_tile, cannot_share, blocked_by): #excluded tokens as tuple
-
-        paths = list()
-        
-        #look for free tiles in the dungeon
-        scanned = self.scan(cannot_share, exclude = True)  
-
-        
-        #find paths from player to all free tiles scanned
-        for tile_position in scanned:
-
-            scanned_tile = self.get_tile(tile_position)
-            path = self.find_shortest_path(target_tile, scanned_tile, blocked_by)
-
-            if path:
-
-                end_tile = self.get_tile(path[-1])
-
-                if not end_tile.monster_token:
-                
-                    if not end_tile.token or end_tile.token.kind not in self.cannot_share_tile_with:
-                        paths.append(path)
-        pass

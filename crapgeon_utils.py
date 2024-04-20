@@ -44,8 +44,13 @@ def are_nearby (item1, item2):	#check if two positions are nearby
 	return False
 		
 
+def distance(position1, position2):
 
-#create map surface
+        return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
+
+
+
+#creates map surface
 
 def create_map (height, width):
 

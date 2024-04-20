@@ -155,23 +155,22 @@ class Monster(Character):
             players_and_paths.append((player,path))
 
         
-        closest_player = None
+        closest_player_and_path = None
         
-        for player_path in players_and_paths:
+        for player_and_path in players_and_paths:
 
-            if player_path[1]:
+            if player_and_path[1]:
 
-                if not closest_player or len(closest_player[1]) > len(player_path[1]):
+                if not closest_player_and_path or len(closest_player_and_path[1]) > len(player_and_path[1]):
 
-                    closest_player = player_path
+                    closest_player_and_path = player_and_path
 
-        return player_path
+        return player_and_path
 
 
-    def assess_path_smart(self):
-        
-        target = self.find_closest_reachable_player()[0]
-        player_tile = self.dungeon.get_tile(target.position)
+    def find_accesses(self, target, smart = True):    #returns list of paths from target to free tiles, sorted shortest to longest
+
+        target_tile = self.dungeon.get_tile(target.position)
         
         paths = list()
         
@@ -182,8 +181,13 @@ class Monster(Character):
         for tile_position in scanned:
 
             scanned_tile = self.dungeon.get_tile(tile_position)
-            path = self.dungeon.find_shortest_path(player_tile, scanned_tile, self.blocked_by)
+            
+            if smart:   #smart creatures do not go to places where there is no direct path to player
+                path = self.dungeon.find_shortest_path(target_tile, scanned_tile, self.blocked_by)
 
+            else:
+                path = self.dungeon.find_shortest_path(target_tile, scanned_tile)
+            
             if path:
 
                 paths.append(path)
@@ -191,65 +195,76 @@ class Monster(Character):
         #sort paths from player to free tiles from shortest to longest
         sorted_paths = sorted(paths, key=len)
 
+        return sorted_paths
+
+
+    def assess_path_smart(self):
+        
+        target = self.find_closest_reachable_player()[0]
+
+        target_tile = self.dungeon.get_tile(target.position)
+
+        sorted_paths = self.find_accesses(target)
+
         shortest_possible_path = None
+        
         for path in sorted_paths:
             #check if monster can reach end_tile of each of sorted paths
             possible_path = self.dungeon.find_shortest_path(self.token.start, self.dungeon.get_tile(path[-1]), self.blocked_by)
 
             if possible_path:
             
-                player_to_monster = self.dungeon.find_shortest_path(self.token.start, player_tile, self.blocked_by)
-                player_to_possible_path_end = self.dungeon.find_shortest_path(player_tile, self.dungeon.get_tile(possible_path[-1]), self.blocked_by)
+                monster_to_target = self.dungeon.find_shortest_path(self.token.start, target_tile, self.blocked_by)
+                target_to_possible_path_end = self.dungeon.find_shortest_path(target_tile, self.dungeon.get_tile(possible_path[-1]), self.blocked_by)
                 #if end tile closer to player than monster is right now, take path to this end tile
-                if len(player_to_possible_path_end) < len(player_to_monster):
+                if len(target_to_possible_path_end) < len(monster_to_target):
 
                     shortest_possible_path = possible_path
                     break
-        
+
         path = self.trim_path(shortest_possible_path)
-        
-        while len(path) > self.moves:
-            path.pop()
 
         return path
 
 
     def assess_path_direct(self):
 
-        target = self.find_closest_player() #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
+        target = self.find_closest_reachable_player()[0] #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
 
-        path = list()
+        sorted_paths = self.find_accesses(target, smart = False)
 
-        position = self.position
+        path = None
         
-        for move in range (self.moves):
+        for sorted_path in sorted_paths:
 
-            #CHECKS WHICH DIRECION IS THE PLAYER AND CHECKS IF TILES ARE FREE
-            if target.position[0] < position[0] and self.goes_through(self.dungeon.get_tile((position[0] -1, position[1]))):
-                
-                position = (position[0] -1, position [1])
-                path.append(position)
+            if path:
+                break
+
+            end_tile = self.dungeon.get_tile(sorted_path[-1])
+
+            possible_path = self.dungeon.find_shortest_path(self.token.start, end_tile, self.blocked_by)
+
+            if not possible_path:
+                continue
             
-            elif target.position[0] > position[0] and self.goes_through(self.dungeon.get_tile((position[0] +1, position[1]))):
-                
-                position = (position[0] +1, position [1])
-                path.append(position)
+            distance = utils.distance(self.position, target.position)
             
-            elif target.position[1] < position[1] and self.goes_through(self.dungeon.get_tile((position[0], position[1] - 1))):
- 
-                position = (position[0],position [1]-1)
-                path.append(position)
-            
-            elif target.position[1] > position[1] and self.goes_through(self.dungeon.get_tile((position[0], position[1] + 1))):
-                
-                position = (position[0], position[1]+1)
-                path.append(position)
-        
+            for position in possible_path:
+
+                if distance <= utils.distance(position, target.position):
+
+                    break
+
+                elif distance > utils.distance(position, target.position):
+
+                    distance = utils.distance(position, target.position)
+
+                if possible_path.index(position) == len(possible_path) -1:
+
+                    path = possible_path
+                        
         path = self.trim_path(path)
-
-        #TODO: if trim_path returns nothing (e.g. all path is occupied by fellow monsters)
-        #the monster should move to the other directions towards the player, if possible
-
+        
         return path
     
 
@@ -287,7 +302,6 @@ class Monster(Character):
                         position = (position[0],position [1]-1)
                         path.append(position)
 
-
         path = self.trim_path(path)
 
         return path
@@ -324,6 +338,9 @@ class Monster(Character):
     def trim_path(self, path):
 
         if path:
+
+            while len(path) > self.moves:
+                path.pop()
         
             path = self.check_free_landing(path)
         
@@ -350,7 +367,7 @@ class Kobold(Monster):
 class HellHound(Monster):
     
     def __init__(self):
-        self.moves = 5
+        self.moves = 3
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
         self.motility = 8
@@ -384,7 +401,7 @@ class RockElemental(Monster):
 class NightMare(Monster):
     
     def __init__(self):
-        self.moves = 100
+        self.moves = 3
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
         self.motility = None

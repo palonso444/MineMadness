@@ -1,7 +1,53 @@
-from kivy.graphics import Ellipse, Rectangle   # type: ignore
+from kivy.graphics import Ellipse, Rectangle, Color   # type: ignore
 from kivy.animation import Animation
+from kivy.properties import Clock
+from kivy.uix.widget import Widget
 
 import character_classes as characters
+import crapgeon_utils as utils
+
+
+class DamageToken(Widget):
+
+    def __init__(self, dungeon, position, **kwargs):
+        super().__init__(**kwargs)
+        self.opacity = 0
+        self.hit_maximmum = False
+        self.fade_speed = 0.05
+        self.dungeon = dungeon
+        self.position = position
+        self.token = None
+        self.position = position
+        
+        Clock.schedule_interval(self.fade, 0.01)
+
+
+    def fade(self, dt):
+
+        if not self.hit_maximmum:
+            self.opacity += self.fade_speed
+            if self.opacity > 0.5:
+                self.hit_maximmum = True
+
+        else:
+            self.opacity -= self.fade_speed
+            if self.opacity < 0:
+                self.canvas.clear()
+                self.dungeon.game.update_switch('character_done')
+                self.dungeon.get_tile(self.position).damage_token = None
+                return False
+
+        self.draw(self.opacity)
+
+
+    def draw(self, opacity):
+        
+        with self.canvas:
+
+            self.color = Color(1,0,0,opacity)
+            self.token = Ellipse(pos = self.pos, size = self.size)
+    
+
 
 
 class SceneryToken(Rectangle):
@@ -28,10 +74,9 @@ class CharacterToken(Ellipse):
         self.dungeon = dungeon_instance
         self.character = character      #links token with character object
         self.source = self.species + 'token.png'
-
         self.start = None   #all defined when token is moved by move()
         self.goal = None    
-        self.path = None    
+        self.path = None
 
 
     def move_player (self, start_tile, end_tile):
@@ -70,10 +115,8 @@ class CharacterToken(Ellipse):
         next_position = path.pop(0)
 
         next_pos = self.dungeon.get_tile(next_position).pos
-
-        if isinstance(self.character, characters.Player):  #monsters always complete movement.
         
-            self.character.remaining_moves -= 1
+        self.character.remaining_moves -= 1
         
         animation = Animation (pos = next_pos, duration = 0.2)
         
@@ -84,39 +127,47 @@ class CharacterToken(Ellipse):
 
     def on_slide_completed (self, *args):
 
-
-        if len(self.path) == 0:     #if goal is reached
-            
-            if self.goal.kind == 'exit' and self.token.kind == 'player':
-
-                self.dungeon.game.dungeon_finished = True
-            
-            else:
-
-                if isinstance(self.character, characters.Player):  #weapons and shovels. Monsters and walls resolved within before moving, within on_release()
-                    
-                    if self.goal.monster_token or self.goal.token:
-
-                        self.goal.clear_token(self.character)
-                
-                if self.start != self.goal:
-                
-                    self.update_on_tiles(self.start, self.goal) #updates tile.token
-                
-                    self.character.update_position(self.goal.row, self.goal.col)
-
-                if isinstance(self.character, characters.Player) and self.character.remaining_moves > 0:
-                    
-                    self.dungeon.game.dynamic_movement_range()    #checks if player can still move
-
-                else:
-            
-                    self.dungeon.game.next_character() #switch turns if character last of character.characters
-        
-        
-        else:   # if len(path) > 0, goal is not reached, continue sliding
+        if len(self.path) > 0:
 
             self.slide(self.path)
+
+        else:   #if goal is reached
+            
+            if isinstance(self.character, characters.Player):    
+            
+                if self.goal.kind == 'exit':
+
+                    self.dungeon.game.dungeon_finished = True
+                    
+                elif self.goal.has_token('shovel') or self.goal.has_token('weapon'):
+
+                    self.character.pick_object(self.goal.token.kind)
+
+                    self.goal.clear_token()
+
+            
+            if self.start != self.goal:
+                
+                self.update_on_tiles(self.start, self.goal) #updates tile.token
+                
+                self.character.update_position(self.goal.row, self.goal.col)
+
+            
+            if isinstance(self.character, characters.Monster) and self.character.remaining_moves > 0:
+                
+                for player in characters.Player.data:
+
+                    if utils.are_nearby(self.character, player):
+
+                        self.character.attack(player)
+
+                    else:
+                        self.dungeon.game.update_switch('character_done')
+
+            else:
+                self.dungeon.game.update_switch('character_done')
+
+            
 
 
     def update_on_tiles(self, start_tile, end_tile):
@@ -170,10 +221,10 @@ class CharacterToken(Ellipse):
         if self.kind == 'monster':
 
             if self.goal.token.kind == 'player':
-
-                self.goal.token.character.rearrange_ids()
                 
                 characters.Player.data.remove(self.goal.token.character)
+
+                self.goal.token.character.rearrange_ids()
 
                 self.dungeon.canvas.remove(self.goal.token)
 

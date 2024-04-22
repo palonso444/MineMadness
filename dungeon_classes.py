@@ -1,5 +1,6 @@
 from kivy.uix.gridlayout import GridLayout    # type: ignore
-
+from kivy.properties import BooleanProperty
+from kivy.graphics import Ellipse, Color
 
 import crapgeon_utils as utils
 import character_classes as characters
@@ -10,7 +11,6 @@ from collections import deque
 
 class DungeonLayout(GridLayout):    #initialized in kv file
 
-    
     def on_pos(self, *args):
     
         
@@ -28,28 +28,27 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                     else:
 
                         tile = tiles.Tile(row=y, col=x, kind ='floor', dungeon_instance=self)
-                
+                    
                     self.add_widget(tile)
 
-
         self.game = self.parent.parent
-        self.game.dungeon = self  #Adds dungeon as CrapgeonGame class attribute
-        
-
+        self.game.dungeon = self  #Adds dungeon as CrapgeonGame class attribute    
+    
+    
     def generate_blueprint (self, height, width):
 
         self.blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(self.blueprint,'K', 0)  #rats
-        utils.place_single_items(self.blueprint,'H', 7)  #hellhound
-        utils.place_single_items(self.blueprint,'W', 0)  #wisp
+        utils.place_single_items(self.blueprint,'K', 2)  #rats
+        utils.place_single_items(self.blueprint,'H', 5)  #hellhound
+        utils.place_single_items(self.blueprint,'W', 3)  #wisp
         utils.place_single_items(self.blueprint,'N', 5)  #nightmare
 
         utils.place_single_items(self.blueprint,'%', 1, (0,0))
         utils.place_single_items(self.blueprint,'o', 0)
         utils.place_single_items(self.blueprint,' ', 0)
 
-        for key,value in {'M': 0, '#': 0.6, 'p': 0.1, 'x': 0.1, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.4, 'p': 0.1, 'x': 0.1, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 
@@ -131,7 +130,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                 elif token_species == 'nightmare':
                     character = characters.NightMare()
 
-            tile.token = tokens.CharacterToken(position = (tile.row, tile.col),  
+            tile.token = tokens.CharacterToken(position = tile.position,  
                                  kind = token_kind,
                                  species = token_species,
                                  dungeon_instance = self,
@@ -139,7 +138,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                                  pos = tile.pos,
                                  size = tile.size)
             
-            character.position = (tile.row, tile.col)   #Character attributes initialized here
+            character.position = tile.position   #Character attributes initialized here
             character.token = tile.token
             character.dungeon = self
             character.id = len(character.__class__.data)
@@ -150,12 +149,12 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         else:
 
-            tile.token = tokens.SceneryToken(position = (tile.row, tile.col),  
+            tile.token = tokens.SceneryToken(position = tile.position,  
                                  kind = token_kind,
                                  dungeon_instance = self,
                                  pos = tile.pos,
                                  size = tile.size)
-
+            
 
     def activate_which_tiles(self, tile_positions = None):
 
@@ -217,8 +216,10 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         queue = deque([(start_tile.position, [])]) # start_tile_pos is not included in the path
 
-        excluded_tiles = self.scan(excluded)
-        excluded_tiles.add(start_tile.position)
+        excluded_positions = self.scan(excluded)
+        excluded_positions.add(start_tile.position)
+        if start_tile.has_token('monster') and end_tile.position in excluded_positions:
+            excluded_positions.remove(end_tile.position)   
 
         while queue:
   
@@ -234,7 +235,20 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
                 if 0 <= row < self.rows and 0 <= col < self.cols: 
                     
-                    if (row, col) not in excluded_tiles or (row,col) == end_tile.position:
+                    if (row, col) not in excluded_positions: #or (row,col) == end_tile.position:
     
-                        excluded_tiles.add((row, col))
+                        excluded_positions.add((row, col))
                         queue.append(((row,col), path + [(row,col)]))
+
+
+    def show_damage_token (self, position, size):
+        
+        tile = self.get_tile(position)
+        
+        if tile.damage_token:
+            tile.damage_token.canvas.clear()
+            tile.damage_token = None
+        
+        with self.canvas:
+            
+            tile.damage_token = tokens.DamageToken(pos = tile.token.pos, position = tile.position, size = size, dungeon = self)

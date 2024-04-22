@@ -1,6 +1,8 @@
 from random import randint
+import threading
 
 import crapgeon_utils as utils
+import token_classes as tokens
 
 
 class Character:
@@ -11,6 +13,7 @@ class Character:
         self.token = None
         self.dungeon = None
         self.id = None
+        self.remaining_moves = 0
 
     
     def update_position (self, y_position, x_position):
@@ -21,11 +24,10 @@ class Character:
     
     def rearrange_ids (self):
 
-        for character in self.__class__.data:
+        for character in self.data:
 
-            if character.id > self.id:
+            character.id = self.data.index(character)
 
-                character.id -= 1
 
 
 class Player(Character):
@@ -33,8 +35,10 @@ class Player(Character):
     data = list ()
 
     def __init__(self):
-
-        self.remaining_moves = 0
+        super().__init__()
+        self.blocked_by = ('wall', 'monster')
+        self.shovels = 0
+        self.weapons = 3
     
     
     def get_movement_range(self, dungeon_layout):   #TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
@@ -89,26 +93,69 @@ class Player(Character):
         return mov_range   
 
 
+    def pick_object(self, token_kind):
+
+        
+        character_attribute = getattr(self, token_kind + 's')
+        character_attribute += 1
+        setattr(self, token_kind + 's', character_attribute)
+
+        self.dungeon.game.update_switch(token_kind + 's')
+
+
+    def drill(self):
+
+        self.shovels -= 1
+        self.remaining_moves -=1
+        self.dungeon.game.update_switch('shovels')
+
+
+    def attack(self, monster):
+        
+        if self.weapons > 0:
+            self.weapons -=1
+
+        self.remaining_moves -= 1
+
+        monster.data.remove(monster)
+        monster.rearrange_ids()
+
+        self.dungeon.show_damage_token (monster.token.position, monster.token.size)
+
+        self.dungeon.game.update_switch('weapons')
+
+        
+
+
 class Vane(Player):
-    #Leader. Has a bit of all.
+    #Leader. More moves. picks gems
 
     def __init__(self):
-        self.blocked_by = ('wall', 'monster')
-        self.health = 3
-        self.moves = 15
-        self.shovels = 2
-        self.weapons = 2
+        super().__init__()
+        self.data = super().data
+        self.health = 30
+        self.moves = 4
         self.gems = 0
 
 
 class CrusherJoe(Player):
-    pass
-    #fighting arquetipe
+    #Fighter. Can attack with no weapons but looses 1 health.
+
+    def __init__(self):
+        super().__init__()
+        self.data = super().data
+        self.health = 3
+        self.moves = 4
 
 
 class Hawkins (Player):
-    pass
-    #inventor. Drilling arquetype
+    #Inventor. No need showels to drill. Low health.
+    
+    def __init__(self):
+        super().__init__()
+        self.data = super().data
+        self.health = 3
+        self.moves = 4
 
 
 
@@ -117,7 +164,9 @@ class Monster(Character):
     data = list()
 
     def __init__(self):
+        super().__init__()
         self.kind = 'monster'
+        self.random_motility = 0
 
     
     def find_closest_player(self):
@@ -165,7 +214,7 @@ class Monster(Character):
 
                     closest_player_and_path = player_and_path
 
-        return player_and_path
+        return closest_player_and_path
 
 
     def find_accesses(self, target, smart = True):    #returns list of paths from target to free tiles, sorted shortest to longest
@@ -278,7 +327,7 @@ class Monster(Character):
         
             trigger = randint(1,10)
 
-            if trigger <= self.motility:
+            if trigger <= self.random_motility:
 
                 direction = randint(1,4) #1: NORTH, 2: EAST, 3: SOUTH, 4: WEST
 
@@ -350,41 +399,73 @@ class Monster(Character):
         return path
     
 
+    def attack (self, player):
+
+        damage = randint(self.strength[0], self.strength[1])
+        player.health -= damage
+        
+        self.remaining_moves -= 1
+
+        if player.health <= 0:
+            player.data.remove(player)
+            player.rearrange_ids()
+
+        self.dungeon.show_damage_token (player.token.position, player.token.size)
+
+
+
 class Kobold(Monster):
     
     def __init__(self):
+        super().__init__()
+        self.data = super().data
         self.moves = 4
+        self.strength = (1,1)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
-        self.motility = 8     #from 1 to 10. Rellevant in monsters with random movement
+        self.random_motility = 8     #from 1 to 10. Rellevant in monsters with random movement
 
 
     def move(self):
 
         return self.assess_path_random()
+    
 
 
 class HellHound(Monster):
     
     def __init__(self):
-        self.moves = 3
+        super().__init__()
+        self.data = super().data
+        self.moves = 5
+        self.strength = (1,1)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
-        self.motility = 8
+        self.random_motility = 8
 
 
     def move(self):
 
-        return self.assess_path_direct()
+        if self.find_closest_reachable_player():
+
+            return self.assess_path_direct()
+        
+        else:
+            
+            return self.assess_path_random()
+
 
 
 class DepthsWisp(Monster):
 
     def __init__(self):
+        super().__init__()
+        self.data = super().data
         self.moves = 3
+        self.strength = (1,1)
         self.blocked_by = ()
         self.cannot_share_tile_with = ('monster', 'player')
-        self.motility = 8
+        self.random_motility = 8
 
 
     def move(self):
@@ -401,15 +482,22 @@ class RockElemental(Monster):
 class NightMare(Monster):
     
     def __init__(self):
-        self.moves = 3
+        super().__init__()
+        self.data = super().data
+        self.moves = 7
+        self.strength = (1,1)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
-        self.motility = None
 
 
     def move(self):
 
-        return self.assess_path_smart()
+        if self.find_closest_reachable_player():
+
+            return self.assess_path_smart()
+        
+        else:
+            return [self.position]
 
 
 class DarkDwarf(Monster):

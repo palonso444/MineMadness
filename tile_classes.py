@@ -1,12 +1,15 @@
 from kivy.uix.button import Button  # type: ignore
+from kivy.animation import Animation
+from kivy.properties import Clock
+from kivy.graphics import Ellipse, Color
 
 import crapgeon_utils as utils
 import character_classes as characters
+import token_classes as tokens
 
 
 class Tile(Button):
 
-    
     def __init__(self, row, col, kind, dungeon_instance, **kwargs):
         super().__init__(**kwargs)
 
@@ -16,22 +19,37 @@ class Tile(Button):
         self.kind = kind
         self.token = None   #defined later when token is placed on tile by DungeonLayout.place_tokens
         self.monster_token = None  #tiles can have up to 2 tokens (shovel + monster for instance). Special slot reserved for monsters in such cases
+        self.damage_token = None
         self.dungeon = dungeon_instance     #need to pass the instance of the dungeon in order to cal dungeon.move_token from this class
 
 
     def on_release(self):
 
-        active_character = self.dungeon.game.active_character    
+        player = self.dungeon.game.active_character
 
-        if self.has_token('wall') or self.has_token('monster'):
+        if self.has_token('wall'):
+            
+            player.drill()
 
-            self.clear_token(active_character)
+            self.clear_token()
+
+            self.dungeon.game.update_switch('character_done')
+            
+            #self.dungeon.game.continue_turn()
+
+        elif self.has_token('monster'):
+
+            player.attack(self.get_character())
+
+            self.clear_token()
+
+            self.dungeon.game.update_switch('character_done')
+
+            #self.dungeon.game.continue_turn()
 
         else:
-
-            start_position = (active_character.position[0], active_character.position[1])
         
-            start_tile = self.dungeon.get_tile(start_position)
+            start_tile = self.dungeon.get_tile(player.position)
 
             start_tile.token.move_player(start_tile, self)
             
@@ -51,19 +69,25 @@ class Tile(Button):
         
         path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position), self, (player.blocked_by))
 
-        if self.has_token('player'):
+        if isinstance(self.token, tokens.CharacterToken) and self.token.character == player:
 
             return True
         
-        if self.has_token('wall') and utils.are_nearby(self, player) and player.shovels > 0:
-
-            return True
+        if self.has_token('wall') and utils.are_nearby(self, player):
             
-        if self.has_token('monster') and utils.are_nearby(self, player) and player.weapons > 0:
+            if player.shovels > 0 or isinstance(player, characters.Hawkins):
 
-            return True
+                return True
+            return False
+            
+        if self.has_token('monster') and utils.are_nearby(self, player):
+            
+            if player.weapons > 0 or isinstance(player, characters.CrusherJoe):
+
+                return True
+            return False
         
-        if path and len(path) <= player.remaining_moves:  #if tile is reachable 
+        if path and len(path) <= player.remaining_moves:
 
             return True
         
@@ -72,7 +96,6 @@ class Tile(Button):
 
     def has_token(self, token_kind):
 
-        
         if self.monster_token and self.monster_token.kind == token_kind:
             return True
         
@@ -82,49 +105,21 @@ class Tile(Button):
         return False
 
 
-    def clear_token(self, active_character):
-        
-        def remove_token():
-            if self.monster_token:
-                self.dungeon.canvas.remove(self.monster_token)
-                self.monster_token = None
-            else:
-                self.dungeon.canvas.remove(self.token)
-                self.token = None
+    def clear_token(self):
         
 
-        if self.has_token('monster'):
+        if self.monster_token:
+            self.dungeon.canvas.remove(self.monster_token)
+            self.monster_token = None
+        
+        else:
+            self.dungeon.canvas.remove(self.token)
+            self.token = None
+        
 
-            if self.monster_token:
-                token = self.monster_token
-            else:
-                token = self.token
-
-            active_character.weapons -= 1
-            active_character.remaining_moves -=1
-            self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
-            token.character.rearrange_ids()
-            characters.Monster.data.remove(token.character)
-
-        elif self.has_token('shovel'):
-
-            active_character.shovels += 1
-            self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
-
-        elif self.has_token('weapon'):
-
-            active_character.weapons += 1
-            self.dungeon.game.weapons = not self.dungeon.game.weapons   # triggers display of updated value
-
-        elif self.has_token('wall'):
-
-            active_character.shovels -= 1
-            active_character.remaining_moves -=1
-            self.dungeon.game.shovels = not self.dungeon.game.shovels   # triggers display of updated value
-
-        elif self.has_token('gem'):
-
-            active_character.gems +=1
-            self.dungeon.game.gems = not self.dungeon.game.gems
-
-        remove_token()
+    def get_character(self):
+        
+        if self.monster_token:
+            return self.monster_token.character
+        else:
+            return self.token.character

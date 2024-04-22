@@ -34,8 +34,10 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     dungeon = ObjectProperty(None)
 
     dungeon_finished = BooleanProperty(False)
- 
-    turn = BooleanProperty(None)        #Those are switches to trigger change of turn and updating of info labels
+    character_done = BooleanProperty(False)
+    
+    turn = BooleanProperty(None)
+            #Those are switches to trigger change of turn and updating of info labels
     health = BooleanProperty(None)      #defined in kv file upon changes in player properties
     shovels = BooleanProperty(None)
     weapons = BooleanProperty(None)
@@ -53,6 +55,13 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         self.weapons = False
         self.gems = False
     
+
+    def update_switch(self, switch_name):
+
+        switch_value = getattr(self, switch_name)
+        switch_value = not switch_value
+        setattr(self, switch_name, switch_value)
+        
     
     def on_dungeon(self, *args):
 
@@ -61,12 +70,25 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         self.initialize_switches()
 
     
+    def on_character_done(self, *args):
+
+        if isinstance(self.active_character, characters.Player) and self.active_character.remaining_moves > 0:
+                
+            self.dynamic_movement_range()    #checks if player can still move
+
+        else:
+            
+            self.next_character() #switch turns if character last of character.characters
+    
+    
     def next_character(self):
 
         
         if self.active_character.id == len(self.active_character.__class__.data) - 1: #if all players or monsters have moved
             
-            self.turn = not self.turn   #turn changes
+            self.update_switch('turn')
+            
+            #self.turn = not self.turn   #turn changes
 
         
         else: 
@@ -100,8 +122,8 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         if self.turn or len(characters.Monster.data) == 0:   #if player turn or no monsters (always players turn)
 
             self.active_character = characters.Player.data[self.active_character_id]
-            
             self.active_character.remaining_moves = self.active_character.moves
+            self.update_switch('health')    #must be updated here after seting player as active character
 
             self.dynamic_movement_range()
 
@@ -111,6 +133,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             self.dungeon.activate_which_tiles() #tiles deactivated in monster turn
             
             self.active_character = characters.Monster.data[self.active_character_id]
+            self.active_character.remaining_moves = self.active_character.moves
                 
             self.active_character.token.move_monster()
 

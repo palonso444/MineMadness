@@ -72,6 +72,9 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     
     def on_character_done(self, *args):
 
+        print ('CHARACTER DONE')
+        print (self.active_character_id)
+
         if isinstance(self.active_character, characters.Player) and self.active_character.remaining_moves > 0:
                 
             self.dynamic_movement_range()    #checks if player can still move
@@ -79,25 +82,14 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         else:
             
             self.next_character() #switch turns if character last of character.characters
-    
-    
-    def next_character(self):
-
-        
-        if self.active_character.id == len(self.active_character.__class__.data) - 1: #if all players or monsters have moved
-            
-            self.update_switch('turn')
-            
-            #self.turn = not self.turn   #turn changes
-
-        
-        else: 
-            
-            self.active_character_id += 1       # next character on list moves
 
 
     def on_turn (self, *args):
         
+        if self.turn or len(characters.Monster.data) == 0:
+            characters.Player.reset_moves()
+        else:
+            characters.Monster.reset_moves()
         
         if self.active_character_id != 0:
                 
@@ -107,14 +99,6 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
             self.on_active_character_id ()  #must be called manually if self.active_character_id does not change
 
-    
-    def dynamic_movement_range(self):
-
-        
-        movement_range = self.active_character.get_movement_range(self.dungeon)
-
-        self.dungeon.activate_which_tiles(movement_range)
-
 
     def on_active_character_id (self, *args):
 
@@ -122,10 +106,13 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         if self.turn or len(characters.Monster.data) == 0:   #if player turn or no monsters (always players turn)
 
             self.active_character = characters.Player.data[self.active_character_id]
-            self.active_character.remaining_moves = self.active_character.moves
-            self.update_switch('health')    #must be updated here after seting player as active character
 
-            self.dynamic_movement_range()
+            if self.active_character.has_moved():
+                self.next_character()
+            
+            else:
+                self.update_switch('health')    #must be updated here after seting player as active character
+                self.dynamic_movement_range()
 
         
         elif not self.turn:  #if monsters turn and monsters in the game
@@ -133,7 +120,6 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             self.dungeon.activate_which_tiles() #tiles deactivated in monster turn
             
             self.active_character = characters.Monster.data[self.active_character_id]
-            self.active_character.remaining_moves = self.active_character.moves
                 
             self.active_character.token.move_monster()
 
@@ -141,6 +127,50 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     def on_dungeon_finished(self, *args):
 
         print ('DUNGEON FINISHED!')
+
+
+    def next_character(self):
+
+        if self.active_character.id < len(self.active_character.__class__.data) - 1:
+
+            self.active_character_id += 1       # next character on list moves
+
+        else:   #if end of characters list reached (all have moved)
+            
+            self.update_switch('turn')
+
+    
+    def dynamic_movement_range(self):
+
+        
+        players_not_yet_active = set()
+
+        for player in characters.Player.data:
+
+            if not player.has_moved():
+
+                players_not_yet_active.add(player.position)
+    
+        player_movement_range = self.active_character.get_movement_range(self.dungeon)
+
+        positions_in_range = players_not_yet_active.union(player_movement_range)
+        
+        self.dungeon.activate_which_tiles(positions_in_range)
+        
+
+    def switch_character(self, new_active_character):
+        
+        if self.active_character.has_moved():
+            self.active_character.remaining_moves = 0
+        
+        index_new_char = characters.Player.data.index(new_active_character)
+        index_old_char = characters.Player.data.index(self.active_character)
+        characters.Player.data[index_old_char], characters.Player.data[index_new_char] = characters.Player.data[index_new_char], characters.Player.data[index_old_char]
+        
+        self.active_character.rearrange_ids()
+
+        self.active_character = new_active_character
+        self.on_active_character_id()
 
 
 class CrapgeonApp(App):

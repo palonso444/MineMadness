@@ -1,55 +1,48 @@
 from kivy.graphics import Ellipse, Rectangle, Color   # type: ignore
 from kivy.animation import Animation
-from kivy.properties import Clock
+from kivy.properties import Clock, BooleanProperty
 from kivy.uix.widget import Widget
 
 import character_classes as characters
 import crapgeon_utils as utils
 
 
-class DamageToken(Widget):
+class FadingToken(Widget):
 
-    def __init__(self, dungeon, position, **kwargs):
+    def __init__(self, dungeon, **kwargs):
         super().__init__(**kwargs)
         self.opacity = 0
         self.hit_maximmum = False
         self.fade_speed = 0.05
         self.dungeon = dungeon
-        self.position = position
-        self.token = None
-        self.position = position
-        
-        Clock.schedule_interval(self.fade, 0.01)
-
 
     def fade(self, dt):
 
         if not self.hit_maximmum:
             self.opacity += self.fade_speed
-            if self.opacity > 0.5:
+            if self.opacity > 0.4:
                 self.hit_maximmum = True
 
         else:
             self.opacity -= self.fade_speed
             if self.opacity < 0:
-                self.canvas.clear()
                 self.dungeon.game.update_switch('character_done')
-                self.dungeon.get_tile(self.position).damage_token = None
                 return False
 
-        self.draw(self.opacity)
 
+class DamageToken(FadingToken):
 
-    def draw(self, opacity):
-        
+    def __init__(self, dungeon, **kwargs):
+        super().__init__(dungeon,**kwargs)
+
         with self.canvas:
 
-            self.color = Color(1,0,0,opacity)
+            self.color = Color(1,0,0,1)
             self.token = Ellipse(pos = self.pos, size = self.size)
+        
+        Clock.schedule_interval(self.fade, 1/60)
+
     
-
-
-
 class SceneryToken(Rectangle):
 
     
@@ -83,7 +76,8 @@ class CharacterToken(Ellipse):
 
         if start_tile == end_tile:     #if character stays in place
             
-            self.dungeon.game.next_character()
+            self.character.remaining_moves = 0
+            self.dungeon.game.update_switch('character_done')
         
         else:
         
@@ -189,49 +183,3 @@ class CharacterToken(Ellipse):
         else:
 
             start_tile.token = None
-
-    
-    def manage_collision(self):     #DEPRECATED! CODE USED IN clear_token()
-
-        #if self.kind == 'player':
-
-            #if self.goal.token.kind == 'monster':
-
-                #self.goal.token.character.rearrange_ids()
-
-                #classes.Monster.data.remove(self.goal.token.character)
-
-                #print ('REMAINING MONSTERS')
-                #print (len(classes.Monster.data))
-                
-                #print ('REMAINING MONSTER IDS')
-                #for monster in classes.Monster.data:
-                    #print (monster.id)
-
-                #self.dungeon.canvas.remove(self.goal.token)
-
-                #self.goal.token = None
-
-                #return True
-
-            #else:
-
-                #return False
-
-        if self.kind == 'monster':
-
-            if self.goal.token.kind == 'player':
-                
-                characters.Player.data.remove(self.goal.token.character)
-
-                self.goal.token.character.rearrange_ids()
-
-                self.dungeon.canvas.remove(self.goal.token)
-
-                self.goal.token = None
-
-                return True 
-
-            else:
-
-                return False

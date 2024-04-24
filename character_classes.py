@@ -1,11 +1,27 @@
 from random import randint
-import threading
 
 import crapgeon_utils as utils
 import token_classes as tokens
 
 
 class Character:
+
+    #TODO: make this funcitons work. Problem with "character.__class__.data":
+
+    '''def rearrange_ids ():
+
+        for character in character.__class__.data:
+
+            character.id = character.__class__.data.index(character)
+            
+            
+        def reset_moves():
+
+            for character in character.__class__.data:
+                character.remaining_moves = character.moves'''
+    
+
+
     
     def __init__(self):    #position as tuple (y,x)
         
@@ -28,17 +44,51 @@ class Character:
 
             character.id = self.data.index(character)
 
+    
+    def attack (self, opponent):
+
+        if isinstance(self, Player):
+            if self.weapons > 0:
+                self.weapons -=1
+                self.dungeon.game.update_switch('weapons')
+
+        damage = randint(self.strength[0], self.strength[1])
+        opponent.health -= damage
+        
+        self.remaining_moves -= 1
+
+        if opponent.health <= 0:
+            opponent.data.remove(opponent)
+            opponent.rearrange_ids()
+        
+        self.dungeon.show_damage_token (opponent.token.pos, opponent.token.size)
+
+
+    def has_moved(self):
+
+        if self.remaining_moves == self.moves:
+            return False
+        return True
+    
 
 
 class Player(Character):
 
     data = list ()
 
+    def reset_moves():
+
+        for player in Player.data:
+            player.remaining_moves = player.moves
+
+
     def __init__(self):
         super().__init__()
         self.blocked_by = ('wall', 'monster')
+        self.cannot_share_tile_with = ('wall', 'monster','player')
         self.shovels = 0
         self.weapons = 3
+        self.gems = 0
     
     
     def get_movement_range(self, dungeon_layout):   #TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
@@ -110,52 +160,37 @@ class Player(Character):
         self.dungeon.game.update_switch('shovels')
 
 
-    def attack(self, monster):
-        
-        if self.weapons > 0:
-            self.weapons -=1
-
-        self.remaining_moves -= 1
-
-        monster.data.remove(monster)
-        monster.rearrange_ids()
-
-        self.dungeon.show_damage_token (monster.token.position, monster.token.size)
-
-        self.dungeon.game.update_switch('weapons')
-
-        
-
-
 class Vane(Player):
-    #Leader. More moves. picks gems
+    #Leader. More moves. picks gems. 
 
     def __init__(self):
         super().__init__()
         self.data = super().data
         self.health = 30
-        self.moves = 4
-        self.gems = 0
+        self.strength = (1,1)
+        self.moves = 2
 
 
 class CrusherJoe(Player):
-    #Fighter. Can attack with no weapons but looses 1 health.
+    #Fighter. Can attack with no weapons. Super strong if attack with weapons
 
     def __init__(self):
         super().__init__()
         self.data = super().data
         self.health = 3
+        self.strength = (1,1)
         self.moves = 4
 
 
 class Hawkins (Player):
-    #Inventor. No need showels to drill. Low health.
+    #Inventor. No need showels to drill. Low health. Cannot pick shovels
     
     def __init__(self):
         super().__init__()
         self.data = super().data
-        self.health = 3
-        self.moves = 4
+        self.health = 30
+        self.strength = (1,1)
+        self.moves = 2
 
 
 
@@ -168,6 +203,10 @@ class Monster(Character):
         self.kind = 'monster'
         self.random_motility = 0
 
+    def reset_moves():
+
+        for monster in Monster.data:
+            monster.remaining_moves = monster.moves
     
     def find_closest_player(self):
 
@@ -399,19 +438,6 @@ class Monster(Character):
         return path
     
 
-    def attack (self, player):
-
-        damage = randint(self.strength[0], self.strength[1])
-        player.health -= damage
-        
-        self.remaining_moves -= 1
-
-        if player.health <= 0:
-            player.data.remove(player)
-            player.rearrange_ids()
-
-        self.dungeon.show_damage_token (player.token.position, player.token.size)
-
 
 
 class Kobold(Monster):
@@ -420,6 +446,7 @@ class Kobold(Monster):
         super().__init__()
         self.data = super().data
         self.moves = 4
+        self.health = 1
         self.strength = (1,1)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
@@ -438,6 +465,7 @@ class HellHound(Monster):
         super().__init__()
         self.data = super().data
         self.moves = 5
+        self.health = 1
         self.strength = (1,1)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
@@ -462,6 +490,7 @@ class DepthsWisp(Monster):
         super().__init__()
         self.data = super().data
         self.moves = 3
+        self.health = 1
         self.strength = (1,1)
         self.blocked_by = ()
         self.cannot_share_tile_with = ('monster', 'player')
@@ -485,6 +514,7 @@ class NightMare(Monster):
         super().__init__()
         self.data = super().data
         self.moves = 7
+        self.health = 1
         self.strength = (1,1)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')

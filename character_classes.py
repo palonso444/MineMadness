@@ -45,21 +45,30 @@ class Character:
             character.id = self.data.index(character)
 
     
-    def attack (self, opponent):
+    def attack (self, opponent_tile):
 
+        opponent = opponent_tile.get_character()
+        
         if isinstance(self, Player):
-            if self.weapons > 0:
-                self.weapons -=1
-                self.dungeon.game.update_switch('weapons')
+            if self.weapons > 0 and self.armed_strength_incr:
+                self.strength += self.armed_strength_incr   #TODO: fix this
 
         damage = randint(self.strength[0], self.strength[1])
         opponent.health -= damage
         
         self.remaining_moves -= 1
 
+        if isinstance(self, Player):
+            if self.weapons > 0:
+                self.weapons -=1
+                self.dungeon.game.update_switch('weapons')
+                if self.armed_strength_incr:
+                    self.strength -= self.armed_strength_incr
+
         if opponent.health <= 0:
             opponent.data.remove(opponent)
             opponent.rearrange_ids()
+            opponent_tile.clear_token()
         
         self.dungeon.show_damage_token (opponent.token.pos, opponent.token.size)
 
@@ -86,9 +95,13 @@ class Player(Character):
         super().__init__()
         self.blocked_by = ('wall', 'monster')
         self.cannot_share_tile_with = ('wall', 'monster','player')
+        self.free_actions = (None,)
         self.shovels = 0
+        self.digging_moves = 1
         self.weapons = 3
+        self.armed_strength_incr = None
         self.gems = 0
+        self.ignores = (None,)
     
     
     def get_movement_range(self, dungeon_layout):   #TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
@@ -143,25 +156,39 @@ class Player(Character):
         return mov_range   
 
 
-    def pick_object(self, token_kind):
+    def pick_object(self, token):
 
+        if token.kind not in self.ignores:
+            character_attribute = getattr(self, token.kind + 's')
+            character_attribute += 1
+            setattr(self, token.kind + 's', character_attribute)
+
+            tile = self.dungeon.get_tile(token.position)
+            tile.clear_token()
+
+            self.dungeon.game.update_switch(token.kind + 's')
+
+
+    def dig(self, wall_tile):
+
+        if self.shovels > 0:
+            self.shovels -= 1
+            self.dungeon.game.update_switch('shovels')
+        self.remaining_moves -= self.digging_moves
+
+        self.dungeon.show_digging_token(wall_tile.token.pos, wall_tile.token.size)
+
+        wall_tile.clear_token()
         
-        character_attribute = getattr(self, token_kind + 's')
-        character_attribute += 1
-        setattr(self, token_kind + 's', character_attribute)
-
-        self.dungeon.game.update_switch(token_kind + 's')
-
-
-    def drill(self):
-
-        self.shovels -= 1
-        self.remaining_moves -=1
-        self.dungeon.game.update_switch('shovels')
+        
 
 
 class Vane(Player):
-    #Leader. More moves. picks gems. 
+    '''Slow digger (takes half of initial moves each dig)
+        Can pick gems
+        LOW strength
+        LOW health
+        HIGH movement''' 
 
     def __init__(self):
         super().__init__()
@@ -171,26 +198,41 @@ class Vane(Player):
         self.moves = 2
 
 
-class CrusherJoe(Player):
-    #Fighter. Can attack with no weapons. Super strong if attack with weapons
+class CrusherJane(Player):
+    '''Can fight with no weapons (MEDIUM strength)
+        Stronger if fight with weapons  (HIGH strength)
+        Cannot pick gems
+        LOW movement
+        '''
 
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.free_actions = ('fighting',)
         self.health = 3
         self.strength = (1,1)
+        self.armed_strength_incr = (1,1)
         self.moves = 4
+        self.ignores = ('gem',)
 
 
 class Hawkins (Player):
-    #Inventor. No need showels to drill. Low health. Cannot pick shovels
+    '''Can dig without shovels
+    Does not pick shovels
+    Can fight with weapons
+    Cannot pick gems
+    LOW health
+    MEDIUM strength
+    MEDIUM movement'''
     
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.free_actions = ('digging',)
         self.health = 30
         self.strength = (1,1)
         self.moves = 2
+        self.ignores = ('shovel', 'gem')
 
 
 
@@ -202,6 +244,7 @@ class Monster(Character):
         super().__init__()
         self.kind = 'monster'
         self.random_motility = 0
+        self.ignores = ('shovel', 'weapon')
 
     def reset_moves():
 

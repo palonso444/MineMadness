@@ -33,17 +33,13 @@ class Tile(Button):
 
         elif self.has_token('wall'):
             
-            player.drill()
-
-            self.clear_token()
+            player.dig(self)
 
             self.dungeon.game.update_switch('character_done')
 
         elif self.has_token('monster'):
 
-            player.attack(self.get_character())
-
-            self.clear_token()
+            player.attack(self)
 
             self.dungeon.game.update_switch('character_done')
 
@@ -51,7 +47,12 @@ class Tile(Button):
         
             start_tile = self.dungeon.get_tile(player.position)
 
-            start_tile.token.move_player(start_tile, self)
+            if start_tile.token.kind == 'player' and start_tile.token.character == player:
+                start_tile.token.move_player(start_tile, self)
+            
+            else:
+                start_tile.monster_token.move_player(start_tile, self)
+            
             
       
     def on_pos(self, *args):
@@ -77,16 +78,16 @@ class Tile(Button):
 
             return True
         
-        if self.has_token('wall') and utils.are_nearby(self, player):
+        if self.has_token('wall') and utils.are_nearby(self, player) and player.remaining_moves >= player.digging_moves:
             
-            if player.shovels > 0 or isinstance(player, characters.Hawkins):
+            if player.shovels > 0 or 'digging' in player.free_actions:
 
                 return True
             return False
             
         if self.has_token('monster') and utils.are_nearby(self, player):
             
-            if player.weapons > 0 or isinstance(player, characters.CrusherJoe):
+            if player.weapons > 0 or 'fighting' in player.free_actions:
 
                 return True
             return False

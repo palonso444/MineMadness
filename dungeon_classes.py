@@ -40,16 +40,17 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         self.blueprint = utils.create_map(height, width)
 
         utils.place_single_items(self.blueprint,'K', 0)  #rats
-        utils.place_single_items(self.blueprint,'H', 0)  #hellhound
+        utils.place_single_items(self.blueprint,'H', 3)  #hellhound
         utils.place_single_items(self.blueprint,'W', 0)  #wisp
         utils.place_single_items(self.blueprint,'N', 1)  #nightmare
 
-        utils.place_single_items(self.blueprint,'%', 1, (0,0))  #vane
-        utils.place_single_items(self.blueprint,'?', 1)         #hawkins
+        utils.place_single_items(self.blueprint,'%', 1)  #vane
+        utils.place_single_items(self.blueprint,'?', 1)  #hawkins
+        utils.place_single_items(self.blueprint,'&', 1)  #crusherjane
         utils.place_single_items(self.blueprint,'o', 0)
         utils.place_single_items(self.blueprint,' ', 0)
 
-        for key,value in {'M': 0, '#': 0, 'p': 0.1, 'x': 0.1, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.3, 'p': 0.1, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 
@@ -72,6 +73,10 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                 elif self.blueprint [tile.row][tile.col] == '?':
 
                     self.place_tokens(tile, 'player', 'hawkins')
+
+                elif self.blueprint [tile.row][tile.col] == '&':
+
+                    self.place_tokens(tile, 'player', 'crusherjane')
                         
 
                 elif self.blueprint [tile.row][tile.col] == 'K':
@@ -122,6 +127,9 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
                 elif token_species == 'hawkins':
                     character = characters.Hawkins()
+
+                elif token_species == 'crusherjane':
+                    character = characters.CrusherJane()
 
             
             elif token_kind == 'monster':
@@ -254,4 +262,12 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         with self.canvas:
             
             tokens.DamageToken(pos = position,
+                                    size = size, dungeon = self)
+            
+    
+    def show_digging_token (self, position, size):
+        
+        with self.canvas:
+            
+            tokens.DiggingToken(pos = position,
                                     size = size, dungeon = self)

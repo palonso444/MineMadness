@@ -12,11 +12,10 @@ class FadingToken(Widget):
     def __init__(self, dungeon, **kwargs):
         super().__init__(**kwargs)
         self.opacity = 0
-        self.hit_maximmum = False
-        self.fade_speed = 0.05
+        self.final_opacity = None
         self.dungeon = dungeon
 
-    def fade(self, dt):
+    '''def fade(self, dt):
 
         if not self.hit_maximmum:
             self.opacity += self.fade_speed
@@ -27,22 +26,56 @@ class FadingToken(Widget):
             self.opacity -= self.fade_speed
             if self.opacity < 0:
                 self.dungeon.game.update_switch('character_done')
-                return False
+                return False'''
+            
+    def fade(self):
+
+        def fade_out(*args):
+
+            fading = Animation(opacity=0, duration=0.2)
+            #fading.bind (on_complete = end_event)
+            fading.start(self)
+
+        #def end_event(*args):
+            #pass
+
+            #self.dungeon.game.update_switch('character_done')
+
+        fading = Animation(opacity=self.final_opacity, duration=0.2)
+        fading.bind (on_complete = fade_out)
+        fading.start(self)
 
 
 class DamageToken(FadingToken):
 
     def __init__(self, dungeon, **kwargs):
         super().__init__(dungeon,**kwargs)
+        self.final_opacity = 0.4
 
         with self.canvas:
 
             self.color = Color(1,0,0,1)
             self.token = Ellipse(pos = self.pos, size = self.size)
         
-        Clock.schedule_interval(self.fade, 1/60)
+        #Clock.schedule_interval(self.fade, 1/60)
+        self.fade()
 
-    
+
+class DiggingToken(FadingToken):
+
+    def __init__(self, dungeon, **kwargs):
+        super().__init__(dungeon,**kwargs)
+        self.final_opacity = 0.7
+
+        with self.canvas:
+
+            self.color = Color(0.58,0.294,0,1)
+            self.token = Rectangle(pos = self.pos, size = self.size)
+        
+        #Clock.schedule_interval(self.fade, 1/60)
+        self.fade()
+
+
 class SceneryToken(Rectangle):
 
     
@@ -135,9 +168,8 @@ class CharacterToken(Ellipse):
                     
                 elif self.goal.has_token('shovel') or self.goal.has_token('weapon'):
 
-                    self.character.pick_object(self.goal.token.kind)
+                    self.character.pick_object(self.goal.token)
 
-                    self.goal.clear_token()
 
             
             if self.start != self.goal:
@@ -153,33 +185,29 @@ class CharacterToken(Ellipse):
 
                     if utils.are_nearby(self.character, player):
 
-                        self.character.attack(player)
+                        player_tile = self.dungeon.get_tile(player.position)
 
-                    else:
-                        self.dungeon.game.update_switch('character_done')
+                        print (player_tile)
+                        
+                        self.character.attack(player_tile)
 
-            else:
-                self.dungeon.game.update_switch('character_done')
+                    #else:
+                        #self.dungeon.game.update_switch('character_done')
+
+            #else:
+            self.dungeon.game.update_switch('character_done')
 
             
 
 
     def update_on_tiles(self, start_tile, end_tile):
 
-        
-        #IF END_TILE OCCUPIED, MONSTERTOKEN IS STORED TO SPECIAL TOKEN SLOT
-        if end_tile.token and isinstance(self.character, characters.Monster):
-
+        if end_tile.token and end_tile.token.kind in self.character.ignores:
             end_tile.monster_token = self
         else:
-
             end_tile.token = self
 
-        # IF SECONDARY SLOT OCCUPIED IN START TILE, IT IS SET TO NONE. MAIN SLOT REMAINS UNTOUCHED
         if start_tile.monster_token:
-
             start_tile.monster_token = None
-        
         else:
-
             start_tile.token = None

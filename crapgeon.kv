@@ -1,3 +1,5 @@
+#: import Player character_classes.Player
+
 <DungeonLayout>:
 
 
@@ -51,6 +53,7 @@
 
     orientation: "vertical"
 
+    on_active_character_id: name_label.text = str(root.active_character.name)
     on_health: health_label.text = 'Health: ' + str(root.active_character.health)
     on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.shovels)
     on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.weapons)
@@ -80,7 +83,7 @@
 
                 halign: 'center'
 
-                text: 'Character name'
+                id: name_label
 
             Label:
 
@@ -110,6 +113,6 @@
 
             width: self.minimum_width
 
-            rows: 5
+            rows: 10
 
-            cols: 5
+            cols: 10

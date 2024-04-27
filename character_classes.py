@@ -25,6 +25,7 @@ class Character:
     
     def __init__(self):    #position as tuple (y,x)
         
+        self.name = None
         self.position = None
         self.token = None
         self.dungeon = None
@@ -45,25 +46,19 @@ class Character:
             character.id = self.data.index(character)
 
     
-    def attack (self, opponent_tile):
+    def fight_on_tile (self, opponent_tile):
 
         opponent = opponent_tile.get_character()
-        
-        if isinstance(self, Player):
-            if self.weapons > 0 and self.armed_strength_incr:
-                self.strength += self.armed_strength_incr   #TODO: fix this
 
         damage = randint(self.strength[0], self.strength[1])
-        opponent.health -= damage
+        if isinstance(self, Player) and self.weapons > 0:
+            self.weapons -= 1
+            self.dungeon.game.update_switch('weapons')
+            if self.armed_strength_incr:
+                damage += self.armed_strength_incr
         
+        opponent.health -= damage
         self.remaining_moves -= 1
-
-        if isinstance(self, Player):
-            if self.weapons > 0:
-                self.weapons -=1
-                self.dungeon.game.update_switch('weapons')
-                if self.armed_strength_incr:
-                    self.strength -= self.armed_strength_incr
 
         if opponent.health <= 0:
             opponent.data.remove(opponent)
@@ -84,6 +79,7 @@ class Character:
 class Player(Character):
 
     data = list ()
+    gems = None
 
     def reset_moves():
 
@@ -97,10 +93,10 @@ class Player(Character):
         self.cannot_share_tile_with = ('wall', 'monster','player')
         self.free_actions = (None,)
         self.shovels = 0
+        self.moves = 6
         self.digging_moves = 1
         self.weapons = 3
         self.armed_strength_incr = None
-        self.gems = 0
         self.ignores = (None,)
     
     
@@ -156,17 +152,18 @@ class Player(Character):
         return mov_range   
 
 
-    def pick_object(self, token):
+    def pick_object(self, object_tile):
 
-        if token.kind not in self.ignores:
-            character_attribute = getattr(self, token.kind + 's')
+        if object_tile.token.kind not in self.ignores: #and object_tile.token.kind != 'gem':
+            character_attribute = getattr(self, object_tile.token.kind + 's')
             character_attribute += 1
-            setattr(self, token.kind + 's', character_attribute)
+            setattr(self, object_tile.token.kind + 's', character_attribute)
 
-            tile = self.dungeon.get_tile(token.position)
-            tile.clear_token()
+            self.dungeon.game.update_switch(object_tile.token.kind + 's')
 
-            self.dungeon.game.update_switch(token.kind + 's')
+            object_tile.clear_token()
+
+            
 
 
     def dig(self, wall_tile):
@@ -193,9 +190,11 @@ class Vane(Player):
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.name = 'Vane'
         self.health = 30
         self.strength = (1,1)
-        self.moves = 2
+        #self.moves = 2
+        self.digging_moves = 2 #half of the self.moves
 
 
 class CrusherJane(Player):
@@ -208,11 +207,12 @@ class CrusherJane(Player):
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.name = 'Crusher Jane'
         self.free_actions = ('fighting',)
         self.health = 3
         self.strength = (1,1)
-        self.armed_strength_incr = (1,1)
-        self.moves = 4
+        self.armed_strength_incr = 2
+        #self.moves = 4
         self.ignores = ('gem',)
 
 
@@ -228,10 +228,11 @@ class Hawkins (Player):
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.name = 'Hawkins'
         self.free_actions = ('digging',)
         self.health = 30
         self.strength = (1,1)
-        self.moves = 2
+        #self.moves = 2
         self.ignores = ('shovel', 'gem')
 
 
@@ -244,7 +245,7 @@ class Monster(Character):
         super().__init__()
         self.kind = 'monster'
         self.random_motility = 0
-        self.ignores = ('shovel', 'weapon')
+        self.ignores = ('shovel', 'weapon', 'gem')
 
     def reset_moves():
 
@@ -433,6 +434,7 @@ class Monster(Character):
                         position = (position[0],position [1]-1)
                         path.append(position)
 
+       
         path = self.trim_path(path)
 
         return path
@@ -456,13 +458,17 @@ class Monster(Character):
 
         
         for position in reversed(path):
+
+            if path.index(position) != len(path)-1:  
+                break   #at this stage only last position in path is rellevant
         
             for token_kind in self.cannot_share_tile_with:
+                
+                #position != self.position is necessary for random moves
+                if self.dungeon.get_tile(position).has_token(token_kind) and position != self.position:
+                        
+                    path.remove(position)
         
-                if len(path)>0 and self.dungeon.get_tile(path[-1]).has_token(token_kind):
-
-                        path.remove(position)
-
         return path
     
 
@@ -488,6 +494,7 @@ class Kobold(Monster):
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.name = 'Kobold'
         self.moves = 4
         self.health = 1
         self.strength = (1,1)
@@ -502,11 +509,12 @@ class Kobold(Monster):
     
 
 
-class HellHound(Monster):
+class CavernHound(Monster):
     
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.name = 'Cavern Hound'
         self.moves = 5
         self.health = 1
         self.strength = (1,1)
@@ -532,6 +540,7 @@ class DepthsWisp(Monster):
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.name = 'Depths Wisp'
         self.moves = 3
         self.health = 1
         self.strength = (1,1)
@@ -556,6 +565,7 @@ class NightMare(Monster):
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.name = 'Nightmare'
         self.moves = 7
         self.health = 1
         self.strength = (1,1)
@@ -582,7 +592,7 @@ class DarkDwarf(Monster):
 class MetalEater(Monster):
     pass
 
-    #chases weapons and shovels and makes disappear. Does not attach player.
+    #chases weapons and shovels and makes disappear. Does not attack player.
 
 
 class GreedyGnome(Monster):

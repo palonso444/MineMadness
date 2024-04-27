@@ -15,13 +15,19 @@ class DungeonLayout(GridLayout):    #initialized in kv file
     
         
         self.generate_blueprint(self.rows, self.cols)   #initialize map of dungeon
+        gem_count = 0
         
         
         for y in range (self.rows):
               
                 for x in range (self.cols):
 
-                    if self.blueprint[y][x] == ' ':
+                    if self.blueprint[y][x] == 'o':
+
+                        gem_count +=1
+                        tile = tiles.Tile(row=y, col=x, kind ='floor', dungeon_instance=self)
+
+                    elif self.blueprint[y][x] == ' ':
 
                         tile = tiles.Tile(row=y, col=x, kind ='exit', dungeon_instance=self)
 
@@ -32,6 +38,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                     self.add_widget(tile)
 
         self.game = self.parent.parent
+        self.game.total_gems = gem_count
         self.game.dungeon = self  #Adds dungeon as CrapgeonGame class attribute    
     
     
@@ -39,18 +46,18 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         self.blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(self.blueprint,'K', 0)  #rats
-        utils.place_single_items(self.blueprint,'H', 3)  #hellhound
+        utils.place_single_items(self.blueprint,'K', 1)  #kobolds
+        utils.place_single_items(self.blueprint,'H', 0)  #hellhound
         utils.place_single_items(self.blueprint,'W', 0)  #wisp
-        utils.place_single_items(self.blueprint,'N', 1)  #nightmare
+        utils.place_single_items(self.blueprint,'N', 0)  #nightmare
 
         utils.place_single_items(self.blueprint,'%', 1)  #vane
         utils.place_single_items(self.blueprint,'?', 1)  #hawkins
         utils.place_single_items(self.blueprint,'&', 1)  #crusherjane
-        utils.place_single_items(self.blueprint,'o', 0)
-        utils.place_single_items(self.blueprint,' ', 0)
+        utils.place_single_items(self.blueprint,'o', 2)
+        utils.place_single_items(self.blueprint,' ', 1)
 
-        for key,value in {'M': 0, '#': 0.3, 'p': 0.1, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0.3, 'p': 0, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 
@@ -138,7 +145,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                     character = characters.Kobold()
                 
                 elif token_species == 'hound':
-                    character = characters.HellHound()
+                    character = characters.CavernHound()
 
                 elif token_species == 'wisp':
                     character = characters.DepthsWisp()

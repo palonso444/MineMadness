@@ -29,7 +29,7 @@ from collections import deque
 class CrapgeonGame(BoxLayout):  #initlialized in kv file
     
     
-    active_character_id = NumericProperty(0)
+    active_character_id = NumericProperty(None, allownone = True)
 
     dungeon = ObjectProperty(None)
 
@@ -44,11 +44,13 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     gems = BooleanProperty(None)
 
     #self.active_character is initialized and defined within on_active_character_id()
+    #self.total_gems is initialized within DungeonLayout on_pos()
     
     
     def initialize_switches(self):
 
         self.turn = True    #TRUE for players, FALSE for monsters. Player starts
+                            #on_turn initializes active_character_id
 
         self.health = False
         self.shovels = False
@@ -72,9 +74,6 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     
     def on_character_done(self, *args):
 
-        print ('CHARACTER DONE')
-        print (self.active_character_id)
-
         if isinstance(self.active_character, characters.Player) and self.active_character.remaining_moves > 0:
                 
             self.dynamic_movement_range()    #checks if player can still move
@@ -91,42 +90,43 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         else:
             characters.Monster.reset_moves()
         
-        if self.active_character_id != 0:
+        if self.active_character_id == 0:
+            self.active_character_id = None
                 
-            self.active_character_id = 0
-
-        else:
-
-            self.on_active_character_id ()  #must be called manually if self.active_character_id does not change
+        self.active_character_id = 0
 
 
     def on_active_character_id (self, *args):
 
         
-        if self.turn or len(characters.Monster.data) == 0:   #if player turn or no monsters (always players turn)
+        if self.active_character_id is not None:
+        
+            if self.turn or len(characters.Monster.data) == 0:   #if player turn or no monsters (always players turn)
 
-            self.active_character = characters.Player.data[self.active_character_id]
+                self.active_character = characters.Player.data[self.active_character_id]
 
-            if self.active_character.has_moved():
-                self.next_character()
+                if self.active_character.has_moved():
+                    self.next_character()
             
-            else:
-                self.update_switch('health')    #must be updated here after seting player as active character
-                self.dynamic_movement_range()
+                else:
+                    self.update_switch('health')    #must be updated here after seting player as active character
+                    self.dynamic_movement_range()
 
         
-        elif not self.turn:  #if monsters turn and monsters in the game
+            elif not self.turn:  #if monsters turn and monsters in the game
 
-            self.dungeon.activate_which_tiles() #tiles deactivated in monster turn
+                self.dungeon.activate_which_tiles() #tiles deactivated in monster turn
             
-            self.active_character = characters.Monster.data[self.active_character_id]
+                self.active_character = characters.Monster.data[self.active_character_id]
                 
-            self.active_character.token.move_monster()
+                self.active_character.token.move_monster()
 
 
     def on_dungeon_finished(self, *args):
 
-        print ('DUNGEON FINISHED!')
+        if self.active_character.gems == self.total_gems:
+
+            print ('DUNGEON FINISHED!!!')
 
 
     def next_character(self):
@@ -170,7 +170,9 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         self.active_character.rearrange_ids()
 
         self.active_character = new_active_character
-        self.on_active_character_id()
+        
+        self.active_character_id = None
+        self.active_character_id = characters.Player.data.index(self.active_character)
 
 
 class CrapgeonApp(App):

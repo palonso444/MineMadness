@@ -164,11 +164,12 @@ class CharacterToken(Ellipse):
             
                 if self.goal.kind == 'exit':
 
-                    self.dungeon.game.dungeon_finished = True
+                    self.dungeon.game.update_switch('dungeon_finished')
                     
-                elif self.goal.has_token('shovel') or self.goal.has_token('weapon'):
+                elif self.goal.has_token('shovel') or self.goal.has_token('weapon') or self.goal.has_token('gem'):
 
-                    self.character.pick_object(self.goal.token)
+                    print (self.goal.token)
+                    self.character.pick_object(self.goal)
 
 
             
@@ -189,7 +190,7 @@ class CharacterToken(Ellipse):
 
                         print (player_tile)
                         
-                        self.character.attack(player_tile)
+                        self.character.fight_on_tile(player_tile)
 
                     #else:
                         #self.dungeon.game.update_switch('character_done')

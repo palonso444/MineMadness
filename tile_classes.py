@@ -1,7 +1,7 @@
 from kivy.uix.button import Button  # type: ignore
-from kivy.animation import Animation
-from kivy.properties import Clock
-from kivy.graphics import Ellipse, Color
+#from kivy.animation import Animation
+#from kivy.properties import Clock
+#from kivy.graphics import Ellipse, Color
 
 import crapgeon_utils as utils
 import character_classes as characters
@@ -39,7 +39,7 @@ class Tile(Button):
 
         elif self.has_token('monster'):
 
-            player.attack(self)
+            player.fight_on_tile(self)
 
             self.dungeon.game.update_switch('character_done')
 
@@ -70,7 +70,7 @@ class Tile(Button):
         
         path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position), self, (player.blocked_by))
 
-        if isinstance(self.token, tokens.CharacterToken) and self.token.character == player:
+        if self.has_token('player') and self.get_character() == player:
 
             return True
         

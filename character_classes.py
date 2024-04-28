@@ -36,7 +36,6 @@ class Character:
     def update_position (self, y_position, x_position):
 
         self.__class__.data[self.id].position = (y_position, x_position)
-        self.__class__.data[self.id].token.position = (y_position, x_position)
 
     
     def rearrange_ids (self):
@@ -79,7 +78,7 @@ class Character:
 class Player(Character):
 
     data = list ()
-    gems = None
+    gems = 0
 
     def reset_moves():
 
@@ -93,7 +92,7 @@ class Player(Character):
         self.cannot_share_tile_with = ('wall', 'monster','player')
         self.free_actions = (None,)
         self.shovels = 0
-        self.moves = 6
+        self.moves = 3
         self.digging_moves = 1
         self.weapons = 3
         self.armed_strength_incr = None
@@ -154,10 +153,16 @@ class Player(Character):
 
     def pick_object(self, object_tile):
 
-        if object_tile.token.kind not in self.ignores: #and object_tile.token.kind != 'gem':
-            character_attribute = getattr(self, object_tile.token.kind + 's')
-            character_attribute += 1
-            setattr(self, object_tile.token.kind + 's', character_attribute)
+        if object_tile.token.kind not in self.ignores: 
+            
+            if object_tile.token.kind != 'gem':
+                character_attribute = getattr(self, object_tile.token.kind + 's')
+                character_attribute += 1
+                setattr(self, object_tile.token.kind + 's', character_attribute)
+
+            elif object_tile.token.kind == 'gem':
+
+                Player.gems += 1
 
             self.dungeon.game.update_switch(object_tile.token.kind + 's')
 
@@ -209,7 +214,7 @@ class CrusherJane(Player):
         self.data = super().data
         self.name = 'Crusher Jane'
         self.free_actions = ('fighting',)
-        self.health = 3
+        self.health = 30
         self.strength = (1,1)
         self.armed_strength_incr = 2
         #self.moves = 4
@@ -446,7 +451,7 @@ class Monster(Character):
         
             if tile.token and tile.token.kind in self.blocked_by:
                 return False
-            if tile.monster_token and tile.monster_token.kind in self.blocked_by:
+            if tile.second_token and tile.second_token.kind in self.blocked_by:
                 return False
                
             return True

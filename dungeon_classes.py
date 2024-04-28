@@ -54,10 +54,10 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         utils.place_single_items(self.blueprint,'%', 1)  #vane
         utils.place_single_items(self.blueprint,'?', 1)  #hawkins
         utils.place_single_items(self.blueprint,'&', 1)  #crusherjane
-        utils.place_single_items(self.blueprint,'o', 2)
+        utils.place_single_items(self.blueprint,'o', 1)
         utils.place_single_items(self.blueprint,' ', 1)
 
-        for key,value in {'M': 0, '#': 0.3, 'p': 0, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in {'M': 0, '#': 0, 'p': 0.3, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 
@@ -153,8 +153,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                 elif token_species == 'nightmare':
                     character = characters.NightMare()
 
-            tile.token = tokens.CharacterToken(position = tile.position,  
-                                 kind = token_kind,
+            tile.token = tokens.CharacterToken(kind = token_kind,
                                  species = token_species,
                                  dungeon_instance = self,
                                  character = None,
@@ -172,8 +171,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         else:
 
-            tile.token = tokens.SceneryToken(position = tile.position,  
-                                 kind = token_kind,
+            tile.token = tokens.SceneryToken(kind = token_kind,
                                  dungeon_instance = self,
                                  pos = tile.pos,
                                  size = tile.size)

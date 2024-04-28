@@ -15,31 +15,13 @@ class FadingToken(Widget):
         self.final_opacity = None
         self.dungeon = dungeon
 
-    '''def fade(self, dt):
-
-        if not self.hit_maximmum:
-            self.opacity += self.fade_speed
-            if self.opacity > 0.4:
-                self.hit_maximmum = True
-
-        else:
-            self.opacity -= self.fade_speed
-            if self.opacity < 0:
-                self.dungeon.game.update_switch('character_done')
-                return False'''
             
     def fade(self):
 
         def fade_out(*args):
 
             fading = Animation(opacity=0, duration=0.2)
-            #fading.bind (on_complete = end_event)
             fading.start(self)
-
-        #def end_event(*args):
-            #pass
-
-            #self.dungeon.game.update_switch('character_done')
 
         fading = Animation(opacity=self.final_opacity, duration=0.2)
         fading.bind (on_complete = fade_out)
@@ -57,7 +39,6 @@ class DamageToken(FadingToken):
             self.color = Color(1,0,0,1)
             self.token = Ellipse(pos = self.pos, size = self.size)
         
-        #Clock.schedule_interval(self.fade, 1/60)
         self.fade()
 
 
@@ -72,18 +53,16 @@ class DiggingToken(FadingToken):
             self.color = Color(0.58,0.294,0,1)
             self.token = Rectangle(pos = self.pos, size = self.size)
         
-        #Clock.schedule_interval(self.fade, 1/60)
         self.fade()
 
 
 class SceneryToken(Rectangle):
 
     
-    def __init__(self, position, kind, dungeon_instance, **kwargs):
+    def __init__(self, kind, dungeon_instance, **kwargs):
         super().__init__(**kwargs)
 
         self.kind = kind    #defines if wall, shovel, etc.
-        self.position = position
         self.dungeon = dungeon_instance
         self.source = self.kind + 'token.png'
 
@@ -91,12 +70,11 @@ class SceneryToken(Rectangle):
 class CharacterToken(Ellipse):
 
     
-    def __init__(self, position, kind, species, dungeon_instance, character, **kwargs):
+    def __init__(self, kind, species, dungeon_instance, character, **kwargs):
         super().__init__(**kwargs)
 
         self.kind = kind    #defines if monster, player, wall, etc.
         self.species = species
-        self.position = position
         self.dungeon = dungeon_instance
         self.character = character      #links token with character object
         self.source = self.species + 'token.png'
@@ -127,7 +105,7 @@ class CharacterToken(Ellipse):
     
     def move_monster(self):
 
-        self.start = self.dungeon.get_tile(self.position)
+        self.start = self.dungeon.get_tile(self.character.position)
 
         self.path = self.character.move()
 
@@ -159,24 +137,24 @@ class CharacterToken(Ellipse):
             self.slide(self.path)
 
         else:   #if goal is reached
-            
-            if isinstance(self.character, characters.Player):    
-            
-                if self.goal.kind == 'exit':
 
-                    self.dungeon.game.update_switch('dungeon_finished')
+            if isinstance(self.character, characters.Player):   
+            
+                if self.goal.kind == 'exit' and characters.Player.gems == self.dungeon.game.total_gems:
+
+                    self.update_on_tiles(self.start, self.goal) #updates tile.token
+                    self.character.update_position(self.goal.row, self.goal.col)
+                    self.dungeon.game.update_switch('player_exited')
+                    return
                     
                 elif self.goal.has_token('shovel') or self.goal.has_token('weapon') or self.goal.has_token('gem'):
 
-                    print (self.goal.token)
                     self.character.pick_object(self.goal)
-
 
             
             if self.start != self.goal:
                 
                 self.update_on_tiles(self.start, self.goal) #updates tile.token
-                
                 self.character.update_position(self.goal.row, self.goal.col)
 
             
@@ -187,28 +165,20 @@ class CharacterToken(Ellipse):
                     if utils.are_nearby(self.character, player):
 
                         player_tile = self.dungeon.get_tile(player.position)
-
-                        print (player_tile)
-                        
                         self.character.fight_on_tile(player_tile)
 
-                    #else:
-                        #self.dungeon.game.update_switch('character_done')
-
-            #else:
-            self.dungeon.game.update_switch('character_done')
-
             
+            self.dungeon.game.update_switch('character_done')
 
 
     def update_on_tiles(self, start_tile, end_tile):
 
         if end_tile.token and end_tile.token.kind in self.character.ignores:
-            end_tile.monster_token = self
+            end_tile.second_token = self
         else:
             end_tile.token = self
 
-        if start_tile.monster_token:
-            start_tile.monster_token = None
+        if start_tile.second_token:
+            start_tile.second_token = None
         else:
             start_tile.token = None

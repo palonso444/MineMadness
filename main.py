@@ -33,7 +33,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
     dungeon = ObjectProperty(None)
 
-    dungeon_finished = BooleanProperty(False)
+    player_exited = BooleanProperty(False)
     character_done = BooleanProperty(False)
     
     turn = BooleanProperty(None)
@@ -48,7 +48,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     
     
     def initialize_switches(self):
-
+        
         self.turn = True    #TRUE for players, FALSE for monsters. Player starts
                             #on_turn initializes active_character_id
 
@@ -97,9 +97,8 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
 
     def on_active_character_id (self, *args):
-
         
-        if self.active_character_id is not None:
+        if type(self.active_character_id) is int:
         
             if self.turn or len(characters.Monster.data) == 0:   #if player turn or no monsters (always players turn)
 
@@ -122,11 +121,21 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
                 self.active_character.token.move_monster()
 
 
-    def on_dungeon_finished(self, *args):
+    def on_player_exited(self, *args):
 
-        if self.active_character.gems == self.total_gems:
+        exit_tile = self.dungeon.get_tile(self.active_character.position)
 
-            print ('DUNGEON FINISHED!!!')
+        characters.Player.data.remove(self.active_character)
+        self.active_character.rearrange_ids()
+        exit_tile.clear_token()
+
+        if self.active_character_id == len(characters.Player.data):
+            self.update_switch('turn')
+
+        else:
+            temp = self.active_character_id
+            self.active_character_id = None
+            self.active_character_id = temp
 
 
     def next_character(self):

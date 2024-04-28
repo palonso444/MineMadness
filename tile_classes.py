@@ -18,8 +18,7 @@ class Tile(Button):
         self.position = (row,col)
         self.kind = kind
         self.token = None   #defined later when token is placed on tile by DungeonLayout.place_tokens
-        self.monster_token = None  #tiles can have up to 2 tokens (shovel + monster for instance). Special slot reserved for monsters in such cases
-        #self.damage_token = None
+        self.second_token = None  #tiles can have up to 2 tokens (shovel + monster for instance). Special slot reserved for monsters in such cases
         self.dungeon = dungeon_instance     #need to pass the instance of the dungeon in order to cal dungeon.move_token from this class
 
 
@@ -51,7 +50,7 @@ class Tile(Button):
                 start_tile.token.move_player(start_tile, self)
             
             else:
-                start_tile.monster_token.move_player(start_tile, self)
+                start_tile.second_token.move_player(start_tile, self)
             
             
       
@@ -101,7 +100,7 @@ class Tile(Button):
 
     def has_token(self, token_kind):
 
-        if self.monster_token and self.monster_token.kind == token_kind:
+        if self.second_token and self.second_token.kind == token_kind:
             return True
         
         if self.token and self.token.kind == token_kind:
@@ -113,9 +112,9 @@ class Tile(Button):
     def clear_token(self):
         
 
-        if self.monster_token:
-            self.dungeon.canvas.remove(self.monster_token)
-            self.monster_token = None
+        if self.second_token:
+            self.dungeon.canvas.remove(self.second_token)
+            self.second_token = None
         
         else:
             self.dungeon.canvas.remove(self.token)
@@ -124,8 +123,8 @@ class Tile(Button):
 
     def get_character(self):
         
-        if self.monster_token:
-            return self.monster_token.character
+        if self.second_token:
+            return self.second_token.character
         else:
             return self.token.character
         

@@ -129,7 +129,10 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         self.active_character.rearrange_ids()
         exit_tile.clear_token()
 
-        if self.active_character_id == len(characters.Player.data):
+        if len(characters.Player.data) == 0:
+            print ('END OF GAME')
+
+        elif self.active_character_id == len(characters.Player.data):
             self.update_switch('turn')
 
         else:

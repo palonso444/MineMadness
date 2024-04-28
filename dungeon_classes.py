@@ -1,16 +1,41 @@
 from kivy.uix.gridlayout import GridLayout    # type: ignore
-from kivy.properties import BooleanProperty
-from kivy.graphics import Ellipse, Color
+#from kivy.properties import BooleanProperty
+#from kivy.graphics import Ellipse, Color
 
 import crapgeon_utils as utils
 import character_classes as characters
 import token_classes as tokens
 import tile_classes as tiles
 from collections import deque
+from random import randint
 
 
 class DungeonLayout(GridLayout):    #initialized in kv file
 
+
+    def establish_size(self, level = 4):
+
+        return 6 + int(level/1.5)
+    
+
+    def get_gem_number(self, level = 1):
+        
+        return level
+    
+
+    def get_monster_item_frequencies(self, level = 4):
+        
+        wall_frequency = randint(10,60)*0.01
+        
+        monster_frequencies = {'K':0.15/level, 'H':level/30, 'W':level/80, 'N':level/120}
+
+        total_monster_frequency = sum(monster_frequencies.values())
+
+        item_frequencies = {'#':wall_frequency, 'p':wall_frequency*0.15, 'x':total_monster_frequency*0.25}
+
+        return {**monster_frequencies, **item_frequencies}
+    
+    
     def on_pos(self, *args):
     
         
@@ -46,18 +71,13 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         self.blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(self.blueprint,'K', 1)  #kobolds
-        utils.place_single_items(self.blueprint,'H', 0)  #hellhound
-        utils.place_single_items(self.blueprint,'W', 0)  #wisp
-        utils.place_single_items(self.blueprint,'N', 0)  #nightmare
-
         utils.place_single_items(self.blueprint,'%', 1)  #vane
         utils.place_single_items(self.blueprint,'?', 1)  #hawkins
         utils.place_single_items(self.blueprint,'&', 1)  #crusherjane
-        utils.place_single_items(self.blueprint,'o', 1)
+        utils.place_single_items(self.blueprint,'o', self.get_gem_number())
         utils.place_single_items(self.blueprint,' ', 1)
 
-        for key,value in {'M': 0, '#': 0, 'p': 0.3, 'x': 0, 's': 0}.items():  #.items() method to iterate over key and values, not only keys (default)
+        for key,value in self.get_monster_item_frequencies().items():
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 

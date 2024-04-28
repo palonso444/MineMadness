@@ -1,5 +1,4 @@
 
-
 import random
 
 
@@ -74,7 +73,7 @@ def create_map (height, width):
 
 #place items on map in an exact way. Pass number of items to be placed. If a single item, coordinates may be also passed as (y,x)
 #If more than one item is placed and coordinates are passed, from second item on they will be placed ramdonly
-#Items do not overwrite each other in any case. If given coords are occupied, item is placed somewhere else.
+#Items do not overwrite each other. If given coords are occupied, item is placed somewhere else.
 
 def place_single_items(map, item, number_of_items = 1, coord = None):
 
@@ -97,7 +96,7 @@ def place_single_items(map, item, number_of_items = 1, coord = None):
 #place items on map in an approximate way. Pass frequency value from 0 (no items) to 1 (map full of items).
 #If place coord are occupied, new item overwrites placed item unless placed item is passed as 'protected'. Default: player, exit and coins.
 
-def place_items (map, item, frequency = 0.1, protected = ('%','?', ' ', 'o', 'W', 'K', 'H', 'N', '&')): #REMOVE WKH
+def place_items (map, item, frequency = 0.1, protected = ('%','?', '&', ' ', 'o')):
 
 	number_of_items = (len(map)* len (map[0])) * frequency
 

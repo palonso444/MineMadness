@@ -78,7 +78,14 @@ class Character:
 class Player(Character):
 
     data = list ()
+    exited = list()
     gems = 0
+
+    def transfer_player(name):
+
+        for player in Player.exited:
+            if player.name == name:
+                return player
 
     def reset_moves():
 
@@ -185,7 +192,7 @@ class Player(Character):
         
 
 
-class Vane(Player):
+class Sawyer(Player):
     '''Slow digger (takes half of initial moves each dig)
         Can pick gems
         LOW strength
@@ -195,7 +202,7 @@ class Vane(Player):
     def __init__(self):
         super().__init__()
         self.data = super().data
-        self.name = 'Vane'
+        self.name = 'Sawyer'
         self.health = 30
         self.strength = (1,1)
         #self.moves = 2

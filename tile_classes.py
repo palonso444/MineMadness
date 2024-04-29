@@ -4,8 +4,8 @@ from kivy.uix.button import Button  # type: ignore
 #from kivy.graphics import Ellipse, Color
 
 import crapgeon_utils as utils
-import character_classes as characters
-import token_classes as tokens
+#import character_classes as characters
+#import token_classes as tokens
 
 
 class Tile(Button):

@@ -13,29 +13,32 @@ from random import randint
 class DungeonLayout(GridLayout):    #initialized in kv file
 
 
-    def establish_size(self, level = 4):
+    def establish_size(self):
 
-        return 6 + int(level/1.5)
+        return 6 + int(self.level/1.5)
     
 
-    def get_gem_number(self, level = 1):
+    def get_gem_number(self):
         
-        return level
+        return self.level
     
 
-    def get_monster_item_frequencies(self, level = 4):
+    def get_monster_item_frequencies(self):
         
         wall_frequency = randint(10,60)*0.01
         
-        monster_frequencies = {'K':0.15/level, 'H':level/30, 'W':level/80, 'N':level/120}
+        monster_frequencies = {'K':0.15/self.level, 'H':self.level/30, 'W':self.level/80, 'N':self.level/120}
 
         total_monster_frequency = sum(monster_frequencies.values())
 
         item_frequencies = {'#':wall_frequency, 'p':wall_frequency*0.15, 'x':total_monster_frequency*0.25}
 
-        return {**monster_frequencies, **item_frequencies}
+        all_frequencies = {**monster_frequencies, **item_frequencies}
+
+        del monster_frequencies, item_frequencies
+        return all_frequencies
     
-    
+
     def on_pos(self, *args):
     
         
@@ -71,10 +74,11 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         self.blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(self.blueprint,'%', 1)  #vane
+        utils.place_single_items(self.blueprint,'%', 1)  #sawyer
         utils.place_single_items(self.blueprint,'?', 1)  #hawkins
         utils.place_single_items(self.blueprint,'&', 1)  #crusherjane
         utils.place_single_items(self.blueprint,'o', self.get_gem_number())
+        #utils.place_single_items(self.blueprint,'o', 0)
         utils.place_single_items(self.blueprint,' ', 1)
 
         for key,value in self.get_monster_item_frequencies().items():
@@ -95,7 +99,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
                 if self.blueprint [tile.row][tile.col] == '%':
 
-                    self.place_tokens(tile, 'player', 'vane')
+                    self.place_tokens(tile, 'player', 'sawyer')
 
                 elif self.blueprint [tile.row][tile.col] == '?':
 
@@ -149,14 +153,26 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         
             if token_kind == 'player':
 
-                if token_species == 'vane':
-                    character = characters.Vane()
+                if token_species == 'sawyer':
+
+                    if self.level == 1:
+                        character = characters.Sawyer()
+                    else:
+                        character = characters.Player.transfer_player('Sawyer')
 
                 elif token_species == 'hawkins':
-                    character = characters.Hawkins()
+
+                    if self.level ==1 :
+                        character = characters.Hawkins()
+                    else:
+                        character = characters.Player.transfer_player('Hawkins')
 
                 elif token_species == 'crusherjane':
-                    character = characters.CrusherJane()
+
+                    if self.level == 1:
+                        character = characters.CrusherJane()
+                    else:
+                        character = characters.Player.transfer_player('Crusher Jane')
 
             
             elif token_kind == 'monster':
@@ -183,8 +199,9 @@ class DungeonLayout(GridLayout):    #initialized in kv file
             character.position = tile.position   #Character attributes initialized here
             character.token = tile.token
             character.dungeon = self
+            
             character.id = len(character.__class__.data)
-            character.__class__.data.append (character)
+            character.__class__.data.append (character) 
             
             tile.token.character = character
 

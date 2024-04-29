@@ -28,7 +28,6 @@ from collections import deque
 
 class CrapgeonGame(BoxLayout):  #initlialized in kv file
     
-    
     active_character_id = NumericProperty(None, allownone = True)
 
     dungeon = ObjectProperty(None)
@@ -43,8 +42,8 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
     weapons = BooleanProperty(None)
     gems = BooleanProperty(None)
 
-    #self.active_character is initialized and defined within on_active_character_id()
-    #self.total_gems is initialized within DungeonLayout on_pos()
+    #self.active_character is initialized and defined -> on_active_character_id()
+    #self.total_gems is initialized and defined -> DungeonLayout on_pos()
     
     
     def initialize_switches(self):
@@ -66,12 +65,14 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         
     
     def on_dungeon(self, *args):
-
         
+
+        characters.Player.gems = 0
         self.dungeon.allocate_tokens()
         self.initialize_switches()
+        characters.Player.exited.clear()
 
-    
+
     def on_character_done(self, *args):
 
         if isinstance(self.active_character, characters.Player) and self.active_character.remaining_moves > 0:
@@ -109,6 +110,8 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             
                 else:
                     self.update_switch('health')    #must be updated here after seting player as active character
+                    self.update_switch('shovels')
+                    self.update_switch('weapons')
                     self.dynamic_movement_range()
 
         
@@ -125,12 +128,17 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
         exit_tile = self.dungeon.get_tile(self.active_character.position)
 
-        characters.Player.data.remove(self.active_character)
+        exited_player = characters.Player.data.pop(self.active_character_id)
+        characters.Player.exited.append(exited_player)
         self.active_character.rearrange_ids()
         exit_tile.clear_token()
 
         if len(characters.Player.data) == 0:
-            print ('END OF GAME')
+            
+            characters.Monster.data.clear()
+            app = App.get_running_app()
+            app.level += 1
+            app.generate_next_level()
 
         elif self.active_character_id == len(characters.Player.data):
             self.update_switch('turn')
@@ -189,9 +197,17 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
 class CrapgeonApp(App):
 
+    level = 1
+
     def build (self):
 
         return CrapgeonGame()
+    
+    def generate_next_level(self):
+
+        self.root.clear_widgets()   #self root is root widget, in this case CrapgeonGame object
+        new_level = CrapgeonGame()
+        self.root.add_widget(new_level)
 
     
 

@@ -1,6 +1,6 @@
 from kivy.graphics import Ellipse, Rectangle, Color   # type: ignore
 from kivy.animation import Animation
-from kivy.properties import Clock, BooleanProperty
+#from kivy.properties import Clock, BooleanProperty
 from kivy.uix.widget import Widget
 
 import character_classes as characters

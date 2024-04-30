@@ -129,7 +129,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
         exit_tile = self.dungeon.get_tile(self.active_character.position)
 
         exited_player = characters.Player.data.pop(self.active_character_id)
-        characters.Player.exited.append(exited_player)
+        characters.Player.exited.add(exited_player)
         self.active_character.rearrange_ids()
         exit_tile.clear_token()
 

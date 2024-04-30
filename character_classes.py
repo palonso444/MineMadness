@@ -57,6 +57,7 @@ class Character:
                 damage += self.armed_strength_incr
         
         opponent.health -= damage
+        #print (damage)
         self.remaining_moves -= 1
 
         if opponent.health <= 0:
@@ -78,11 +79,11 @@ class Character:
 class Player(Character):
 
     data = list ()
-    exited = list()
+    exited = set()
     gems = 0
 
     def transfer_player(name):
-
+        
         for player in Player.exited:
             if player.name == name:
                 return player
@@ -99,9 +100,9 @@ class Player(Character):
         self.cannot_share_tile_with = ('wall', 'monster','player')
         self.free_actions = (None,)
         self.shovels = 0
-        self.moves = 3
+        #self.moves = 3
         self.digging_moves = 1
-        self.weapons = 3
+        self.weapons = 0
         self.armed_strength_incr = None
         self.ignores = (None,)
     
@@ -203,10 +204,10 @@ class Sawyer(Player):
         super().__init__()
         self.data = super().data
         self.name = 'Sawyer'
-        self.health = 30
-        self.strength = (1,1)
-        #self.moves = 2
-        self.digging_moves = 2 #half of the self.moves
+        self.health = 4
+        self.strength = (1,2)
+        self.moves = 5
+        self.digging_moves = 3
 
 
 class CrusherJane(Player):
@@ -221,10 +222,10 @@ class CrusherJane(Player):
         self.data = super().data
         self.name = 'Crusher Jane'
         self.free_actions = ('fighting',)
-        self.health = 30
-        self.strength = (1,1)
+        self.health = 8
+        self.strength = (3,6)
         self.armed_strength_incr = 2
-        #self.moves = 4
+        self.moves = 3
         self.ignores = ('gem',)
 
 
@@ -242,9 +243,9 @@ class Hawkins (Player):
         self.data = super().data
         self.name = 'Hawkins'
         self.free_actions = ('digging',)
-        self.health = 30
-        self.strength = (1,1)
-        #self.moves = 2
+        self.health = 5
+        self.strength = (1,4)
+        self.moves = 4
         self.ignores = ('shovel', 'gem')
 
 
@@ -256,7 +257,7 @@ class Monster(Character):
     def __init__(self):
         super().__init__()
         self.kind = 'monster'
-        self.random_motility = 0
+        self.random_motility = 0    #from 0 to 10. Rellevant in monsters with random movement
         self.ignores = ('shovel', 'weapon', 'gem')
 
     def reset_moves():
@@ -507,12 +508,12 @@ class Kobold(Monster):
         super().__init__()
         self.data = super().data
         self.name = 'Kobold'
-        self.moves = 4
-        self.health = 1
-        self.strength = (1,1)
+        self.moves = 3
+        self.health = 2
+        self.strength = (1,2)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
-        self.random_motility = 8     #from 1 to 10. Rellevant in monsters with random movement
+        self.random_motility = 8
 
 
     def move(self):
@@ -521,15 +522,15 @@ class Kobold(Monster):
     
 
 
-class CavernHound(Monster):
+class CaveHound(Monster):
     
     def __init__(self):
         super().__init__()
         self.data = super().data
-        self.name = 'Cavern Hound'
-        self.moves = 5
-        self.health = 1
-        self.strength = (1,1)
+        self.name = 'Cave Hound'
+        self.moves = 4
+        self.health = 4
+        self.strength = (1,4)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
         self.random_motility = 8
@@ -553,17 +554,23 @@ class DepthsWisp(Monster):
         super().__init__()
         self.data = super().data
         self.name = 'Depths Wisp'
-        self.moves = 3
+        self.moves = 5
         self.health = 1
-        self.strength = (1,1)
+        self.strength = (1,2)
         self.blocked_by = ()
         self.cannot_share_tile_with = ('monster', 'player')
-        self.random_motility = 8
+        self.random_motility = 5
 
 
     def move(self):
 
-        return self.assess_path_direct()
+        if self.find_closest_reachable_player():
+
+            return self.assess_path_direct()
+        
+        else:
+            
+            return self.assess_path_random()
     
 
 class RockElemental(Monster):
@@ -578,9 +585,9 @@ class NightMare(Monster):
         super().__init__()
         self.data = super().data
         self.name = 'Nightmare'
-        self.moves = 7
-        self.health = 1
-        self.strength = (1,1)
+        self.moves = 4
+        self.health = 6
+        self.strength = (2,5)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
 

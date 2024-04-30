@@ -1,4 +1,3 @@
-
 <DungeonLayout>:
 
 
@@ -70,20 +69,21 @@
 
         Label:      #CHARACTER PICTURE HERE
 
-            size_hint: 0.5, 1
+            size_hint: 0.05, 1
 
-            text: "PICTURE \n HERE"
+            #text: "PICTURE \n HERE"
 
-            halign: 'center'
+            #halign: 'center'
 
         BoxLayout:
             
-            orientation:'vertical'    
-        
+            orientation:'vertical'
+
             Label:
 
-                halign: 'center'
+                #halign: 'center'
 
+                font_size: '32sp'
                 id: name_label
 
             Label:
@@ -116,6 +116,6 @@
 
             width: self.minimum_width
 
-            rows: self.establish_size()
+            rows: self.dungeon_size()
 
-            cols: self.establish_size()
+            cols: self.dungeon_size()

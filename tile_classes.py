@@ -69,13 +69,18 @@ class Tile(Button):
         
         path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position), self, (player.blocked_by))
 
-        if self.has_token('player') and self.get_character() == player:
-
+        if self.has_token('player'): 
+            
+            if self.get_character() == player:
+                return True
+            if self.get_character().has_moved():
+                return False
             return True
+
         
-        if self.has_token('player') and not self.get_character().has_moved():
+        #if self.has_token('player') and self.get_character().has_moved():
 
-            return True
+            #return False
         
         if self.has_token('wall') and utils.are_nearby(self, player) and player.remaining_moves >= player.digging_moves:
             

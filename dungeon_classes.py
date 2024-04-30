@@ -13,17 +13,17 @@ from random import randint
 class DungeonLayout(GridLayout):    #initialized in kv file
 
 
-    def establish_size(self):
+    def dungeon_size(self):
 
         return 6 + int(self.level/1.5)
     
 
-    def get_gem_number(self):
+    def gem_number(self):
         
         return self.level
     
 
-    def get_monster_item_frequencies(self):
+    def level_progression(self):
         
         wall_frequency = randint(10,60)*0.01
         
@@ -31,7 +31,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         total_monster_frequency = sum(monster_frequencies.values())
 
-        item_frequencies = {'#':wall_frequency, 'p':wall_frequency*0.15, 'x':total_monster_frequency*0.25}
+        item_frequencies = {'#':wall_frequency, 'p':wall_frequency*0.15, 'x':total_monster_frequency*0.4}
 
         all_frequencies = {**monster_frequencies, **item_frequencies}
 
@@ -77,11 +77,11 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         utils.place_single_items(self.blueprint,'%', 1)  #sawyer
         utils.place_single_items(self.blueprint,'?', 1)  #hawkins
         utils.place_single_items(self.blueprint,'&', 1)  #crusherjane
-        utils.place_single_items(self.blueprint,'o', self.get_gem_number())
+        utils.place_single_items(self.blueprint,'o', self.gem_number())
         #utils.place_single_items(self.blueprint,'o', 0)
         utils.place_single_items(self.blueprint,' ', 1)
 
-        for key,value in self.get_monster_item_frequencies().items():
+        for key,value in self.level_progression().items():
         
             utils.place_items (self.blueprint, item=key, frequency=value)
 
@@ -181,7 +181,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
                     character = characters.Kobold()
                 
                 elif token_species == 'hound':
-                    character = characters.CavernHound()
+                    character = characters.CaveHound()
 
                 elif token_species == 'wisp':
                     character = characters.DepthsWisp()

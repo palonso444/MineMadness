@@ -81,9 +81,11 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         #utils.place_single_items(self.blueprint,'o', 0)
         utils.place_single_items(self.blueprint,' ', 1)
 
+        protected_items = ('%','?', '&', ' ', 'o')
+        
         for key,value in self.level_progression().items():
         
-            utils.place_items (self.blueprint, item=key, frequency=value)
+            utils.place_items (self.blueprint, item=key, frequency=value, protected = protected_items)
 
         
         #for y in range (len(self.blueprint)):

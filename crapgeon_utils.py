@@ -4,18 +4,16 @@ import random
 
 #define a random location in map
 
-def location(map):
+def location(map:list[list[str]]) -> tuple[int]:
 	
 	height = random.randint(0,len(map)-1)
 	
 	width = random.randint(0,len(map[0])-1)
 	
-	location = [height, width]
-	
-	return location
+	return (height, width)
 
 
-def check_for_free_spots(map):
+def check_for_free_spots(map:list[list[str]]) -> bool:
 
 	for y in range (len(map)):
 			
@@ -28,7 +26,7 @@ def check_for_free_spots(map):
 	return False
 
 
-def are_nearby (item1, item2):	#check if two positions are nearby
+def are_nearby (item1:object, item2:object) -> bool:	#check if two positions are nearby
 
 	directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -43,7 +41,7 @@ def are_nearby (item1, item2):	#check if two positions are nearby
 	return False
 		
 
-def distance(position1, position2):
+def distance(position1:tuple[int], position2:tuple[int]) -> int:
 
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
@@ -51,7 +49,7 @@ def distance(position1, position2):
 
 #creates map surface
 
-def create_map (height, width):
+def create_map (height:int, width:int) -> list[list[str]]:
 
 	map = list()
 
@@ -63,7 +61,7 @@ def create_map (height, width):
 
 			map_width.append('.')
 
-		map.append (map_width)
+		map.append(map_width)
 
 	return map
 
@@ -75,7 +73,7 @@ def create_map (height, width):
 #If more than one item is placed and coordinates are passed, from second item on they will be placed ramdonly
 #Items do not overwrite each other. If given coords are occupied, item is placed somewhere else.
 
-def place_single_items(map, item, number_of_items = 1, coord = None):
+def place_single_items(map:list[list[str]], item:str, number_of_items = 1, coord = None) -> None:
 
 	for number in range (int(number_of_items)):
 
@@ -96,7 +94,7 @@ def place_single_items(map, item, number_of_items = 1, coord = None):
 #place items on map in an approximate way. Pass frequency value from 0 (no items) to 1 (map full of items).
 #If place coord are occupied, new item overwrites placed item unless placed item is passed as 'protected'. Default: player, exit and coins.
 
-def place_items (map, item, frequency = 0.1, protected = ('%','?', '&', ' ', 'o')):
+def place_items (map:list[list[str]], item:str, frequency = 0.1, protected = None) -> None:
 
 	number_of_items = (len(map)* len (map[0])) * frequency
 
@@ -104,6 +102,10 @@ def place_items (map, item, frequency = 0.1, protected = ('%','?', '&', ' ', 'o'
 			
 		coord = location (map)
 
-		if map [coord[0]][coord[1]] not in protected:
+		if not protected or map [coord[0]][coord[1]] not in protected:
 		
 			map [coord[0]][coord[1]] = item
+
+
+def place_nearby (map:list, items:tuple[str]) -> None:
+	pass

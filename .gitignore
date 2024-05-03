@@ -1,0 +1,4 @@
+Crapgeonenv
+bin
+.pytest_cache
+.buildozer

@@ -392,17 +392,17 @@ class Monster(Character):
             if not possible_path:
                 continue
             
-            distance = utils.distance(self.position, target.position)
+            distance = utils.get_distance(self.position, target.position)
             
             for position in possible_path:
 
-                if distance <= utils.distance(position, target.position):
+                if distance <= utils.get_distance(position, target.position):
 
                     break
 
-                elif distance > utils.distance(position, target.position):
+                elif distance > utils.get_distance(position, target.position):
 
-                    distance = utils.distance(position, target.position)
+                    distance = utils.get_distance(position, target.position)
 
                 if possible_path.index(position) == len(possible_path) -1:
 

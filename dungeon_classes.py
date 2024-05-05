@@ -74,12 +74,11 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         self.blueprint = utils.create_map(height, width)
 
-        utils.place_single_items(self.blueprint,'%', 1)  #sawyer
-        utils.place_single_items(self.blueprint,'?', 1)  #hawkins
-        utils.place_single_items(self.blueprint,'&', 1)  #crusherjane
-        utils.place_single_items(self.blueprint,'o', self.gem_number())
+        utils.place_items_as_group(self.blueprint, ('%', '?', '&'), min_dist = 1)
+        
+        utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         #utils.place_single_items(self.blueprint,'o', 0)
-        utils.place_single_items(self.blueprint,' ', 1)
+        utils.place_equal_items(self.blueprint,' ', 1)
 
         protected_items = ('%','?', '&', ' ', 'o')
         

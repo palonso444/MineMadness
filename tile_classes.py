@@ -121,7 +121,7 @@ class Tile(Button):
             self.dungeon.canvas.remove(self.second_token)
             self.second_token = None
         
-        elif self.token.kind == token_kind:
+        elif self.token and self.token.kind == token_kind:
             self.dungeon.canvas.remove(self.token)
             self.token = None
         

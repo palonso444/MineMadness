@@ -109,9 +109,13 @@ class CharacterToken(Ellipse):
 
         self.path = self.character.move()
 
-        self.goal = self.dungeon.get_tile(self.path[-1])
+        if self.path is None:  # if cannot move, will try directly to attack players
+            self.character.attack_players()
+            self.dungeon.game.update_switch('character_done')
 
-        self.slide(self.path)
+        else:
+            self.goal = self.dungeon.get_tile(self.path[-1])
+            self.slide(self.path)
 
 
     def slide (self, path):
@@ -158,14 +162,9 @@ class CharacterToken(Ellipse):
                 self.character.update_position(self.goal.row, self.goal.col)
 
             
-            if isinstance(self.character, characters.Monster) and self.character.remaining_moves > 0:
-                
-                for player in characters.Player.data:
+            if isinstance(self.character, characters.Monster):
 
-                    if utils.are_nearby(self.character, player):
-
-                        player_tile = self.dungeon.get_tile(player.position)
-                        self.character.fight_on_tile(player_tile)
+                self.character.attack_players()
 
             
             self.dungeon.game.update_switch('character_done')

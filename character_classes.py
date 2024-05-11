@@ -262,6 +262,7 @@ class Monster(Character):
         self.kind = 'monster'
         self.random_motility = 0    #from 0 to 10. Rellevant in monsters with random movement
         self.ignores = ('shovel', 'weapon', 'gem')
+        self.attacks = 2
 
     def reset_moves():
 
@@ -422,7 +423,7 @@ class Monster(Character):
 
         position = self.position
         
-        for move in range (self.moves):
+        for move in range(self.moves):
         
             trigger = randint(1,10)
 
@@ -450,11 +451,21 @@ class Monster(Character):
                         position = (position[0],position [1]-1)
                         path.append(position)
 
-       
         path = self.trim_path(path)
+        print (path)
+        print (self.remaining_moves)
 
         return path
     
+
+    def attack_players(self):
+        
+        for player in Player.data:
+            if utils.are_nearby(self, player) and self.remaining_moves > 0:
+
+                player_tile = self.dungeon.get_tile(player.position)
+                self.fight_on_tile(player_tile)
+
 
     def goes_through(self, tile):
 
@@ -498,7 +509,7 @@ class Monster(Character):
             path = self.check_free_landing(path)
         
         if not path or len(path) == 0:
-            path = [self.position]
+            path = None
 
         return path
     
@@ -603,7 +614,7 @@ class NightMare(Monster):
             return self.assess_path_smart()
         
         else:
-            return [self.position]
+            return None
 
 
 class DarkDwarf(Monster):

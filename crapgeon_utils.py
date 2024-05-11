@@ -11,7 +11,7 @@ def location(map:list[list[str]]) -> tuple[int]:
 	
 	width = random.randint(0,len(map[0])-1)
 	
-	return (height, width)
+	return height, width
 
 
 def check_for_free_spots(map:list[list[str]]) -> bool:
@@ -161,41 +161,7 @@ def get_nearby_positions(map:list[list[str]],position:tuple[int], max_number = 4
 		
 			if number == max_number or directions.index(direction) == len(directions)-1:
 				return nearby_positions
-
-	
-# DEPRECATED USE PLACE ITEMS AS GROUP INSTEAD
-'''# Places items on free positions ('.' in blueprint). Distance regarding only first item placed
-def place_items_together (map:list, items:tuple[str], position = None, distance = 1):
-
-	initial_position = place_equal_items(map, items[0], position = position)
-	
-	given_distance = distance
-	real_distance = distance
-	deviation = 0
-	max_possible_distance = get_max_possible_distance(map, initial_position)
-
-	next_index_to_place = 1
-
-	while deviation <= max_possible_distance:
-	
-		for y in range(len(map)):
-			for x in range(len(map[y])):
-
-				if get_distance(initial_position, (y,x)) == real_distance and map[y][x] == '.':
-
-					place_equal_items(map, items[next_index_to_place], position = (y,x))
-					next_index_to_place += 1
-		
-				if next_index_to_place == len(items):
-					return
-		
-		if y == len(map) - 1 and x == len(map[y]) - 1:
 			
-			if real_distance == given_distance or real_distance < given_distance:
-				deviation +=1
-				real_distance = given_distance + deviation
-			elif real_distance > given_distance:
-				real_distance = given_distance - deviation'''
 	
 
 def place_items_as_group(map:list[list[str]], items:tuple[str], 
@@ -216,8 +182,8 @@ def place_items_as_group(map:list[list[str]], items:tuple[str],
 	while len(tested_positions) < map_area and item_to_place is not None:
 
 		while True:
-			cand_position = (random.randint(0,len(map)-1),
-				random.randint(0,len(map[0])-1))
+			cand_position = location(map)
+
 			if cand_position not in tested_positions:
 				tested_positions.add(cand_position)
 				break
@@ -246,7 +212,7 @@ def place_items_as_group(map:list[list[str]], items:tuple[str],
 
 
 
-''''map = create_map(5,5)'''
+'''map = create_map(5,5)
 
 map = [['#','#','#','#','#'],
 	   ['#','.','#','#','#'],
@@ -254,7 +220,7 @@ map = [['#','#','#','#','#'],
 	   ['#','#','#','#','#'],
 	   ['#','#','#','#','#']]
 
-place_items_as_group(map, ('U','y','r'), min_dist = 1, max_dist = 1)
+place_items_as_group(map, ('U','y','r','U','y','r'), min_dist = 2, max_dist = 3)
 
 for line in range(len(map)):
-	print (*map[line])
+	print (*map[line])'''

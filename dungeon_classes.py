@@ -74,23 +74,38 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         self.blueprint = utils.create_map(height, width)
 
-        utils.place_items_as_group(self.blueprint, ('%', '?', '&'), min_dist = 1)
+        live_players = self.determine_alive_players()
+
+        utils.place_items_as_group(self.blueprint, live_players, min_dist = 1)
         
         utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         #utils.place_single_items(self.blueprint,'o', 0)
         utils.place_equal_items(self.blueprint,' ', 1)
+        utils.place_equal_items(self.blueprint,'W', 4)
+        utils.place_equal_items(self.blueprint,'#', 15)
 
         protected_items = ('%','?', '&', ' ', 'o')
         
-        for key,value in self.level_progression().items():
+        '''for key,value in self.level_progression().items():
         
-            utils.place_items (self.blueprint, item=key, frequency=value, protected = protected_items)
+            utils.place_items (self.blueprint, item=key, frequency=value, protected = protected_items)'''
 
         
         #for y in range (len(self.blueprint)):
                 #print (*self.blueprint[y])
+        
     
     
+    def determine_alive_players(self):
+
+        if self.level == 1:
+            return characters.Player.player_chars
+        else:
+            live_players = set()
+            for player in characters.Player.exited:
+                live_players.add(player.char)
+            return live_players
+                
 
     def allocate_tokens (self):
 

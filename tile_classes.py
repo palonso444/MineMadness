@@ -114,14 +114,14 @@ class Tile(Button):
         return False
 
 
-    def clear_token(self):
+    def clear_token(self, token_kind):
         
 
-        if self.second_token:
+        if self.second_token and self.second_token.kind == token_kind:
             self.dungeon.canvas.remove(self.second_token)
             self.second_token = None
         
-        else:
+        elif self.token.kind == token_kind:
             self.dungeon.canvas.remove(self.token)
             self.token = None
         

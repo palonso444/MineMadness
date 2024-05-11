@@ -57,13 +57,12 @@ class Character:
                 damage += self.armed_strength_incr
         
         opponent.health -= damage
-        #print (damage)
         self.remaining_moves -= 1
 
         if opponent.health <= 0:
             opponent.data.remove(opponent)
             opponent.rearrange_ids()
-            opponent_tile.clear_token()
+            opponent_tile.clear_token(opponent.token.kind)
         
         self.dungeon.show_damage_token (opponent.token.pos, opponent.token.size)
 
@@ -78,6 +77,7 @@ class Character:
 
 class Player(Character):
 
+    player_chars = ('%', '?', '&')  # % sawyer, ? hawkins, & crusher jane
     data = list ()
     exited = set()
     gems = 0
@@ -174,7 +174,7 @@ class Player(Character):
 
             self.dungeon.game.update_switch(object_tile.token.kind + 's')
 
-            object_tile.clear_token()
+            object_tile.clear_token(object_tile.token.kind)
 
             
 
@@ -188,7 +188,7 @@ class Player(Character):
 
         self.dungeon.show_digging_token(wall_tile.token.pos, wall_tile.token.size)
 
-        wall_tile.clear_token()
+        wall_tile.clear_token('wall')
         
         
 
@@ -203,6 +203,7 @@ class Sawyer(Player):
     def __init__(self):
         super().__init__()
         self.data = super().data
+        self.char = '%'
         self.name = 'Sawyer'
         self.health = 4
         self.strength = (1,2)
@@ -221,6 +222,7 @@ class CrusherJane(Player):
         super().__init__()
         self.data = super().data
         self.name = 'Crusher Jane'
+        self.char = '&'
         self.free_actions = ('fighting',)
         self.health = 8
         self.strength = (3,6)
@@ -242,6 +244,7 @@ class Hawkins (Player):
         super().__init__()
         self.data = super().data
         self.name = 'Hawkins'
+        self.char = '?'
         self.free_actions = ('digging',)
         self.health = 5
         self.strength = (1,4)
@@ -559,6 +562,7 @@ class DepthsWisp(Monster):
         self.strength = (1,2)
         self.blocked_by = ()
         self.cannot_share_tile_with = ('monster', 'player')
+        self.ignores = ('shovel', 'weapon', 'gem', 'wall')
         self.random_motility = 5
 
 

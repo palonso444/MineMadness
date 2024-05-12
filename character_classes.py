@@ -64,7 +64,7 @@ class Character:
             opponent.rearrange_ids()
             opponent_tile.clear_token(opponent.token.kind)
         
-        self.dungeon.show_damage_token (opponent.token.pos, opponent.token.size)
+        self.dungeon.show_damage_token (opponent.token.shape.pos, opponent.token.shape.size)
 
 
     def has_moved(self):
@@ -190,7 +190,7 @@ class Player(Character):
             self.dungeon.game.update_switch('shovels')
         self.remaining_moves -= self.digging_moves
 
-        self.dungeon.show_digging_token(wall_tile.token.pos, wall_tile.token.size)
+        self.dungeon.show_digging_token(wall_tile.token.shape.pos, wall_tile.token.shape.size)
 
         wall_tile.clear_token('wall')
         

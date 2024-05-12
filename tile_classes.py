@@ -51,16 +51,12 @@ class Tile(Button):
             
             else:
                 start_tile.second_token.move_player(start_tile, self)
-            
-            
-      
-    def on_pos(self, *args):
 
-        
-        if self.token:
-        
-            self.token.pos = self.pos
-            self.token.size = self.size
+
+    def update_token(self, *args):
+
+        self.token.pos = self.pos
+        self.token.size = self.size
 
 
     def is_activable(self):
@@ -77,10 +73,6 @@ class Tile(Button):
                 return False
             return True
 
-        
-        #if self.has_token_kind('player') and self.get_character().has_moved():
-
-            #return False
         
         if self.has_token_kind('wall') and utils.are_nearby(self, player) and player.remaining_moves >= player.digging_moves:
             
@@ -118,11 +110,11 @@ class Tile(Button):
         
 
         if self.second_token and self.second_token.kind == token_kind:
-            self.dungeon.canvas.remove(self.second_token)
+            self.dungeon.canvas.remove(self.second_token.shape)
             self.second_token = None
         
         elif self.token and self.token.kind == token_kind:
-            self.dungeon.canvas.remove(self.token)
+            self.dungeon.canvas.remove(self.token.shape)
             self.token = None
         
 

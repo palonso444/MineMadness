@@ -11,21 +11,13 @@
 
 
 <Tile>:
-
-    #token: None ---> this might allow set on_size() self.token.size = self.size on python file.
     
     background_normal: ''   #sets the background default to white instead of predefined grey
-    
     background_color: 0.4, 0.8, 1, 1
-    
     size_hint: None,None
-
     width: '60dp'
-
     height: self.width
-
     disabled: True
-
     kind: None
 
     canvas:
@@ -39,7 +31,6 @@
             pos: self.pos
             size: self.size
             source: self.kind + 'background.png' if self.kind else None
-
 
 
 <ScrollView>:

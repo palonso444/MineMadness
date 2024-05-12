@@ -85,6 +85,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
 
     def on_turn (self, *args):
+
         
         if self.turn or len(characters.Monster.data) == 0:
             characters.Player.reset_moves()
@@ -98,6 +99,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
 
     def on_active_character_id (self, *args):
+
         
         if type(self.active_character_id) is int:
         
@@ -149,6 +151,7 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
 
 
     def next_character(self):
+
 
         if self.active_character.id < len(self.active_character.__class__.data) - 1:
 

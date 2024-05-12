@@ -7,6 +7,22 @@ import character_classes as characters
 import crapgeon_utils as utils
 
 
+class SolidToken(Widget):
+
+    def __init__(self, kind, species, dungeon_instance, **kwargs):
+        super().__init__(**kwargs)
+
+        self.kind = kind    #defines if pickable or wall
+        self.species = species
+        self.dungeon = dungeon_instance
+        self.source = self.species + 'token.png'
+
+    def update(self, *args):
+
+        self.shape.pos = self.pos
+        self.shape.size = self.size
+
+
 class FadingToken(Widget):
 
     def __init__(self, dungeon, **kwargs):
@@ -56,32 +72,37 @@ class DiggingToken(FadingToken):
         self.fade()
 
 
-class SceneryToken(Rectangle):
+class SceneryToken(SolidToken):
 
     
     def __init__(self, kind, species, dungeon_instance, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(kind, species, dungeon_instance,**kwargs)
+        
+        with self.dungeon.canvas:
 
-        self.kind = kind    #defines if pickale or wall
-        self.species = species
-        self.dungeon = dungeon_instance
-        self.source = self.species + 'token.png'
+            self.shape = Rectangle(pos = self.pos, size = self.size, source = self.source)
+
+        self.bind(pos = self.update, size=self.update)
 
 
-class CharacterToken(Ellipse):
+
+class CharacterToken(SolidToken):
 
     
-    def __init__(self, kind, species, dungeon_instance, character, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, kind, species, dungeon_instance, **kwargs):
+        super().__init__(kind, species, dungeon_instance,**kwargs)
 
-        self.kind = kind    #defines if monster, player, wall, etc.
-        self.species = species
-        self.dungeon = dungeon_instance
-        self.character = character      #links token with character object
-        self.source = self.species + 'token.png'
+        self.character = None      #links token with character object
+
         self.start = None   #all defined when token is moved by move()
         self.goal = None    
         self.path = None
+        
+        with self.dungeon.canvas:
+
+            self.shape = Ellipse(pos = self.pos, size = self.size, source = self.source)
+
+        self.bind(pos = self.update, size=self.update)
 
 
     def move_player (self, start_tile, end_tile):
@@ -129,10 +150,8 @@ class CharacterToken(Ellipse):
         self.character.remaining_moves -= 1
         
         animation = Animation (pos = next_pos, duration = 0.2)
-        
         animation.bind (on_complete = self.on_slide_completed)
-        
-        animation.start(self)
+        animation.start(self.shape)
 
 
     def on_slide_completed (self, *args):

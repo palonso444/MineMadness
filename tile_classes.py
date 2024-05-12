@@ -26,17 +26,17 @@ class Tile(Button):
 
         player = self.dungeon.game.active_character
 
-        if self.has_token('player') and self.get_character() != player:
+        if self.has_token_kind('player') and self.get_character() != player:
 
             self.dungeon.game.switch_character(self.get_character())
 
-        elif self.has_token('wall'):
+        elif self.has_token_kind('wall'):
             
             player.dig(self)
 
             self.dungeon.game.update_switch('character_done')
 
-        elif self.has_token('monster'):
+        elif self.has_token_kind('monster'):
 
             player.fight_on_tile(self)
 
@@ -69,7 +69,7 @@ class Tile(Button):
         
         path = self.dungeon.find_shortest_path(self.dungeon.get_tile(player.position), self, (player.blocked_by))
 
-        if self.has_token('player'): 
+        if self.has_token_kind('player'): 
             
             if self.get_character() == player:
                 return True
@@ -78,18 +78,18 @@ class Tile(Button):
             return True
 
         
-        #if self.has_token('player') and self.get_character().has_moved():
+        #if self.has_token_kind('player') and self.get_character().has_moved():
 
             #return False
         
-        if self.has_token('wall') and utils.are_nearby(self, player) and player.remaining_moves >= player.digging_moves:
+        if self.has_token_kind('wall') and utils.are_nearby(self, player) and player.remaining_moves >= player.digging_moves:
             
             if player.shovels > 0 or 'digging' in player.free_actions:
 
                 return True
             return False
             
-        if self.has_token('monster') and utils.are_nearby(self, player):
+        if self.has_token_kind('monster') and utils.are_nearby(self, player):
             
             if player.weapons > 0 or 'fighting' in player.free_actions:
 
@@ -103,7 +103,7 @@ class Tile(Button):
         return False
     
 
-    def has_token(self, token_kind):
+    def has_token_kind(self, token_kind):
 
         if self.second_token and self.second_token.kind == token_kind:
             return True

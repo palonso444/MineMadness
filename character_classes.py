@@ -161,22 +161,26 @@ class Player(Character):
 
     def pick_object(self, object_tile):
 
-        if object_tile.token.kind not in self.ignores: 
+        if object_tile.token.species not in self.ignores:
             
-            if object_tile.token.kind != 'gem':
-                character_attribute = getattr(self, object_tile.token.kind + 's')
-                character_attribute += 1
-                setattr(self, object_tile.token.kind + 's', character_attribute)
-
-            elif object_tile.token.kind == 'gem':
+            if object_tile.token.species == 'gem':
 
                 Player.gems += 1
-
-            self.dungeon.game.update_switch(object_tile.token.kind + 's')
-
-            object_tile.clear_token(object_tile.token.kind)
-
+                self.dungeon.game.update_switch('gems')
             
+            elif object_tile.token.species == 'jerky':
+
+                self.health += 2
+                self.health = self.max_health if self.health > self.max_health else self.health
+                self.dungeon.game.update_switch('health')
+
+            else:
+                character_attribute = getattr(self, object_tile.token.species + 's')
+                character_attribute += 1
+                setattr(self, object_tile.token.species + 's', character_attribute)
+                self.dungeon.game.update_switch(object_tile.token.species + 's')
+            
+            object_tile.clear_token(object_tile.token.kind)
 
 
     def dig(self, wall_tile):
@@ -206,6 +210,7 @@ class Sawyer(Player):
         self.char = '%'
         self.name = 'Sawyer'
         self.health = 4
+        self.max_health = self.health
         self.strength = (1,2)
         self.moves = 5
         self.digging_moves = 3
@@ -225,6 +230,7 @@ class CrusherJane(Player):
         self.char = '&'
         self.free_actions = ('fighting',)
         self.health = 8
+        self.max_health = self.health
         self.strength = (3,6)
         self.armed_strength_incr = 2
         self.moves = 3
@@ -247,6 +253,7 @@ class Hawkins (Player):
         self.char = '?'
         self.free_actions = ('digging',)
         self.health = 5
+        self.max_health = self.health
         self.strength = (1,4)
         self.moves = 4
         self.ignores = ('shovel', 'gem')
@@ -261,7 +268,7 @@ class Monster(Character):
         super().__init__()
         self.kind = 'monster'
         self.random_motility = 0    #from 0 to 10. Rellevant in monsters with random movement
-        self.ignores = ('shovel', 'weapon', 'gem')
+        self.ignores = ('shovel', 'weapon', 'gem', 'jerky')
         self.attacks = 2
 
     def reset_moves():
@@ -452,8 +459,6 @@ class Monster(Character):
                         path.append(position)
 
         path = self.trim_path(path)
-        print (path)
-        print (self.remaining_moves)
 
         return path
     
@@ -492,7 +497,7 @@ class Monster(Character):
             for token_kind in self.cannot_share_tile_with:
                 
                 #position != self.position is necessary for random moves
-                if self.dungeon.get_tile(position).has_token(token_kind) and position != self.position:
+                if self.dungeon.get_tile(position).has_token_kind(token_kind) and position != self.position:
                         
                     path.remove(position)
         
@@ -524,6 +529,7 @@ class Kobold(Monster):
         self.name = 'Kobold'
         self.moves = 3
         self.health = 2
+        self.max_health = self.health
         self.strength = (1,2)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
@@ -544,6 +550,7 @@ class CaveHound(Monster):
         self.name = 'Cave Hound'
         self.moves = 4
         self.health = 4
+        self.max_health = self.health
         self.strength = (1,4)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')
@@ -570,10 +577,11 @@ class DepthsWisp(Monster):
         self.name = 'Depths Wisp'
         self.moves = 5
         self.health = 1
+        self.max_health = self.health
         self.strength = (1,2)
         self.blocked_by = ()
         self.cannot_share_tile_with = ('monster', 'player')
-        self.ignores = ('shovel', 'weapon', 'gem', 'wall')
+        self.ignores = self.ignores + ('rock',)
         self.random_motility = 5
 
 
@@ -602,6 +610,7 @@ class NightMare(Monster):
         self.name = 'Nightmare'
         self.moves = 4
         self.health = 6
+        self.max_health = self.health
         self.strength = (2,5)
         self.blocked_by = ('wall', 'player')
         self.cannot_share_tile_with = ('wall', 'monster', 'player')

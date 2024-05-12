@@ -118,9 +118,8 @@ class CrapgeonGame(BoxLayout):  #initlialized in kv file
             elif not self.turn:  #if monsters turn and monsters in the game
 
                 self.dungeon.activate_which_tiles() #tiles deactivated in monster turn
-            
                 self.active_character = characters.Monster.data[self.active_character_id]
-                
+                self.update_switch('health')
                 self.active_character.token.move_monster()
 
 

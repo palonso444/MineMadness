@@ -7,7 +7,7 @@
     
     halign: 'left'
     
-    font_size: '25sp'
+    font_size: '20sp'
 
 
 <Tile>:
@@ -20,7 +20,7 @@
     
     size_hint: None,None
 
-    width: '100dp'
+    width: '60dp'
 
     height: self.width
 
@@ -54,10 +54,10 @@
     orientation: "vertical"
 
     on_active_character_id: name_label.text = str(root.active_character.name)
-    on_health: health_label.text = 'Health: ' + str(root.active_character.health)
+    on_health: health_label.text = 'Health: ' + str(root.active_character.health) + '/' + str(root.active_character.max_health)
     on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.shovels)
     on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.weapons)
-    on_gems:   gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
+    on_gems: gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
 
     GridLayout:     # to separate character picture and info
 
@@ -83,7 +83,7 @@
 
                 #halign: 'center'
 
-                font_size: '32sp'
+                font_size: '25sp'
                 id: name_label
 
             Label:

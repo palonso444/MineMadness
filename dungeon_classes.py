@@ -19,19 +19,27 @@ class DungeonLayout(GridLayout):    #initialized in kv file
     
 
     def gem_number(self):
-        
-        return self.level
+
+        gem_number = int(self.level*0.2)
+        gem_number = 1 if gem_number < 1 else gem_number
+        return gem_number
     
 
     def level_progression(self):
         
-        wall_frequency = randint(10,60)*0.01
+        wall_frequency = randint(20,60)*0.01
         
-        monster_frequencies = {'K':0.15/self.level, 'H':self.level/30, 'W':self.level/80, 'N':self.level/120}
+        monster_frequencies = {'K':0.10/self.level, 
+                               'H':self.level*0.015,
+                               'W':self.level*0.006, 
+                               'N':self.level*0.002}
 
         total_monster_frequency = sum(monster_frequencies.values())
 
-        item_frequencies = {'#':wall_frequency, 'p':wall_frequency*0.15, 'x':total_monster_frequency*0.4}
+        item_frequencies = {'#':wall_frequency, 
+                            'p':wall_frequency*0.15, 
+                            'x':total_monster_frequency*0.3,
+                            'j':self.level*0.015}
 
         all_frequencies = {**monster_frequencies, **item_frequencies}
 
@@ -79,16 +87,16 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         utils.place_items_as_group(self.blueprint, live_players, min_dist = 1)
         
         utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
-        #utils.place_single_items(self.blueprint,'o', 0)
+        #utils.place_equal_items(self.blueprint,'o', 5)
         utils.place_equal_items(self.blueprint,' ', 1)
-        utils.place_equal_items(self.blueprint,'K', 1)
+        #utils.place_equal_items(self.blueprint,'W', 3)
         #utils.place_equal_items(self.blueprint,'#', 15)
 
         protected_items = ('%','?', '&', ' ', 'o')
         
-        #for key,value in self.level_progression().items():
+        for key,value in self.level_progression().items():
         
-            #utils.place_items (self.blueprint, item=key, frequency=value, protected = protected_items)
+            utils.place_items (self.blueprint, item=key, frequency=value, protected = protected_items)
 
         
         #for y in range (len(self.blueprint)):
@@ -114,55 +122,46 @@ class DungeonLayout(GridLayout):    #initialized in kv file
             with self.canvas:
 
                 if self.blueprint [tile.row][tile.col] == '%':
-
                     self.place_tokens(tile, 'player', 'sawyer')
 
                 elif self.blueprint [tile.row][tile.col] == '?':
-
                     self.place_tokens(tile, 'player', 'hawkins')
 
                 elif self.blueprint [tile.row][tile.col] == '&':
-
                     self.place_tokens(tile, 'player', 'crusherjane')
                         
 
-                elif self.blueprint [tile.row][tile.col] == 'K':
-                        
+                elif self.blueprint [tile.row][tile.col] == 'K': 
                     self.place_tokens(tile, 'monster', 'kobold')
 
                 elif self.blueprint [tile.row][tile.col] == 'H':
-                        
                     self.place_tokens(tile, 'monster', 'hound')
 
                 elif self.blueprint [tile.row][tile.col] == 'W':
-                        
                     self.place_tokens(tile, 'monster', 'wisp')
 
                 elif self.blueprint [tile.row][tile.col] == 'N':
-                        
                     self.place_tokens(tile, 'monster', 'nightmare')
 
                     
                 elif self.blueprint [tile.row][tile.col] == '#':
-
-                    self.place_tokens(tile, 'wall')
+                    self.place_tokens(tile, 'wall', 'rock')
 
                 
                 elif self.blueprint [tile.row][tile.col] == 'p':
-
-                    self.place_tokens(tile, 'shovel')
+                    self.place_tokens(tile, 'pickable', 'shovel')
 
                 elif self.blueprint [tile.row][tile.col] == 'x':
+                    self.place_tokens(tile, 'pickable', 'weapon')
 
-                    self.place_tokens(tile, 'weapon')
-
+                elif self.blueprint [tile.row][tile.col] == 'j':
+                    self.place_tokens(tile, 'pickable', 'jerky')
                 
                 elif self.blueprint [tile.row][tile.col] == 'o':
+                    self.place_tokens(tile, 'pickable', 'gem')
 
-                    self.place_tokens(tile, 'gem')
 
-
-    def place_tokens(self, tile, token_kind, token_species = None):
+    def place_tokens(self, tile, token_kind, token_species):
 
 
         if token_kind == 'player' or token_kind == 'monster':
@@ -225,9 +224,10 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         else:
 
             tile.token = tokens.SceneryToken(kind = token_kind,
-                                 dungeon_instance = self,
-                                 pos = tile.pos,
-                                 size = tile.size)
+                                            species = token_species,
+                                            dungeon_instance = self,
+                                            pos = tile.pos,
+                                            size = tile.size)
             
 
     def activate_which_tiles(self, tile_positions = None):
@@ -265,11 +265,11 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
             for token in scenery:
 
-                if not exclude and tile.has_token(token):
+                if not exclude and tile.has_token_kind(token):
 
                     found_tiles.add(tile.position)
 
-                elif exclude and tile.has_token(token):
+                elif exclude and tile.has_token_kind(token):
 
                     excluded_tiles.add(tile)
 
@@ -292,7 +292,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         excluded_positions = self.scan(excluded)
         excluded_positions.add(start_tile.position)
-        if start_tile.has_token('monster') and end_tile.position in excluded_positions:
+        if start_tile.has_token_kind('monster') and end_tile.position in excluded_positions:
             excluded_positions.remove(end_tile.position)   
 
         while queue:

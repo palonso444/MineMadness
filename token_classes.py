@@ -59,12 +59,13 @@ class DiggingToken(FadingToken):
 class SceneryToken(Rectangle):
 
     
-    def __init__(self, kind, dungeon_instance, **kwargs):
+    def __init__(self, kind, species, dungeon_instance, **kwargs):
         super().__init__(**kwargs)
 
-        self.kind = kind    #defines if wall, shovel, etc.
+        self.kind = kind    #defines if pickale or wall
+        self.species = species
         self.dungeon = dungeon_instance
-        self.source = self.kind + 'token.png'
+        self.source = self.species + 'token.png'
 
 
 class CharacterToken(Ellipse):
@@ -151,7 +152,7 @@ class CharacterToken(Ellipse):
                     self.dungeon.game.update_switch('player_exited')
                     return
                     
-                elif self.goal.has_token('shovel') or self.goal.has_token('weapon') or self.goal.has_token('gem'):
+                elif self.goal.has_token_kind('pickable'):
 
                     self.character.pick_object(self.goal)
 
@@ -172,7 +173,7 @@ class CharacterToken(Ellipse):
 
     def update_on_tiles(self, start_tile, end_tile):
 
-        if end_tile.token and end_tile.token.kind in self.character.ignores:
+        if end_tile.token and end_tile.token.species in self.character.ignores:
             end_tile.second_token = self
         else:
             end_tile.token = self

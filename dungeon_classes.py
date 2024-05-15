@@ -15,8 +15,8 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
     def dungeon_size(self):
 
-        return 6 + int(self.level/1.5)
-        #return 2
+        #return 6 + int(self.level/1.5)
+        return 3
     
 
     def gem_number(self):
@@ -87,17 +87,17 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
         utils.place_items_as_group(self.blueprint, live_players, min_dist = 1)
         
-        utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
+        #utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint,' ', 1)
-        #utils.place_equal_items(self.blueprint,'H', 3)
+        utils.place_equal_items(self.blueprint,'H', 1)
         #utils.place_equal_items(self.blueprint,'#', 15)
         #utils.place_equal_items(self.blueprint,'o', 5)
 
         protected_items = ('%','?', '&', ' ', 'o')
         
-        for key,value in self.level_progression().items():
+        #for key,value in self.level_progression().items():
         
-            utils.place_items (self.blueprint, item=key, frequency=value, protected = protected_items)
+            #utils.place_items (self.blueprint, item=key, frequency=value, protected = protected_items)
 
         
         #for y in range (len(self.blueprint)):
@@ -108,7 +108,8 @@ class DungeonLayout(GridLayout):    #initialized in kv file
     def determine_alive_players(self):
 
         if self.level == 1:
-            return characters.Player.player_chars
+            #return characters.Player.player_chars
+            return ('%')
         else:
             live_players = set()
             for player in characters.Player.exited:

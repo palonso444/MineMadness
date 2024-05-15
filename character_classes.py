@@ -2,6 +2,7 @@ from random import randint
 
 import crapgeon_utils as utils
 import token_classes as tokens
+import tile_classes as tiles
 
 
 class Character:
@@ -296,49 +297,58 @@ class Monster(Character):
                 return Player.data[distances.index(distance)]
 
     
-    def find_closest_reachable_player(self):
+    def find_closest_reachable_target(self, target_kind:str, target_species:str|None = None) -> tiles.Tile|None:
 
-        players_and_paths = list()
+        '''
+        Finds closest target based on len(path) and returns the tile where this target is placed
+        Returns tile is there is path to tile, None if tile is unreachable"
+        '''
 
-        start = self.dungeon.get_tile(self.position)
+        tiles_and_paths = list()
+        start_tile = self.dungeon.get_tile(self.position)
         
-        for player in Player.data:
+        for tile in self.dungeon.children:
 
-            goal = self.dungeon.get_tile(player.position)
+            if tile.has_token_kind(target_kind):
 
-            path = self.dungeon.find_shortest_path(start, goal, self.blocked_by)
+                if target_species is None or tile.second_token.species == target_species or (tile.token.species 
+                                                                                             == target_species):
 
-            players_and_paths.append((player,path))
+                    path = self.dungeon.find_shortest_path(start_tile, tile, self.blocked_by)
+                    tiles_and_paths.append((tile,path))
 
         
-        closest_player_and_path = None
+        closest_tile_and_path = None
         
-        for player_and_path in players_and_paths:
+        for tile_and_path in tiles_and_paths:
 
-            if player_and_path[1]:
+            if tile_and_path[1] is not None: # if path is not None
 
-                if not closest_player_and_path or len(closest_player_and_path[1]) > len(player_and_path[1]):
+                if closest_tile_and_path is None or len(closest_tile_and_path[1]) > len(tile_and_path[1]):
 
-                    closest_player_and_path = player_and_path
+                    closest_tile_and_path = tile_and_path
 
-        return closest_player_and_path
+        return closest_tile_and_path if closest_tile_and_path is None else closest_tile_and_path[0]
 
 
-    def find_accesses(self, target, smart = True):    #returns list of paths from target to free tiles, sorted shortest to longest
+    def find_accesses(self, target_tile, smart = True):    #returns list of paths from target to free tiles, sorted shortest to longest
+        '''
+        Returns a list of paths, sorted from shorter to longer,
+        from target to all free tiles in the dungeon
+        path[-1] is position of free tile in the dungeon, path[0] is position nearby to target_tile
+        '''
 
-        target_tile = self.dungeon.get_tile(target.position)
-        
         paths = list()
         
-        #look which tiles are free in the dungeon
+        #look which tile positions are free in the dungeon among ALL tiles
         scanned = self.dungeon.scan(self.cannot_share_tile_with, exclude = True)
         
-        #find paths from player to all free tiles scanned
+        #find paths from target_tile to all free tiles scanned
         for tile_position in scanned:
 
             scanned_tile = self.dungeon.get_tile(tile_position)
             
-            if smart:   #smart creatures do not go to places where there is no direct path to player
+            if smart:   #smart creatures avoid tiles where, althogh closer in position, the path to target is longer
                 path = self.dungeon.find_shortest_path(target_tile, scanned_tile, self.blocked_by)
 
             else:
@@ -349,6 +359,7 @@ class Monster(Character):
                 paths.append(path)
         
         #sort paths from player to free tiles from shortest to longest
+        
         sorted_paths = sorted(paths, key=len)
 
         return sorted_paths
@@ -383,11 +394,9 @@ class Monster(Character):
         return path
 
 
-    def assess_path_direct(self):
+    def assess_path_direct(self, target_tile):
 
-        target = self.find_closest_reachable_player()[0] #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
-
-        sorted_paths = self.find_accesses(target, smart = False)
+        sorted_paths = self.find_accesses(target_tile, smart = False)
 
         path = None
         
@@ -403,17 +412,17 @@ class Monster(Character):
             if not possible_path:
                 continue
             
-            distance = utils.get_distance(self.position, target.position)
+            distance = utils.get_distance(self.position, target_tile.position)
             
             for position in possible_path:
 
-                if distance <= utils.get_distance(position, target.position):
+                if distance <= utils.get_distance(position, target_tile.position):
 
                     break
 
-                elif distance > utils.get_distance(position, target.position):
+                elif distance > utils.get_distance(position, target_tile.position):
 
-                    distance = utils.get_distance(position, target.position)
+                    distance = utils.get_distance(position, target_tile.position)
 
                 if possible_path.index(position) == len(possible_path) -1:
 
@@ -464,8 +473,10 @@ class Monster(Character):
     
 
     def attack_players(self):
+
+        players = Player.data[:]
         
-        for player in Player.data:
+        for player in players:
             if utils.are_nearby(self, player) and self.remaining_moves > 0:
 
                 player_tile = self.dungeon.get_tile(player.position)
@@ -559,12 +570,12 @@ class CaveHound(Monster):
 
     def move(self):
 
-        if self.find_closest_reachable_player():
+        target_tile = self.find_closest_reachable_target('player')
 
-            return self.assess_path_direct()
+        if target_tile is not None:
+            return self.assess_path_direct(target_tile)
         
         else:
-            
             return self.assess_path_random()
 
 

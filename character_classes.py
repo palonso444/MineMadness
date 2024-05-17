@@ -210,7 +210,7 @@ class Sawyer(Player):
         self.data = super().data
         self.char = '%'
         self.name = 'Sawyer'
-        self.health = 4
+        self.health = 400
         self.max_health = self.health
         self.strength = (1,2)
         self.moves = 5
@@ -365,31 +365,56 @@ class Monster(Character):
         return sorted_paths
 
 
-    def assess_path_smart(self):
+    def assess_path_smart(self, target_tile):
+
+        accesses = self.find_accesses(target_tile)
+        #print (accesses, '\n')
         
-        target = self.find_closest_reachable_player()[0]
-
-        target_tile = self.dungeon.get_tile(target.position)
-
-        sorted_paths = self.find_accesses(target)
-
-        shortest_possible_path = None
-        
-        for path in sorted_paths:
-            #check if monster can reach end_tile of each of sorted paths
-            possible_path = self.dungeon.find_shortest_path(self.token.start, self.dungeon.get_tile(path[-1]), self.blocked_by)
-
-            if possible_path:
+        i = 0
+        while i < len(accesses):
             
-                monster_to_target = self.dungeon.find_shortest_path(self.token.start, target_tile, self.blocked_by)
-                target_to_possible_path_end = self.dungeon.find_shortest_path(target_tile, self.dungeon.get_tile(possible_path[-1]), self.blocked_by)
-                #if end tile closer to player than monster is right now, take path to this end tile
-                if len(target_to_possible_path_end) < len(monster_to_target):
+            #if access is unreachable, remove access
+            path_access_end = self.dungeon.find_shortest_path(self.token.start, self.dungeon.get_tile(accesses[i][-1]), self.blocked_by)
+            if path_access_end is None:
+                accesses.remove(accesses[i])
+                i -=1
+                
+                #print (accesses, '\n')
 
-                    shortest_possible_path = possible_path
-                    break
+            #remove all accesses longer than first access (the shortest)
+            if len(accesses[i]) > len(accesses[0]):
+                accesses.remove(accesses[i])
+                i -=1
+                
+                #print('ONLY SHORTEST REMAIN')
+                #print (accesses, '\n')
 
-        path = self.trim_path(shortest_possible_path)
+            
+            #if access end further away from target than monster is, remove access
+            else:
+                monster_to_target = self.dungeon.find_shortest_path(self.token.start, 
+                                                                    target_tile, self.blocked_by)
+                target_to_access_end = self.dungeon.find_shortest_path(target_tile, 
+                                                                       self.dungeon.get_tile(accesses[i][-1]), self.blocked_by)
+                
+                if len(target_to_access_end) > len(monster_to_target):
+                    accesses.remove(accesses[i])
+                    i -=1
+            #print (accesses, '\n')
+
+            i += 1
+
+        path_to_closest_access = None
+
+        for access in accesses:
+
+            end_tile = self.dungeon.get_tile(access[-1])
+            path_to_access = self.dungeon.find_shortest_path(self.token.start, end_tile, self.blocked_by)
+            if path_to_access is not None:
+                if path_to_closest_access is None or len(path_to_closest_access) > len(path_to_access):
+                    path_to_closest_access = path_to_access
+
+        path = self.trim_path(path_to_closest_access)
 
         return path
 
@@ -619,7 +644,7 @@ class NightMare(Monster):
         super().__init__()
         self.data = super().data
         self.name = 'Nightmare'
-        self.moves = 4
+        self.moves = 40
         self.health = 6
         self.max_health = self.health
         self.strength = (2,5)
@@ -629,9 +654,11 @@ class NightMare(Monster):
 
     def move(self):
 
-        if self.find_closest_reachable_player():
+        target_tile = self.find_closest_reachable_target('player')
+        
+        if target_tile is not None:
 
-            return self.assess_path_smart()
+            return self.assess_path_smart(target_tile)
         
         else:
             return None

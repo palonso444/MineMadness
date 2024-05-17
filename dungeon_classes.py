@@ -15,8 +15,8 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
     def dungeon_size(self):
 
-        #return 6 + int(self.level/1.5)
-        return 3
+        return 6 + int(self.level/1.5)
+        #return 3
     
 
     def gem_number(self):
@@ -89,8 +89,8 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         
         #utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint,' ', 1)
-        utils.place_equal_items(self.blueprint,'H', 1)
-        #utils.place_equal_items(self.blueprint,'#', 15)
+        utils.place_equal_items(self.blueprint,'N', 10)
+        #utils.place_equal_items(self.blueprint,'#', 20)
         #utils.place_equal_items(self.blueprint,'o', 5)
 
         protected_items = ('%','?', '&', ' ', 'o')
@@ -283,7 +283,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
         return found_tiles
 
 
-    def find_shortest_path(self, start_tile, end_tile, excluded = tuple()):
+    def find_shortest_path(self, start_tile, end_tile, excluded = tuple()) -> list[tuple]|None:
                                                             
 
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
@@ -300,7 +300,7 @@ class DungeonLayout(GridLayout):    #initialized in kv file
 
             if current_position == end_tile.position:
 
-                return path
+                return path if len(path) > 0 else None
             
             for direction in directions:
 
@@ -312,6 +312,8 @@ class DungeonLayout(GridLayout):    #initialized in kv file
     
                         excluded_positions.add((row, col))
                         queue.append(((row,col), path + [(row,col)]))
+
+        return None
 
 
     def show_damage_token (self, position, size):

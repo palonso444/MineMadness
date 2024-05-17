@@ -382,7 +382,7 @@ class Monster(Character):
                 #print (accesses, '\n')
 
             #remove all accesses longer than first access (the shortest)
-            if len(accesses[i]) > len(accesses[0]):
+            elif len(accesses[i]) > len(accesses[0]):
                 accesses.remove(accesses[i])
                 i -=1
                 

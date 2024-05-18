@@ -3,10 +3,8 @@
 
 <Label>:
 
-    text_size: self.size    #needed to make halign work
-    
+    text_size: self.size    #needed to make halign work  
     halign: 'left'
-    
     font_size: '20sp'
 
 
@@ -53,9 +51,7 @@
     GridLayout:     # to separate character picture and info
 
         size_hint: 1, 0.25
-
         rows: 1
-
         cols: 2
 
         Label:      #CHARACTER PICTURE HERE
@@ -67,7 +63,6 @@
             #halign: 'center'
 
         BoxLayout:
-            
             orientation:'vertical'
 
             Label:
@@ -78,35 +73,25 @@
                 id: name_label
 
             Label:
-
                 id: health_label
 
-            Label:
-                
+            Label:  
                 id: shovels_label
             
             Label:
-
                 id: weapons_label
 
             Label:
-                
                 id: gems_label
 
     ScrollView:
-
         size_hint: 1, 0.6
     
         DungeonLayout:
 
             level: root.level
-            
             size_hint: None, None
-
             height: self.minimum_height
-
             width: self.minimum_width
-
             rows: self.dungeon_size()
-
             cols: self.dungeon_size()

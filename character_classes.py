@@ -1,5 +1,5 @@
 from random import randint
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import crapgeon_utils as utils
 import tile_classes as tiles
@@ -9,10 +9,10 @@ class Character(ABC):
 
     def __init__(self):
 
-        self.name: str = None
-        self.id: int = None
-        self.position: tuple = None
-        self.remaining_moves: int = 0
+        self.name: str | None = None
+        self.id: int | None = None
+        self.position: tuple | None = None
+        self.remaining_moves: int | None = None
 
         self.token = None
         self.dungeon = None
@@ -52,7 +52,7 @@ class Character(ABC):
         return True
 
 
-class Player(Character):
+class Player(Character, ABC):
 
     player_chars: tuple = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
     data: list = list()
@@ -88,7 +88,7 @@ class Player(Character):
         self.shovels: int = 0
         self.digging_moves: int = 1
         self.weapons: int = 0
-        self.armed_strength_incr: int = None
+        self.armed_strength_incr: int | None = None
         self.ignores: tuple = (None,)
 
     def get_movement_range(
@@ -227,7 +227,7 @@ class CrusherJane(Player):
         self.char: str = "&"
         self.name: str = "Crusher Jane"
         self.free_actions: tuple = ("fighting",)
-        self.health: int = 8
+        self.health: int = 80
         self.max_health: int = self.health
         self.strength: tuple = (3, 6)
         self.armed_strength_incr: int = 2
@@ -256,7 +256,7 @@ class Hawkins(Player):
         self.ignores: tuple = ("shovel", "gem")
 
 
-class Monster(Character):
+class Monster(Character, ABC):
 
     data: list = list()
 
@@ -278,9 +278,14 @@ class Monster(Character):
         super().__init__()
         self.kind: str = "monster"
         self.blocked_by = ("wall", "player")
-        self.cannot_share_tile_with = ("wall", "monster", "player")
+        self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
         self.random_motility: int = 0  # from 0 to 10. For monsters with random movement
+        self.chases: tuple = ("player", None)
         self.ignores: tuple = ("shovel", "weapon", "gem", "jerky")
+
+    @abstractmethod
+    def move(self):
+        pass
 
     def attack_players(self):
 
@@ -293,8 +298,8 @@ class Monster(Character):
                 self.fight_on_tile(player_tile)
 
     def find_closest_reachable_target(
-        self, target_kind: str, target_species: str | None = None
-    ) -> tiles.Tile | None:
+        self, target_token: tuple[str] = (None, None)
+    ) -> tiles.Tile | None:  # pass target_token as (token_kind, token_species)
         """
         Finds closest target based on len(path) and returns the tile where this target is placed
         Returns tile is there is path to tile, None if tile is unreachable"
@@ -304,11 +309,11 @@ class Monster(Character):
         start_tile: tiles.Tile = self.dungeon.get_tile(self.position)
 
         for tile in self.dungeon.children:
-            if tile.has_token_kind(target_kind):
+            if tile.has_token_kind(target_token[0]):
                 if (
-                    target_species is None
-                    or tile.token.species == target_species
-                    or tile.second_token.species == target_species
+                    target_token[1] is None
+                    or tile.token.species == target_token[1]
+                    or tile.second_token.species == target_token[1]
                 ):
                     path = self.dungeon.find_shortest_path(
                         start_tile, tile, self.blocked_by
@@ -364,7 +369,7 @@ class Monster(Character):
 
             i += 1
 
-        path_to_closest_access: list[tuple] | None = None
+        path: list[tuple] | None = None
 
         for access in accesses:
 
@@ -373,12 +378,13 @@ class Monster(Character):
                 self.token.start, end_tile, self.blocked_by
             )
             if path_to_access is not None:
-                if path_to_closest_access is None or len(path_to_closest_access) > len(
-                    path_to_access
-                ):
-                    path_to_closest_access = path_to_access
+                if path is None or len(path) > len(path_to_access):
+                    path = path_to_access
 
-        return path_to_closest_access
+        if self.chases[0] not in self.cannot_share_tile_with:
+            path = self._add_target_position_to_path(path)
+
+        return path
 
     def assess_path_direct(self, target_tile: tiles.Tile):
 
@@ -415,6 +421,9 @@ class Monster(Character):
                 if possible_path.index(position) == len(possible_path) - 1:
 
                     path = possible_path
+
+        if self.chases[0] not in self.cannot_share_tile_with:
+            path = self._add_target_position_to_path(path)
 
         return path
 
@@ -540,6 +549,38 @@ class Monster(Character):
 
         return path
 
+    def _add_target_position_to_path(self, path: list[tuple]):
+
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        for direction in directions:
+
+            if path is None:  # monster and target are nearby
+                end_tile = self.dungeon.get_tile(
+                    (
+                        self.position[0] + direction[0],
+                        self.position[1] + direction[1],
+                    )
+                )
+
+            else:
+                end_tile = self.dungeon.get_tile(
+                    (path[-1][0] + direction[0], path[-1][1] + direction[1])
+                )
+
+            if end_tile is not None and end_tile.has_token_kind(self.chases[0]):
+                if (
+                    self.chases[1] is None
+                    or self.chases[1] == end_tile.token.species
+                    or self.chases[1] == end_tile.second_token.species
+                ):
+                    if utils.are_nearby(self, end_tile):
+                        path = [end_tile.position]
+                    else:
+                        path.append(end_tile.position)
+                    break
+        return path
+
 
 class Kobold(Monster):
 
@@ -570,14 +611,13 @@ class CaveHound(Monster):
             self.health
         )  # TODO: delete this attribute when not monster health is displayed
         self.strength = (1, 4)
-        self.moves = 4
+        self.moves = 2
+        self.chases = ("pickable", "gem")
         self.random_motility = 8
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(
-            "pickable", "gem"
-        )
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
             return self.assess_path_direct(target_tile)
@@ -606,7 +646,7 @@ class DepthsWisp(Monster):
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target("player")
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
             return self.assess_path_direct()
@@ -632,11 +672,12 @@ class NightMare(Monster):
             self.health
         )  # TODO: delete this attribute when not monster health is displayed
         self.strength = (2, 5)
-        self.moves = 40
+        self.moves = 15
+        self.chases = ("pickable", "gem")
 
     def move(self):
 
-        target_tile: tiles.Tiles | None = self.find_closest_reachable_target("player")
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
             return self.assess_path_smart(target_tile)

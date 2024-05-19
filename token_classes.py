@@ -1,7 +1,6 @@
 from kivy.graphics import Ellipse, Rectangle, Color  # type: ignore
 from kivy.animation import Animation
 
-# from kivy.properties import Clock, BooleanProperty
 from kivy.uix.widget import Widget
 
 import character_classes as characters
@@ -111,7 +110,6 @@ class CharacterToken(SolidToken):
         else:
 
             self.start = start_tile
-
             self.goal = end_tile
 
             self.path = self.dungeon.find_shortest_path(
@@ -125,7 +123,6 @@ class CharacterToken(SolidToken):
     def move_monster(self):
 
         self.start = self.dungeon.get_tile(self.character.position)
-
         self.path = self.character.move()
 
         if self.path is None:  # if cannot move, will try directly to attack players
@@ -133,14 +130,20 @@ class CharacterToken(SolidToken):
             self.dungeon.game.update_switch("character_done")
 
         else:
-            self.goal = self.dungeon.get_tile(self.path[-1])
+
+            goal_index = (
+                self.character.remaining_moves - 1
+                if self.character.remaining_moves - 1 < len(self.path)
+                else len(self.path) - 1
+            )
+            self.goal = self.dungeon.get_tile(self.path[goal_index])
+
             self.slide(self.path)
 
     def slide(self, path):
 
-        next_position = path.pop(0)
-
-        next_pos = self.dungeon.get_tile(next_position).pos
+        next_tile = self.dungeon.get_tile(path.pop(0))
+        next_pos = next_tile.pos
 
         self.character.remaining_moves -= 1
 
@@ -150,11 +153,10 @@ class CharacterToken(SolidToken):
 
     def on_slide_completed(self, *args):
 
-        if len(self.path) > 0:
-
+        if len(self.path) > 0 and self.character.remaining_moves > 0:
             self.slide(self.path)
 
-        else:  # if goal is reached
+        else:  # if goal is reached or remaining_moves == 0
 
             if isinstance(self.character, characters.Player):
 

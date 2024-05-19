@@ -15,8 +15,8 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
     def dungeon_size(self):
 
-        return 6 + int(self.level / 1.5)
-        # return 3
+        # return 6 + int(self.level / 1.5)
+        return 3
 
     def gem_number(self):
 
@@ -86,7 +86,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
         # utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint, " ", 1)
-        utils.place_equal_items(self.blueprint, "H", 1)
+        utils.place_equal_items(self.blueprint, "N", 1)
         # utils.place_equal_items(self.blueprint, "#", 10)
         utils.place_equal_items(self.blueprint, "o", 1)
 

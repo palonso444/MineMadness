@@ -3,16 +3,30 @@ from abc import ABC, abstractmethod
 
 import crapgeon_utils as utils
 import tile_classes as tiles
+import game_stats as stats
 
 
 class Character(ABC):
+
+    @classmethod
+    def rearrange_ids(cls) -> None:
+
+        for character in cls.data:
+            character.id = cls.data.index(character)
+
+    @classmethod
+    def reset_moves(cls) -> None:
+
+        for character in cls.data:
+            character.stats.remaining_moves = character.stats.moves
+
+    # INSTANCE METHODS
 
     def __init__(self):
 
         self.name: str | None = None
         self.id: int | None = None
         self.position: tuple | None = None
-        self.remaining_moves: int | None = None
 
         self.token = None
         self.dungeon = None
@@ -26,17 +40,17 @@ class Character(ABC):
         opponent = opponent_tile.get_character()
         game = self.dungeon.game
 
-        damage = randint(self.strength[0], self.strength[1])
-        if isinstance(self, Player) and self.weapons > 0:
-            self.weapons -= 1
+        damage = randint(self.stats.strength[0], self.stats.strength[1])
+        if isinstance(self, Player) and self.stats.weapons > 0:
+            self.stats.weapons -= 1
             game.update_switch("weapons")
-            if self.armed_strength_incr:
-                damage += self.armed_strength_incr
+            if self.stats.armed_strength_incr is not None:
+                damage += self.stats.armed_strength_incr
 
-        opponent.health -= damage
-        self.remaining_moves -= 1
+        opponent.stats.health -= damage
+        self.stats.remaining_moves -= 1
 
-        if opponent.health <= 0:
+        if opponent.stats.health <= 0:
             opponent.__class__.data.remove(opponent)
             opponent.__class__.rearrange_ids()
             opponent_tile.clear_token(opponent.token.kind)
@@ -47,9 +61,20 @@ class Character(ABC):
 
     def has_moved(self) -> bool:
 
-        if self.remaining_moves == self.moves:
+        if self.stats.remaining_moves == self.stats.moves:
             return False
         return True
+
+    # MOVEMENT METHODS
+
+    def glide(self):
+        raise NotImplementedError
+
+    def walk(self):
+        raise NotImplementedError
+
+    def gallop(self):
+        raise NotImplementedError
 
 
 class Player(Character, ABC):
@@ -59,21 +84,10 @@ class Player(Character, ABC):
     exited: set = set()
     gems: int = 0
 
-    # CLASS METHODS
+    @classmethod
+    def transfer_player(cls, name: str) -> Character:
 
-    def rearrange_ids() -> None:
-
-        for character in Player.data:
-            character.id = Player.data.index(character)
-
-    def reset_moves() -> None:
-
-        for player in Player.data:
-            player.remaining_moves = player.moves
-
-    def transfer_player(name: str) -> Character:
-
-        for player in Player.exited:
+        for player in cls.exited:
             if player.name == name:
                 return player
 
@@ -85,10 +99,6 @@ class Player(Character, ABC):
         self.blocked_by: tuple = ("wall", "monster")
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
         self.free_actions: tuple = (None,)
-        self.shovels: int = 0
-        self.digging_moves: int = 1
-        self.weapons: int = 0
-        self.armed_strength_incr: int | None = None
         self.ignores: tuple = (None,)
 
     def get_movement_range(
@@ -97,7 +107,7 @@ class Player(Character, ABC):
         # TODO: better as method of Player Class
 
         mov_range = set()  # set of tuples (no repeated values)
-        remaining_moves = self.remaining_moves
+        remaining_moves = self.stats.remaining_moves
 
         # GET CURRENT PLAYER POSITION
         mov_range.add((self.position[0], self.position[1]))
@@ -157,16 +167,18 @@ class Player(Character, ABC):
                 game.update_switch("gems")
 
             elif tile.token.species == "jerky":
-                self.health += 2
-                self.health = (
-                    self.max_health if self.health > self.max_health else self.health
+                self.stats.health += 2
+                self.stats.health = (
+                    self.stats.max_health
+                    if self.stats.health > self.stats.max_health
+                    else self.stats.health
                 )
                 game.update_switch("health")
 
             else:
-                character_attribute = getattr(self, tile.token.species + "s")
+                character_attribute = getattr(self.stats, tile.token.species + "s")
                 character_attribute += 1
-                setattr(self, tile.token.species + "s", character_attribute)
+                setattr(self.stats, tile.token.species + "s", character_attribute)
                 game.update_switch(tile.token.species + "s")
 
             tile.clear_token(tile.token.kind)
@@ -175,10 +187,10 @@ class Player(Character, ABC):
 
         game = self.dungeon.game
 
-        if self.shovels > 0:
-            self.shovels -= 1
+        if self.stats.shovels > 0:
+            self.stats.shovels -= 1
             game.update_switch("shovels")
-        self.remaining_moves -= self.digging_moves
+        self.stats.remaining_moves -= self.stats.digging_moves
 
         self.dungeon.show_digging_token(
             wall_tile.token.shape.pos, wall_tile.token.shape.size
@@ -197,80 +209,9 @@ class Player(Character, ABC):
             mov_range.add((y_position, self.position[1] + side_move))  # one step right
 
 
-class Sawyer(Player):
-    """Slow digger (takes half of initial moves each dig)
-    Can pick gems
-    LOW strength
-    LOW health
-    HIGH movement"""
-
-    def __init__(self):
-        super().__init__()
-        self.char: str = "%"
-        self.name: str = "Sawyer"
-        self.health: int = 400
-        self.max_health: int = self.health
-        self.strength: tuple = (1, 2)
-        self.moves: int = 5
-        self.digging_moves: int = 3
-
-
-class CrusherJane(Player):
-    """Can fight with no weapons (MEDIUM strength)
-    Stronger if fight with weapons  (HIGH strength)
-    Cannot pick gems
-    LOW movement
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.char: str = "&"
-        self.name: str = "Crusher Jane"
-        self.free_actions: tuple = ("fighting",)
-        self.health: int = 80
-        self.max_health: int = self.health
-        self.strength: tuple = (3, 6)
-        self.armed_strength_incr: int = 2
-        self.moves: int = 3
-        self.ignores: tuple = ("gem",)
-
-
-class Hawkins(Player):
-    """Can dig without shovels
-    Does not pick shovels
-    Can fight with weapons
-    Cannot pick gems
-    LOW health
-    MEDIUM strength
-    MEDIUM movement"""
-
-    def __init__(self):
-        super().__init__()
-        self.char: str = "?"
-        self.name: str = "Hawkins"
-        self.free_actions: tuple = ("digging",)
-        self.health: int = 5
-        self.max_health: int = self.health
-        self.strength: tuple = (1, 4)
-        self.moves: int = 4
-        self.ignores: tuple = ("shovel", "gem")
-
-
 class Monster(Character, ABC):
 
     data: list = list()
-
-    # CLASS METHODS
-
-    def rearrange_ids():
-
-        for character in Monster.data:
-            character.id = Monster.data.index(character)
-
-    def reset_moves():
-
-        for monster in Monster.data:
-            monster.remaining_moves = monster.moves
 
     # INSTANCE METHODS
 
@@ -279,7 +220,6 @@ class Monster(Character, ABC):
         self.kind: str = "monster"
         self.blocked_by = ("wall", "player")
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
-        self.random_motility: int = 0  # from 0 to 10. For monsters with random movement
         self.chases: tuple = ("player", None)
         self.ignores: tuple = ("shovel", "weapon", "gem", "jerky")
 
@@ -292,7 +232,7 @@ class Monster(Character, ABC):
         players: list = Player.data[:]
 
         for player in players:
-            if utils.are_nearby(self, player) and self.remaining_moves > 0:
+            if utils.are_nearby(self, player) and self.stats.remaining_moves > 0:
 
                 player_tile: tiles.Tile = self.dungeon.get_tile(player.position)
                 self.fight_on_tile(player_tile)
@@ -433,11 +373,11 @@ class Monster(Character, ABC):
 
         position: tuple = self.position
 
-        for move in range(self.moves):
+        for move in range(self.stats.moves):
 
             trigger: int = randint(1, 10)
 
-            if trigger <= self.random_motility:
+            if trigger <= self.stats.random_motility:
 
                 direction: int = randint(1, 4)  # 1: NORTH, 2: EAST, 3: SOUTH, 4: WEST
 
@@ -582,19 +522,61 @@ class Monster(Character, ABC):
         return path
 
 
+class Sawyer(Player):
+    """Slow digger (takes half of initial moves each dig)
+    Can pick gems
+    LOW strength
+    LOW health
+    HIGH movement"""
+
+    def __init__(self):
+        super().__init__()
+        self.char: str = "%"
+        self.name: str = "Sawyer"
+        self.stats = stats.SawyerStats()
+
+
+class CrusherJane(Player):
+    """Can fight with no weapons (MEDIUM strength)
+    Stronger if fight with weapons  (HIGH strength)
+    Cannot pick gems
+    LOW movement
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.char: str = "&"
+        self.name: str = "Crusher Jane"
+        self.free_actions: tuple = ("fighting",)
+        self.ignores: tuple = ("gem",)
+        self.stats = stats.CrusherJaneStats()
+
+
+class Hawkins(Player):
+    """Can dig without shovels
+    Does not pick shovels
+    Can fight with weapons
+    Cannot pick gems
+    LOW health
+    MEDIUM strength
+    MEDIUM movement"""
+
+    def __init__(self):
+        super().__init__()
+        self.char: str = "?"
+        self.name: str = "Hawkins"
+        self.free_actions: tuple = ("digging",)
+        self.ignores: tuple = ("shovel", "gem")
+        self.stats = stats.HawkinsStats()
+
+
 class Kobold(Monster):
 
     def __init__(self):
         super().__init__()
         self.char: str = "K"
-        self.name = "Kobold"
-        self.health = 2
-        self.max_health = (
-            self.health
-        )  # TODO: delete this attribute when not monster health is displayed
-        self.strength = (1, 2)
-        self.moves = 3
-        self.random_motility = 8
+        self.name: str = "Kobold"
+        self.stats = stats.KoboldStats()
 
     def move(self):
         return self.assess_path_random()
@@ -605,15 +587,8 @@ class CaveHound(Monster):
     def __init__(self):
         super().__init__()
         self.char: str = "H"
-        self.name = "Cave Hound"
-        self.health = 4
-        self.max_health = (
-            self.health
-        )  # TODO: delete this attribute when not monster health is displayed
-        self.strength = (1, 4)
-        self.moves = 2
-        self.chases = ("pickable", "gem")
-        self.random_motility = 8
+        self.name: str = "Cave Hound"
+        self.stats = stats.CaveHoundStats()
 
     def move(self):
 
@@ -630,19 +605,13 @@ class DepthsWisp(Monster):
 
     def __init__(self):
         super().__init__()
-        self.blocked_by = ()
-        self.cannot_share_tile_with = ("monster", "player")
-        self.ignores = self.ignores + ("rock",)
+        self.blocked_by: tuple = ()
+        self.cannot_share_tile_with: tuple = ("monster", "player")
+        self.ignores: tuple = self.ignores + ("rock",)
 
         self.char: str = "W"
-        self.name = "Depths Wisp"
-        self.health = 1
-        self.max_health = (
-            self.health
-        )  # TODO: delete this attribute when not monster health is displayed
-        self.strength = (1, 2)
-        self.moves = 5
-        self.random_motility = 5
+        self.name: str = "Depths Wisp"
+        self.stats = stats.DepthsWispStats()
 
     def move(self):
 
@@ -666,14 +635,8 @@ class NightMare(Monster):
     def __init__(self):
         super().__init__()
         self.char: str = "N"
-        self.name = "Nightmare"
-        self.health = 6
-        self.max_health = (
-            self.health
-        )  # TODO: delete this attribute when not monster health is displayed
-        self.strength = (2, 5)
-        self.moves = 15
-        self.chases = ("pickable", "gem")
+        self.name: str = "Nightmare"
+        self.stats = stats.NightmareStats()
 
     def move(self):
 

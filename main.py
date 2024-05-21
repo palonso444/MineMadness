@@ -76,7 +76,7 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
 
         if (
             isinstance(self.active_character, characters.Player)
-            and self.active_character.remaining_moves > 0
+            and self.active_character.stats.remaining_moves > 0
         ):
 
             self.dynamic_movement_range()  # checks if player can still move
@@ -179,8 +179,8 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
 
     def switch_character(self, new_active_character):
 
-        if self.active_character.has_moved():
-            self.active_character.remaining_moves = 0
+        # if self.active_character.has_moved():
+        # self.active_character.stats.remaining_moves = 0
 
         index_new_char = characters.Player.data.index(new_active_character)
         index_old_char = characters.Player.data.index(self.active_character)

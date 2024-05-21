@@ -15,8 +15,8 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
     def dungeon_size(self):
 
-        # return 6 + int(self.level / 1.5)
-        return 3
+        return 6 + int(self.level / 1.5)
+        # return 3
 
     def gem_number(self):
 
@@ -86,15 +86,17 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
         # utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint, " ", 1)
-        utils.place_equal_items(self.blueprint, "N", 1)
+        utils.place_equal_items(self.blueprint, "N", 4)
         # utils.place_equal_items(self.blueprint, "#", 10)
         utils.place_equal_items(self.blueprint, "o", 1)
 
         protected_items = ("%", "?", "&", " ", "o")
 
-        # for key,value in self.level_progression().items():
+        # for key, value in self.level_progression().items():
 
-        # utils.place_items (self.blueprint, item=key, frequency=value, protected = protected_items)
+        # utils.place_items(
+        # self.blueprint, item=key, frequency=value, protected=protected_items
+        # )
 
         # for y in range (len(self.blueprint)):
         # print (*self.blueprint[y])
@@ -102,8 +104,8 @@ class DungeonLayout(GridLayout):  # initialized in kv file
     def determine_alive_players(self):
 
         if self.level == 1:
-            # return characters.Player.player_chars
-            return "&"
+            return characters.Player.player_chars
+            # return "&"
         else:
             live_players = set()
             for player in characters.Player.exited:
@@ -113,42 +115,43 @@ class DungeonLayout(GridLayout):  # initialized in kv file
     def allocate_tokens(self):
 
         for tile in self.children:
+            match self.blueprint[tile.row][tile.col]:
 
-            if self.blueprint[tile.row][tile.col] == "%":
-                self.place_tokens(tile, "player", "sawyer")
+                case "%":
+                    self.place_tokens(tile, "player", "sawyer")
 
-            elif self.blueprint[tile.row][tile.col] == "?":
-                self.place_tokens(tile, "player", "hawkins")
+                case "?":
+                    self.place_tokens(tile, "player", "hawkins")
 
-            elif self.blueprint[tile.row][tile.col] == "&":
-                self.place_tokens(tile, "player", "crusherjane")
+                case "&":
+                    self.place_tokens(tile, "player", "crusherjane")
 
-            elif self.blueprint[tile.row][tile.col] == "K":
-                self.place_tokens(tile, "monster", "kobold")
+                case "K":
+                    self.place_tokens(tile, "monster", "kobold")
 
-            elif self.blueprint[tile.row][tile.col] == "H":
-                self.place_tokens(tile, "monster", "hound")
+                case "H":
+                    self.place_tokens(tile, "monster", "hound")
 
-            elif self.blueprint[tile.row][tile.col] == "W":
-                self.place_tokens(tile, "monster", "wisp")
+                case "W":
+                    self.place_tokens(tile, "monster", "wisp")
 
-            elif self.blueprint[tile.row][tile.col] == "N":
-                self.place_tokens(tile, "monster", "nightmare")
+                case "N":
+                    self.place_tokens(tile, "monster", "nightmare")
 
-            elif self.blueprint[tile.row][tile.col] == "#":
-                self.place_tokens(tile, "wall", "rock")
+                case "#":
+                    self.place_tokens(tile, "wall", "rock")
 
-            elif self.blueprint[tile.row][tile.col] == "p":
-                self.place_tokens(tile, "pickable", "shovel")
+                case "p":
+                    self.place_tokens(tile, "pickable", "shovel")
 
-            elif self.blueprint[tile.row][tile.col] == "x":
-                self.place_tokens(tile, "pickable", "weapon")
+                case "x":
+                    self.place_tokens(tile, "pickable", "weapon")
 
-            elif self.blueprint[tile.row][tile.col] == "j":
-                self.place_tokens(tile, "pickable", "jerky")
+                case "j":
+                    self.place_tokens(tile, "pickable", "jerky")
 
-            elif self.blueprint[tile.row][tile.col] == "o":
-                self.place_tokens(tile, "pickable", "gem")
+                case "o":
+                    self.place_tokens(tile, "pickable", "gem")
 
     def place_tokens(self, tile, token_kind, token_species):
 
@@ -279,13 +282,18 @@ class DungeonLayout(GridLayout):  # initialized in kv file
     def find_shortest_path(
         self, start_tile, end_tile, excluded=tuple()
     ) -> list[tuple] | None:
+        """
+        Returns the shortest path from start_tile to end_tile in the form of list of positions
+        e.g. [(0,1), (0,2), (1,2)]. Start tile position NOT INCLUDED in path. End tile included.
+        Returns None if there is no possible path.
+        """
 
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        queue = deque(
+        directions: list[tuple] = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        queue: deque = deque(
             [(start_tile.position, [])]
         )  # start_tile_pos is not included in the path
 
-        excluded_positions = self.scan(excluded)
+        excluded_positions: list[tuple] = self.scan(excluded)
         excluded_positions.add(start_tile.position)
         if (
             start_tile.has_token_kind("monster")
@@ -298,7 +306,6 @@ class DungeonLayout(GridLayout):  # initialized in kv file
             current_position, path = queue.popleft()
 
             if current_position == end_tile.position:
-
                 return path if len(path) > 0 else None
 
             for direction in directions:

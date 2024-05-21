@@ -104,7 +104,7 @@ class CharacterToken(SolidToken):
 
         if start_tile == end_tile:  # if character stays in place
 
-            self.character.remaining_moves = 0
+            self.character.stats.remaining_moves = 0
             self.dungeon.game.update_switch("character_done")
 
         else:
@@ -132,8 +132,8 @@ class CharacterToken(SolidToken):
         else:
 
             goal_index = (
-                self.character.remaining_moves - 1
-                if self.character.remaining_moves - 1 < len(self.path)
+                self.character.stats.remaining_moves - 1
+                if self.character.stats.remaining_moves - 1 < len(self.path)
                 else len(self.path) - 1
             )
             self.goal = self.dungeon.get_tile(self.path[goal_index])
@@ -145,7 +145,7 @@ class CharacterToken(SolidToken):
         next_tile = self.dungeon.get_tile(path.pop(0))
         next_pos = next_tile.pos
 
-        self.character.remaining_moves -= 1
+        self.character.stats.remaining_moves -= 1
 
         animation = Animation(pos=next_pos, duration=0.2)
         animation.bind(on_complete=self.on_slide_completed)
@@ -153,7 +153,7 @@ class CharacterToken(SolidToken):
 
     def on_slide_completed(self, *args):
 
-        if len(self.path) > 0 and self.character.remaining_moves > 0:
+        if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
             self.slide(self.path)
 
         else:  # if goal is reached or remaining_moves == 0

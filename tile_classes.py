@@ -80,22 +80,22 @@ class Tile(Button):
         if (
             self.has_token_kind("wall")
             and utils.are_nearby(self, player)
-            and player.remaining_moves >= player.digging_moves
+            and player.stats.remaining_moves >= player.stats.digging_moves
         ):
 
-            if player.shovels > 0 or "digging" in player.free_actions:
+            if player.stats.shovels > 0 or "digging" in player.free_actions:
 
                 return True
             return False
 
         if self.has_token_kind("monster") and utils.are_nearby(self, player):
 
-            if player.weapons > 0 or "fighting" in player.free_actions:
+            if player.stats.weapons > 0 or "fighting" in player.free_actions:
 
                 return True
             return False
 
-        if path and len(path) <= player.remaining_moves:
+        if path and len(path) <= player.stats.remaining_moves:
 
             return True
 

@@ -1,31 +1,24 @@
-<DungeonLayout>:
+#: import DungeonStats game_stats.DungeonStats
 
+
+<DungeonStats>:
+    level: 1
 
 <Label>:
 
-    text_size: self.size    #needed to make halign work
-    
+    text_size: self.size    #needed to make halign work  
     halign: 'left'
-    
-    font_size: '25sp'
+    font_size: '20sp'
 
 
 <Tile>:
-
-    #token: None ---> this might allow set on_size() self.token.size = self.size on python file.
     
     background_normal: ''   #sets the background default to white instead of predefined grey
-    
     background_color: 0.4, 0.8, 1, 1
-    
     size_hint: None,None
-
-    width: '100dp'
-
+    width: '60dp'
     height: self.width
-
     disabled: True
-
     kind: None
 
     canvas:
@@ -34,17 +27,16 @@
 
             rgba: (1,1,1,0.8) if not self.disabled else (1,1,1,1)
 
-        Rectangle:  #draws the floor
+        Rectangle:  # draws the floor
             
             pos: self.pos
             size: self.size
             source: self.kind + 'background.png' if self.kind else None
 
 
-
 <ScrollView>:
 
-    effect_cls: 'ScrollEffect'  #this avoids bouncing when reaching end of scroll
+    effect_cls: 'ScrollEffect'  # avoids bouncing when reaching end of scroll
 
 
 <CrapgeonGame>:
@@ -54,17 +46,15 @@
     orientation: "vertical"
 
     on_active_character_id: name_label.text = str(root.active_character.name)
-    on_health: health_label.text = 'Health: ' + str(root.active_character.health)
-    on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.shovels)
-    on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.weapons)
-    on_gems:   gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
-
+    on_health: health_label.text = 'Health: ' + str(root.active_character.stats.health) + '/' + str(root.active_character.stats.max_health)
+    on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.stats.shovels)
+    on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.stats.weapons)
+    on_gems: gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
+    
     GridLayout:     # to separate character picture and info
 
         size_hint: 1, 0.25
-
         rows: 1
-
         cols: 2
 
         Label:      #CHARACTER PICTURE HERE
@@ -76,46 +66,36 @@
             #halign: 'center'
 
         BoxLayout:
-            
             orientation:'vertical'
 
             Label:
 
                 #halign: 'center'
 
-                font_size: '32sp'
+                font_size: '25sp'
                 id: name_label
 
             Label:
-
                 id: health_label
 
-            Label:
-                
+            Label:  
                 id: shovels_label
             
             Label:
-
                 id: weapons_label
 
             Label:
-                
                 id: gems_label
 
     ScrollView:
-
         size_hint: 1, 0.6
     
         DungeonLayout:
 
-            level: root.level
-            
+            stats: DungeonStats()
+            level: self.stats.level
             size_hint: None, None
-
             height: self.minimum_height
-
             width: self.minimum_width
-
-            rows: self.dungeon_size()
-
-            cols: self.dungeon_size()
+            rows: self.stats.size()
+            cols: self.stats.size()

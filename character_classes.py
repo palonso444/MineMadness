@@ -1,620 +1,667 @@
 from random import randint
+from abc import ABC, abstractmethod
 
 import crapgeon_utils as utils
-import token_classes as tokens
+import tile_classes as tiles
+import game_stats as stats
 
 
-class Character:
+class Character(ABC):
 
-    #TODO: make this funcitons work. Problem with "character.__class__.data":
+    @classmethod
+    def rearrange_ids(cls) -> None:
 
-    '''def rearrange_ids ():
+        for character in cls.data:
+            character.id = cls.data.index(character)
 
-        for character in character.__class__.data:
+    @classmethod
+    def reset_moves(cls) -> None:
 
-            character.id = character.__class__.data.index(character)
-            
-            
-        def reset_moves():
+        for character in cls.data:
+            character.stats.remaining_moves = character.stats.moves
 
-            for character in character.__class__.data:
-                character.remaining_moves = character.moves'''
-    
+    # INSTANCE METHODS
 
+    def __init__(self):
 
-    
-    def __init__(self):    #position as tuple (y,x)
-        
-        self.name = None
-        self.position = None
+        self.name: str | None = None
+        self.id: int | None = None
+        self.position: tuple | None = None
+
         self.token = None
         self.dungeon = None
-        self.id = None
-        self.remaining_moves = 0
 
-    
-    def update_position (self, y_position, x_position):
+    def update_position(self, position: tuple[int]) -> None:
 
-        self.__class__.data[self.id].position = (y_position, x_position)
+        self.__class__.data[self.id].position = position
 
-    
-    def rearrange_ids (self):
-
-        for character in self.data:
-
-            character.id = self.data.index(character)
-
-    
-    def fight_on_tile (self, opponent_tile):
+    def fight_on_tile(self, opponent_tile: tiles.Tile) -> None:
 
         opponent = opponent_tile.get_character()
+        game = self.dungeon.game
 
-        damage = randint(self.strength[0], self.strength[1])
-        if isinstance(self, Player) and self.weapons > 0:
-            self.weapons -= 1
-            self.dungeon.game.update_switch('weapons')
-            if self.armed_strength_incr:
-                damage += self.armed_strength_incr
-        
-        opponent.health -= damage
-        #print (damage)
-        self.remaining_moves -= 1
+        damage = randint(self.stats.strength[0], self.stats.strength[1])
+        if isinstance(self, Player) and self.stats.weapons > 0:
+            self.stats.weapons -= 1
+            game.update_switch("weapons")
+            if self.stats.armed_strength_incr is not None:
+                damage += self.stats.armed_strength_incr
 
-        if opponent.health <= 0:
-            opponent.data.remove(opponent)
-            opponent.rearrange_ids()
-            opponent_tile.clear_token()
-        
-        self.dungeon.show_damage_token (opponent.token.pos, opponent.token.size)
+        opponent.stats.health -= damage
+        self.stats.remaining_moves -= 1
 
+        if opponent.stats.health <= 0:
+            opponent.__class__.data.remove(opponent)
+            opponent.__class__.rearrange_ids()
+            opponent_tile.clear_token(opponent.token.kind)
 
-    def has_moved(self):
+        self.dungeon.show_damage_token(
+            opponent.token.shape.pos, opponent.token.shape.size
+        )
 
-        if self.remaining_moves == self.moves:
+    def has_moved(self) -> bool:
+
+        if self.stats.remaining_moves == self.stats.moves:
             return False
         return True
-    
+
+    # MOVEMENT METHODS TO IMPLEMENT
+
+    def glide(self):
+        raise NotImplementedError
+
+    def walk(self):
+        raise NotImplementedError
+
+    def gallop(self):
+        raise NotImplementedError
 
 
-class Player(Character):
+class Player(Character, ABC):
 
-    data = list ()
-    exited = set()
-    gems = 0
+    player_chars: tuple = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
+    data: list = list()
+    exited: set = set()
+    gems: int = 0
 
-    def transfer_player(name):
-        
-        for player in Player.exited:
+    @classmethod
+    def transfer_player(cls, name: str) -> Character:
+
+        for player in cls.exited:
             if player.name == name:
                 return player
 
-    def reset_moves():
-
-        for player in Player.data:
-            player.remaining_moves = player.moves
-
+    # INSTANCE METHODS
 
     def __init__(self):
         super().__init__()
-        self.blocked_by = ('wall', 'monster')
-        self.cannot_share_tile_with = ('wall', 'monster','player')
-        self.free_actions = (None,)
-        self.shovels = 0
-        #self.moves = 3
-        self.digging_moves = 1
-        self.weapons = 0
-        self.armed_strength_incr = None
-        self.ignores = (None,)
-    
-    
-    def get_movement_range(self, dungeon_layout):   #TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
-                                                    #TODO: better as method of Player Class
+        self.kind: str = "player"
+        self.blocked_by: tuple = ("wall", "monster")
+        self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
+        self.free_actions: tuple = (None,)
+        self.ignores: tuple = (None,)
 
-        def get_lateral_range(self, y_position, side_move, mov_range, dungeon_layout):
+    def get_movement_range(
+        self, dungeon_layout
+    ):  # TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
+        # TODO: better as method of Player Class
 
-            
-            if self.position[1] - side_move >= 0: #if room in left side
+        mov_range = set()  # set of tuples (no repeated values)
+        remaining_moves = self.stats.remaining_moves
 
-                mov_range.add((y_position, self.position [1] - side_move)) #one step left.
-
-            
-            if self.position[1] + side_move < dungeon_layout.cols: #if room in right side             
-
-                mov_range.add((y_position, self.position [1] + side_move)) #one step right
-
-
-        mov_range = set()  #set of tuples (no repeated values)
-        remaining_moves = self.remaining_moves
-        
         # GET CURRENT PLAYER POSITION
         mov_range.add((self.position[0], self.position[1]))
-        
 
-        for move in range (1, remaining_moves + 1):     #starts at 1 not to include current player position again
+        for move in range(
+            1, remaining_moves + 1
+        ):  # starts at 1 not to include current player position again
 
-            #INCLUDE ALL POSSIBLE MOVES ON THE SAME ROW AS PLAYER
-            get_lateral_range(self, self.position[0], move, mov_range, dungeon_layout)
+            # INCLUDE ALL POSSIBLE MOVES ON THE SAME ROW AS PLAYER
+            self._get_lateral_range(self.position[0], move, mov_range, dungeon_layout)
             remaining_moves -= 1
-            
-            if self.position[0] - move >= 0:    #if height within range up
 
-                #INCLUDE ALL POSSIBLE MOVES DIRECTION UP
-                mov_range.add((self.position[0] - move, self.position[1]))  #one step up. 
+            if self.position[0] - move >= 0:  # if height within range up
 
-                for side_move in range(1, remaining_moves + 1):         #one step both sides
+                # INCLUDE ALL POSSIBLE MOVES DIRECTION UP
+                mov_range.add(
+                    (self.position[0] - move, self.position[1])
+                )  # one step up.
 
-                    get_lateral_range(self, self.position[0] - move, side_move, mov_range, dungeon_layout)
+                for side_move in range(1, remaining_moves + 1):  # one step both sides
 
+                    self._get_lateral_range(
+                        self.position[0] - move,
+                        side_move,
+                        mov_range,
+                        dungeon_layout,
+                    )
 
-            if self.position[0] + move < dungeon_layout.rows:   #if height within range down
-            
-                #INCLUDE ALL POSSIBLE MOVES DIRECTION DOWN
-                mov_range.add((self.position[0] + move, self.position[1]))   #one step down.
+            if (
+                self.position[0] + move < dungeon_layout.rows
+            ):  # if height within range down
 
-                for side_move in range(1, remaining_moves + 1):         #one step both sides
+                # INCLUDE ALL POSSIBLE MOVES DIRECTION DOWN
+                mov_range.add(
+                    (self.position[0] + move, self.position[1])
+                )  # one step down.
 
-                    get_lateral_range(self, self.position[0] + move, side_move, mov_range, dungeon_layout)
-        
-        
-        return mov_range   
+                for side_move in range(1, remaining_moves + 1):  # one step both sides
 
+                    self._get_lateral_range(
+                        self.position[0] + move,
+                        side_move,
+                        mov_range,
+                        dungeon_layout,
+                    )
 
-    def pick_object(self, object_tile):
+        return mov_range
 
-        if object_tile.token.kind not in self.ignores: 
-            
-            if object_tile.token.kind != 'gem':
-                character_attribute = getattr(self, object_tile.token.kind + 's')
-                character_attribute += 1
-                setattr(self, object_tile.token.kind + 's', character_attribute)
+    def pick_object(self, tile: tiles.Tile) -> None:
 
-            elif object_tile.token.kind == 'gem':
+        game = self.dungeon.game
 
+        if tile.token.species not in self.ignores:
+
+            if tile.token.species == "gem":
                 Player.gems += 1
+                game.update_switch("gems")
 
-            self.dungeon.game.update_switch(object_tile.token.kind + 's')
+            elif tile.token.species == "jerky":
+                self.stats.health += 2
+                self.stats.health = (
+                    self.stats.max_health
+                    if self.stats.health > self.stats.max_health
+                    else self.stats.health
+                )
+                game.update_switch("health")
 
-            object_tile.clear_token()
+            else:
+                character_attribute = getattr(self.stats, tile.token.species + "s")
+                character_attribute += 1
+                setattr(self.stats, tile.token.species + "s", character_attribute)
+                game.update_switch(tile.token.species + "s")
 
-            
+            tile.clear_token(tile.token.kind)
+
+    def dig(self, wall_tile: tiles.Tile) -> None:
+
+        game = self.dungeon.game
+
+        if self.stats.shovels > 0:
+            self.stats.shovels -= 1
+            game.update_switch("shovels")
+        self.stats.remaining_moves -= self.stats.digging_moves
+
+        self.dungeon.show_digging_token(
+            wall_tile.token.shape.pos, wall_tile.token.shape.size
+        )
+
+        wall_tile.clear_token("wall")
+
+    def _get_lateral_range(
+        self, y_position: int, side_move: int, mov_range: list[tuple], dungeon_layout
+    ) -> None:
+
+        if self.position[1] - side_move >= 0:  # if room in left side
+            mov_range.add((y_position, self.position[1] - side_move))  # one step left.
+
+        if self.position[1] + side_move < dungeon_layout.cols:  # if room in right side
+            mov_range.add((y_position, self.position[1] + side_move))  # one step right
 
 
-    def dig(self, wall_tile):
+class Monster(Character, ABC):
 
-        if self.shovels > 0:
-            self.shovels -= 1
-            self.dungeon.game.update_switch('shovels')
-        self.remaining_moves -= self.digging_moves
+    data: list = list()
 
-        self.dungeon.show_digging_token(wall_tile.token.pos, wall_tile.token.size)
+    # INSTANCE METHODS
 
-        wall_tile.clear_token()
-        
-        
+    def __init__(self):
+        super().__init__()
+        self.kind: str = "monster"
+        self.blocked_by = ("wall", "player")
+        self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
+        self.chases: tuple = ("player", None)
+        self.ignores: tuple = ("shovel", "weapon", "gem", "jerky")
+
+    @abstractmethod
+    def move(self):
+        pass
+
+    def attack_players(self):
+
+        players: list = Player.data[:]
+
+        for player in players:
+            if utils.are_nearby(self, player) and self.stats.remaining_moves > 0:
+
+                player_tile: tiles.Tile = self.dungeon.get_tile(player.position)
+                self.fight_on_tile(player_tile)
+
+    def find_closest_reachable_target(
+        self, target_token: tuple[str] = (None, None)
+    ) -> tiles.Tile | None:  # pass target_token as (token_kind, token_species)
+        """
+        Finds closest target based on len(path) and returns the tile where this target is placed
+        Returns tile is there is path to tile, None if tile is unreachable"
+        """
+
+        tiles_and_paths: list = list()
+        start_tile: tiles.Tile = self.dungeon.get_tile(self.position)
+
+        for tile in self.dungeon.children:
+            if tile.has_token_kind(target_token[0]):
+                if (
+                    target_token[1] is None
+                    or tile.token.species == target_token[1]
+                    or tile.second_token.species == target_token[1]
+                ):
+                    path = self.dungeon.find_shortest_path(
+                        start_tile, tile, self.blocked_by
+                    )
+                    tiles_and_paths.append((tile, path))
+
+        closest_tile_and_path = None
+
+        for tile_and_path in tiles_and_paths:
+            if tile_and_path[1] is not None:  # if path is not None
+                if closest_tile_and_path is None or len(closest_tile_and_path[1]) > len(
+                    tile_and_path[1]
+                ):
+
+                    closest_tile_and_path = tile_and_path
+
+        return None if closest_tile_and_path is None else closest_tile_and_path[0]
+
+    def assess_path_smart(self, target_tile: tiles.Tile) -> list[tuple] | None:
+
+        accesses: list[list] | None = self._find_accesses(target_tile)
+
+        i = 0
+        while i < len(accesses):
+
+            # if access is unreachable, remove access
+            path_access_end: list[tuple] | None = self.dungeon.find_shortest_path(
+                self.token.start,
+                self.dungeon.get_tile(accesses[i][-1]),
+                self.blocked_by,
+            )
+            if path_access_end is None:
+                accesses.remove(accesses[i])
+                continue
+
+            # remove all accesses longer than first access (the shortest)
+            elif len(accesses[i]) > len(accesses[0]):
+                accesses.remove(accesses[i])
+                continue
+
+            # if access end further away from target than monster is, remove access
+            else:
+                monster_to_target: list[tuple] = self.dungeon.find_shortest_path(
+                    self.token.start, target_tile, self.blocked_by
+                )
+                target_to_access_end: list[tuple] = self.dungeon.find_shortest_path(
+                    target_tile, self.dungeon.get_tile(accesses[i][-1]), self.blocked_by
+                )
+
+                if len(target_to_access_end) > len(monster_to_target):
+                    accesses.remove(accesses[i])
+                    continue
+
+            i += 1
+
+        path: list[tuple] | None = None
+
+        for access in accesses:
+
+            end_tile: tiles.Tile = self.dungeon.get_tile(access[-1])
+            path_to_access: list[tuple] | None = self.dungeon.find_shortest_path(
+                self.token.start, end_tile, self.blocked_by
+            )
+            if path_to_access is not None:
+                if path is None or len(path) > len(path_to_access):
+                    path = path_to_access
+
+        if self.chases[0] not in self.cannot_share_tile_with:
+            path = self._add_target_position_to_path(path)
+
+        return path
+
+    def assess_path_direct(self, target_tile: tiles.Tile):
+
+        accesses: list[list] | None = self._find_accesses(target_tile, smart=False)
+
+        path: list[tuple] | None = None
+
+        for access in accesses:
+
+            if path:
+                break
+
+            end_tile = self.dungeon.get_tile(access[-1])
+
+            possible_path: list[tuple] = self.dungeon.find_shortest_path(
+                self.token.start, end_tile, self.blocked_by
+            )
+
+            if not possible_path:
+                continue
+
+            distance: int = utils.get_distance(self.position, target_tile.position)
+
+            for position in possible_path:
+
+                if distance <= utils.get_distance(position, target_tile.position):
+
+                    break
+
+                elif distance > utils.get_distance(position, target_tile.position):
+
+                    distance = utils.get_distance(position, target_tile.position)
+
+                if possible_path.index(position) == len(possible_path) - 1:
+
+                    path = possible_path
+
+        if self.chases[0] not in self.cannot_share_tile_with:
+            path = self._add_target_position_to_path(path)
+
+        return path
+
+    def assess_path_random(self):
+
+        path: list | None = list()
+
+        position: tuple = self.position
+
+        for move in range(self.stats.moves):
+
+            trigger: int = randint(1, 10)
+
+            if trigger <= self.stats.random_motility:
+
+                direction: int = randint(1, 4)  # 1: NORTH, 2: EAST, 3: SOUTH, 4: WEST
+
+                if direction == 1 and self._goes_through(
+                    self.dungeon.get_tile((position[0] - 1, position[1]))
+                ):
+
+                    position: tuple = (position[0] - 1, position[1])
+                    path.append(position)
+
+                elif direction == 2 and self._goes_through(
+                    self.dungeon.get_tile((position[0], position[1] + 1))
+                ):
+
+                    position: tuple = (position[0], position[1] + 1)
+                    path.append(position)
+
+                elif direction == 3 and self._goes_through(
+                    self.dungeon.get_tile((position[0] + 1, position[1]))
+                ):
+
+                    position: tuple = (position[0] + 1, position[1])
+                    path.append(position)
+
+                elif direction == 4 and self._goes_through(
+                    self.dungeon.get_tile((position[0], position[1] - 1))
+                ):
+
+                    position: tuple = (position[0], position[1] - 1)
+                    path.append(position)
+
+        if len(path) > 0:
+            path = self._check_free_landing(path)
+
+        return path if len(path) > 0 else None
+
+    def _find_accesses(
+        self, target_tile: tiles.Tile, smart: bool = True
+    ) -> list[list] | None:
+        """
+        Returns a list of paths, sorted from shorter to longer,
+        from target to all free tiles in the dungeon
+        path[-1] is position of free tile in the dungeon, path[0] is position nearby to target_tile
+        """
+
+        paths = list()
+
+        # look which tile positions are free in the dungeon among ALL tiles
+        scanned: list[tuple] = self.dungeon.scan(
+            self.cannot_share_tile_with, exclude=True
+        )
+
+        # find paths from target_tile to all free tiles scanned
+        for tile_position in scanned:
+
+            scanned_tile: tiles.Tile = self.dungeon.get_tile(tile_position)
+
+            if (
+                smart
+            ):  # smart creatures avoid tiles where, althogh closer in position, the path to target is longer
+                path: list[tuple] = self.dungeon.find_shortest_path(
+                    target_tile, scanned_tile, self.blocked_by
+                )
+
+            else:
+                path: list[tuple] = self.dungeon.find_shortest_path(
+                    target_tile, scanned_tile
+                )
+
+            if path:
+
+                paths.append(path)
+
+        # sort paths from player to free tiles from shortest to longest
+
+        sorted_paths = sorted(paths, key=len)
+
+        return sorted_paths if len(sorted_paths) > 0 else None
+
+    def _goes_through(self, tile):
+
+        if tile:
+
+            if tile.token and tile.token.kind in self.blocked_by:
+                return False
+            if tile.second_token and tile.second_token.kind in self.blocked_by:
+                return False
+
+            return True
+
+        return False
+
+    def _check_free_landing(self, path: list[tuple]):
+
+        for position in reversed(path):
+
+            if path.index(position) != len(path) - 1:
+                break  # at this stage only last position in path is rellevant
+
+            for token_kind in self.cannot_share_tile_with:
+
+                # position != self.position is necessary for random moves
+                if (
+                    self.dungeon.get_tile(position).has_token_kind(token_kind)
+                    and position != self.position
+                ):
+
+                    path.remove(position)
+
+        return path
+
+    def _add_target_position_to_path(self, path: list[tuple]):
+
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        for direction in directions:
+
+            if path is None:  # monster and target are nearby
+                end_tile = self.dungeon.get_tile(
+                    (
+                        self.position[0] + direction[0],
+                        self.position[1] + direction[1],
+                    )
+                )
+
+            else:
+                end_tile = self.dungeon.get_tile(
+                    (path[-1][0] + direction[0], path[-1][1] + direction[1])
+                )
+
+            if end_tile is not None and end_tile.has_token_kind(self.chases[0]):
+                if (
+                    self.chases[1] is None
+                    or self.chases[1] == end_tile.token.species
+                    or self.chases[1] == end_tile.second_token.species
+                ):
+                    if utils.are_nearby(self, end_tile):
+                        path = [end_tile.position]
+                    else:
+                        path.append(end_tile.position)
+                    break
+        return path
 
 
 class Sawyer(Player):
-    '''Slow digger (takes half of initial moves each dig)
-        Can pick gems
-        LOW strength
-        LOW health
-        HIGH movement''' 
+    """Slow digger (takes half of initial moves each dig)
+    Can pick gems
+    LOW strength
+    LOW health
+    HIGH movement"""
 
     def __init__(self):
         super().__init__()
-        self.data = super().data
-        self.name = 'Sawyer'
-        self.health = 4
-        self.strength = (1,2)
-        self.moves = 5
-        self.digging_moves = 3
+        self.char: str = "%"
+        self.name: str = "Sawyer"
+        self.stats = stats.SawyerStats()
 
 
 class CrusherJane(Player):
-    '''Can fight with no weapons (MEDIUM strength)
-        Stronger if fight with weapons  (HIGH strength)
-        Cannot pick gems
-        LOW movement
-        '''
+    """Can fight with no weapons (MEDIUM strength)
+    Stronger if fight with weapons  (HIGH strength)
+    Cannot pick gems
+    LOW movement
+    """
 
     def __init__(self):
         super().__init__()
-        self.data = super().data
-        self.name = 'Crusher Jane'
-        self.free_actions = ('fighting',)
-        self.health = 8
-        self.strength = (3,6)
-        self.armed_strength_incr = 2
-        self.moves = 3
-        self.ignores = ('gem',)
+        self.char: str = "&"
+        self.name: str = "Crusher Jane"
+        self.free_actions: tuple = ("fighting",)
+        self.ignores: tuple = ("gem",)
+        self.stats = stats.CrusherJaneStats()
 
 
-class Hawkins (Player):
-    '''Can dig without shovels
+class Hawkins(Player):
+    """Can dig without shovels
     Does not pick shovels
     Can fight with weapons
     Cannot pick gems
     LOW health
     MEDIUM strength
-    MEDIUM movement'''
-    
-    def __init__(self):
-        super().__init__()
-        self.data = super().data
-        self.name = 'Hawkins'
-        self.free_actions = ('digging',)
-        self.health = 5
-        self.strength = (1,4)
-        self.moves = 4
-        self.ignores = ('shovel', 'gem')
-
-
-
-class Monster(Character):
-
-    data = list()
+    MEDIUM movement"""
 
     def __init__(self):
         super().__init__()
-        self.kind = 'monster'
-        self.random_motility = 0    #from 0 to 10. Rellevant in monsters with random movement
-        self.ignores = ('shovel', 'weapon', 'gem')
-
-    def reset_moves():
-
-        for monster in Monster.data:
-            monster.remaining_moves = monster.moves
-    
-    def find_closest_player(self):
-
-
-        distances = list()
-        
-        for player in Player.data:
-        
-            distance = abs(self.position[0] - player.position[0]) + abs(self.position[1] - player.position[1])
-            
-            distances.append(distance)
-
-        shortest_distance = min(distances)
-
-        for distance in distances:
-
-            if distance == shortest_distance:
-
-                return Player.data[distances.index(distance)]
-
-    
-    def find_closest_reachable_player(self):
-
-        players_and_paths = list()
-
-        start = self.dungeon.get_tile(self.position)
-        
-        for player in Player.data:
-
-            goal = self.dungeon.get_tile(player.position)
-
-            path = self.dungeon.find_shortest_path(start, goal, self.blocked_by)
-
-            players_and_paths.append((player,path))
-
-        
-        closest_player_and_path = None
-        
-        for player_and_path in players_and_paths:
-
-            if player_and_path[1]:
-
-                if not closest_player_and_path or len(closest_player_and_path[1]) > len(player_and_path[1]):
-
-                    closest_player_and_path = player_and_path
-
-        return closest_player_and_path
-
-
-    def find_accesses(self, target, smart = True):    #returns list of paths from target to free tiles, sorted shortest to longest
-
-        target_tile = self.dungeon.get_tile(target.position)
-        
-        paths = list()
-        
-        #look which tiles are free in the dungeon
-        scanned = self.dungeon.scan(self.cannot_share_tile_with, exclude = True)
-        
-        #find paths from player to all free tiles scanned
-        for tile_position in scanned:
-
-            scanned_tile = self.dungeon.get_tile(tile_position)
-            
-            if smart:   #smart creatures do not go to places where there is no direct path to player
-                path = self.dungeon.find_shortest_path(target_tile, scanned_tile, self.blocked_by)
-
-            else:
-                path = self.dungeon.find_shortest_path(target_tile, scanned_tile)
-            
-            if path:
-
-                paths.append(path)
-        
-        #sort paths from player to free tiles from shortest to longest
-        sorted_paths = sorted(paths, key=len)
-
-        return sorted_paths
-
-
-    def assess_path_smart(self):
-        
-        target = self.find_closest_reachable_player()[0]
-
-        target_tile = self.dungeon.get_tile(target.position)
-
-        sorted_paths = self.find_accesses(target)
-
-        shortest_possible_path = None
-        
-        for path in sorted_paths:
-            #check if monster can reach end_tile of each of sorted paths
-            possible_path = self.dungeon.find_shortest_path(self.token.start, self.dungeon.get_tile(path[-1]), self.blocked_by)
-
-            if possible_path:
-            
-                monster_to_target = self.dungeon.find_shortest_path(self.token.start, target_tile, self.blocked_by)
-                target_to_possible_path_end = self.dungeon.find_shortest_path(target_tile, self.dungeon.get_tile(possible_path[-1]), self.blocked_by)
-                #if end tile closer to player than monster is right now, take path to this end tile
-                if len(target_to_possible_path_end) < len(monster_to_target):
-
-                    shortest_possible_path = possible_path
-                    break
-
-        path = self.trim_path(shortest_possible_path)
-
-        return path
-
-
-    def assess_path_direct(self):
-
-        target = self.find_closest_reachable_player()[0] #REDO SO IT CAN TARGET ALSO GEMS, FOR INSTANCE
-
-        sorted_paths = self.find_accesses(target, smart = False)
-
-        path = None
-        
-        for sorted_path in sorted_paths:
-
-            if path:
-                break
-
-            end_tile = self.dungeon.get_tile(sorted_path[-1])
-
-            possible_path = self.dungeon.find_shortest_path(self.token.start, end_tile, self.blocked_by)
-
-            if not possible_path:
-                continue
-            
-            distance = utils.distance(self.position, target.position)
-            
-            for position in possible_path:
-
-                if distance <= utils.distance(position, target.position):
-
-                    break
-
-                elif distance > utils.distance(position, target.position):
-
-                    distance = utils.distance(position, target.position)
-
-                if possible_path.index(position) == len(possible_path) -1:
-
-                    path = possible_path
-                        
-        path = self.trim_path(path)
-        
-        return path
-    
-
-    def assess_path_random(self):
-
-        path = list()
-
-        position = self.position
-        
-        for move in range (self.moves):
-        
-            trigger = randint(1,10)
-
-            if trigger <= self.random_motility:
-
-                direction = randint(1,4) #1: NORTH, 2: EAST, 3: SOUTH, 4: WEST
-
-                if direction == 1 and self.goes_through(self.dungeon.get_tile((position[0] -1, position[1]))):
-                    
-                        position = (position[0] -1, position [1])
-                        path.append(position)
-
-                elif direction == 2 and self.goes_through(self.dungeon.get_tile((position[0], position[1] +1))):
-                    
-                        position = (position[0], position[1]+1)
-                        path.append(position)
-
-                elif direction == 3 and self.goes_through(self.dungeon.get_tile((position[0] +1, position[1]))):
-                    
-                        position = (position[0] +1, position [1])
-                        path.append(position)
-
-                elif direction == 4 and self.goes_through(self.dungeon.get_tile((position[0], position[1] -1))):
-                    
-                        position = (position[0],position [1]-1)
-                        path.append(position)
-
-       
-        path = self.trim_path(path)
-
-        return path
-    
-
-    def goes_through(self, tile):
-
-        if tile:
-        
-            if tile.token and tile.token.kind in self.blocked_by:
-                return False
-            if tile.second_token and tile.second_token.kind in self.blocked_by:
-                return False
-               
-            return True
-        
-        return False
-    
-    
-    def check_free_landing(self, path):
-
-        
-        for position in reversed(path):
-
-            if path.index(position) != len(path)-1:  
-                break   #at this stage only last position in path is rellevant
-        
-            for token_kind in self.cannot_share_tile_with:
-                
-                #position != self.position is necessary for random moves
-                if self.dungeon.get_tile(position).has_token(token_kind) and position != self.position:
-                        
-                    path.remove(position)
-        
-        return path
-    
-
-    def trim_path(self, path):
-
-        if path:
-
-            while len(path) > self.moves:
-                path.pop()
-        
-            path = self.check_free_landing(path)
-        
-        if not path or len(path) == 0:
-            path = [self.position]
-
-        return path
-    
-
+        self.char: str = "?"
+        self.name: str = "Hawkins"
+        self.free_actions: tuple = ("digging",)
+        self.ignores: tuple = ("shovel", "gem")
+        self.stats = stats.HawkinsStats()
 
 
 class Kobold(Monster):
-    
+
     def __init__(self):
         super().__init__()
-        self.data = super().data
-        self.name = 'Kobold'
-        self.moves = 3
-        self.health = 2
-        self.strength = (1,2)
-        self.blocked_by = ('wall', 'player')
-        self.cannot_share_tile_with = ('wall', 'monster', 'player')
-        self.random_motility = 8
-
+        self.char: str = "K"
+        self.name: str = "Kobold"
+        self.stats = stats.KoboldStats()
 
     def move(self):
-
         return self.assess_path_random()
-    
 
 
 class CaveHound(Monster):
-    
+
     def __init__(self):
         super().__init__()
-        self.data = super().data
-        self.name = 'Cave Hound'
-        self.moves = 4
-        self.health = 4
-        self.strength = (1,4)
-        self.blocked_by = ('wall', 'player')
-        self.cannot_share_tile_with = ('wall', 'monster', 'player')
-        self.random_motility = 8
-
+        self.char: str = "H"
+        self.name: str = "Cave Hound"
+        self.stats = stats.CaveHoundStats()
 
     def move(self):
 
-        if self.find_closest_reachable_player():
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
-            return self.assess_path_direct()
-        
+        if target_tile is not None:
+            return self.assess_path_direct(target_tile)
+
         else:
-            
             return self.assess_path_random()
-
 
 
 class DepthsWisp(Monster):
 
     def __init__(self):
         super().__init__()
-        self.data = super().data
-        self.name = 'Depths Wisp'
-        self.moves = 5
-        self.health = 1
-        self.strength = (1,2)
-        self.blocked_by = ()
-        self.cannot_share_tile_with = ('monster', 'player')
-        self.random_motility = 5
+        self.blocked_by: tuple = ()
+        self.cannot_share_tile_with: tuple = ("monster", "player")
+        self.ignores: tuple = self.ignores + ("rock",)
 
+        self.char: str = "W"
+        self.name: str = "Depths Wisp"
+        self.stats = stats.DepthsWispStats()
 
     def move(self):
 
-        if self.find_closest_reachable_player():
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
+        if target_tile is not None:
             return self.assess_path_direct()
-        
+
         else:
-            
             return self.assess_path_random()
-    
+
 
 class RockElemental(Monster):
     pass
 
-    #moves randomly and slowly but extremely strong if hits
+    # moves randomly and slowly but extremely strong if hits
 
 
 class NightMare(Monster):
-    
+
     def __init__(self):
         super().__init__()
-        self.data = super().data
-        self.name = 'Nightmare'
-        self.moves = 4
-        self.health = 6
-        self.strength = (2,5)
-        self.blocked_by = ('wall', 'player')
-        self.cannot_share_tile_with = ('wall', 'monster', 'player')
-
+        self.char: str = "N"
+        self.name: str = "Nightmare"
+        self.stats = stats.NightmareStats()
 
     def move(self):
 
-        if self.find_closest_reachable_player():
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
-            return self.assess_path_smart()
-        
+        if target_tile is not None:
+            return self.assess_path_smart(target_tile)
+
         else:
-            return [self.position]
+            return None
 
 
 class DarkDwarf(Monster):
     pass
 
-    #chases the player. Intermediate strength
+    # chases the player. Intermediate strength
 
 
 class MetalEater(Monster):
     pass
 
-    #chases weapons and shovels and makes disappear. Does not attack player.
+    # chases weapons and shovels and makes disappear. Does not attack player.
 
 
 class GreedyGnome(Monster):
     pass
 
-    #chases the nearest gold and stays on top of it. Intermediate strength
+    # chases the nearest gold and stays on top of it. Intermediate strength

@@ -1,5 +1,54 @@
 from dataclasses import dataclass
 from abc import ABC
+from random import randint
+
+# from kivy.event import EventDispatcher
+# from kivy.properties import NumericProperty
+
+
+class DungeonStats:  # inherit from EventDispatcher to use NumericProperty
+
+    critical_items: tuple[str] = ("%", "?", "&", " ", "o")
+
+    # level: int = NumericProperty(1)
+
+    def __init__(self):
+        self.level: int = 1
+
+    def size(self):
+
+        return 6 + int(self.level / 1.5)
+
+    def gem_number(self):
+
+        gem_number = int(self.level * 0.2)
+        gem_number = 1 if gem_number < 1 else gem_number
+        return gem_number
+
+    def level_progression(self):
+
+        wall_frequency = randint(20, 60) * 0.01
+
+        monster_frequencies = {
+            "K": 0.10 / self.level,
+            "H": self.level * 0.015,
+            "W": self.level * 0.006,
+            "N": self.level * 0.002,
+        }
+
+        total_monster_frequency = sum(monster_frequencies.values())
+
+        item_frequencies = {
+            "#": wall_frequency,
+            "p": wall_frequency * 0.15,
+            "x": total_monster_frequency * 0.3,
+            "j": self.level * 0.015,
+        }
+
+        all_frequencies = {**monster_frequencies, **item_frequencies}
+
+        del monster_frequencies, item_frequencies
+        return all_frequencies
 
 
 @dataclass

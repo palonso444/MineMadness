@@ -68,7 +68,7 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
     def on_dungeon(self, *args):
 
         characters.Player.gems = 0
-        self.dungeon.allocate_tokens()
+        self.dungeon.match_blueprint()
         self.initialize_switches()
         characters.Player.exited.clear()
 
@@ -139,9 +139,9 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
         if len(characters.Player.data) == 0:
 
             characters.Monster.data.clear()
-            app = App.get_running_app()
-            app.level += 1
-            app.generate_next_level()
+            app = App.get_running_app()  # maybe this can be done from dungeon not app
+            app.level += 1  # this should be self.dungeon.stats.level
+            app.generate_next_level()  # maybe this can be done from dungeon not app
 
         elif self.active_character_id == len(characters.Player.data):
             self.update_switch("turn")

@@ -7,7 +7,7 @@ from kivy.uix.button import Button  # type: ignore
 import crapgeon_utils as utils
 
 # import character_classes as characters
-# import token_classes as tokens
+import token_classes as tokens
 
 
 class Tile(Button):
@@ -15,13 +15,17 @@ class Tile(Button):
     def __init__(self, row, col, kind, dungeon_instance, **kwargs):
         super().__init__(**kwargs)
 
-        self.row = row
-        self.col = col
-        self.position = (row, col)
-        self.kind = kind
-        self.token = None  # defined later when token is placed on tile by DungeonLayout.place_tokens
-        self.second_token = None  # tiles can have up to 2 tokens (shovel + monster for instance). Special slot reserved for monsters in such cases
-        self.dungeon = dungeon_instance  # need to pass the instance of the dungeon in order to cal dungeon.move_token from this class
+        self.row: int = row
+        self.col: int = col
+        self.position: tuple = (row, col)
+        self.kind: str = kind
+        self.token: tokens.SolidToken = (
+            None  # defined when is by DungeonLayout.place_tokens
+        )
+        self.second_token: tokens.CharacterToken = (
+            None  # tiles can have up to 2 tokens (shovel + monster for instance).
+        )
+        self.dungeon = dungeon_instance  # need to pass the instance of the dungeon to call dungeon.move_token from the class
 
     def on_release(self):
 

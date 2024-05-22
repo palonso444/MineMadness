@@ -65,7 +65,7 @@ class Character(ABC):
             return False
         return True
 
-    # MOVEMENT METHODS
+    # MOVEMENT METHODS TO IMPLEMENT
 
     def glide(self):
         raise NotImplementedError

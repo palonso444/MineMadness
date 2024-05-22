@@ -13,42 +13,6 @@ from random import randint
 
 class DungeonLayout(GridLayout):  # initialized in kv file
 
-    def dungeon_size(self):
-
-        return 6 + int(self.level / 1.5)
-        # return 3
-
-    def gem_number(self):
-
-        gem_number = int(self.level * 0.2)
-        gem_number = 1 if gem_number < 1 else gem_number
-        return gem_number
-
-    def level_progression(self):
-
-        wall_frequency = randint(20, 60) * 0.01
-
-        monster_frequencies = {
-            "K": 0.10 / self.level,
-            "H": self.level * 0.015,
-            "W": self.level * 0.006,
-            "N": self.level * 0.002,
-        }
-
-        total_monster_frequency = sum(monster_frequencies.values())
-
-        item_frequencies = {
-            "#": wall_frequency,
-            "p": wall_frequency * 0.15,
-            "x": total_monster_frequency * 0.3,
-            "j": self.level * 0.015,
-        }
-
-        all_frequencies = {**monster_frequencies, **item_frequencies}
-
-        del monster_frequencies, item_frequencies
-        return all_frequencies
-
     def on_pos(self, *args):
 
         self.generate_blueprint(self.rows, self.cols)  # initialize map of dungeon
@@ -80,23 +44,24 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
         self.blueprint = utils.create_map(height, width)
 
-        live_players = self.determine_alive_players()
-
-        utils.place_items_as_group(self.blueprint, live_players, min_dist=1)
+        utils.place_items_as_group(
+            self.blueprint, self.determine_alive_players(), min_dist=1
+        )
 
         # utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint, " ", 1)
-        utils.place_equal_items(self.blueprint, "N", 4)
+        # utils.place_equal_items(self.blueprint, "N", 4)
         # utils.place_equal_items(self.blueprint, "#", 10)
-        utils.place_equal_items(self.blueprint, "o", 1)
+        utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
 
-        protected_items = ("%", "?", "&", " ", "o")
+        for key, value in self.stats.level_progression().items():
 
-        # for key, value in self.level_progression().items():
-
-        # utils.place_items(
-        # self.blueprint, item=key, frequency=value, protected=protected_items
-        # )
+            utils.place_items(
+                self.blueprint,
+                item=key,
+                frequency=value,
+                protected=self.stats.critical_items,
+            )
 
         # for y in range (len(self.blueprint)):
         # print (*self.blueprint[y])
@@ -112,7 +77,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
                 live_players.add(player.char)
             return live_players
 
-    def allocate_tokens(self):
+    def match_blueprint(self):
 
         for tile in self.children:
             match self.blueprint[tile.row][tile.col]:

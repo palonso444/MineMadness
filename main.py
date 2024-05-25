@@ -10,7 +10,7 @@ from kivy.uix.button import Button  # type: ignore
 # from kivy.uix.image import Image    # type: ignore
 # from kivy.graphics import Ellipse, Rectangle   # type: ignore
 # from kivy.uix.widget import Widget  # type: ignore
-from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty, Clock  # type: ignore
+from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty  # type: ignore
 
 # from kivy.animation import Animation
 
@@ -78,11 +78,9 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
             isinstance(self.active_character, characters.Player)
             and self.active_character.stats.remaining_moves > 0
         ):
-
             self.dynamic_movement_range()  # checks if player can still move
 
         else:
-
             self.next_character()  # switch turns if character last of character.characters
 
     def on_turn(self, *args):
@@ -103,8 +101,7 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
 
             if (
                 self.turn or len(characters.Monster.data) == 0
-            ):  # if player turn or no monsters (always players turn)
-
+            ):  # if player turn or no monsters
                 self.active_character = characters.Player.data[self.active_character_id]
 
                 if self.active_character.has_moved():
@@ -154,11 +151,9 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
     def next_character(self):
 
         if self.active_character.id < len(self.active_character.__class__.data) - 1:
-
             self.active_character_id += 1  # next character on list moves
 
         else:  # if end of characters list reached (all have moved)
-
             self.update_switch("turn")
 
     def dynamic_movement_range(self):
@@ -168,13 +163,10 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
         for player in characters.Player.data:
 
             if not player.has_moved():
-
                 players_not_yet_active.add(player.position)
 
         player_movement_range = self.active_character.get_movement_range(self.dungeon)
-
         positions_in_range = players_not_yet_active.union(player_movement_range)
-
         self.dungeon.activate_which_tiles(positions_in_range)
 
     def switch_character(self, new_active_character):
@@ -193,9 +185,7 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
         )
 
         self.active_character.rearrange_ids()
-
         self.active_character = new_active_character
-
         self.active_character_id = None
         self.active_character_id = characters.Player.data.index(self.active_character)
 

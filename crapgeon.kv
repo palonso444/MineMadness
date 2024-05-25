@@ -1,16 +1,23 @@
 #: import DungeonStats game_stats.DungeonStats
 
+<BoxLayout>:
+    #spacing: '5dp'
+    #padding: '5dp'
 
 <Label>:
-
-    text_size: self.size    #needed to make halign work  
+    text_size: self.size    # needed to make halign work  
     halign: 'left'
+    valign: 'center'
     font_size: '20sp'
+    #padding: '20dp', '10dp', '20dp', '10dp'
+
+<Button>:
+    halign: 'center'
+    disabled: True
 
 
 <Tile>:
-    
-    background_normal: ''   #sets the background default to white instead of predefined grey
+    background_normal: ''   # sets the background default to white instead of predefined grey
     background_color: 0.4, 0.8, 1, 1
     size_hint: None,None
     width: '60dp'
@@ -19,13 +26,10 @@
     kind: None
 
     canvas:
-        
         Color:
-
             rgba: (1,1,1,0.8) if not self.disabled else (1,1,1,1)
 
-        Rectangle:  # draws the floor
-            
+        Rectangle:  # draws the floor      
             pos: self.pos
             size: self.size
             source: self.kind + 'background.png' if self.kind else None
@@ -37,58 +41,72 @@
 
 
 <CrapgeonGame>:
+    orientation: 'vertical'
+    padding: '5dp'
 
     level: app.level
 
-    orientation: "vertical"
-
     on_active_character_id: name_label.text = str(root.active_character.name)
-    on_health: health_label.text = 'Health: ' + str(root.active_character.stats.health) + '/' + str(root.active_character.stats.max_health)
-    on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.stats.shovels)
+    on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.stats.shovels) if root.active_character.name != 'Hawkins' else 'Dynamite: 0'
     on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.stats.weapons)
     on_gems: gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
     
-    GridLayout:     # to separate character picture and info
+    # HEADER LABELS: CHARACTER NAME AND FLOOR NUMBER
+    BoxLayout:
+        padding: '5dp'
+        orientation: 'horizontal'
+        size_hint: 1, 0.1
+        
+        Label:
+            id: name_label
+            size_hint: 0.6, 1
+            font_size: '23sp'
 
-        size_hint: 1, 0.25
-        rows: 1
-        cols: 2
-
-        Label:      #CHARACTER PICTURE HERE
-
-            size_hint: 0.05, 1
-
-            #text: "PICTURE \n HERE"
-
-            #halign: 'center'
-
-        BoxLayout:
-            orientation:'vertical'
-
-            Label:
-
-                #halign: 'center'
-
-                font_size: '25sp'
-                id: name_label
-
-            Label:
-                id: health_label
-
-            Label:  
-                id: shovels_label
+        ToggleButton:
+            size_hint: 0.4, 1
+            text:'ACTION'
             
+    # GUI: CHARACTER STATS AND INVENTORY
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint: 1, 0.3
+        padding: '5dp'
+
+        #CHARACTER STATS
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: 0.5,1
+            spacing: '5dp'
+
+            Label:
+                id: level_label
+                text: 'FLOOR 1'
             Label:
                 id: weapons_label
-
+            Label:  
+                id: shovels_label
             Label:
                 id: gems_label
+
+        #INVENTORY
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: 0.5,1
+            spacing: '5dp'
+
+            Button:
+                text: 'Jerky'
+            Button:
+                text: 'Tobacco'
+            Button:
+                text: 'Whisky'
+            Button:
+                text: 'Bloodstone'
 
     ScrollView:
         size_hint: 1, 0.6
     
         DungeonLayout:
-
             stats: DungeonStats()
             level: self.stats.level
             size_hint: None, None

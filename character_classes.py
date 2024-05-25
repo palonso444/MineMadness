@@ -73,7 +73,7 @@ class Character(ABC):
     def walk(self):
         raise NotImplementedError
 
-    def gallop(self):
+    def stomp(self):
         raise NotImplementedError
 
 

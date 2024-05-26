@@ -15,6 +15,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
     def on_pos(self, *args):
 
+        self.tiles_dict = dict()  # for faster access to tiles by get_tile()
         self.generate_blueprint(self.rows, self.cols)  # initialize map of dungeon
         self.game = self.parent.parent
         self.game.total_gems = 0
@@ -36,6 +37,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
                     tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
 
+                self.tiles_dict[tile.position] = tile
                 self.add_widget(tile)
 
         self.game.dungeon = self  # Adds dungeon as CrapgeonGame class attribute
@@ -50,11 +52,12 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
         # utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint, " ", 1)
-        # utils.place_equal_items(self.blueprint, "N", 4)
-        # utils.place_equal_items(self.blueprint, "#", 10)
-        utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
+        utils.place_equal_items(self.blueprint, "#", 6)
+        utils.place_equal_items(self.blueprint, "o", 2)
+        utils.place_equal_items(self.blueprint, "G", 2)
+        # utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
 
-        for key, value in self.stats.level_progression().items():
+        """for key, value in self.stats.level_progression().items():
 
             utils.place_items(
                 self.blueprint,
@@ -64,7 +67,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
             )
 
         # for y in range (len(self.blueprint)):
-        # print (*self.blueprint[y])
+        # print (*self.blueprint[y])"""
 
     def determine_alive_players(self):
 
@@ -102,6 +105,9 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
                 case "N":
                     self.place_tokens(tile, "monster", "nightmare")
+
+                case "G":
+                    self.place_tokens(tile, "monster", "gnome")
 
                 case "#":
                     self.place_tokens(tile, "wall", "rock")
@@ -159,6 +165,9 @@ class DungeonLayout(GridLayout):  # initialized in kv file
                 elif token_species == "nightmare":
                     character = characters.NightMare()
 
+                elif token_species == "gnome":
+                    character = characters.GreedyGnome()
+
             tile.token = tokens.CharacterToken(
                 kind=token_kind,
                 species=token_species,
@@ -208,11 +217,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
     def get_tile(self, position):
 
-        for tile in self.children:
-
-            if tile.position == position:
-
-                return tile
+        return self.tiles_dict.get(position)
 
     def scan(
         self, scenery, exclude=False
@@ -226,11 +231,11 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
             for token in scenery:
 
-                if not exclude and tile.has_token_kind(token):
+                if not exclude and tile.has_token((token, None)):
 
                     found_tiles.add(tile.position)
 
-                elif exclude and tile.has_token_kind(token):
+                elif exclude and tile.has_token((token, None)):
 
                     excluded_tiles.add(tile)
 
@@ -261,7 +266,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
         excluded_positions: list[tuple] = self.scan(excluded)
         excluded_positions.add(start_tile.position)
         if (
-            start_tile.has_token_kind("monster")
+            start_tile.has_token(("monster", None))
             and end_tile.position in excluded_positions
         ):
             excluded_positions.remove(end_tile.position)

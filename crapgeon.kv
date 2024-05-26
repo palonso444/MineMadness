@@ -101,12 +101,13 @@
             Button:
                 text: 'Whisky'
             Button:
-                text: 'Bloodstone'
+                text: 'Talisman'
 
     ScrollView:
         size_hint: 1, 0.6
     
         DungeonLayout:
+            tiles_dict: None
             stats: DungeonStats()
             level: self.stats.level
             size_hint: None, None

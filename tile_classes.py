@@ -31,17 +31,17 @@ class Tile(Button):
 
         player = self.dungeon.game.active_character
 
-        if self.has_token_kind("player") and self.get_character() != player:
+        if self.has_token(("player", None)) and self.get_character() != player:
 
             self.dungeon.game.switch_character(self.get_character())
 
-        elif self.has_token_kind("wall"):
+        elif self.has_token(("wall", None)):
 
             player.dig(self)
 
             self.dungeon.game.update_switch("character_done")
 
-        elif self.has_token_kind("monster"):
+        elif self.has_token(("monster", None)):
 
             player.fight_on_tile(self)
 
@@ -73,7 +73,7 @@ class Tile(Button):
             self.dungeon.get_tile(player.position), self, (player.blocked_by)
         )
 
-        if self.has_token_kind("player"):
+        if self.has_token(("player", None)):
 
             if self.get_character() == player:
                 return True
@@ -82,7 +82,7 @@ class Tile(Button):
             return True
 
         if (
-            self.has_token_kind("wall")
+            self.has_token(("wall", None))
             and utils.are_nearby(self, player)
             and player.stats.remaining_moves >= player.stats.digging_moves
         ):
@@ -92,7 +92,7 @@ class Tile(Button):
                 return True
             return False
 
-        if self.has_token_kind("monster") and utils.are_nearby(self, player):
+        if self.has_token(("monster", None)) and utils.are_nearby(self, player):
 
             if player.stats.weapons > 0 or "fighting" in player.free_actions:
 
@@ -105,13 +105,19 @@ class Tile(Button):
 
         return False
 
-    def has_token_kind(self, token_kind):
+    def has_token(self, token: tuple[str]) -> bool:
 
-        if self.second_token and self.second_token.kind == token_kind:
-            return True
+        if self.second_token and self.second_token.kind == token[0]:
+            if token[1] is None or self.second_token.species == token[1]:
+                return True
+            else:
+                return False
 
-        if self.token and self.token.kind == token_kind:
-            return True
+        if self.token and self.token.kind == token[0]:
+            if token[1] is None or self.token.species == token[1]:
+                return True
+            else:
+                return False
 
         return False
 

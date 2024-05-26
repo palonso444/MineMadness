@@ -249,16 +249,17 @@ class Monster(Character, ABC):
         start_tile: tiles.Tile = self.dungeon.get_tile(self.position)
 
         for tile in self.dungeon.children:
-            if tile.has_token_kind(target_token[0]):
-                if (
-                    target_token[1] is None
-                    or tile.token.species == target_token[1]
-                    or tile.second_token.species == target_token[1]
+            if tile.has_token(target_token):
+
+                if (  # if tile is full and monster wants to land there
+                    target_token[0] not in self.cannot_share_tile_with
+                    and tile.second_token is not None
                 ):
-                    path = self.dungeon.find_shortest_path(
-                        start_tile, tile, self.blocked_by
-                    )
-                    tiles_and_paths.append((tile, path))
+                    continue
+                path = self.dungeon.find_shortest_path(
+                    start_tile, tile, self.blocked_by
+                )
+                tiles_and_paths.append((tile, path))
 
         closest_tile_and_path = None
 
@@ -481,7 +482,7 @@ class Monster(Character, ABC):
 
                 # position != self.position is necessary for random moves
                 if (
-                    self.dungeon.get_tile(position).has_token_kind(token_kind)
+                    self.dungeon.get_tile(position).has_token((token_kind, None))
                     and position != self.position
                 ):
 
@@ -508,17 +509,12 @@ class Monster(Character, ABC):
                     (path[-1][0] + direction[0], path[-1][1] + direction[1])
                 )
 
-            if end_tile is not None and end_tile.has_token_kind(self.chases[0]):
-                if (
-                    self.chases[1] is None
-                    or self.chases[1] == end_tile.token.species
-                    or self.chases[1] == end_tile.second_token.species
-                ):
-                    if utils.are_nearby(self, end_tile):
-                        path = [end_tile.position]
-                    else:
-                        path.append(end_tile.position)
-                    break
+            if end_tile is not None and end_tile.has_token(self.chases):
+                if utils.are_nearby(self, end_tile):
+                    path = [end_tile.position]
+                else:
+                    path.append(end_tile.position)
+                break
         return path
 
 
@@ -662,6 +658,23 @@ class MetalEater(Monster):
 
 
 class GreedyGnome(Monster):
-    pass
 
-    # chases the nearest gold and stays on top of it. Intermediate strength
+    def __init__(self):
+        super().__init__()
+        self.char: str = "G"
+        self.name: str = "Greedy Gnome"
+        self.chases: tuple = ("pickable", "gem")
+        self.stats = stats.GreedyGnomeStats()
+
+    def move(self):
+
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+
+        if self.dungeon.get_tile(self.position).has_token(self.chases):
+            return
+
+        elif target_tile is not None:
+            return self.assess_path_smart(target_tile)
+
+        else:
+            return self.assess_path_random()

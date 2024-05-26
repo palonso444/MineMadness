@@ -129,3 +129,11 @@ class NightmareStats(MonsterStats):
     health: int = 6
     strength: tuple = (2, 5)
     moves: int = 15
+
+
+@dataclass
+class GreedyGnomeStats(MonsterStats):
+    health: int = 6
+    strength: tuple = (1, 3)
+    moves: int = 5
+    random_motility: int = 6  # from 0 to 10. For monsters with random movement

@@ -170,7 +170,7 @@ class CharacterToken(SolidToken):
                     self.dungeon.game.update_switch("player_exited")
                     return
 
-                elif self.goal.has_token_kind("pickable"):
+                elif self.goal.has_token(("pickable", None)):
 
                     self.character.pick_object(self.goal)
 

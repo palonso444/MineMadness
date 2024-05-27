@@ -1,14 +1,10 @@
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 
-# from kivy.properties import BooleanProperty
-# from kivy.graphics import Ellipse, Color
-
 import crapgeon_utils as utils
 import character_classes as characters
 import token_classes as tokens
 import tile_classes as tiles
 from collections import deque
-from random import randint
 
 
 class DungeonLayout(GridLayout):  # initialized in kv file
@@ -52,9 +48,9 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
         # utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint, " ", 1)
-        utils.place_equal_items(self.blueprint, "#", 6)
+        utils.place_equal_items(self.blueprint, "K", 2)
         utils.place_equal_items(self.blueprint, "o", 2)
-        utils.place_equal_items(self.blueprint, "G", 2)
+        utils.place_equal_items(self.blueprint, "j", 2)
         # utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
 
         """for key, value in self.stats.level_progression().items():

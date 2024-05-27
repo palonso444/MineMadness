@@ -1,8 +1,5 @@
 #: import DungeonStats game_stats.DungeonStats
-
-<BoxLayout>:
-    #spacing: '5dp'
-    #padding: '5dp'
+#: import DungeonLayout dungeon_classes.DungeonLayout
 
 <Label>:
     text_size: self.size    # needed to make halign work  
@@ -22,7 +19,6 @@
     size_hint: None,None
     width: '60dp'
     height: self.width
-    disabled: True
     kind: None
 
     canvas:
@@ -94,14 +90,22 @@
             size_hint: 0.5,1
             spacing: '5dp'
 
-            Button:
-                text: 'Jerky'
-            Button:
-                text: 'Tobacco'
-            Button:
-                text: 'Whisky'
-            Button:
-                text: 'Talisman'
+            JerkyButton:
+                text: "Jerky"
+                id: jerky_button
+                game: root
+            TobaccoButton:
+                text: "Tobacco"
+                id: tobacco_button
+                game: root
+            WhiskyButton:
+                text: "Whisky"
+                id: whisky_button
+                game: root
+            TalismanButton:
+                text: "Talisman"
+                id: talisman_button
+                game: root
 
     ScrollView:
         size_hint: 1, 0.6

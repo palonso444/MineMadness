@@ -25,6 +25,7 @@ class Character(ABC):
     def __init__(self):
 
         self.name: str | None = None
+        self.inventory: dict | None = None
         self.id: int | None = None
         self.position: tuple | None = None
 
@@ -100,6 +101,12 @@ class Player(Character, ABC):
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
         self.free_actions: tuple = (None,)
         self.ignores: tuple = (None,)
+        self.inventory: dict[str:int] = {
+            "jerky": 0,
+            "tobacco": 0,
+            "whisky": 0,
+            "talisman": 0,
+        }
 
     def get_movement_range(
         self, dungeon_layout
@@ -166,14 +173,9 @@ class Player(Character, ABC):
                 Player.gems += 1
                 game.update_switch("gems")
 
-            elif tile.token.species == "jerky":
-                self.stats.health += 2
-                self.stats.health = (
-                    self.stats.max_health
-                    if self.stats.health > self.stats.max_health
-                    else self.stats.health
-                )
-                game.update_switch("health")
+            elif tile.token.species in self.inventory.keys():
+                self.inventory[tile.token.species] += 1
+                game.inv_object = tile.token.species
 
             else:
                 character_attribute = getattr(self.stats, tile.token.species + "s")

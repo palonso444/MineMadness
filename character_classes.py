@@ -103,10 +103,13 @@ class Player(Character, ABC):
         self.ignores: tuple = (None,)
         self.inventory: dict[str:int] = {
             "jerky": 0,
+            "coffee": 0,
             "tobacco": 0,
             "whisky": 0,
             "talisman": 0,
         }
+        self.effects: list = list()
+        self.state: str | None = None
 
     def get_movement_range(
         self, dungeon_layout

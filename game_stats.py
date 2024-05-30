@@ -52,6 +52,37 @@ class DungeonStats:  # inherit from EventDispatcher to use NumericProperty
 
 
 @dataclass
+class ItemStats(ABC):
+    effect_size: int
+    effect_duration: int | None
+    use_time: int = 1
+
+
+@dataclass
+class JerkyStats(ItemStats):
+    effect_size: int = 2
+    effect_duration: None = None
+
+
+@dataclass
+class CoffeeStats(ItemStats):
+    effect_size: int = 2
+    effect_duration: int = 3
+
+
+@dataclass
+class TobaccoStats(ItemStats):
+    effect_size: int = 2
+    effect_duration: int = 4
+
+
+@dataclass
+class WhiskyStats(ItemStats):
+    effect_size: int = 2
+    effect_duration: int = 4
+
+
+@dataclass
 class CharacterStats(ABC):
 
     health: int | None = None
@@ -80,7 +111,7 @@ class MonsterStats(CharacterStats, ABC):
 @dataclass
 class SawyerStats(PlayerStats):
     health: int = 400
-    strength: tuple = (1, 2)
+    strength: list = (1, 2)  # TODO: list as it may vary
     moves: int = 5
     digging_moves: int = 3
 
@@ -88,14 +119,14 @@ class SawyerStats(PlayerStats):
 @dataclass
 class HawkinsStats(PlayerStats):
     health: int = 5
-    strength: tuple = (1, 4)
+    strength: list = (1, 4)  # TODO: list as it may vary
     moves: int = 4
 
 
 @dataclass
 class CrusherJaneStats(PlayerStats):
     health: int = 80
-    strength: tuple = (3, 6)
+    strength: tuple = (3, 6)  # TODO: list as it may vary
     armed_strength_incr: int = 2
     moves: int = 3
 

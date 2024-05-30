@@ -49,7 +49,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
         # utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint, " ", 1)
         utils.place_equal_items(self.blueprint, "K", 2)
-        utils.place_equal_items(self.blueprint, "o", 2)
+        utils.place_equal_items(self.blueprint, "c", 2)
         utils.place_equal_items(self.blueprint, "j", 2)
         # utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
 
@@ -116,6 +116,18 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
                 case "j":
                     self.place_tokens(tile, "pickable", "jerky")
+
+                case "c":
+                    self.place_tokens(tile, "pickable", "coffee")
+
+                case "l":
+                    self.place_tokens(tile, "pickable", "tobacco")
+
+                case "w":
+                    self.place_tokens(tile, "pickable", "whisky")
+
+                case "t":
+                    self.place_tokens(tile, "pickable", "talisman")
 
                 case "o":
                     self.place_tokens(tile, "pickable", "gem")
@@ -220,27 +232,20 @@ class DungeonLayout(GridLayout):  # initialized in kv file
     ):  # pass scenery as tuple of token.kinds to look for (e.g. ('wall', 'shovel'))
 
         found_tiles = set()
-
         excluded_tiles = set()
 
         for tile in self.children:
-
             for token in scenery:
 
                 if not exclude and tile.has_token((token, None)):
-
                     found_tiles.add(tile.position)
 
                 elif exclude and tile.has_token((token, None)):
-
                     excluded_tiles.add(tile)
 
         if exclude:
-
             for tile in self.children:
-
                 if tile not in excluded_tiles:
-
                     found_tiles.add(tile.position)
 
         return found_tiles
@@ -293,11 +298,9 @@ class DungeonLayout(GridLayout):  # initialized in kv file
     def show_damage_token(self, position, size):
 
         with self.canvas:
-
             tokens.DamageToken(pos=position, size=size, dungeon=self)
 
     def show_digging_token(self, position, size):
 
         with self.canvas:
-
             tokens.DiggingToken(pos=position, size=size, dungeon=self)

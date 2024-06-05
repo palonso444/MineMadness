@@ -15,7 +15,7 @@ class SolidToken(Widget):
         self.kind = kind  # defines if pickable or wall
         self.species = species
         self.dungeon = dungeon_instance
-        self.source = self.species + "token.png"
+        self.source = "./tokens/" + self.species + "token.png"
 
     def update(self, *args):
 
@@ -187,7 +187,10 @@ class CharacterToken(SolidToken):
 
     def update_on_tiles(self, start_tile, end_tile):
 
-        if end_tile.token and end_tile.token.species in self.character.ignores:
+        if end_tile.token and (
+            end_tile.token.kind in self.character.ignores
+            or end_tile.token.species in self.character.ignores
+        ):
             end_tile.second_token = self
         else:
             end_tile.token = self

@@ -48,13 +48,17 @@ class Character(ABC):
             if self.stats.armed_strength_incr is not None:
                 damage += self.stats.armed_strength_incr
 
-        opponent.stats.health -= damage
+        opponent._apply_thoughness(damage)
+
+        if opponent.stats.thoughness < 0:
+            opponent.stats.health += (
+                opponent.stats.thoughness
+            )  # thoughness is negative now
+
         self.stats.remaining_moves -= 1
 
         if opponent.stats.health <= 0:
-            opponent.__class__.data.remove(opponent)
-            opponent.__class__.rearrange_ids()
-            opponent_tile.clear_token(opponent.token.kind)
+            opponent._kill_character(opponent_tile)
 
         self.dungeon.show_damage_token(
             opponent.token.shape.pos, opponent.token.shape.size
@@ -66,16 +70,26 @@ class Character(ABC):
             return False
         return True
 
+    def _apply_thoughness(self, damage):
+
+        self.stats.thoughness -= damage
+
+    def _kill_character(self, tile):
+
+        self.__class__.data.remove(self)
+        self.__class__.rearrange_ids()
+        tile.clear_token(self.token.kind)
+
     # MOVEMENT METHODS TO IMPLEMENT
 
     def glide(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def walk(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def stomp(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class Player(Character, ABC):
@@ -91,6 +105,31 @@ class Player(Character, ABC):
         for player in cls.exited:
             if player.name == name:
                 return player
+
+    @classmethod
+    def remove_effects(cls, turn: int) -> None:
+
+        for character in cls.data:
+            for attribute, effects in character.effects.items():
+
+                i = 0
+                while i < len(effects):
+
+                    if effects[i]["end_turn"] == turn:
+                        player_stat = getattr(character.stats, attribute)
+
+                        if isinstance(player_stat, int):
+                            new_value = player_stat - effects[i]["size"]
+                        elif isinstance(player_stat, tuple):
+                            new_value = (
+                                player_stat[0],
+                                player_stat[1] - effects[i]["size"],
+                            )
+
+                        effects.remove(effects[i])
+                        setattr(character.stats, attribute, new_value)
+                        continue
+                    i += 1
 
     # INSTANCE METHODS
 
@@ -108,7 +147,7 @@ class Player(Character, ABC):
             "whisky": 0,
             "talisman": 0,
         }
-        self.effects: list = list()
+        self.effects: dict[str:list] = {"moves": [], "thoughness": [], "strength": []}
         self.state: str | None = None
 
     def get_movement_range(
@@ -170,7 +209,11 @@ class Player(Character, ABC):
 
         game = self.dungeon.game
 
-        if tile.token.species not in self.ignores:
+        # if tile.token.species not in self.ignores:
+        if (
+            tile.token.kind not in self.ignores
+            and tile.token.species not in self.ignores
+        ):
 
             if tile.token.species == "gem":
                 Player.gems += 1
@@ -203,6 +246,9 @@ class Player(Character, ABC):
 
         wall_tile.clear_token("wall")
 
+    def check_if_overdose(self, item):
+        pass
+
     def _get_lateral_range(
         self, y_position: int, side_move: int, mov_range: list[tuple], dungeon_layout
     ) -> None:
@@ -226,7 +272,7 @@ class Monster(Character, ABC):
         self.blocked_by = ("wall", "player")
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
         self.chases: tuple = ("player", None)
-        self.ignores: tuple = ("shovel", "weapon", "gem", "jerky")
+        self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
 
     @abstractmethod
     def move(self):

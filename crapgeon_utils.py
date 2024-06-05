@@ -2,9 +2,14 @@ import random
 from collections import deque
 
 
+def check_if_player_turn(turn_number):
+
+    if turn_number % 2 == 0:
+        return True
+    return False
+
+
 # define a random location in map
-
-
 def location(map: list[list[str]]) -> tuple[int]:
 
     height = random.randint(0, len(map) - 1)

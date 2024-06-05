@@ -8,7 +8,7 @@ from random import randint
 
 class DungeonStats:  # inherit from EventDispatcher to use NumericProperty
 
-    critical_items: tuple[str] = ("%", "?", "&", " ", "o")
+    mandatory_items: tuple[str] = ("%", "?", "&", " ", "o")
 
     # level: int = NumericProperty(1)
 
@@ -53,53 +53,59 @@ class DungeonStats:  # inherit from EventDispatcher to use NumericProperty
 
 @dataclass
 class ItemStats(ABC):
-    effect_size: int
-    effect_duration: int | None
+    effect_size: float | None = None
+    effect_duration: int | None = None
     use_time: int = 1
+    min_effect: int = 1
+    max_effect: int | None = None
 
 
 @dataclass
 class JerkyStats(ItemStats):
-    effect_size: int = 2
-    effect_duration: None = None
+    effect_size: float = 0.3  # percentage of increase respect character stats
+    min_effect: int = 2
 
 
 @dataclass
 class CoffeeStats(ItemStats):
-    effect_size: int = 2
+    effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 3
 
 
 @dataclass
 class TobaccoStats(ItemStats):
-    effect_size: int = 2
-    effect_duration: int = 4
+    effect_size: float = 0.3  # percentage of increase respect character stats
+    effect_duration: int = 3
 
 
 @dataclass
 class WhiskyStats(ItemStats):
-    effect_size: int = 2
+    effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 4
 
 
 @dataclass
 class CharacterStats(ABC):
 
+    thoughness: int = 0
     health: int | None = None
+    strength: tuple | None = None
+    moves: int | None = None
     remaining_moves: int | None = None
-
-    def __post_init__(self):
-        self.max_health = self.health
 
 
 @dataclass
 class PlayerStats(CharacterStats, ABC):
 
-    health: int | None = None
     shovels: int = 0
     digging_moves: int = 1
     weapons: int = 0
     armed_strength_incr: int | None = None
+
+    def __post_init__(self):
+        self.max_health: int = self.health  # only modified by leveling up
+        self.natural_moves: int = self.moves  # only modified by leveling up
+        self.natural_strength: tuple = self.strength  # only modified by leveling up
 
 
 @dataclass
@@ -125,8 +131,8 @@ class HawkinsStats(PlayerStats):
 
 @dataclass
 class CrusherJaneStats(PlayerStats):
-    health: int = 80
-    strength: tuple = (3, 6)  # TODO: list as it may vary
+    health: int = 10
+    strength: tuple = (3, 6)
     armed_strength_incr: int = 2
     moves: int = 3
 

@@ -48,9 +48,9 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
         # utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint, " ", 1)
-        utils.place_equal_items(self.blueprint, "K", 2)
-        utils.place_equal_items(self.blueprint, "c", 2)
-        utils.place_equal_items(self.blueprint, "j", 2)
+        # utils.place_equal_items(self.blueprint, "K", 2)
+        utils.place_equal_items(self.blueprint, "l", 3)
+        # utils.place_equal_items(self.blueprint, "j", 2)
         # utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
 
         """for key, value in self.stats.level_progression().items():
@@ -68,8 +68,8 @@ class DungeonLayout(GridLayout):  # initialized in kv file
     def determine_alive_players(self):
 
         if self.level == 1:
-            return characters.Player.player_chars
-            # return "&"
+            # return characters.Player.player_chars
+            return "&"
         else:
             live_players = set()
             for player in characters.Player.exited:

@@ -32,7 +32,7 @@
         Rectangle:  # draws the floor      
             pos: self.pos
             size: self.size
-            source: self.kind + 'background.png' if self.kind else None
+            source: "./backgrounds/" + self.kind + 'background.png' if self.kind else None
 
 
 <ScrollView>:

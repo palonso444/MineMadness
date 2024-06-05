@@ -13,6 +13,7 @@ from kivy.uix.button import Button  # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 
 import character_classes as characters
+import crapgeon_utils as utils
 import interface
 
 
@@ -25,7 +26,7 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
 
     # GENERAL PROPERTIES
     dungeon = ObjectProperty(None)
-    turn = BooleanProperty(None)
+    turn = NumericProperty(None)
     active_character_id = NumericProperty(None, allownone=True)
     character_done = BooleanProperty(False)
     player_exited = BooleanProperty(False)
@@ -43,7 +44,7 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
 
     def initialize_switches(self):
 
-        self.turn = True  # TRUE for players, FALSE for monsters. Player starts
+        self.turn = 0  # even for players, odd for monsters. Player starts
 
         self.health = False
         self.shovels = False
@@ -53,7 +54,10 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
     def update_switch(self, switch_name):
 
         switch_value = getattr(self, switch_name)
-        switch_value = not switch_value
+        if isinstance(switch_value, bool):
+            switch_value = not switch_value
+        elif switch_name == "turn":
+            switch_value += 1
         setattr(self, switch_name, switch_value)
 
     def update_interface(self):
@@ -81,7 +85,8 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
 
     def on_turn(self, *args):
 
-        if self.turn or len(characters.Monster.data) == 0:
+        if utils.check_if_player_turn(self.turn) or len(characters.Monster.data) == 0:
+            characters.Player.remove_effects(self.turn)
             characters.Player.reset_moves()
         else:
             characters.Monster.reset_moves()
@@ -93,10 +98,11 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
 
     def on_active_character_id(self, *args):
 
-        if type(self.active_character_id) is int:
+        if isinstance(self.active_character_id, int):
 
             if (
-                self.turn or len(characters.Monster.data) == 0
+                utils.check_if_player_turn(self.turn)
+                or len(characters.Monster.data) == 0
             ):  # if player turn or no monsters
                 self.active_character = characters.Player.data[self.active_character_id]
 
@@ -112,7 +118,7 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
                     self.update_switch("weapons")
                     self.dynamic_movement_range()
 
-            elif not self.turn:  # if monsters turn and monsters in the game
+            else:  # if monsters turn and monsters in the game
 
                 self.dungeon.activate_which_tiles()  # tiles deactivated in monster turn
                 self.active_character = characters.Monster.data[

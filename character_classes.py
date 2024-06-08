@@ -41,6 +41,8 @@ class Character(ABC):
         opponent = opponent_tile.get_character()
         game = self.dungeon.game
 
+        self.stats.remaining_moves -= 1
+
         damage = randint(self.stats.strength[0], self.stats.strength[1])
         if isinstance(self, Player) and self.stats.weapons > 0:
             self.stats.weapons -= 1
@@ -48,14 +50,9 @@ class Character(ABC):
             if self.stats.armed_strength_incr is not None:
                 damage += self.stats.armed_strength_incr
 
-        opponent._apply_thoughness(damage)
+        damage = opponent._apply_thoughness(damage)
 
-        if opponent.stats.thoughness < 0:
-            opponent.stats.health += (
-                opponent.stats.thoughness
-            )  # thoughness is negative now
-
-        self.stats.remaining_moves -= 1
+        opponent.stats.health = opponent.stats.health - damage
 
         if opponent.stats.health <= 0:
             opponent._kill_character(opponent_tile)
@@ -72,7 +69,20 @@ class Character(ABC):
 
     def _apply_thoughness(self, damage):
 
-        self.stats.thoughness -= damage
+        i = 0
+        while i < len(self.effects["thoughness"]):
+            self.effects["thoughness"][i]["size"] -= damage
+
+            if self.effects["thoughness"][i]["size"] <= 0:
+                damage = abs(self.effects["thoughness"][i]["size"])
+                self.effects["thoughness"].remove(self.effects["thoughness"][i])
+                continue
+
+            elif self.effects["thoughness"][i]["size"] > 0:
+                damage = 0
+                break
+
+        return damage
 
     def _kill_character(self, tile):
 

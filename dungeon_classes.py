@@ -48,8 +48,8 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
         # utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint, " ", 1)
-        # utils.place_equal_items(self.blueprint, "K", 2)
-        utils.place_equal_items(self.blueprint, "l", 3)
+        utils.place_equal_items(self.blueprint, "H", 1)
+        utils.place_equal_items(self.blueprint, "l", 4)
         # utils.place_equal_items(self.blueprint, "j", 2)
         # utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
 

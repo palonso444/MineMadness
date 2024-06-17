@@ -1,0 +1,207 @@
+from kivy.uix.button import Button
+from kivy.uix.togglebutton import ToggleButton
+from dataclasses import dataclass
+from character_classes import Sawyer, CrusherJane, Hawkins, Monster
+from kivy.animation import Animation
+
+import crapgeon_utils as utils
+
+
+class AbilityButton(ToggleButton):
+
+    def display_text(self):
+
+        character = self.game.active_character
+
+        if isinstance(character, Sawyer):
+            return "Hide"
+        elif isinstance(character, Hawkins):
+            return "Enable Explosive"
+        elif isinstance(character, CrusherJane):
+            return "Use Weapons"
+        elif isinstance(character, Monster):
+            return ""
+
+    def on_state(self, instance, value):
+
+        print("ACT")
+
+        if self.game.ability_button:
+
+            character = self.game.active_character
+
+            if value == "down":
+                print("DOWN")
+                character.stats.remaining_moves -= 1
+                self.game.dynamic_movement_range()
+                character.ability_active = True
+
+                if isinstance(character, Sawyer):
+                    character.token.color.a = 0.6  # changes transparency
+                    character.ignores = character.ignores + ("pickable",)
+
+                if character.stats.remaining_moves == 0:
+                    self.game.update_switch("character_done")
+
+            else:
+                character.ability_active = False
+                print("NORMAL")
+
+                if isinstance(character, Sawyer):
+                    character.token.color.a = 1  # changes transparency
+                    character.ignores = utils.tuple_remove(
+                        character.ignores, "pickable"
+                    )
+
+
+class Interfacebutton(Button):
+
+    types = ("jerky", "coffee", "tobacco", "whisky", "talisman")
+
+    def apply_cost(self, item):
+
+        character = self.game.active_character
+
+        character.inventory[item] -= 1
+        self.game.inv_object = item  # this disables the button, if necessary
+
+        character.stats.remaining_moves -= self.stats.use_time
+        self.game.dynamic_movement_range()
+
+        character.check_if_overdose(item)
+
+        if character.stats.remaining_moves == 0:
+            self.game.update_switch("character_done")
+
+    def get_effect_size(self, character, attribute: str):
+
+        target_attribute = getattr(character.stats, attribute)
+
+        effect_size = int(self.stats.effect_size * target_attribute)
+
+        effect_size = (
+            effect_size
+            if effect_size > self.stats.min_effect
+            else self.stats.min_effect
+        )
+        effect_size = (
+            effect_size
+            if self.stats.max_effect is None or effect_size < self.stats.max_effect
+            else self.stats.max_effect
+        )
+
+        return effect_size
+
+
+class JerkyButton(Interfacebutton):
+    """
+    Increases life
+    """
+
+    def on_release(self, *args):
+
+        character = self.game.active_character
+
+        effect_size = self.get_effect_size(character, "max_health")
+
+        character.stats.health += (
+            effect_size
+            if character.stats.health + effect_size <= character.stats.max_health
+            else character.stats.max_health
+        )
+
+        self.game.update_switch("health")
+        self.apply_cost("jerky")
+
+
+class CoffeeButton(Interfacebutton):
+    """
+    Increases movement
+    """
+
+    def on_release(self, *args):
+
+        character = self.game.active_character
+
+        effect_size = self.get_effect_size(character, "natural_moves")
+
+        character.stats.moves += effect_size
+        character.stats.remaining_moves += effect_size
+
+        character.effects["moves"].append(
+            {
+                "size": effect_size,
+                "end_turn": self.game.turn + self.stats.effect_duration,
+            }
+        )
+
+        self.apply_cost("coffee")
+
+
+class TobaccoButton(Interfacebutton):
+    """
+    Increases thoughness (armor-like effect)
+    """
+
+    def on_release(self, *args):
+
+        character = self.game.active_character
+
+        effect_size = self.get_effect_size(character, "max_health")
+
+        character.stats.thoughness += effect_size
+
+        character.effects["thoughness"].append(
+            {
+                "size": effect_size,
+                "end_turn": self.game.turn + self.stats.effect_duration,
+            }
+        )
+
+        self.apply_cost("tobacco")
+
+
+class WhiskyButton(Interfacebutton):
+    """
+    Increases strength
+    """
+
+    def on_release(self, *args):
+
+        character = self.game.active_character
+
+        effect_size = int(
+            (character.stats.natural_strength[0] + character.stats.natural_strength[1])
+            / 2
+            * self.stats.effect_size
+        )
+
+        effect_size = (
+            effect_size
+            if effect_size > self.stats.min_effect
+            else self.stats.min_effect
+        )
+        print(effect_size)
+
+        character.stats.strength = (
+            character.stats.strength[0],
+            character.stats.strength[1] + effect_size,
+        )
+
+        character.effects["strength"].append(
+            {
+                "size": effect_size,
+                "end_turn": self.game.turn + self.stats.effect_duration,
+            }
+        )
+
+        self.apply_cost("whisky")
+
+
+class TalismanButton(Interfacebutton):
+    """
+    Revives a random character from the death ones, if any
+    Otherwise, levels up the character that uses it
+    """
+
+    pass

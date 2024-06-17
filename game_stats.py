@@ -8,7 +8,7 @@ from random import randint
 
 class DungeonStats:  # inherit from EventDispatcher to use NumericProperty
 
-    critical_items: tuple[str] = ("%", "?", "&", " ", "o")
+    mandatory_items: tuple[str] = ("%", "?", "&", " ", "o")
 
     # level: int = NumericProperty(1)
 
@@ -52,23 +52,60 @@ class DungeonStats:  # inherit from EventDispatcher to use NumericProperty
 
 
 @dataclass
+class ItemStats(ABC):
+    effect_size: float | None = None
+    effect_duration: int | None = None
+    use_time: int = 1
+    min_effect: int = 1
+    max_effect: int | None = None
+
+
+@dataclass
+class JerkyStats(ItemStats):
+    effect_size: float = 0.3  # percentage of increase respect character stats
+    min_effect: int = 2
+
+
+@dataclass
+class CoffeeStats(ItemStats):
+    effect_size: float = 0.3  # percentage of increase respect character stats
+    effect_duration: int = 3
+
+
+@dataclass
+class TobaccoStats(ItemStats):
+    effect_size: float = 0.3  # percentage of increase respect character stats
+    effect_duration: int = 3
+
+
+@dataclass
+class WhiskyStats(ItemStats):
+    effect_size: float = 0.3  # percentage of increase respect character stats
+    effect_duration: int = 3
+
+
+@dataclass
 class CharacterStats(ABC):
 
+    thoughness: int = 0
     health: int | None = None
+    strength: tuple | None = None
+    moves: int | None = None
     remaining_moves: int | None = None
-
-    def __post_init__(self):
-        self.max_health = self.health
 
 
 @dataclass
 class PlayerStats(CharacterStats, ABC):
 
-    health: int | None = None
     shovels: int = 0
     digging_moves: int = 1
     weapons: int = 0
     armed_strength_incr: int | None = None
+
+    def __post_init__(self):
+        self.max_health: int = self.health  # only modified by leveling up
+        self.natural_moves: int = self.moves  # only modified by leveling up
+        self.natural_strength: tuple = self.strength  # only modified by leveling up
 
 
 @dataclass
@@ -80,7 +117,7 @@ class MonsterStats(CharacterStats, ABC):
 @dataclass
 class SawyerStats(PlayerStats):
     health: int = 400
-    strength: tuple = (1, 2)
+    strength: list = (1, 2)  # TODO: list as it may vary
     moves: int = 5
     digging_moves: int = 3
 
@@ -88,15 +125,15 @@ class SawyerStats(PlayerStats):
 @dataclass
 class HawkinsStats(PlayerStats):
     health: int = 5
-    strength: tuple = (1, 4)
+    strength: list = (1, 4)  # TODO: list as it may vary
     moves: int = 4
 
 
 @dataclass
 class CrusherJaneStats(PlayerStats):
-    health: int = 80
+    health: int = 100
     strength: tuple = (3, 6)
-    armed_strength_incr: int = 2
+    armed_strength_incr: int = 100
     moves: int = 3
 
 
@@ -129,3 +166,11 @@ class NightmareStats(MonsterStats):
     health: int = 6
     strength: tuple = (2, 5)
     moves: int = 15
+
+
+@dataclass
+class GreedyGnomeStats(MonsterStats):
+    health: int = 6
+    strength: tuple = (1, 3)
+    moves: int = 5
+    random_motility: int = 6  # from 0 to 10. For monsters with random movement

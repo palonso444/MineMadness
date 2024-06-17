@@ -1,5 +1,6 @@
 from kivy.graphics import Ellipse, Rectangle, Color  # type: ignore
 from kivy.animation import Animation
+from kivy.properties import NumericProperty
 
 from kivy.uix.widget import Widget
 
@@ -15,7 +16,7 @@ class SolidToken(Widget):
         self.kind = kind  # defines if pickable or wall
         self.species = species
         self.dungeon = dungeon_instance
-        self.source = self.species + "token.png"
+        self.source = "./tokens/" + self.species + "token.png"
 
     def update(self, *args):
 
@@ -96,6 +97,7 @@ class CharacterToken(SolidToken):
 
         with self.dungeon.canvas:
 
+            self.color = Color(1, 1, 1, 1)
             self.shape = Ellipse(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update, size=self.update)
@@ -170,7 +172,7 @@ class CharacterToken(SolidToken):
                     self.dungeon.game.update_switch("player_exited")
                     return
 
-                elif self.goal.has_token_kind("pickable"):
+                elif self.goal.has_token(("pickable", None)):
 
                     self.character.pick_object(self.goal)
 
@@ -187,7 +189,10 @@ class CharacterToken(SolidToken):
 
     def update_on_tiles(self, start_tile, end_tile):
 
-        if end_tile.token and end_tile.token.species in self.character.ignores:
+        if end_tile.token and (
+            end_tile.token.kind in self.character.ignores
+            or end_tile.token.species in self.character.ignores
+        ):
             end_tile.second_token = self
         else:
             end_tile.token = self

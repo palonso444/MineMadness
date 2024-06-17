@@ -25,8 +25,15 @@ class Character(ABC):
     def __init__(self):
 
         self.name: str | None = None
+        self.inventory: dict | None = None
         self.id: int | None = None
         self.position: tuple | None = None
+
+        # monsters need thoughness to fight, even if there are no effects on it
+        self.effects: dict[str:list] = {"moves": [], "thoughness": [], "strength": []}
+
+        # monsters need ability_active for the functioning of the ability_button
+        self.ability_active: bool = False
 
         self.token = None
         self.dungeon = None
@@ -40,20 +47,27 @@ class Character(ABC):
         opponent = opponent_tile.get_character()
         game = self.dungeon.game
 
-        damage = randint(self.stats.strength[0], self.stats.strength[1])
-        if isinstance(self, Player) and self.stats.weapons > 0:
-            self.stats.weapons -= 1
-            game.update_switch("weapons")
-            if self.stats.armed_strength_incr is not None:
-                damage += self.stats.armed_strength_incr
-
-        opponent.stats.health -= damage
         self.stats.remaining_moves -= 1
 
+        damage = randint(self.stats.strength[0], self.stats.strength[1])
+        if isinstance(self, CrusherJane) and self.ability_active:
+            damage += self.stats.armed_strength_incr
+
+        if "fighting" not in self.free_actions or (
+            isinstance(self, CrusherJane) and self.ability_active
+        ):
+            self.stats.weapons -= 1
+            game.update_switch("weapons")
+            if isinstance(self, CrusherJane) and self.stats.weapons == 0:
+                self.ability_active = False
+                game.update_switch("ability_button")
+
+        damage = opponent._apply_thoughness(damage)
+
+        opponent.stats.health = opponent.stats.health - damage
+
         if opponent.stats.health <= 0:
-            opponent.__class__.data.remove(opponent)
-            opponent.__class__.rearrange_ids()
-            opponent_tile.clear_token(opponent.token.kind)
+            opponent._kill_character(opponent_tile)
 
         self.dungeon.show_damage_token(
             opponent.token.shape.pos, opponent.token.shape.size
@@ -65,16 +79,39 @@ class Character(ABC):
             return False
         return True
 
+    def _apply_thoughness(self, damage):
+
+        i = 0
+        while i < len(self.effects["thoughness"]):
+            self.effects["thoughness"][i]["size"] -= damage
+
+            if self.effects["thoughness"][i]["size"] <= 0:
+                damage = abs(self.effects["thoughness"][i]["size"])
+                self.effects["thoughness"].remove(self.effects["thoughness"][i])
+                continue
+
+            elif self.effects["thoughness"][i]["size"] > 0:
+                damage = 0
+                break
+
+        return damage
+
+    def _kill_character(self, tile):
+
+        self.__class__.data.remove(self)
+        self.__class__.rearrange_ids()
+        tile.clear_token(self.token.kind)
+
     # MOVEMENT METHODS TO IMPLEMENT
 
     def glide(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def walk(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
-    def gallop(self):
-        raise NotImplementedError
+    def stomp(self):
+        raise NotImplementedError()
 
 
 class Player(Character, ABC):
@@ -91,6 +128,31 @@ class Player(Character, ABC):
             if player.name == name:
                 return player
 
+    @classmethod
+    def remove_effects(cls, turn: int) -> None:
+
+        for character in cls.data:
+            for attribute, effects in character.effects.items():
+
+                i = 0
+                while i < len(effects):
+
+                    if effects[i]["end_turn"] == turn:
+                        player_stat = getattr(character.stats, attribute)
+
+                        if isinstance(player_stat, int):
+                            new_value = player_stat - effects[i]["size"]
+                        elif isinstance(player_stat, tuple):
+                            new_value = (
+                                player_stat[0],
+                                player_stat[1] - effects[i]["size"],
+                            )
+
+                        effects.remove(effects[i])
+                        setattr(character.stats, attribute, new_value)
+                        continue
+                    i += 1
+
     # INSTANCE METHODS
 
     def __init__(self):
@@ -100,6 +162,14 @@ class Player(Character, ABC):
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
         self.free_actions: tuple = (None,)
         self.ignores: tuple = (None,)
+        self.inventory: dict[str:int] = {
+            "jerky": 0,
+            "coffee": 0,
+            "tobacco": 0,
+            "whisky": 0,
+            "talisman": 0,
+        }
+        self.state: str | None = None
 
     def get_movement_range(
         self, dungeon_layout
@@ -160,26 +230,26 @@ class Player(Character, ABC):
 
         game = self.dungeon.game
 
-        if tile.token.species not in self.ignores:
+        # if tile.token.species not in self.ignores:
+        if (
+            tile.token.kind not in self.ignores
+            and tile.token.species not in self.ignores
+        ):
 
             if tile.token.species == "gem":
                 Player.gems += 1
                 game.update_switch("gems")
 
-            elif tile.token.species == "jerky":
-                self.stats.health += 2
-                self.stats.health = (
-                    self.stats.max_health
-                    if self.stats.health > self.stats.max_health
-                    else self.stats.health
-                )
-                game.update_switch("health")
+            elif tile.token.species in self.inventory.keys():
+                self.inventory[tile.token.species] += 1
+                game.inv_object = tile.token.species
 
             else:
                 character_attribute = getattr(self.stats, tile.token.species + "s")
                 character_attribute += 1
                 setattr(self.stats, tile.token.species + "s", character_attribute)
                 game.update_switch(tile.token.species + "s")
+                game.update_switch("ability_button")
 
             tile.clear_token(tile.token.kind)
 
@@ -197,6 +267,9 @@ class Player(Character, ABC):
         )
 
         wall_tile.clear_token("wall")
+
+    def check_if_overdose(self, item):
+        pass
 
     def _get_lateral_range(
         self, y_position: int, side_move: int, mov_range: list[tuple], dungeon_layout
@@ -220,8 +293,9 @@ class Monster(Character, ABC):
         self.kind: str = "monster"
         self.blocked_by = ("wall", "player")
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
+        self.free_actions: tuple = ("fighting",)
         self.chases: tuple = ("player", None)
-        self.ignores: tuple = ("shovel", "weapon", "gem", "jerky")
+        self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
 
     @abstractmethod
     def move(self):
@@ -249,16 +323,17 @@ class Monster(Character, ABC):
         start_tile: tiles.Tile = self.dungeon.get_tile(self.position)
 
         for tile in self.dungeon.children:
-            if tile.has_token_kind(target_token[0]):
-                if (
-                    target_token[1] is None
-                    or tile.token.species == target_token[1]
-                    or tile.second_token.species == target_token[1]
+            if tile.has_token(target_token):
+
+                if (  # if tile is full and monster wants to land there
+                    target_token[0] not in self.cannot_share_tile_with
+                    and tile.second_token is not None
                 ):
-                    path = self.dungeon.find_shortest_path(
-                        start_tile, tile, self.blocked_by
-                    )
-                    tiles_and_paths.append((tile, path))
+                    continue
+                path = self.dungeon.find_shortest_path(
+                    start_tile, tile, self.blocked_by
+                )
+                tiles_and_paths.append((tile, path))
 
         closest_tile_and_path = None
 
@@ -481,7 +556,7 @@ class Monster(Character, ABC):
 
                 # position != self.position is necessary for random moves
                 if (
-                    self.dungeon.get_tile(position).has_token_kind(token_kind)
+                    self.dungeon.get_tile(position).has_token((token_kind, None))
                     and position != self.position
                 ):
 
@@ -508,17 +583,12 @@ class Monster(Character, ABC):
                     (path[-1][0] + direction[0], path[-1][1] + direction[1])
                 )
 
-            if end_tile is not None and end_tile.has_token_kind(self.chases[0]):
-                if (
-                    self.chases[1] is None
-                    or self.chases[1] == end_tile.token.species
-                    or self.chases[1] == end_tile.second_token.species
-                ):
-                    if utils.are_nearby(self, end_tile):
-                        path = [end_tile.position]
-                    else:
-                        path.append(end_tile.position)
-                    break
+            if end_tile is not None and end_tile.has_token(self.chases):
+                if utils.are_nearby(self, end_tile):
+                    path = [end_tile.position]
+                else:
+                    path.append(end_tile.position)
+                break
         return path
 
 
@@ -662,6 +732,23 @@ class MetalEater(Monster):
 
 
 class GreedyGnome(Monster):
-    pass
 
-    # chases the nearest gold and stays on top of it. Intermediate strength
+    def __init__(self):
+        super().__init__()
+        self.char: str = "G"
+        self.name: str = "Greedy Gnome"
+        self.chases: tuple = ("pickable", "gem")
+        self.stats = stats.GreedyGnomeStats()
+
+    def move(self):
+
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+
+        if self.dungeon.get_tile(self.position).has_token(self.chases):
+            return
+
+        elif target_tile is not None:
+            return self.assess_path_smart(target_tile)
+
+        else:
+            return self.assess_path_random()

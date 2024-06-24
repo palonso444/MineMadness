@@ -1,4 +1,5 @@
 from kivy.uix.button import Button  # type: ignore
+from kivy.properties import BooleanProperty
 
 # from kivy.animation import Animation
 # from kivy.properties import Clock
@@ -6,11 +7,13 @@ from kivy.uix.button import Button  # type: ignore
 
 import crapgeon_utils as utils
 
-# import character_classes as characters
+import character_classes as classes
 import token_classes as tokens
 
 
 class Tile(Button):
+
+    dodging_finished = BooleanProperty(False)
 
     def __init__(self, row, col, kind, dungeon_instance, **kwargs):
         super().__init__(**kwargs)
@@ -30,25 +33,30 @@ class Tile(Button):
     def on_release(self):
 
         player = self.dungeon.game.active_character
+        game = self.dungeon.game
 
-        if self.has_token(("player", None)) and self.get_character() != player:
+        if player.using_dynamite():
+            player.special_items["dynamite"] -= 1
+            player.stats.remaining_moves -= 1
+            player.ability_active = (
+                False if player.special_items["dynamite"] == 0 else True
+            )
+            game.update_switch("ability_button")
 
-            self.dungeon.game.switch_character(self.get_character())
+            self.fall_dynamite_on_tile()
+
+        elif self.has_token(("player", None)) and self.get_character() != player:
+            game.switch_character(self.get_character())
 
         elif self.has_token(("wall", None)):
-
             player.dig(self)
-
-            self.dungeon.game.update_switch("character_done")
+            game.update_switch("character_done")
 
         elif self.has_token(("monster", None)):
-
             player.fight_on_tile(self)
-
-            self.dungeon.game.update_switch("character_done")
+            game.update_switch("character_done")
 
         else:
-
             start_tile = self.dungeon.get_tile(player.position)
 
             if (
@@ -60,6 +68,24 @@ class Tile(Button):
             else:
                 start_tile.second_token.move_player(start_tile, self)
 
+    def fall_dynamite_on_tile(self):
+
+        if self.has_token(("monster", None)):
+            self.get_character().try_to_dodge()
+        else:
+            self.dodging_finished = True
+
+    def on_dodging_finished(self, *args):
+
+        if self.dodging_finished:
+            if self.has_token(("monster", None)):
+                self.get_character().kill_character(self)
+            self.clear_token()  # remove all other tokens, pickables, etc. if any
+            self.dungeon.place_tokens(self, "wall", "rock")
+            self.on_dodging_finished = False
+
+            self.dungeon.game.update_switch("character_done")
+
     def update_token(self, *args):
 
         self.token.pos = self.pos
@@ -69,40 +95,59 @@ class Tile(Button):
 
         player = self.dungeon.game.active_character
 
-        path = self.dungeon.find_shortest_path(
-            self.dungeon.get_tile(player.position), self, (player.blocked_by)
-        )
-
         if self.has_token(("player", None)):
 
+            if player.using_dynamite():
+                return False
             if self.get_character() == player:
                 return True
             if self.get_character().has_moved():
                 return False
             return True
 
+        path = self.dungeon.find_shortest_path(
+            self.dungeon.get_tile(player.position), self, player.blocked_by
+        )
+
+        dynamite_path = self.dungeon.find_shortest_path(
+            self.dungeon.get_tile(player.position),
+            self,
+            tuple(item for item in player.blocked_by if item != "monster"),
+        )
+
         if (
             self.has_token(("wall", None))
             and utils.are_nearby(self, player)
             and player.stats.remaining_moves >= player.stats.digging_moves
+            and not player.using_dynamite()
         ):
 
             if player.stats.shovels > 0 or "digging" in player.free_actions:
                 return True
-            return False
 
-        if self.has_token(("monster", None)) and utils.are_nearby(self, player):
+        if (
+            self.has_token(("monster", None))
+            and utils.are_nearby(self, player)
+            and ((player.stats.weapons > 0 or "fighting" in player.free_actions))
+        ):
+            return True
 
-            if player.stats.weapons > 0 or "fighting" in player.free_actions:
-                return True
-            return False
+        if (
+            player.using_dynamite()
+            and dynamite_path is not None
+            and len(dynamite_path) <= player.stats.shooting_range
+        ):
+            return True
 
-        if path and len(path) <= player.stats.remaining_moves:
+        if path is not None and len(path) <= player.stats.remaining_moves:
             return True
 
         return False
 
-    def has_token(self, token: tuple[str]) -> bool:
+    def has_token(self, token: tuple[str] | None = None) -> bool:
+
+        if token is None and self.token is not None and self.second_token is not None:
+            return True
 
         if self.second_token and self.second_token.kind == token[0]:
             if token[1] is None or self.second_token.species == token[1]:
@@ -118,9 +163,17 @@ class Tile(Button):
 
         return False
 
-    def clear_token(self, token_kind):
+    def clear_token(self, token_kind: str | None = None):
 
-        if self.second_token and self.second_token.kind == token_kind:
+        if token_kind is None:
+            if self.second_token is not None:
+                self.dungeon.canvas.remove(self.second_token.shape)
+                self.second_token = None
+            if self.token is not None:
+                self.dungeon.canvas.remove(self.token.shape)
+                self.token = None
+
+        elif self.second_token and self.second_token.kind == token_kind:
             self.dungeon.canvas.remove(self.second_token.shape)
             self.second_token = None
 

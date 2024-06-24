@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, choice
 from abc import ABC, abstractmethod
 
 import crapgeon_utils as utils
@@ -38,8 +38,10 @@ class Character(ABC):
         self.token = None
         self.dungeon = None
 
-    def update_position(self, position: tuple[int]) -> None:
+    def using_dynamite(self):  # needed for everybody for Token.on_slide_completed()
+        return False
 
+    def update_position(self, position: tuple[int]) -> None:
         self.__class__.data[self.id].position = position
 
     def fight_on_tile(self, opponent_tile: tiles.Tile) -> None:
@@ -67,7 +69,7 @@ class Character(ABC):
         opponent.stats.health = opponent.stats.health - damage
 
         if opponent.stats.health <= 0:
-            opponent._kill_character(opponent_tile)
+            opponent.kill_character(opponent_tile)
 
         self.dungeon.show_damage_token(
             opponent.token.shape.pos, opponent.token.shape.size
@@ -78,6 +80,12 @@ class Character(ABC):
         if self.stats.remaining_moves == self.stats.moves:
             return False
         return True
+
+    def kill_character(self, tile):
+
+        self.__class__.data.remove(self)
+        self.__class__.rearrange_ids()
+        tile.clear_token(self.token.kind)
 
     def _apply_thoughness(self, damage):
 
@@ -95,12 +103,6 @@ class Character(ABC):
                 break
 
         return damage
-
-    def _kill_character(self, tile):
-
-        self.__class__.data.remove(self)
-        self.__class__.rearrange_ids()
-        tile.clear_token(self.token.kind)
 
     # MOVEMENT METHODS TO IMPLEMENT
 
@@ -169,15 +171,19 @@ class Player(Character, ABC):
             "whisky": 0,
             "talisman": 0,
         }
+        self.special_items: dict[str:int] | None = None
         self.state: str | None = None
 
-    def get_movement_range(
-        self, dungeon_layout
+    def get_range(
+        self, dungeon_layout, range_kind: str
     ):  # TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
         # TODO: better as method of Player Class
 
-        mov_range = set()  # set of tuples (no repeated values)
-        remaining_moves = self.stats.remaining_moves
+        mov_range: set[tuple] = set()
+        if range_kind == "movement":
+            remaining_moves = self.stats.remaining_moves
+        elif range_kind == "shooting":
+            remaining_moves = self.stats.shooting_range
 
         # GET CURRENT PLAYER POSITION
         mov_range.add((self.position[0], self.position[1]))
@@ -240,6 +246,13 @@ class Player(Character, ABC):
                 Player.gems += 1
                 game.update_switch("gems")
 
+            elif (
+                self.special_items is not None
+                and tile.token.species in self.special_items.keys()
+            ):
+                self.special_items[tile.token.species] += 1
+                game.update_switch("ability_button")
+
             elif tile.token.species in self.inventory.keys():
                 self.inventory[tile.token.species] += 1
                 game.inv_object = tile.token.species
@@ -249,7 +262,7 @@ class Player(Character, ABC):
                 character_attribute += 1
                 setattr(self.stats, tile.token.species + "s", character_attribute)
                 game.update_switch(tile.token.species + "s")
-                game.update_switch("ability_button")
+                game.update_switch("ability_button")  # for Crusher Jane
 
             tile.clear_token(tile.token.kind)
 
@@ -267,6 +280,10 @@ class Player(Character, ABC):
         )
 
         wall_tile.clear_token("wall")
+
+        # if digging a wall recently created by dynamite
+        if wall_tile.dodging_finished:
+            wall_tile.dodging_finished = False
 
     def check_if_overdose(self, item):
         pass
@@ -301,6 +318,20 @@ class Monster(Character, ABC):
     def move(self):
         pass
 
+    def try_to_dodge(self):
+
+        random_num = randint(1, 10)
+        surrounding_spaces = self.dungeon.get_surrounding_spaces(
+            self.position, self.cannot_share_tile_with
+        )
+        trigger = random_num + (4 - len(surrounding_spaces))
+
+        if trigger <= self.stats.dodging_ability and len(surrounding_spaces) > 0:
+            end_position = choice(list(surrounding_spaces))
+            self._dodge(end_position)
+        else:
+            self.dungeon.get_tile(self.position).dodging_finished = True
+
     def attack_players(self):
 
         players: list = Player.data[:]
@@ -316,7 +347,7 @@ class Monster(Character, ABC):
     ) -> tiles.Tile | None:  # pass target_token as (token_kind, token_species)
         """
         Finds closest target based on len(path) and returns the tile where this target is placed
-        Returns tile is there is path to tile, None if tile is unreachable"
+        Returns tile if there is path to tile, None if tile is unreachable"
         """
 
         tiles_and_paths: list = list()
@@ -324,6 +355,13 @@ class Monster(Character, ABC):
 
         for tile in self.dungeon.children:
             if tile.has_token(target_token):
+
+                if (
+                    target_token[0] == "player"
+                    and isinstance(tile.get_character(), Sawyer)
+                    and tile.get_character().ability_active
+                ):
+                    continue
 
                 if (  # if tile is full and monster wants to land there
                     target_token[0] not in self.cannot_share_tile_with
@@ -489,6 +527,15 @@ class Monster(Character, ABC):
 
         return path if len(path) > 0 else None
 
+    def _dodge(self, end_position: tuple[int]):
+
+        start_tile = self.dungeon.get_tile(self.position)
+        end_tile = self.dungeon.get_tile(end_position)
+        self.token.start = start_tile
+        self.token.goal = end_tile
+        self.token.path = [end_position]
+        self.token.slide(self.token.path)
+
     def _find_accesses(
         self, target_tile: tiles.Tile, smart: bool = True
     ) -> list[list] | None:
@@ -603,6 +650,8 @@ class Sawyer(Player):
         super().__init__()
         self.char: str = "%"
         self.name: str = "Sawyer"
+        self.special_items: dict[str:int] | None = {"powder": 0}
+        self.ignores = ("dynamite",)
         self.stats = stats.SawyerStats()
 
 
@@ -618,7 +667,7 @@ class CrusherJane(Player):
         self.char: str = "&"
         self.name: str = "Crusher Jane"
         self.free_actions: tuple = ("fighting",)
-        self.ignores: tuple = ("gem",)
+        self.ignores: tuple = ("gem", "powder", "dynamite")
         self.stats = stats.CrusherJaneStats()
 
 
@@ -636,8 +685,14 @@ class Hawkins(Player):
         self.char: str = "?"
         self.name: str = "Hawkins"
         self.free_actions: tuple = ("digging",)
-        self.ignores: tuple = ("shovel", "gem")
+        self.ignores: tuple = ("shovel", "gem", "powder")
+        self.special_items: dict[str:int] | None = {"dynamite": 100}
         self.stats = stats.HawkinsStats()
+
+    def using_dynamite(self):
+        if self.ability_active:
+            return True
+        return False
 
 
 class Kobold(Monster):

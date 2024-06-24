@@ -46,11 +46,10 @@ class DungeonLayout(GridLayout):  # initialized in kv file
             self.blueprint, self.determine_alive_players(), min_dist=1
         )
 
-        # utils.place_equal_items(self.blueprint,'o', number_of_items=self.gem_number())
         utils.place_equal_items(self.blueprint, " ", 1)
         # utils.place_equal_items(self.blueprint, "H", 1)
-        utils.place_equal_items(self.blueprint, "x", 4)
-        utils.place_equal_items(self.blueprint, "H", 2)
+        utils.place_equal_items(self.blueprint, "d", 4)
+        utils.place_equal_items(self.blueprint, "N", 10)
         # utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
 
         """for key, value in self.stats.level_progression().items():
@@ -59,7 +58,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
                 self.blueprint,
                 item=key,
                 frequency=value,
-                protected=self.stats.critical_items,
+                protected=self.stats.mandatory_items,
             )
 
         # for y in range (len(self.blueprint)):
@@ -68,8 +67,8 @@ class DungeonLayout(GridLayout):  # initialized in kv file
     def determine_alive_players(self):
 
         if self.level == 1:
-            # return characters.Player.player_chars
-            return "&"
+            return characters.Player.player_chars
+            # return "?"
         else:
             live_players = set()
             for player in characters.Player.exited:
@@ -128,6 +127,12 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
                 case "t":
                     self.place_tokens(tile, "pickable", "talisman")
+
+                case "h":
+                    self.place_tokens(tile, "pickable", "powder")
+
+                case "d":
+                    self.place_tokens(tile, "pickable", "dynamite")
 
                 case "o":
                     self.place_tokens(tile, "pickable", "gem")
@@ -208,13 +213,10 @@ class DungeonLayout(GridLayout):  # initialized in kv file
     def activate_which_tiles(self, tile_positions=None):
 
         for tile in self.children:
-
             tile.disabled = True
 
             if tile_positions:
-
                 for position in tile_positions:
-
                     if (
                         tile.row == position[0]
                         and tile.col == position[1]
@@ -294,6 +296,48 @@ class DungeonLayout(GridLayout):  # initialized in kv file
                         queue.append(((row, col), path + [(row, col)]))
 
         return None
+
+    def get_surrounding_spaces(
+        self, position: tuple[int], cannot_share_tile_with: tuple[str]
+    ) -> set[tuple[int]]:
+        """Returns surrounding positions of given position in which tiles are not occupied"""
+
+        nearby_positions = self.get_nearby_positions(position)
+        nearby_spaces = set()
+
+        for position in nearby_positions:
+            end_tile = self.get_tile(position)
+
+            if not any(
+                end_tile.has_token((token_kind, None))
+                for token_kind in cannot_share_tile_with
+            ):
+                nearby_spaces.add(position)
+
+        return nearby_spaces
+
+    def get_nearby_positions(self, position: tuple[int]) -> set[tuple[int]]:
+        """Returns surroundig positions"""
+
+        nearby_positions = set()
+        directions = ((0, 1), (0, -1), (1, 0), (-1, 0))
+
+        for direction in directions:
+
+            if self.check_within_limits(
+                (position[0] + direction[0], position[1] + direction[1])
+            ):
+
+                nearby_positions.add(
+                    (position[0] + direction[0], position[1] + direction[1])
+                )
+        return nearby_positions
+
+    def check_within_limits(self, position: tuple[int]) -> bool:
+
+        if 0 <= position[0] < self.rows and 0 <= position[1] < self.cols:
+            return True
+        return False
 
     def show_damage_token(self, position, size):
 

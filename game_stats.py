@@ -101,6 +101,7 @@ class PlayerStats(CharacterStats, ABC):
     digging_moves: int = 1
     weapons: int = 0
     armed_strength_incr: int | None = None
+    shooting_range: int | None = None
 
     def __post_init__(self):
         self.max_health: int = self.health  # only modified by leveling up
@@ -110,8 +111,17 @@ class PlayerStats(CharacterStats, ABC):
 
 @dataclass
 class MonsterStats(CharacterStats, ABC):
+    """
+    From 0 to 10. 10 always mobile, 0 immobile. For monsters with random movement
+    """
 
-    random_motility: int = 0  # from 0 to 10. For monsters with random movement
+    random_motility: int = 0
+
+    """
+    From 0 to 14. 14 always dodge if at least 1 free tile available nearby. 10 always dodge if 4 free tiles nearby. 0 never dodge. 
+    """
+
+    dodging_ability: int = 0
 
 
 @dataclass
@@ -124,9 +134,10 @@ class SawyerStats(PlayerStats):
 
 @dataclass
 class HawkinsStats(PlayerStats):
-    health: int = 5
+    health: int = 500
     strength: list = (1, 4)  # TODO: list as it may vary
     moves: int = 4
+    shooting_range: int = 2
 
 
 @dataclass
@@ -151,6 +162,7 @@ class CaveHoundStats(MonsterStats):
     strength: tuple = (1, 4)
     moves: int = 2
     random_motility: int = 8
+    dodging_ability: int = 10
 
 
 @dataclass
@@ -159,13 +171,15 @@ class DepthsWispStats(MonsterStats):
     strength: tuple = (1, 2)
     moves: int = 5
     random_motility: int = 5
+    dodging_ability: int = 10
 
 
 @dataclass
 class NightmareStats(MonsterStats):
     health: int = 6
     strength: tuple = (2, 5)
-    moves: int = 15
+    moves: int = 150
+    dodging_ability: int = 10
 
 
 @dataclass

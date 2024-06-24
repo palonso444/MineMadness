@@ -147,13 +147,17 @@ class CharacterToken(SolidToken):
         next_tile = self.dungeon.get_tile(path.pop(0))
         next_pos = next_tile.pos
 
-        self.character.stats.remaining_moves -= 1
+        if self.character.stats.remaining_moves is not None:  # sometimes when dodging
+            self.character.stats.remaining_moves -= 1
 
         animation = Animation(pos=next_pos, duration=0.2)
         animation.bind(on_complete=self.on_slide_completed)
         animation.start(self.shape)
 
     def on_slide_completed(self, *args):
+
+        game = self.dungeon.game
+        monster_dodged = False
 
         if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
             self.slide(self.path)
@@ -164,28 +168,34 @@ class CharacterToken(SolidToken):
 
                 if (
                     self.goal.kind == "exit"
-                    and characters.Player.gems == self.dungeon.game.total_gems
+                    and characters.Player.gems == game.total_gems
                 ):
 
                     self.update_on_tiles(self.start, self.goal)  # updates tile.token
                     self.character.update_position(self.goal.position)
-                    self.dungeon.game.update_switch("player_exited")
+                    game.update_switch("player_exited")
                     return
 
                 elif self.goal.has_token(("pickable", None)):
-
                     self.character.pick_object(self.goal)
 
             if self.start != self.goal:
-
                 self.update_on_tiles(self.start, self.goal)  # updates tile.token
                 self.character.update_position(self.goal.position)
 
+            # only attack in monster turn, not when no attack if dodging
             if isinstance(self.character, characters.Monster):
 
-                self.character.attack_players()
+                # if players turn, monster was dodging
+                if utils.check_if_player_turn(game.turn):
+                    self.dungeon.get_tile(self.start.position).dodging_finished = True
+                    monster_dodged = True
+                else:
+                    self.character.attack_players()
 
-            self.dungeon.game.update_switch("character_done")
+            # if monster dodged switch is updated in "on_dodging_finished()"
+            if not monster_dodged:
+                game.update_switch("character_done")
 
     def update_on_tiles(self, start_tile, end_tile):
 

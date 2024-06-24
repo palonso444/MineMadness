@@ -1,5 +1,6 @@
 import random
 from collections import deque
+from kivy.uix.gridlayout import GridLayout
 
 
 def tuple_remove(some_tuple, item) -> tuple:
@@ -20,22 +21,16 @@ def check_if_player_turn(turn_number):
 def location(map: list[list[str]]) -> tuple[int]:
 
     height = random.randint(0, len(map) - 1)
-
     width = random.randint(0, len(map[0]) - 1)
-
     return height, width
 
 
 def check_for_free_spots(map: list[list[str]]) -> bool:
 
     for y in range(len(map)):
-
         for x in range(len(map[y])):
-
             if map[y][x] == ".":
-
                 return True
-
     return False
 
 
@@ -78,13 +73,6 @@ def get_max_possible_distance(map: list[list[str]], position: tuple[int]) -> int
         max_distance = get_distance(position, (len(map) - 1, len(map[0]) - 1))
 
     return max_distance
-
-
-def check_within_limits(map: list[list[str]], position: tuple[int]) -> bool:
-
-    if 0 <= position[0] < len(map) and 0 <= position[1] < len(map[position[0]]):
-        return True
-    return False
 
 
 # creates map surface
@@ -154,37 +142,6 @@ def place_items(map: list[list[str]], item: str, frequency=0.1, protected=None) 
         if not protected or map[position[0]][position[1]] not in protected:
 
             map[position[0]][position[1]] = item
-
-
-# Returns 1 to 4 nearby positions regardless if occupied or not
-def get_nearby_positions(
-    map: list[list[str]], position: tuple[int], max_number=4
-) -> set[tuple[int]]:
-
-    nearby_positions = set()
-
-    directions = ((0, 1), (0, -1), (1, 0), (-1, 0))
-
-    number = 0
-
-    if check_within_limits(map, position):
-
-        for direction in directions:
-
-            if 0 <= position[0] + direction[0] < len(map) and (
-                0 <= position[1] + direction[1] < len(map[position[0] + direction[0]])
-            ):
-
-                nearby_positions.add(
-                    (position[0] + direction[0], position[1] + direction[1])
-                )
-                number += 1
-
-            if (
-                number == max_number
-                or directions.index(direction) == len(directions) - 1
-            ):
-                return nearby_positions
 
 
 def place_items_as_group(

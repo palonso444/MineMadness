@@ -16,7 +16,7 @@ class AbilityButton(ToggleButton):
         if isinstance(character, Sawyer):
             return "Hide"
         elif isinstance(character, Hawkins):
-            return "Enable Explosive"
+            return "Use Dynamite"
         elif isinstance(character, CrusherJane):
             return "Use Weapons"
         elif isinstance(character, Monster):
@@ -24,34 +24,41 @@ class AbilityButton(ToggleButton):
 
     def on_state(self, instance, value):
 
-        print("ACT")
-
-        if self.game.ability_button:
+        if (
+            self.game.ability_button_active
+        ):  # TODO: when button unbinding in self.game.on_ability_button() works this has to go
 
             character = self.game.active_character
 
-            if value == "down":
-                print("DOWN")
-                character.stats.remaining_moves -= 1
-                self.game.dynamic_movement_range()
+            if value == "down" and isinstance(character, Hawkins):
                 character.ability_active = True
+                self.game.dynamic_movement_range("shooting")
+
+            elif value == "down":
+                character.stats.remaining_moves -= 1
+                character.ability_active = True
+                self.game.dynamic_movement_range()
 
                 if isinstance(character, Sawyer):
+                    character.special_items["powder"] -= 1
                     character.token.color.a = 0.6  # changes transparency
                     character.ignores = character.ignores + ("pickable",)
 
                 if character.stats.remaining_moves == 0:
                     self.game.update_switch("character_done")
 
-            else:
+            elif value == "normal":
                 character.ability_active = False
-                print("NORMAL")
 
-                if isinstance(character, Sawyer):
+                if isinstance(character, Hawkins):
+                    self.game.dynamic_movement_range()
+
+                elif isinstance(character, Sawyer):
                     character.token.color.a = 1  # changes transparency
                     character.ignores = utils.tuple_remove(
                         character.ignores, "pickable"
                     )
+                self.game.update_switch("ability_button")
 
 
 class Interfacebutton(Button):
@@ -181,7 +188,6 @@ class WhiskyButton(Interfacebutton):
             if effect_size > self.stats.min_effect
             else self.stats.min_effect
         )
-        print(effect_size)
 
         character.stats.strength = (
             character.stats.strength[0],

@@ -4,7 +4,7 @@ from kivy.uix.gridlayout import GridLayout  # type: ignore
 
 # from kivy.uix.scrollview import ScrollView  # type: ignore
 # from kivy.uix.label import Label    # type: ignore
-from kivy.uix.button import Button  # type: ignore
+from kivy.uix.button import Button  # type: ignored
 
 # from kivy.core.text import LabelBase    # type: ignore
 # from kivy.uix.image import Image    # type: ignore
@@ -55,7 +55,7 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
         self.weapons = False
         self.gems = False
 
-        self.ability_button_active = True
+        self.ability_button_active = True  # TODO: when button unbinding in self.on_ability_button() works this has to go
 
     def update_switch(self, switch_name):
 
@@ -74,32 +74,38 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
 
     def on_ability_button(self, *args):
 
-        self.ability_button_active = False
+        self.ability_button_active = False  # TODO: unbind button instead of this
 
         if isinstance(self.active_character, characters.Monster):
-            self.ids.ability_button.state = "normal"
             self.ids.ability_button.disabled = True
+            self.ids.ability_button.state = "normal"
 
         elif self.active_character.ability_active:
             self.ids.ability_button.disabled = False
             self.ids.ability_button.state = "down"
 
         elif isinstance(self.active_character, characters.Sawyer):
-            self.ids.ability_button.state = "normal"
-            self.ids.ability_button.disabled = False
+            if self.active_character.special_items["powder"] > 0:
+                self.ids.ability_button.disabled = False
+            else:
+                self.ids.ability_button.disabled = True
+                self.ids.ability_button.state = "normal"
 
         elif isinstance(self.active_character, characters.Hawkins):
-            self.ids.ability_button.state = "normal"
-            self.ids.ability_button.disabled = True
+            if self.active_character.special_items["dynamite"] > 0:
+                self.ids.ability_button.disabled = False
+            else:
+                self.ids.ability_button.disabled = True
+                self.ids.ability_button.state = "normal"
 
         elif isinstance(self.active_character, characters.CrusherJane):
             if self.active_character.stats.weapons > 0:
                 self.ids.ability_button.disabled = False
             else:
-                self.ids.ability_button.state = "normal"
                 self.ids.ability_button.disabled = True
+                self.ids.ability_button.state = "normal"
 
-        self.ability_button_active = True
+        self.ability_button_active = True  # TODO: bind button instead of this
 
     def on_dungeon(self, *args):
 
@@ -114,7 +120,10 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
             isinstance(self.active_character, characters.Player)
             and self.active_character.stats.remaining_moves > 0
         ):
-            self.dynamic_movement_range()  # checks if player can still move
+            if self.active_character.using_dynamite():
+                self.dynamic_movement_range("shooting")
+            else:
+                self.dynamic_movement_range()  # checks if player can still move
 
         else:
             self.next_character()  # switch turns if character last of character.characters
@@ -152,7 +161,11 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
                     )  # must be updated here after seting player as active character
                     self.update_switch("shovels")
                     self.update_switch("weapons")
-                    self.dynamic_movement_range()
+
+                    if self.active_character.using_dynamite():
+                        self.dynamic_movement_range("shooting")
+                    else:
+                        self.dynamic_movement_range()
 
             else:  # if monsters turn and monsters in the game
 
@@ -196,7 +209,7 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
         else:  # if end of characters list reached (all have moved)
             self.update_switch("turn")
 
-    def dynamic_movement_range(self):
+    def dynamic_movement_range(self, range_kind: str = "movement"):
 
         players_not_yet_active = set()
 
@@ -205,7 +218,9 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
             if not player.has_moved():
                 players_not_yet_active.add(player.position)
 
-        player_movement_range = self.active_character.get_movement_range(self.dungeon)
+        player_movement_range = self.active_character.get_range(
+            self.dungeon, range_kind
+        )
         positions_in_range = players_not_yet_active.union(player_movement_range)
         self.dungeon.activate_which_tiles(positions_in_range)
 

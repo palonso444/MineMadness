@@ -2,8 +2,8 @@ This is a complete beta-version mechanic-wise but it is not balanced nor debugge
 More monsters must be created.
 
 
-IDEAS FOR SECOND PART
------------------------
+IDEAS FOR UPCOMING VERSIONS
+---------------------------
 
 Include range weapons
 

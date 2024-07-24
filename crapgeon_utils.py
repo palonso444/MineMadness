@@ -1,6 +1,22 @@
 import random
 from collections import deque
-from kivy.uix.gridlayout import GridLayout
+
+
+def match_attribute_to_item(attributes: list[str]) -> list[str]:
+    """
+    Converts a list of attributes to a list of items that modifies them
+    """
+
+    items = list()
+    for attribute in attributes:
+        match attribute:
+            case "moves":
+                items.append("coffee")
+            case "thoughness":
+                items.append("tobacco")
+            case "strength":
+                items.append("whisky")
+    return items
 
 
 def tuple_remove(some_tuple, item) -> tuple:
@@ -10,9 +26,9 @@ def tuple_remove(some_tuple, item) -> tuple:
     return tuple(tuple_to_list)
 
 
-def check_if_player_turn(turn_number):
+def check_if_multiple(number: int, multiple_of: int):
 
-    if turn_number % 2 == 0:
+    if number % multiple_of == 0:
         return True
     return False
 
@@ -41,13 +57,9 @@ def are_nearby(
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
     for direction in directions:
-
         row, col = item1.position[0] + direction[0], item1.position[1] + direction[1]
-
         if (row, col) == item2.position:
-
             return True
-
     return False
 
 
@@ -61,15 +73,12 @@ def get_max_possible_distance(map: list[list[str]], position: tuple[int]) -> int
     max_distance = get_distance(position, (0, 0))
 
     if get_distance(position, (0, len(map[0]) - 1)) > max_distance:
-
         max_distance = get_distance(position, (0, len(map[0]) - 1))
 
     if get_distance(position, (len(map) - 1, 0)) > max_distance:
-
         max_distance = get_distance(position, (len(map) - 1, 0))
 
     if get_distance(position, (len(map) - 1, len(map[0]) - 1)) > max_distance:
-
         max_distance = get_distance(position, (len(map) - 1, len(map[0]) - 1))
 
     return max_distance

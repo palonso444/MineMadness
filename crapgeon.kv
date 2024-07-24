@@ -3,8 +3,13 @@
 #: import CoffeeStats game_stats.CoffeeStats
 #: import TobaccoStats game_stats.TobaccoStats
 #: import WhiskyStats game_stats.WhiskyStats
-#: import DungeonLayout dungeon_classes.DungeonLayout
+#: import TalismanStats game_stats.TalismanStats
 
+<DungeonLayout>:
+    size_hint: None, None
+    height: self.minimum_height
+    width: self.minimum_width
+    game: root
 
 <Label>:
     text_size: self.size    # needed to make halign work  
@@ -16,7 +21,6 @@
 <Button>:
     halign: 'center'
     disabled: True
-
 
 <Tile>:
     background_normal: ''   # sets the background default to white instead of predefined grey
@@ -35,21 +39,24 @@
             size: self.size
             source: "./backgrounds/" + self.kind + 'background.png' if self.kind else None
 
+<ProgressBar>:
+    padding: '40dp'
 
 <ScrollView>:
     effect_cls: 'ScrollEffect'  # avoids bouncing when reaching end of scroll
 
 
-<CrapgeonGame>:
+<MineMadnessGame>:
     orientation: 'vertical'
     padding: '5dp'
+    level: 1
 
-    level: app.level
     active_character: None
 
     on_active_character_id: 
         name_label.text = str(root.active_character.name)
         ability_button.text = ability_button.display_text()
+
     on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.stats.shovels)
     on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.stats.weapons)
     on_gems: gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
@@ -84,7 +91,6 @@
 
             Label:
                 id: level_label
-                text: 'FLOOR 1'
             Label:
                 id: weapons_label
             Label:  
@@ -121,17 +127,20 @@
             TalismanButton:
                 text: "Talisman"
                 id: talisman_button
+                stats: TalismanStats()
                 game: root
 
+    BoxLayout:
+        size_hint: 1, 0.025
+        padding: '5dp', '0dp','5dp','5dp'
+        ProgressBar:
+            max: 20
+            value: 0
+            id: experience_bar
+
     ScrollView:
-        size_hint: 1, 0.6
+        size_hint: 1, 0.575
     
         DungeonLayout:
-            tiles_dict: None
-            stats: DungeonStats()
-            level: self.stats.level
-            size_hint: None, None
-            height: self.minimum_height
-            width: self.minimum_width
-            rows: self.stats.size()
-            cols: self.stats.size()
+            game: root
+            # initialized in python file

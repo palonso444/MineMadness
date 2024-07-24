@@ -5,13 +5,45 @@ import character_classes as characters
 import token_classes as tokens
 import tile_classes as tiles
 from collections import deque
+from random import choice
+from game_stats import DungeonStats
+from kivy.clock import Clock
+from functools import partial
+from kivy.properties import ListProperty, BooleanProperty
 
 
-class DungeonLayout(GridLayout):  # initialized in kv file
+class DungeonLayout(GridLayout):
+
+    fading_tokens_items_queue = ListProperty([])
+
+    def __init__(self, dungeon_level: int = 1, game=None, **kwargs):
+        super().__init__(**kwargs)
+        self.tiles_dict: dict[tuple : tiles.Tile] | None = None
+
+        self.dungeon_level = dungeon_level
+        self.stats = DungeonStats(self.dungeon_level)
+        self.rows: int = self.stats.size()
+        self.cols: int = self.stats.size()
+
+        # determines which character shows fadingtokens
+        self.fading_token_character: characters.Player | None = None
+        # determines if tokens of Dungeon.fading_tokens_items_queue are displayed in green or red
+        self.fading_tokens_effect_fades: bool | None = None
+
+        self.game = game
+
+    def display_depth(self):
+        self.game.ids.level_label.text = (
+            "Depth: " + str(self.dungeon_level * 30) + " ft."
+        )
 
     def on_pos(self, *args):
 
-        self.tiles_dict = dict()  # for faster access to tiles by get_tile()
+        self.display_depth()  # dysplays depth in level_label of interface
+
+        self.tiles_dict: dict[tuple : tiles.Tile] = (
+            dict()
+        )  # for faster access to tiles by get_tile()
         self.generate_blueprint(self.rows, self.cols)  # initialize map of dungeon
         self.game = self.parent.parent
         self.game.total_gems = 0
@@ -36,7 +68,7 @@ class DungeonLayout(GridLayout):  # initialized in kv file
                 self.tiles_dict[tile.position] = tile
                 self.add_widget(tile)
 
-        self.game.dungeon = self  # Adds dungeon as CrapgeonGame class attribute
+        self.game.dungeon = self  # Adds dungeon as MineMadnessGame class attribute
 
     def generate_blueprint(self, height, width):
 
@@ -47,9 +79,13 @@ class DungeonLayout(GridLayout):  # initialized in kv file
         )
 
         utils.place_equal_items(self.blueprint, " ", 1)
-        # utils.place_equal_items(self.blueprint, "H", 1)
-        utils.place_equal_items(self.blueprint, "d", 4)
-        utils.place_equal_items(self.blueprint, "N", 10)
+        # utils.place_equal_items(self.blueprint, "H", 2)
+        utils.place_equal_items(self.blueprint, "N", 1)
+        # utils.place_equal_items(self.blueprint, "j", 3)
+        utils.place_equal_items(self.blueprint, "t", 6)
+        utils.place_equal_items(self.blueprint, "l", 3)
+        # utils.place_equal_items(self.blueprint, "w", 3)
+        # utils.place_equal_items(self.blueprint, "c", 3)
         # utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
 
         """for key, value in self.stats.level_progression().items():
@@ -66,9 +102,9 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
     def determine_alive_players(self):
 
-        if self.level == 1:
+        if self.dungeon_level == 1:
             return characters.Player.player_chars
-            # return "?"
+            # return "&"
         else:
             live_players = set()
             for player in characters.Player.exited:
@@ -81,63 +117,69 @@ class DungeonLayout(GridLayout):  # initialized in kv file
             match self.blueprint[tile.row][tile.col]:
 
                 case "%":
-                    self.place_tokens(tile, "player", "sawyer")
+                    self.create_item(tile, "player", "sawyer")
 
                 case "?":
-                    self.place_tokens(tile, "player", "hawkins")
+                    self.create_item(tile, "player", "hawkins")
 
                 case "&":
-                    self.place_tokens(tile, "player", "crusherjane")
+                    self.create_item(tile, "player", "crusherjane")
 
                 case "K":
-                    self.place_tokens(tile, "monster", "kobold")
+                    self.create_item(tile, "monster", "kobold")
 
                 case "H":
-                    self.place_tokens(tile, "monster", "hound")
+                    self.create_item(tile, "monster", "hound")
 
                 case "W":
-                    self.place_tokens(tile, "monster", "wisp")
+                    self.create_item(tile, "monster", "wisp")
 
                 case "N":
-                    self.place_tokens(tile, "monster", "nightmare")
+                    self.create_item(tile, "monster", "nightmare")
 
                 case "G":
-                    self.place_tokens(tile, "monster", "gnome")
+                    self.create_item(tile, "monster", "gnome")
 
                 case "#":
-                    self.place_tokens(tile, "wall", "rock")
+                    self.create_item(tile, "wall", "rock")
+
+                case "{":
+                    self.create_item(tile, "wall", "granite")
+
+                case "*":
+                    self.create_item(tile, "wall", "quartz")
 
                 case "p":
-                    self.place_tokens(tile, "pickable", "shovel")
+                    self.create_item(tile, "pickable", "shovel")
 
                 case "x":
-                    self.place_tokens(tile, "pickable", "weapon")
+                    self.create_item(tile, "pickable", "weapon")
 
                 case "j":
-                    self.place_tokens(tile, "pickable", "jerky")
+                    self.create_item(tile, "pickable", "jerky")
 
                 case "c":
-                    self.place_tokens(tile, "pickable", "coffee")
+                    self.create_item(tile, "pickable", "coffee")
 
                 case "l":
-                    self.place_tokens(tile, "pickable", "tobacco")
+                    self.create_item(tile, "pickable", "tobacco")
 
                 case "w":
-                    self.place_tokens(tile, "pickable", "whisky")
+                    self.create_item(tile, "pickable", "whisky")
 
                 case "t":
-                    self.place_tokens(tile, "pickable", "talisman")
+                    self.create_item(tile, "pickable", "talisman")
 
                 case "h":
-                    self.place_tokens(tile, "pickable", "powder")
+                    self.create_item(tile, "pickable", "powder")
 
                 case "d":
-                    self.place_tokens(tile, "pickable", "dynamite")
+                    self.create_item(tile, "pickable", "dynamite")
 
                 case "o":
-                    self.place_tokens(tile, "pickable", "gem")
+                    self.create_item(tile, "pickable", "gem")
 
-    def place_tokens(self, tile, token_kind, token_species):
+    def create_item(self, tile, token_kind, token_species):
 
         if token_kind == "player" or token_kind == "monster":
 
@@ -145,21 +187,21 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
                 if token_species == "sawyer":
 
-                    if self.level == 1:
+                    if self.dungeon_level == 1:
                         character = characters.Sawyer()
                     else:
                         character = characters.Player.transfer_player("Sawyer")
 
                 elif token_species == "hawkins":
 
-                    if self.level == 1:
+                    if self.dungeon_level == 1:
                         character = characters.Hawkins()
                     else:
                         character = characters.Player.transfer_player("Hawkins")
 
                 elif token_species == "crusherjane":
 
-                    if self.level == 1:
+                    if self.dungeon_level == 1:
                         character = characters.CrusherJane()
                     else:
                         character = characters.Player.transfer_player("Crusher Jane")
@@ -181,22 +223,37 @@ class DungeonLayout(GridLayout):  # initialized in kv file
                 elif token_species == "gnome":
                     character = characters.GreedyGnome()
 
+            self.place_item(tile, token_kind, token_species, character)
+
+        else:
+
+            self.place_item(tile, token_kind, token_species)
+
+    def place_item(
+        self,
+        tile: tiles.Tile,
+        token_kind: str,
+        token_species: str,
+        character: characters.Character | None = None,
+    ):
+
+        if character is not None:
+
+            character.position = tile.position
+            character.dungeon = self
+            character.id = len(character.__class__.data)
+            character.__class__.data.append(character)
+
             tile.token = tokens.CharacterToken(
                 kind=token_kind,
                 species=token_species,
+                character=character,
                 dungeon_instance=self,
                 pos=tile.pos,
                 size=tile.size,
             )
 
-            character.position = tile.position  # Character attributes initialized here
             character.token = tile.token
-            character.dungeon = self
-
-            character.id = len(character.__class__.data)
-            character.__class__.data.append(character)
-
-            tile.token.character = character
 
         else:
 
@@ -339,6 +396,24 @@ class DungeonLayout(GridLayout):  # initialized in kv file
             return True
         return False
 
+    def get_random_tile(self, free: bool = False):
+        """
+        Returns a random tile from the dungeon. If free, it will return a tile with no tokens
+        """
+
+        tiles_checked: set = set()
+        total_tiles = len(self.children)
+
+        while len(tiles_checked) < total_tiles:
+            tile = choice(self.children)
+            if free:
+                if tile.has_token():
+                    tiles_checked.add(self.children.index(tile))
+                else:
+                    return tile
+            else:
+                return tile
+
     def show_damage_token(self, position, size):
 
         with self.canvas:
@@ -348,3 +423,28 @@ class DungeonLayout(GridLayout):  # initialized in kv file
 
         with self.canvas:
             tokens.DiggingToken(pos=position, size=size, dungeon=self)
+
+    def show_effect_token(self, item: str, pos, size, effect_fades: bool = False):
+        """
+        Item is the item causing effect, see tokens.EffectToken class for more details.
+        """
+
+        with self.canvas:
+            tokens.EffectToken(
+                item=item, pos=pos, size=size, dungeon=self, effect_fades=effect_fades
+            )
+
+    def on_fading_tokens_items_queue(self, instance, queue):
+
+        if len(queue) > 0:
+            self.show_effect_token(
+                self.fading_tokens_items_queue[0],
+                self.fading_token_character.token.shape.pos,
+                self.fading_token_character.token.shape.size,
+                self.fading_tokens_effect_fades,
+            )
+
+    def remove_item_if_in_queue(self, instance, fading_token):
+
+        if fading_token.item in self.fading_tokens_items_queue:
+            self.fading_tokens_items_queue.remove(fading_token.item)

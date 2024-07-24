@@ -1,8 +1,8 @@
-from kivy.graphics import Ellipse, Rectangle, Color  # type: ignore
+from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
 from kivy.animation import Animation
-from kivy.properties import NumericProperty
 
 from kivy.uix.widget import Widget
+from kivy.properties import NumericProperty
 
 import character_classes as characters
 import crapgeon_utils as utils
@@ -18,10 +18,25 @@ class SolidToken(Widget):
         self.dungeon = dungeon_instance
         self.source = "./tokens/" + self.species + "token.png"
 
-    def update(self, *args):
+        self.shape = None  # token.shape (canvas object) initialized in each subclass
+        self.circle = None  # token.circle (canvas object) initialized by draw_selection_circle() only in players
+        # SceneryToken need this attribute to avoid bugs in Player.dig() and Player.pick_object()
 
-        self.shape.pos = self.pos
-        self.shape.size = self.size
+    def update(self, solidtoken, solidtoken_pos):
+        solidtoken.shape.pos = solidtoken_pos
+        solidtoken.shape.size = solidtoken.size
+
+    def remove_selection_circle(self):
+        """
+        Placeholder to avoid crashing by Tile.clear_token()
+        """
+        pass
+
+    def remove_health_bar(self):
+        """
+        Placeholder to avoid crashing by Tile.clear_token()
+        """
+        pass
 
 
 class FadingToken(Widget):
@@ -31,15 +46,19 @@ class FadingToken(Widget):
         self.opacity = 0
         self.final_opacity = None
         self.dungeon = dungeon
+        self.duration: int | None = None
 
     def fade(self):
 
         def fade_out(*args):
 
-            fading = Animation(opacity=0, duration=0.2)
+            fading = Animation(opacity=0, duration=self.duration)
+            if isinstance(self, EffectToken):
+                # remove item from Dungeon.fading_tokens_items_queue
+                fading.bind(on_complete=self.dungeon.remove_item_if_in_queue)
             fading.start(self)
 
-        fading = Animation(opacity=self.final_opacity, duration=0.2)
+        fading = Animation(opacity=self.final_opacity, duration=self.duration)
         fading.bind(on_complete=fade_out)
         fading.start(self)
 
@@ -49,11 +68,11 @@ class DamageToken(FadingToken):
     def __init__(self, dungeon, **kwargs):
         super().__init__(dungeon, **kwargs)
         self.final_opacity = 0.4
+        self.duration = 0.2
 
         with self.canvas:
-
             self.color = Color(1, 0, 0, 1)
-            self.token = Ellipse(pos=self.pos, size=self.size)
+            self.shape = Ellipse(pos=self.pos, size=self.size)
 
         self.fade()
 
@@ -63,11 +82,34 @@ class DiggingToken(FadingToken):
     def __init__(self, dungeon, **kwargs):
         super().__init__(dungeon, **kwargs)
         self.final_opacity = 0.7
+        self.duration = 0.2
 
         with self.canvas:
-
             self.color = Color(0.58, 0.294, 0, 1)
-            self.token = Rectangle(pos=self.pos, size=self.size)
+            self.shape = Rectangle(pos=self.pos, size=self.size)
+
+        self.fade()
+
+
+class EffectToken(FadingToken):
+    """
+    Introduce as item argument the name of the item that causes the effect (example: coffee)
+    In case of items with more than 1 possible effects, introduce as "item" name_effect (example: talisman_level_up)
+    """
+
+    def __init__(self, item: str, dungeon, effect_fades: bool = False, **kwargs):
+        super().__init__(dungeon, **kwargs)
+        self.final_opacity = 1
+        self.duration = 0.6
+        self.item = item
+
+        if effect_fades:
+            self.source = "./fadingtokens/" + self.item + "_fades_token.png"
+        else:
+            self.source = "./fadingtokens/" + self.item + "_effect_token.png"
+
+        with self.canvas:
+            self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 
         self.fade()
 
@@ -78,7 +120,6 @@ class SceneryToken(SolidToken):
         super().__init__(kind, species, dungeon_instance, **kwargs)
 
         with self.dungeon.canvas:
-
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update, size=self.update)
@@ -86,21 +127,127 @@ class SceneryToken(SolidToken):
 
 class CharacterToken(SolidToken):
 
-    def __init__(self, kind, species, dungeon_instance, **kwargs):
+    percentage_natural_health = NumericProperty(None)
+
+    def __init__(self, kind, species, character, dungeon_instance, **kwargs):
         super().__init__(kind, species, dungeon_instance, **kwargs)
 
-        self.character = None  # links token with character object
+        self.character = character  # links token with character object
 
         self.start = None  # all defined when token is moved by move()
         self.goal = None
         self.path = None
 
-        with self.dungeon.canvas:
+        self.bar = None  # health bar, monsters need it None to avoid crashing when Token.slide()
+        self.negative_bar = None  # red portion of the health bar
 
+        with self.dungeon.canvas:
             self.color = Color(1, 1, 1, 1)
             self.shape = Ellipse(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update, size=self.update)
+
+        if isinstance(self.character, characters.Player):
+            # bind and initialize health bar
+            self.bind(percentage_natural_health=self.calculate_and_display_health_bar)
+            self.percentage_natural_health = (
+                self.character.stats.health / self.character.stats.natural_health
+            )
+
+    def calculate_and_display_health_bar(self, instance, percentage_natural_health):
+
+        if self.bar is not None and self.negative_bar is not None:
+            self.remove_health_bar()
+
+        bar_pos_x = self.shape.pos[0] + (self.shape.size[0] * 0.1)
+        bar_pos_y = self.shape.pos[1] + (self.shape.size[1] * 0.1)
+
+        bar_length = self.shape.size[0] * 0.8  # total horizontal length of the bar
+        bar_tickness = self.shape.size[1] * 0.1
+
+        # canvas.after to ensure bar is displayed on top of charactertoken
+        with self.dungeon.canvas.after:
+
+            # green portion of health bar
+            self.bar_color = Color(0, 1, 0, 1)
+            self.bar = Rectangle(
+                pos=(bar_pos_x, bar_pos_y),
+                size=(bar_length * percentage_natural_health, bar_tickness),
+            )
+
+            # red portion of health bar
+            self.bar_color = Color(1, 0, 0, 1)
+            self.negative_bar = Rectangle(
+                # x positon of red bar is bar_pos_x + length of green portion of bar
+                pos=(bar_pos_x + self.bar.size[0], bar_pos_y),
+                size=(bar_length * (1 - percentage_natural_health), bar_tickness),
+            )
+
+        self.bind(pos=self.update_health_bar, size=self.update_health_bar)
+
+    def update_health_bar(self, *args):
+
+        # update green portion of health bar
+        self.bar.pos = (
+            self.shape.pos[0] + self.shape.size[0] * 0.1,
+            self.shape.pos[1] + self.shape.size[1] * 0.1,
+        )
+        self.bar.size = (
+            self.shape.size[0] * 0.8 * self.percentage_natural_health,
+            self.shape.size[1] * 0.1,
+        )
+
+        # update red portion of health bar
+        self.negative_bar.pos = (
+            # x positon of bar is token_pos + 0.1 margin + size of green portion of bar
+            self.shape.pos[0] + (self.shape.size[0] * 0.1) + self.bar.size[0],
+            self.shape.pos[1] + (self.shape.size[1] * 0.1),
+        )
+        self.negative_bar.size = (
+            self.shape.size[0] * 0.8 * (1 - self.percentage_natural_health),
+            self.shape.size[1] * 0.1,
+        )
+
+    def draw_selection_circle(self):
+
+        with self.dungeon.canvas:
+            self.circle_color = Color(1, 1, 0, 1)
+            self.circle = Line(
+                circle=(
+                    self.shape.pos[0] + self.width / 2,
+                    self.shape.pos[1] + self.height / 2,
+                    self.width / 2,
+                ),
+                width=1.5,
+            )
+
+        self.bind(pos=self.update_circle, size=self.update_circle)
+
+    def update_circle(self, *args):
+
+        self.circle.circle = (  # self is CharacterToken, self.circle is Line
+            self.shape.pos[0]  # center_x of circle = CharacterToken.pos[0] (x)
+            + self.width / 2,
+            self.shape.pos[1]  # center_y of circle = CharacterToken.pos[1] (y)
+            + self.height / 2,
+            self.width / 2,  # radius of circle = CharacterToken.width / 2
+        )
+
+    def remove_selection_circle(self):
+
+        if self.circle is not None:
+            self.dungeon.canvas.remove(self.circle)
+            self.circle = None
+
+    def remove_health_bar(self):
+
+        if self.bar is not None:
+            self.dungeon.canvas.after.remove(self.bar)
+            self.bar = None
+
+        if self.negative_bar is not None:
+            self.dungeon.canvas.after.remove(self.negative_bar)
+            self.negative_bar = None
 
     def move_player(self, start_tile, end_tile):
 
@@ -151,6 +298,10 @@ class CharacterToken(SolidToken):
             self.character.stats.remaining_moves -= 1
 
         animation = Animation(pos=next_pos, duration=0.2)
+        if self.circle is not None:  # selection circle
+            animation.bind(on_progress=self.update_circle)
+        if self.bar is not None:  # health bar
+            animation.bind(on_progress=self.update_health_bar)
         animation.bind(on_complete=self.on_slide_completed)
         animation.start(self.shape)
 
@@ -159,10 +310,11 @@ class CharacterToken(SolidToken):
         game = self.dungeon.game
         monster_dodged = False
 
-        if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
+        # len(path) is always <= monster.stats.remaining_moves
+        if len(self.path) > 0:
             self.slide(self.path)
 
-        else:  # if goal is reached or remaining_moves == 0
+        else:  # if goal is reached
 
             if isinstance(self.character, characters.Player):
 
@@ -183,11 +335,11 @@ class CharacterToken(SolidToken):
                 self.update_on_tiles(self.start, self.goal)  # updates tile.token
                 self.character.update_position(self.goal.position)
 
-            # only attack in monster turn, not when no attack if dodging
+            # only attack in monster turn, no attack if dodging
             if isinstance(self.character, characters.Monster):
 
                 # if players turn, monster was dodging
-                if utils.check_if_player_turn(game.turn):
+                if utils.check_if_multiple(game.turn, 2):
                     self.dungeon.get_tile(self.start.position).dodging_finished = True
                     monster_dodged = True
                 else:

@@ -7,7 +7,7 @@ from kivy.properties import BooleanProperty
 
 import crapgeon_utils as utils
 
-import character_classes as classes
+import character_classes as characters
 import token_classes as tokens
 
 
@@ -23,7 +23,7 @@ class Tile(Button):
         self.position: tuple = (row, col)
         self.kind: str = kind
         self.token: tokens.SolidToken = (
-            None  # defined when is by DungeonLayout.place_tokens
+            None  # defined when is by DungeonLayout.create_item
         )
         self.second_token: tokens.CharacterToken = (
             None  # tiles can have up to 2 tokens (shovel + monster for instance).
@@ -46,6 +46,8 @@ class Tile(Button):
             self.fall_dynamite_on_tile()
 
         elif self.has_token(("player", None)) and self.get_character() != player:
+            print("SWITCH CHARACTER")
+            print(self.get_character())
             game.switch_character(self.get_character())
 
         elif self.has_token(("wall", None)):
@@ -81,15 +83,18 @@ class Tile(Button):
             if self.has_token(("monster", None)):
                 self.get_character().kill_character(self)
             self.clear_token()  # remove all other tokens, pickables, etc. if any
-            self.dungeon.place_tokens(self, "wall", "rock")
+            self.dungeon.create_item(self, "wall", "rock")
+            self.dungeon.show_effect_token(
+                "explosion", self.token.shape.pos, self.token.shape.size
+            )
             self.on_dodging_finished = False
 
             self.dungeon.game.update_switch("character_done")
 
-    def update_token(self, *args):
+    def update_token(self, tile, tile_pos):
 
-        self.token.pos = self.pos
-        self.token.size = self.size
+        tile.token.pos = tile_pos
+        tile.token.size = tile.size
 
     def is_activable(self):
 
@@ -101,7 +106,10 @@ class Tile(Button):
                 return False
             if self.get_character() == player:
                 return True
-            if self.get_character().has_moved():
+            if (
+                self.get_character().has_moved()
+                and not characters.Monster.all_out_of_game()
+            ):
                 return False
             return True
 
@@ -116,7 +124,7 @@ class Tile(Button):
         )
 
         if (
-            self.has_token(("wall", None))
+            self.has_token(("wall", "rock"))
             and utils.are_nearby(self, player)
             and player.stats.remaining_moves >= player.stats.digging_moves
             and not player.using_dynamite()
@@ -124,6 +132,21 @@ class Tile(Button):
 
             if player.stats.shovels > 0 or "digging" in player.free_actions:
                 return True
+
+        if self.has_token(("wall", "granite")) and isinstance(
+            player, characters.Hawkins
+        ):
+            if (
+                utils.are_nearby(self, player)
+                and player.stats.remaining_moves >= player.stats.digging_moves
+                and player.stats.shovels > 0
+            ):
+                return True
+
+        if (
+            self.has_token(("wall", "granite")) or self.has_token(("wall", "quartz"))
+        ) and player.using_dynamite():
+            return True
 
         if (
             self.has_token(("monster", None))
@@ -149,36 +172,46 @@ class Tile(Button):
         if token is None and self.token is not None and self.second_token is not None:
             return True
 
-        if self.second_token and self.second_token.kind == token[0]:
-            if token[1] is None or self.second_token.species == token[1]:
-                return True
-            else:
-                return False
+        if token is not None:
 
-        if self.token and self.token.kind == token[0]:
-            if token[1] is None or self.token.species == token[1]:
-                return True
-            else:
-                return False
+            if self.second_token and self.second_token.kind == token[0]:
+                if token[1] is None or self.second_token.species == token[1]:
+                    return True
+                # else:
+                # return False
+
+            if self.token and self.token.kind == token[0]:
+                if token[1] is None or self.token.species == token[1]:
+                    return True
+                # else:
+                # return False
 
         return False
 
-    def clear_token(self, token_kind: str | None = None):
+    def clear_token(self, token_kind: str | None = None) -> None:
 
         if token_kind is None:
             if self.second_token is not None:
                 self.dungeon.canvas.remove(self.second_token.shape)
+                self.second_token.remove_selection_circle()
+                self.second_token.remove_health_bar()
                 self.second_token = None
             if self.token is not None:
                 self.dungeon.canvas.remove(self.token.shape)
+                self.token.remove_selection_circle()
+                self.token.remove_health_bar()
                 self.token = None
 
         elif self.second_token and self.second_token.kind == token_kind:
             self.dungeon.canvas.remove(self.second_token.shape)
+            self.second_token.remove_selection_circle()
+            self.second_token.remove_health_bar()
             self.second_token = None
 
         elif self.token and self.token.kind == token_kind:
             self.dungeon.canvas.remove(self.token.shape)
+            self.token.remove_selection_circle()
+            self.token.remove_health_bar()
             self.token = None
 
     def get_character(self):

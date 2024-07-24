@@ -1,10 +1,7 @@
 from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
-from dataclasses import dataclass
-from character_classes import Sawyer, CrusherJane, Hawkins, Monster
-from kivy.animation import Animation
-
-import crapgeon_utils as utils
+from character_classes import Player, Sawyer, CrusherJane, Hawkins, Monster
+from random import choice
 
 
 class AbilityButton(ToggleButton):
@@ -32,6 +29,9 @@ class AbilityButton(ToggleButton):
 
             if value == "down" and isinstance(character, Hawkins):
                 character.ability_active = True
+                self.game.dungeon.show_effect_token(
+                    "dynamite", character.token.shape.pos, character.token.shape.size
+                )
                 self.game.dynamic_movement_range("shooting")
 
             elif value == "down":
@@ -41,8 +41,12 @@ class AbilityButton(ToggleButton):
 
                 if isinstance(character, Sawyer):
                     character.special_items["powder"] -= 1
-                    character.token.color.a = 0.6  # changes transparency
-                    character.ignores = character.ignores + ("pickable",)
+                    character.hide()
+
+                elif isinstance(character, CrusherJane):
+                    self.game.dungeon.show_effect_token(
+                        "armed", character.token.shape.pos, character.token.shape.size
+                    )
 
                 if character.stats.remaining_moves == 0:
                     self.game.update_switch("character_done")
@@ -50,14 +54,20 @@ class AbilityButton(ToggleButton):
             elif value == "normal":
                 character.ability_active = False
 
-                if isinstance(character, Hawkins):
+                if isinstance(character, Sawyer):
+                    character.unhide()
+
+                elif isinstance(character, Hawkins):
                     self.game.dynamic_movement_range()
 
-                elif isinstance(character, Sawyer):
-                    character.token.color.a = 1  # changes transparency
-                    character.ignores = utils.tuple_remove(
-                        character.ignores, "pickable"
+                elif isinstance(character, CrusherJane):
+                    self.game.dungeon.show_effect_token(
+                        "armed",
+                        character.token.shape.pos,
+                        character.token.shape.size,
+                        effect_fades=True,
                     )
+
                 self.game.update_switch("ability_button")
 
 
@@ -105,19 +115,18 @@ class JerkyButton(Interfacebutton):
     Increases life
     """
 
-    def on_release(self, *args):
+    def on_release(self):
 
         character = self.game.active_character
 
-        effect_size = self.get_effect_size(character, "max_health")
+        effect_size = self.get_effect_size(character, "natural_health")
 
-        character.stats.health += (
-            effect_size
-            if character.stats.health + effect_size <= character.stats.max_health
-            else character.stats.max_health
-        )
+        character.heal(effect_size)
 
         self.game.update_switch("health")
+        self.game.dungeon.show_effect_token(
+            "jerky", character.token.shape.pos, character.token.shape.size
+        )
         self.apply_cost("jerky")
 
 
@@ -126,7 +135,7 @@ class CoffeeButton(Interfacebutton):
     Increases movement
     """
 
-    def on_release(self, *args):
+    def on_release(self):
 
         character = self.game.active_character
 
@@ -142,6 +151,9 @@ class CoffeeButton(Interfacebutton):
             }
         )
 
+        self.game.dungeon.show_effect_token(
+            "coffee", character.token.shape.pos, character.token.shape.size
+        )
         self.apply_cost("coffee")
 
 
@@ -150,11 +162,11 @@ class TobaccoButton(Interfacebutton):
     Increases thoughness (armor-like effect)
     """
 
-    def on_release(self, *args):
+    def on_release(self):
 
         character = self.game.active_character
 
-        effect_size = self.get_effect_size(character, "max_health")
+        effect_size = self.get_effect_size(character, "natural_health")
 
         character.stats.thoughness += effect_size
 
@@ -165,6 +177,12 @@ class TobaccoButton(Interfacebutton):
             }
         )
 
+        print("TOBACCO END TURN")
+        print(self.game.turn + self.stats.effect_duration)
+
+        self.game.dungeon.show_effect_token(
+            "tobacco", character.token.shape.pos, character.token.shape.size
+        )
         self.apply_cost("tobacco")
 
 
@@ -173,7 +191,7 @@ class WhiskyButton(Interfacebutton):
     Increases strength
     """
 
-    def on_release(self, *args):
+    def on_release(self):
 
         character = self.game.active_character
 
@@ -201,6 +219,9 @@ class WhiskyButton(Interfacebutton):
             }
         )
 
+        self.game.dungeon.show_effect_token(
+            "whisky", character.token.shape.pos, character.token.shape.size
+        )
         self.apply_cost("whisky")
 
 
@@ -210,4 +231,31 @@ class TalismanButton(Interfacebutton):
     Otherwise, levels up the character that uses it
     """
 
-    pass
+    def on_release(self):
+
+        if len(Player.dead_data) == 0:
+            character = self.game.active_character
+            character.experience = character.stats.exp_to_next_level
+
+            self.game.dungeon.show_effect_token(
+                "talisman_level_up",
+                character.token.shape.pos,
+                character.token.shape.size,
+            )
+
+        else:
+            player = choice(Player.dead_data)
+            Player.dead_data.remove(player)
+            player.unbind(experience=player.on_experience)
+            player.unbind(player_level=player.on_player_level)
+            player.resurrect()
+            self.game.dungeon.show_effect_token(
+                "talisman_back",
+                player.token.shape.pos,
+                player.token.shape.size,
+            )
+
+            player.bind(experience=player.on_experience)
+            player.bind(player_level=player.on_player_level)
+
+        self.apply_cost("talisman")

@@ -1,15 +1,9 @@
 from kivy.app import App  # type: ignore
 from kivy.uix.boxlayout import BoxLayout  # type: ignore
-from kivy.uix.gridlayout import GridLayout  # type: ignore
-
-# from kivy.uix.scrollview import ScrollView  # type: ignore
-# from kivy.uix.label import Label    # type: ignore
-from kivy.uix.button import Button  # type: ignored
+from dungeon_classes import DungeonLayout
 
 # from kivy.core.text import LabelBase    # type: ignore
 # from kivy.uix.image import Image    # type: ignore
-# from kivy.graphics import Ellipse, Rectangle   # type: ignore
-# from kivy.uix.widget import Widget  # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 
 import character_classes as characters
@@ -22,11 +16,11 @@ import interface
 # fn_italic='fonts/Vollkorn-Italic.ttf'
 
 
-class CrapgeonGame(BoxLayout):  # initlialized in kv file
+class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
     # GENERAL PROPERTIES
     dungeon = ObjectProperty(None)
-    turn = NumericProperty(None)
+    turn = NumericProperty(None, allownone=True)
     active_character_id = NumericProperty(None, allownone=True)
     character_done = BooleanProperty(False)
     player_exited = BooleanProperty(False)
@@ -46,6 +40,14 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
     weapons = BooleanProperty(None)
     gems = BooleanProperty(None)
 
+    def on_dungeon(self, game, dungeon):
+
+        characters.Player.gems = 0
+        dungeon.match_blueprint()
+        # characters.Player.set_starting_player_order()
+        game.initialize_switches()
+        characters.Player.exited.clear()
+
     def initialize_switches(self):
 
         self.turn = 0  # even for players, odd for monsters. Player starts
@@ -57,6 +59,13 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
 
         self.ability_button_active = True  # TODO: when button unbinding in self.on_ability_button() works this has to go
 
+    def update_interface(self):
+
+        for button_type in interface.Interfacebutton.types:
+            self.inv_object = button_type
+        self.update_switch("ability_button")
+        self.update_experience_bar()
+
     def update_switch(self, switch_name):
 
         switch_value = getattr(self, switch_name)
@@ -66,11 +75,13 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
             switch_value += 1
         setattr(self, switch_name, switch_value)
 
-    def update_interface(self):
+    def update_experience_bar(self):
 
-        for button_type in interface.Interfacebutton.types:
-            self.inv_object = button_type
-        self.update_switch("ability_button")
+        if isinstance(self.active_character, characters.Player):
+            self.ids.experience_bar.max = self.active_character.stats.exp_to_next_level
+            self.ids.experience_bar.value = self.active_character.experience
+        else:
+            self.ids.experience_bar.value = 0
 
     def on_ability_button(self, *args):
 
@@ -89,32 +100,35 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
                 self.ids.ability_button.disabled = False
             else:
                 self.ids.ability_button.disabled = True
-                self.ids.ability_button.state = "normal"
+            self.ids.ability_button.state = "normal"
 
         elif isinstance(self.active_character, characters.Hawkins):
             if self.active_character.special_items["dynamite"] > 0:
                 self.ids.ability_button.disabled = False
             else:
                 self.ids.ability_button.disabled = True
-                self.ids.ability_button.state = "normal"
+            self.ids.ability_button.state = "normal"
 
         elif isinstance(self.active_character, characters.CrusherJane):
             if self.active_character.stats.weapons > 0:
                 self.ids.ability_button.disabled = False
             else:
                 self.ids.ability_button.disabled = True
-                self.ids.ability_button.state = "normal"
+            self.ids.ability_button.state = "normal"
 
         self.ability_button_active = True  # TODO: bind button instead of this
 
-    def on_dungeon(self, *args):
-
-        characters.Player.gems = 0
-        self.dungeon.match_blueprint()
-        self.initialize_switches()
-        characters.Player.exited.clear()
-
     def on_character_done(self, *args):
+
+        # if no monsters in game, players can move indefinitely
+        if (
+            isinstance(self.active_character, characters.Player)
+            and self.active_character.stats.remaining_moves == 0
+            and characters.Monster.all_out_of_game()
+        ):
+            self.active_character.stats.remaining_moves = (
+                self.active_character.stats.moves
+            )
 
         if (
             isinstance(self.active_character, characters.Player)
@@ -125,36 +139,44 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
             else:
                 self.dynamic_movement_range()  # checks if player can still move
 
-        else:
+        else:  # if self.active_character remaining moves == 0
+            if isinstance(self.active_character, characters.Player):
+                self.active_character.remove_effects(self.turn)
+                self.active_character.token.remove_selection_circle()
             self.next_character()  # switch turns if character last of character.characters
 
-    def on_turn(self, *args):
+    def on_turn(self, game, turn):
 
-        if utils.check_if_player_turn(self.turn) or len(characters.Monster.data) == 0:
-            characters.Player.remove_effects(self.turn)
-            characters.Player.reset_moves()
-        else:
-            characters.Monster.reset_moves()
+        if turn is not None:
 
-        if self.active_character_id == 0:
-            self.active_character_id = None
+            if utils.check_if_multiple(turn, 2) or characters.Monster.all_out_of_game():
+                characters.Player.reset_moves()
+            else:
+                characters.Monster.reset_moves()
 
-        self.active_character_id = 0
+            if self.active_character_id == 0:
+                self.active_character_id = None
 
-    def on_active_character_id(self, *args):
+            self.active_character_id = 0
 
-        if isinstance(self.active_character_id, int):
+    def on_active_character_id(self, game, character_id):
+
+        if character_id is not None:
 
             if (
-                utils.check_if_player_turn(self.turn)
-                or len(characters.Monster.data) == 0
+                utils.check_if_multiple(self.turn, 2)
+                or characters.Monster.all_out_of_game()
             ):  # if player turn or no monsters
-                self.active_character = characters.Player.data[self.active_character_id]
+                self.active_character = characters.Player.data[character_id]
 
-                if self.active_character.has_moved():
+                if (
+                    self.active_character.has_moved()
+                    and not characters.Monster.all_out_of_game()
+                ):
                     self.next_character()
 
                 else:
+                    self.active_character.token.draw_selection_circle()
                     self.update_interface()
                     self.update_switch(
                         "health"
@@ -186,12 +208,11 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
         self.active_character.rearrange_ids()
         exit_tile.clear_token("player")
 
-        if len(characters.Player.data) == 0:
+        if characters.Player.all_out_of_game():
 
             characters.Monster.data.clear()
-            app = App.get_running_app()  # maybe this can be done from dungeon not app
-            app.level += 1  # this should be self.dungeon.stats.level
-            app.generate_next_level()  # maybe this can be done from dungeon not app
+            new_dungeon_level: int = self.dungeon.dungeon_level + 1
+            self.generate_next_level(new_dungeon_level)
 
         elif self.active_character_id == len(characters.Player.data):
             self.update_switch("turn")
@@ -210,13 +231,22 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
             self.update_switch("turn")
 
     def dynamic_movement_range(self, range_kind: str = "movement"):
+        """
+        Gets total range of activable tiles (player movement range and other player positions if player
+        did not move if monsters are present, otherwhise all other players positions) and pass it to
+        activate_which_tiles() to check if tiles are activable
+        """
 
-        players_not_yet_active = set()
-
-        for player in characters.Player.data:
-
-            if not player.has_moved():
-                players_not_yet_active.add(player.position)
+        if characters.Monster.all_out_of_game():
+            players_not_yet_active = {
+                player.position for player in characters.Player.data
+            }
+        else:
+            players_not_yet_active = {
+                player.position
+                for player in characters.Player.data
+                if not player.has_moved()
+            }
 
         player_movement_range = self.active_character.get_range(
             self.dungeon, range_kind
@@ -235,38 +265,37 @@ class CrapgeonGame(BoxLayout):  # initlialized in kv file
             characters.Player.data[index_new_char],
             characters.Player.data[index_old_char],
         )
-
-        self.active_character.rearrange_ids()
+        characters.Player.rearrange_ids()
+        self.active_character.token.remove_selection_circle()
         self.active_character = new_active_character
         self.active_character_id = None
         self.active_character_id = characters.Player.data.index(self.active_character)
 
-    def on_inv_object(self, *args):
+    def on_inv_object(self, game, inv_object):
 
-        if self.inv_object is not None:
+        if inv_object is not None:
 
             character = self.active_character
 
-            if character.inventory is None or character.inventory[self.inv_object] == 0:
-                self.ids[self.inv_object + "_button"].disabled = True
+            if character.inventory is None or character.inventory[inv_object] == 0:
+                self.ids[inv_object + "_button"].disabled = True
             else:
-                self.ids[self.inv_object + "_button"].disabled = False
+                self.ids[inv_object + "_button"].disabled = False
 
             self.inv_object = None
+
+    def generate_next_level(self, new_dungeon_level: int) -> None:
+
+        self.children[0].remove_widget(self.dungeon)  # self.children[0] is Scrollview
+        new_level = DungeonLayout(dungeon_level=new_dungeon_level, game=self)
+        self.children[0].add_widget(new_level)
+        self.turn = None
 
 
 class CrapgeonApp(App):
 
-    level = 1
-
     def build(self):
-        return CrapgeonGame()
-
-    def generate_next_level(self):
-
-        self.root.clear_widgets()  # self root is root widget, in this case CrapgeonGame object
-        new_level = CrapgeonGame()
-        self.root.add_widget(new_level)
+        return MineMadnessGame()
 
 
 ######################################################### START APP ##########################################################

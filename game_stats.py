@@ -2,22 +2,18 @@ from dataclasses import dataclass
 from abc import ABC
 from random import randint
 
-# from kivy.event import EventDispatcher
-# from kivy.properties import NumericProperty
 
-
-class DungeonStats:  # inherit from EventDispatcher to use NumericProperty
+class DungeonStats:
 
     mandatory_items: tuple[str] = ("%", "?", "&", " ", "o")
 
-    # level: int = NumericProperty(1)
-
-    def __init__(self):
-        self.level: int = 1
+    def __init__(self, dungeon_level: int):
+        self.level = dungeon_level
 
     def size(self):
 
-        return 6 + int(self.level / 1.5)
+        # return 6 + int(self.level / 1.5)
+        return 4 * self.level
 
     def gem_number(self):
 
@@ -69,19 +65,24 @@ class JerkyStats(ItemStats):
 @dataclass
 class CoffeeStats(ItemStats):
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 3
+    effect_duration: int = 1
 
 
 @dataclass
 class TobaccoStats(ItemStats):
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 3
+    effect_duration: int = 1
 
 
 @dataclass
 class WhiskyStats(ItemStats):
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 3
+    effect_duration: int = 1
+
+
+@dataclass
+class TalismanStats(ItemStats):
+    pass
 
 
 @dataclass
@@ -97,16 +98,19 @@ class CharacterStats(ABC):
 @dataclass
 class PlayerStats(CharacterStats, ABC):
 
-    shovels: int = 0
+    shovels: int = 2
     digging_moves: int = 1
-    weapons: int = 0
-    armed_strength_incr: int | None = None
+    weapons: int = 5
+    advantage_strength_incr: int | None = None
     shooting_range: int | None = None
+    recovery_end_of_level: int = 100  # healthpoints players heal at end of level
+    base_exp_to_level_up: int = 10
 
     def __post_init__(self):
-        self.max_health: int = self.health  # only modified by leveling up
+        self.natural_health: int = self.health  # only modified by leveling up
         self.natural_moves: int = self.moves  # only modified by leveling up
         self.natural_strength: tuple = self.strength  # only modified by leveling up
+        self.exp_to_next_level: int = self.base_exp_to_level_up
 
 
 @dataclass
@@ -118,33 +122,36 @@ class MonsterStats(CharacterStats, ABC):
     random_motility: int = 0
 
     """
-    From 0 to 14. 14 always dodge if at least 1 free tile available nearby. 10 always dodge if 4 free tiles nearby. 0 never dodge. 
+    From 0 to 14. 14 always dodges if at least 1 free tile available nearby. 10 always dodges if 4 free tiles nearby. 0 never dodges. 
     """
 
     dodging_ability: int = 0
 
+    experiece_when_killed: int = 5
+
 
 @dataclass
 class SawyerStats(PlayerStats):
-    health: int = 400
-    strength: list = (1, 2)  # TODO: list as it may vary
-    moves: int = 5
+    health: int = 50
+    strength: list = (1, 2)
+    advantage_strength_incr: int = 100
+    moves: int = 4
     digging_moves: int = 3
 
 
 @dataclass
 class HawkinsStats(PlayerStats):
-    health: int = 500
-    strength: list = (1, 4)  # TODO: list as it may vary
+    health: int = 50
+    strength: list = (1, 4)
     moves: int = 4
     shooting_range: int = 2
 
 
 @dataclass
 class CrusherJaneStats(PlayerStats):
-    health: int = 100
+    health: int = 50
     strength: tuple = (3, 6)
-    armed_strength_incr: int = 100
+    advantage_strength_incr: int = 100
     moves: int = 3
 
 
@@ -160,7 +167,7 @@ class KoboldStats(MonsterStats):
 class CaveHoundStats(MonsterStats):
     health: int = 4
     strength: tuple = (1, 4)
-    moves: int = 2
+    moves: int = 4
     random_motility: int = 8
     dodging_ability: int = 10
 
@@ -178,7 +185,7 @@ class DepthsWispStats(MonsterStats):
 class NightmareStats(MonsterStats):
     health: int = 6
     strength: tuple = (2, 5)
-    moves: int = 150
+    moves: int = 4
     dodging_ability: int = 10
 
 

@@ -45,4 +45,4 @@ Hawkins gains experience when blowing with dynamite monsters with high dodging_a
 
 Monsters that stay on gems make no sense, they should leave the gems, attack player, go back to gem
 
-Monster idea: Giant Esrthgrub, chases player and goes accross rock walls by eating them
+Monster idea: Giant Earthgrub, chases player and goes accross rock walls by eating them

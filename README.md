@@ -42,3 +42,7 @@ Hawkins and Crusher Jane can die and game continues. If Sawyer dies game is over
 Use animation transitions property (see documentation) to make sliding not be uniform but resemble steps
 
 Hawkins gains experience when blowing with dynamite monsters with high dodging_ability 
+
+Monsters that stay on gems make no sense, they should leave the gems, attack player, go back to gem
+
+Monster idea: Giant Esrthgrub, chases player and goes accross rock walls by eating them

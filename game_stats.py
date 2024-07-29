@@ -12,8 +12,7 @@ class DungeonStats:
 
     def size(self):
 
-        # return 6 + int(self.level / 1.5)
-        return 4 * self.level
+        return 6 + int(self.level * 0.2)
 
     def gem_number(self):
 
@@ -23,22 +22,35 @@ class DungeonStats:
 
     def level_progression(self):
 
-        wall_frequency = randint(20, 60) * 0.01
+        wall_frequency = randint(2, 6) * 0.1
 
         monster_frequencies = {
-            "K": 0.10 / self.level,
-            "H": self.level * 0.015,
-            "W": self.level * 0.006,
-            "N": self.level * 0.002,
+            "K": 0.2 / self.level if self.level < 3 else 0,
+            "L": 0.025 * self.level if self.level < 4 else 0,
+            "B": randint(0, 3) * 0.02 if self.level > 1 else 0,
+            "H": 0.025 * self.level if 2 < self.level < 4 else 0,
+            "G": 0.025 * self.level if self.level > 3 else 0,
+            "R": 0.015 * self.level if self.level > 4 else 0,
+            "O": 0.1 / self.level if self.level < 4 else 0,
+            "N": 0.1 * self.level if 3 < self.level < 6 else 0,
+            "Y": 0.025 * self.level if 4 < self.level < 8 else 0,
+            "S": randint(0, 2) * 0.025,
+            "W": 0.05 * self.level if self.level < 3 else 0,
+            "D": 0.025 * self.level if 4 < self.level < 8 else 0,
+            "P": randint(0, 1) * 0.05,
         }
 
         total_monster_frequency = sum(monster_frequencies.values())
 
         item_frequencies = {
             "#": wall_frequency,
-            "p": wall_frequency * 0.15,
-            "x": total_monster_frequency * 0.3,
-            "j": self.level * 0.015,
+            "p": wall_frequency * 0.1,
+            "x": total_monster_frequency * 0.2,
+            "j": total_monster_frequency * 0.15,
+            "c": total_monster_frequency * 0.075,
+            "w": total_monster_frequency * 0.075,
+            "l": total_monster_frequency * 0.075,
+            "t": randint(0, 1) * 0.05 if self.level > 2 else 0,
         }
 
         all_frequencies = {**monster_frequencies, **item_frequencies}
@@ -65,19 +77,19 @@ class JerkyStats(ItemStats):
 @dataclass
 class CoffeeStats(ItemStats):
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 1
+    effect_duration: int = 4
 
 
 @dataclass
 class TobaccoStats(ItemStats):
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 1
+    effect_duration: int = 4
 
 
 @dataclass
 class WhiskyStats(ItemStats):
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 1
+    effect_duration: int = 4
 
 
 @dataclass
@@ -100,10 +112,10 @@ class PlayerStats(CharacterStats, ABC):
 
     shovels: int = 2
     digging_moves: int = 1
-    weapons: int = 5
+    weapons: int = 2
     advantage_strength_incr: int | None = None
     shooting_range: int | None = None
-    recovery_end_of_level: int = 100  # healthpoints players heal at end of level
+    recovery_end_of_level: int = 0  # healthpoints players heal at end of level
     base_exp_to_level_up: int = 10
 
     def __post_init__(self):
@@ -119,7 +131,7 @@ class MonsterStats(CharacterStats, ABC):
     From 0 to 10. 10 always mobile, 0 immobile. For monsters with random movement
     """
 
-    random_motility: int = 0
+    random_motility: int = 0  # from 0 to 10. For monsters with random movement
 
     """
     From 0 to 14. 14 always dodges if at least 1 free tile available nearby. 10 always dodges if 4 free tiles nearby. 0 never dodges. 
@@ -127,71 +139,169 @@ class MonsterStats(CharacterStats, ABC):
 
     dodging_ability: int = 0
 
-    experiece_when_killed: int = 5
-
 
 @dataclass
 class SawyerStats(PlayerStats):
-    health: int = 50
+    health: int = 6
     strength: list = (1, 2)
-    advantage_strength_incr: int = 100
+    advantage_strength_incr: int = 2
     moves: int = 4
     digging_moves: int = 3
 
 
 @dataclass
 class HawkinsStats(PlayerStats):
-    health: int = 50
-    strength: list = (1, 4)
-    moves: int = 4
+    health: int = 8
+    strength: list = (1, 3)
+    moves: int = 3
     shooting_range: int = 2
 
 
 @dataclass
 class CrusherJaneStats(PlayerStats):
-    health: int = 50
-    strength: tuple = (3, 6)
-    advantage_strength_incr: int = 100
+    weapons: int = 4
+    health: int = 12
+    strength: tuple = (2, 4)
+    advantage_strength_incr: int = 1
     moves: int = 3
+
+
+# RANDOM MOVEMENT MONSTERS
 
 
 @dataclass
 class KoboldStats(MonsterStats):
-    health: int = 2
+    health: int = 3
     strength: tuple = (1, 2)
-    moves: int = 3
-    random_motility: int = 8
+    moves: int = 5
+    random_motility: int = 7
+    dodging_ability: int = 10
+    experiece_when_killed: int = 3
+
+
+@dataclass
+class BlindLizardStats(MonsterStats):
+    health: int = 5
+    strength: tuple = (2, 4)
+    moves: int = 5
+    random_motility: int = 4
+    dodging_ability: int = 3
+    experiece_when_killed: int = 6
+
+
+@dataclass
+class BlackDeathStats(MonsterStats):
+    health: int = 1
+    strength: tuple = (10, 15)
+    moves: int = 7
+    random_motility: int = 10
+    dodging_ability: int = 11
+    experiece_when_killed: int = 30
+
+
+# DIRECT MOVEMENT MONSTERS
 
 
 @dataclass
 class CaveHoundStats(MonsterStats):
     health: int = 4
-    strength: tuple = (1, 4)
-    moves: int = 4
+    strength: tuple = (1, 3)
+    moves: int = 7
     random_motility: int = 8
-    dodging_ability: int = 10
+    dodging_ability: int = 6
+    experiece_when_killed: int = 6
+
+
+@dataclass
+class GrowlStats(MonsterStats):
+    health: int = 10
+    strength: tuple = (3, 8)
+    moves: int = 5
+    random_motility: int = 5
+    dodging_ability: int = 3
+    experiece_when_killed: int = 10
+
+
+@dataclass
+class RockGolemStats(MonsterStats):
+    health: int = 40
+    strength: tuple = (5, 10)
+    moves: int = 3
+    dodging_ability: int = 0
+    experiece_when_killed: int = 35
+
+
+# SMART MOVEMENT MONSTERS
+
+
+@dataclass
+class DarkGnomeStats(MonsterStats):
+    health: int = 2
+    strength: tuple = (1, 3)
+    moves: int = 5
+    random_motility: int = 5
+    dodging_ability: int = 3
+    experiece_when_killed: int = 3
+
+
+@dataclass
+class NightmareStats(MonsterStats):
+    health: int = 6
+    strength: tuple = (2, 6)
+    random_motility: int = 2
+    moves: int = 6
+    dodging_ability: int = 6
+    experiece_when_killed: int = 8
+
+
+@dataclass
+class LindWormStats(MonsterStats):
+    health: int = 30
+    strength: tuple = (12, 18)
+    moves: int = 5
+    dodging_ability: int = 4
+    experiece_when_killed: int = 50
+
+
+# GHOSTS
+
+
+@dataclass
+class WanderingShadowStats(MonsterStats):
+    health: int = 2
+    strength: tuple = (1, 5)
+    moves: int = 8
+    random_motility: int = 9
+    dodging_ability: int = 14
+    experiece_when_killed: int = 10
 
 
 @dataclass
 class DepthsWispStats(MonsterStats):
     health: int = 1
     strength: tuple = (1, 2)
-    moves: int = 5
-    random_motility: int = 5
-    dodging_ability: int = 10
-
-
-@dataclass
-class NightmareStats(MonsterStats):
-    health: int = 6
-    strength: tuple = (2, 5)
     moves: int = 4
     dodging_ability: int = 10
+    experiece_when_killed: int = 3
 
 
 @dataclass
-class GreedyGnomeStats(MonsterStats):
-    health: int = 6
-    strength: tuple = (1, 3)
+class MountainDjinnStats(MonsterStats):
+    health: int = 18
+    strength: tuple = (5, 10)
     moves: int = 5
-    random_motility: int = 6  # from 0 to 10. For monsters with random movement
+    dodging_ability: int = 5
+    experiece_when_killed: int = 30
+
+
+# SPECIAL MONSTERS
+
+
+@dataclass
+class PixieStats(MonsterStats):
+    health: int = 2
+    strength: tuple = (1, 1)
+    moves: int = 5
+    random_motility: int = 10
+    dodging_ability: int = 7
+    experiece_when_killed: int = 3

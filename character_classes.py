@@ -179,11 +179,11 @@ class Player(Character, ABC, EventDispatcher):
         self.free_actions: tuple = (None,)
         self.ignores: tuple = (None,)
         self.inventory: dict[str:int] = {
-            "jerky": 0,
+            "jerky": 2,
             "coffee": 0,
             "tobacco": 0,
             "whisky": 0,
-            "talisman": 10,
+            "talisman": 0,
         }
         self.special_items: dict[str:int] | None = None
         self.effects: dict[str:list] = {"moves": [], "thoughness": [], "strength": []}
@@ -466,7 +466,7 @@ class Monster(Character, ABC):
         self.kind: str = "monster"
         self.blocked_by = ("wall", "player")
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
-        self.free_actions: tuple = ("fighting",)
+        self.free_actions: tuple = ("fighting",)  # no need of weapons to fight
         self.chases: tuple = ("player", None)
         self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
 
@@ -518,11 +518,8 @@ class Monster(Character, ABC):
         for tile in self.dungeon.children:
             if tile.has_token(target_token):
 
-                if (
-                    target_token[0] == "player"
-                    and isinstance(tile.get_character(), Sawyer)
-                    and tile.get_character().ability_active
-                ):
+                # if character is hidden.
+                if target_token[0] == "player" and tile.get_character().is_hidden():
                     continue
 
                 if (  # if tile is full and monster wants to land there
@@ -852,28 +849,29 @@ class Sawyer(Player):
         super().__init__()
         self.char: str = "%"
         self.name: str = "Sawyer"
-        self.special_items: dict[str:int] | None = {"powder": 5}
+        self.special_items: dict[str:int] | None = {"powder": 2}
         self.ignores = ("dynamite",)
 
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
 
     def on_player_level(self, instance, value):
-        """Sawyer increases 1 movement per level
-        1 advantatge_strength_increase per level
-        1 health point every 2 levels
-        1 max damage every 2 levels
-        1 recovery_end_of_level every 3 levels"""
+        """Sawyer is a young, unexperienced but dexteritous character. Is it not particularly strong
+        but has a lot of cunning that allows her to survive compromised situations.
 
-        self._level_up_moves(1)
+        Sawyer increases 1 movement every 2 levels,
+        1 health per level,
+        1 recovery_end_of_level per level,
+        1 advantatge_strength_increase per level
+        1 max damage every 2 levels"""
+
+        self._level_up_health(1)
         self.stats.advantage_strength_incr += 1
+        self.stats.recovery_end_of_level += 1
 
         if not utils.check_if_multiple(value, 2):
-            self._level_up_health(1)
+            self._level_up_moves(1)
             self._level_up_strength((0, 1))
-
-        if not utils.check_if_multiple(value, 3):
-            self.stats.recovery_end_of_level += 1
 
         self._update_level_track(value)
 
@@ -895,7 +893,8 @@ class Sawyer(Player):
 
 
 class CrusherJane(Player):
-    """Can fight with no weapons (MEDIUM strength)
+    """
+    Can fight with no weapons (MEDIUM strength)
     Stronger if fight with weapons  (HIGH strength)
     Cannot pick gems
     LOW movement
@@ -912,23 +911,27 @@ class CrusherJane(Player):
         self._update_level_track(self.player_level)
 
     def on_player_level(self, instance, value):
-        """Crusher Jane increases 1 movement every 2 levels
-        1 health point every level
-        1 recovery_end_of_level every level
-        1 advantatge_strength_increase every 2 levels
-        1 max damage every level and 2 min damage every 2 levels"""
+        """Crusher Jane is a big, strong and not particularly intelligent women. Relies on brute strength and on her
+        physical endurance to resist the most brutal hits.
+        Crusher Jane increases 1 movement every 4 levels,
+        2 health every level,
+        (+1, +2) strength per level,
+        1 recovery_end_of_level per level
+        1 adv. strength every 2 levels.
+        """
 
         print("CRUSHER JANE LEVEL UP!")
         print(value)
 
-        self._level_up_health(1)
-        self._level_up_strength((0, 1))
-        self.stats.recovery_end_of_level += 1
+        self._level_up_health(2)
+        self._level_up_strength((1, 2))
 
         if not utils.check_if_multiple(value, 2):
-            self._level_up_moves(1)
-            self._level_up_strength((2, 0))
+            self.stats.recovery_end_of_level += 1
             self.stats.advantage_strength_incr += 1
+
+        if utils.check_if_multiple(value, 4):
+            self._level_up_moves(1)
 
         self._update_level_track(value)
 
@@ -952,29 +955,31 @@ class Hawkins(Player):
         self.name: str = "Hawkins"
         self.free_actions: tuple = ("digging",)
         self.ignores: tuple = ("gem", "powder")
-        self.special_items: dict[str:int] | None = {"dynamite": 100}
+        self.special_items: dict[str:int] | None = {"dynamite": 2}
 
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)
 
     def on_player_level(self, instance, value):
-        """Hawkins increases 1 movement every 2 levels
-        1 health point every 2 levels
-        1 recovery_end_of_level every 2 levels
-        1 max damage every level and 1 min damage every 4 levels"""
+        """Hawkins is an old and wise man. It is trained by the most difficult situations of life and it is strong
+        for his age. But his most valuable asset is his wits.
+        Hawkins increases 1 movement every 3 levels
+        1 health point every level
+        1 recovery_end_of_level every 3 levels
+        1 max damage every level and 1 min damage every 2 levels"""
 
         print("HAWKINS LEVEL UP!")
         print(value)
 
+        self._level_up_health(1)
         self._level_up_strength((0, 1))
 
         if not utils.check_if_multiple(value, 2):
-            self._level_up_moves(1)
-            self._level_up_health(1)
-            self.stats.recovery_end_of_level += 1
-
-        if utils.check_if_multiple(value, 4):
             self._level_up_strength((1, 0))
+
+        if utils.check_if_multiple(value, 3):
+            self._level_up_moves(1)
+            self.stats.recovery_end_of_level += 1
 
         self._update_level_track(value)
 
@@ -987,7 +992,14 @@ class Hawkins(Player):
         return False
 
 
+# RANDOM MOVEMENT MONSTERS
+
+
 class Kobold(Monster):
+    """
+    HIGH movement
+    LOW strength
+    """
 
     def __init__(self):
         super().__init__()
@@ -997,6 +1009,41 @@ class Kobold(Monster):
 
     def move(self):
         return self.assess_path_random()
+
+
+class BlindLizard(Monster):
+    """
+    MEDIUM movement
+    MEDIUM strength
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.char: str = "L"
+        self.name: str = "Blind Lizard"
+        self.stats = stats.BlindLizardStats()
+
+    def move(self):
+        return self.assess_path_random()
+
+
+class BlackDeath(Monster):
+    """
+    VERY HIGH  movement
+    VERY HIGH strength
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.char: str = "B"
+        self.name: str = "Black Death"
+        self.stats = stats.BlackDeathStats()
+
+    def move(self):
+        return self.assess_path_random()
+
+
+# DIRECT MOVEMENT MONSTERS
 
 
 class CaveHound(Monster):
@@ -1018,33 +1065,76 @@ class CaveHound(Monster):
             return self.assess_path_random()
 
 
-class DepthsWisp(Monster):
+class Growl(Monster):
+    """
+    MEDIUM movement
+    HIGH strength
+    """
 
     def __init__(self):
         super().__init__()
-        self.blocked_by: tuple = ()
-        self.cannot_share_tile_with: tuple = ("monster", "player")
-        self.ignores: tuple = self.ignores + ("rock",)
-
-        self.char: str = "W"
-        self.name: str = "Depths Wisp"
-        self.stats = stats.DepthsWispStats()
+        self.char: str = "G"
+        self.name: str = "Growl"
+        self.stats = stats.GrowlStats()
 
     def move(self):
 
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_direct()
+            return self.assess_path_direct(target_tile)
 
         else:
             return self.assess_path_random()
 
 
-class RockElemental(Monster):
-    pass
+class RockGolem(Monster):
+    """
+    LOW movement
+    VERY HIGH strength
+    """
 
-    # moves randomly and slowly but extremely strong if hits
+    def __init__(self):
+        super().__init__()
+        self.char: str = "R"
+        self.name: str = "Rock Golem"
+        self.stats = stats.RockGolemStats()
+
+    def move(self):
+
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+
+        if target_tile is not None:
+            return self.assess_path_direct(target_tile)
+
+        else:
+            return None
+
+
+# SMART MOVEMENT MONSTERS
+
+
+class DarkGnome(Monster):
+    """
+    LOW strength
+    MEDIUM movement
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.char: str = "O"
+        self.name: str = "Dark Gnome"
+        self.stats = stats.DarkGnomeStats()
+
+    def move(self):
+
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+
+        if target_tile is not None:
+            return self.assess_path_smart(target_tile)
+
+        else:
+            return self.assess_path_random()
 
 
 class NightMare(Monster):
@@ -1063,36 +1153,131 @@ class NightMare(Monster):
             return self.assess_path_smart(target_tile)
 
         else:
-            return None
+            return self.assess_path_random()
 
 
-class DarkDwarf(Monster):
-    pass
-
-    # chases the player. Intermediate strength
-
-
-class MetalEater(Monster):
-    pass
-
-    # chases weapons and shovels and makes disappear. Does not attack player.
-
-
-class GreedyGnome(Monster):
+class LindWorm(Monster):
 
     def __init__(self):
         super().__init__()
-        self.char: str = "G"
-        self.name: str = "Greedy Gnome"
-        self.chases: tuple = ("pickable", "gem")
-        self.stats = stats.GreedyGnomeStats()
+        self.char: str = "Y"
+        self.name: str = "Lindworm"
+        self.stats = stats.LindWormStats()
+
+    def move(self):
+
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+
+        if target_tile is not None:
+            return self.assess_path_smart(target_tile)
+
+        else:
+            return None
+
+
+# GHOSTS
+
+
+class WanderingShadow(Monster):
+    """
+    RANDOM HIGH movement
+    MEDIUM strength
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.blocked_by: tuple = ()
+        self.cannot_share_tile_with: tuple = ("monster", "player")
+        self.ignores: tuple = self.ignores + ("rock",)
+
+        self.char: str = "S"
+        self.name: str = "Wandering Shadow"
+        self.stats = stats.WanderingShadowStats()
+
+    def move(self):
+
+        return self.assess_path_random()
+
+
+class DepthsWisp(Monster):
+    """
+    DIRECT MEDIUM movement
+    LOW strength
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.blocked_by: tuple = ()
+        self.cannot_share_tile_with: tuple = ("monster", "player")
+        self.ignores: tuple = self.ignores + ("rock",)
+
+        self.char: str = "W"
+        self.name: str = "Depths Wisp"
+        self.stats = stats.DepthsWispStats()
+
+    def move(self):
+
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+
+        if target_tile is not None:
+            return self.assess_path_direct(target_tile)
+
+        else:
+            return None
+
+
+class MountainDjinn(Monster):
+    """
+    DIRECT MEDIUM movement
+    HIGH strength
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.blocked_by: tuple = ()
+        self.cannot_share_tile_with: tuple = ("monster", "player")
+        self.ignores: tuple = self.ignores + ("rock",)
+
+        self.char: str = "D"
+        self.name: str = "Mountain Djinn"
+        self.stats = stats.MountainDjinnStats()
+
+    def move(self):
+
+        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+
+        if target_tile is not None:
+            return self.assess_path_direct(target_tile)
+
+        else:
+            return None
+
+
+# SPECIAL MONSTERS
+
+
+class Pixie(Monster):
+    """
+    HIGH movement
+    LOW health
+    DOES NOT attack player
+    Chases pickables and makes them disappear
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.char: str = "P"
+        self.name: str = "Pixie"
+        self.chases: tuple = ("pickable", None)
+        self.ignores: tuple = self.ignores + ("gem",)
+        self.stats = stats.PixieStats()
 
     def move(self):
 
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if self.dungeon.get_tile(self.position).has_token(self.chases):
-            return
+            self.dungeon.get_tile(self.position).clear_token("pickable")
 
         elif target_tile is not None:
             return self.assess_path_smart(target_tile)

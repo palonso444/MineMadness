@@ -127,6 +127,10 @@ class JerkyButton(Interfacebutton):
         self.game.dungeon.show_effect_token(
             "jerky", character.token.shape.pos, character.token.shape.size
         )
+        # this updates health bar
+        character.token.percentage_natural_health = (
+            character.stats.health / character.stats.natural_health
+        )
         self.apply_cost("jerky")
 
 

@@ -1,10 +1,10 @@
 [app]
 
 # (str) Title of your application
-title = Shots and Shovels
+title = Mine Madness
 
 # (str) Package name
-package.name = shotsandshovels
+package.name = minemadness
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = com.appsbrivalles
@@ -29,7 +29,7 @@ source.exclude_dirs = tests, bin, venv
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.2
+version = 0.3
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]

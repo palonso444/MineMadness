@@ -79,16 +79,16 @@ class DungeonLayout(GridLayout):
         )
 
         utils.place_equal_items(self.blueprint, " ", 1)
-        # utils.place_equal_items(self.blueprint, "H", 2)
-        utils.place_equal_items(self.blueprint, "N", 1)
-        # utils.place_equal_items(self.blueprint, "j", 3)
-        utils.place_equal_items(self.blueprint, "t", 6)
-        utils.place_equal_items(self.blueprint, "l", 3)
-        # utils.place_equal_items(self.blueprint, "w", 3)
+        # utils.place_equal_items(self.blueprint, "x", 1)
+        # utils.place_equal_items(self.blueprint, "P", 1)
+        # utils.place_equal_items(self.blueprint, "o", 1)
+        # utils.place_equal_items(self.blueprint, "H", 1)
+        # utils.place_equal_items(self.blueprint, "G", 1)
+        # utils.place_equal_items(self.blueprint, "j", 1)
         # utils.place_equal_items(self.blueprint, "c", 3)
-        # utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
+        utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
 
-        """for key, value in self.stats.level_progression().items():
+        for key, value in self.stats.level_progression().items():
 
             utils.place_items(
                 self.blueprint,
@@ -128,17 +128,41 @@ class DungeonLayout(GridLayout):
                 case "K":
                     self.create_item(tile, "monster", "kobold")
 
+                case "L":
+                    self.create_item(tile, "monster", "lizard")
+
+                case "B":
+                    self.create_item(tile, "monster", "blackdeath")
+
                 case "H":
                     self.create_item(tile, "monster", "hound")
 
-                case "W":
-                    self.create_item(tile, "monster", "wisp")
+                case "G":
+                    self.create_item(tile, "monster", "growl")
+
+                case "R":
+                    self.create_item(tile, "monster", "golem")
+
+                case "O":
+                    self.create_item(tile, "monster", "gnome")
 
                 case "N":
                     self.create_item(tile, "monster", "nightmare")
 
-                case "G":
-                    self.create_item(tile, "monster", "gnome")
+                case "Y":
+                    self.create_item(tile, "monster", "lindworm")
+
+                case "S":
+                    self.create_item(tile, "monster", "shadow")
+
+                case "W":
+                    self.create_item(tile, "monster", "wisp")
+
+                case "D":
+                    self.create_item(tile, "monster", "djinn")
+
+                case "P":
+                    self.create_item(tile, "monster", "pixie")
 
                 case "#":
                     self.create_item(tile, "wall", "rock")
@@ -181,6 +205,8 @@ class DungeonLayout(GridLayout):
 
     def create_item(self, tile, token_kind, token_species):
 
+        # this function cannot be a match due to function calls in between cases
+
         if token_kind == "player" or token_kind == "monster":
 
             if token_kind == "player":
@@ -211,17 +237,41 @@ class DungeonLayout(GridLayout):
                 if token_species == "kobold":
                     character = characters.Kobold()
 
+                elif token_species == "lizard":
+                    character = characters.BlindLizard()
+
+                elif token_species == "blackdeath":
+                    character = characters.BlackDeath()
+
                 elif token_species == "hound":
                     character = characters.CaveHound()
 
-                elif token_species == "wisp":
-                    character = characters.DepthsWisp()
+                elif token_species == "growl":
+                    character = characters.Growl()
+
+                elif token_species == "golem":
+                    character = characters.RockGolem()
+
+                elif token_species == "gnome":
+                    character = characters.DarkGnome()
 
                 elif token_species == "nightmare":
                     character = characters.NightMare()
 
-                elif token_species == "gnome":
-                    character = characters.GreedyGnome()
+                elif token_species == "lindworm":
+                    character = characters.LindWorm()
+
+                elif token_species == "shadow":
+                    character = characters.WanderingShadow()
+
+                elif token_species == "wisp":
+                    character = characters.DepthsWisp()
+
+                elif token_species == "djinn":
+                    character = characters.MountainDjinn()
+
+                elif token_species == "pixie":
+                    character = characters.Pixie()
 
             self.place_item(tile, token_kind, token_species, character)
 

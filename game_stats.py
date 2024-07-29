@@ -32,7 +32,7 @@ class DungeonStats:
             "G": 0.025 * self.level if self.level > 3 else 0,
             "R": 0.015 * self.level if self.level > 4 else 0,
             "O": 0.1 / self.level if self.level < 4 else 0,
-            "N": 0.1 * self.level if 3 < self.level < 6 else 0,
+            "N": 0.025 * self.level if 3 < self.level < 6 else 0,
             "Y": 0.025 * self.level if 4 < self.level < 8 else 0,
             "S": randint(0, 2) * 0.025,
             "W": 0.05 * self.level if self.level < 3 else 0,
@@ -176,7 +176,7 @@ class KoboldStats(MonsterStats):
     moves: int = 5
     random_motility: int = 7
     dodging_ability: int = 10
-    experiece_when_killed: int = 3
+    experiece_when_killed: int = 5
 
 
 @dataclass
@@ -186,7 +186,7 @@ class BlindLizardStats(MonsterStats):
     moves: int = 5
     random_motility: int = 4
     dodging_ability: int = 3
-    experiece_when_killed: int = 6
+    experiece_when_killed: int = 8
 
 
 @dataclass
@@ -209,7 +209,7 @@ class CaveHoundStats(MonsterStats):
     moves: int = 7
     random_motility: int = 8
     dodging_ability: int = 6
-    experiece_when_killed: int = 6
+    experiece_when_killed: int = 10
 
 
 @dataclass
@@ -219,7 +219,7 @@ class GrowlStats(MonsterStats):
     moves: int = 5
     random_motility: int = 5
     dodging_ability: int = 3
-    experiece_when_killed: int = 10
+    experiece_when_killed: int = 20
 
 
 @dataclass
@@ -228,7 +228,7 @@ class RockGolemStats(MonsterStats):
     strength: tuple = (5, 10)
     moves: int = 3
     dodging_ability: int = 0
-    experiece_when_killed: int = 35
+    experiece_when_killed: int = 45
 
 
 # SMART MOVEMENT MONSTERS
@@ -251,7 +251,7 @@ class NightmareStats(MonsterStats):
     random_motility: int = 2
     moves: int = 6
     dodging_ability: int = 6
-    experiece_when_killed: int = 8
+    experiece_when_killed: int = 15
 
 
 @dataclass

@@ -203,6 +203,11 @@ class Player(Character, ABC, EventDispatcher):
                 self.player_level * self.stats.base_exp_to_level_up
             )
             self.experience = 0
+            self.dungeon.show_effect_token(
+                "talisman_level_up",
+                self.token.shape.pos,
+                self.token.shape.size,
+            )
             # experience bar updated by Cragpeongame.update_interface()
             print("UPDATEEE")
 

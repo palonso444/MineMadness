@@ -36,7 +36,7 @@ BUG: sometimes players appear semitransparent when movement range is showed
 
 BUG: wisps pass sometimes above the walls. Should pass always under them
 
-BUG: characters don't level up
+BUG: characters don't level up when killing monsters
 
 Level number as a popup at beginning of level
 

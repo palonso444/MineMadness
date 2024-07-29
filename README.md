@@ -36,6 +36,8 @@ BUG: sometimes players appear semitransparent when movement range is showed
 
 BUG: wisps pass sometimes above the walls. Should pass always under them
 
+BUG: characters don't level up
+
 Level number as a popup at beginning of level
 
 Player can assign points to character when leveling up

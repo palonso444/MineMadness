@@ -3,6 +3,7 @@ Description of current code
 
 This is a complete beta-version mechanic-wise but it is not properly balanced or debugged.
 See the attached README_debugging file for what needs to be done regarding debugging. There is no guarantee that mechanics function well!!
+print statements of the code must be removed after debugging
 More monsters must be created (special ones).
 Only rock walls are in this version. Granite or Quarz walls are implemented but need to be included in the
 game_progression() function of game.stats.py

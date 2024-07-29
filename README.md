@@ -10,11 +10,11 @@ game_progression() function of game.stats.py
 Ideas for upcoming versions
 ---------------------------
 
-Change gems thematally to another object that is not appealing to monsters. If monsters pick gems it breaks the game. Idea: come kind of plant that only Sawyer can recognize and is able to pick.
+Change gems thematically to another object that is not appealing to monsters. If monsters pick gems it breaks the game. Idea: some kind of plant that only Sawyer can recognize and can pick.
 
-Monster can pick objects. Kill monster and object is dropped on its spot.
+Monsters can pick objects. Kill the monster and the object is dropped on its spot.
 
-Invisible traps triggered if player goes to trap spot
+Invisible traps are triggered if a player goes to the trap spot
 
 Characters monsters and players have self.hidden property and can hide. Self.armed to check if they use weapons.
 

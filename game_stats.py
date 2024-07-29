@@ -32,11 +32,11 @@ class DungeonStats:
             "G": 0.025 * self.level if self.level > 3 else 0,
             "R": 0.015 * self.level if self.level > 4 else 0,
             "O": 0.1 / self.level if self.level < 4 else 0,
-            "N": 0.025 * self.level if 3 < self.level < 6 else 0,
-            "Y": 0.025 * self.level if 4 < self.level < 8 else 0,
+            "N": 0.015 * self.level if 3 < self.level < 6 else 0,
+            "Y": 0.001 * self.level if 4 < self.level < 8 else 0,
             "S": randint(0, 2) * 0.025,
             "W": 0.05 * self.level if self.level < 3 else 0,
-            "D": 0.025 * self.level if 4 < self.level < 8 else 0,
+            "D": 0.002 * self.level if 4 < self.level < 8 else 0,
             "P": randint(0, 1) * 0.05,
         }
 
@@ -50,7 +50,7 @@ class DungeonStats:
             "c": total_monster_frequency * 0.075,
             "w": total_monster_frequency * 0.075,
             "l": total_monster_frequency * 0.075,
-            "t": randint(0, 1) * 0.05 if self.level > 2 else 0,
+            "t": randint(0, 1) * self.level * 0.0015 if self.level > 2 else 0,
         }
 
         all_frequencies = {**monster_frequencies, **item_frequencies}

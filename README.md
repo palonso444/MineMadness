@@ -1,11 +1,12 @@
-### This is a complete beta-version mechanic-wise but it is not balanced nor debugged. 
-More monsters must be created.
+## Description of current code
 
+This is a complete beta-version mechanic-wise but it is not properly balanced or debugged.
+See the attached README_debugging file for what needs to be done regarding debugging. ####There is no guarantee that mechanics function well!!
+More monsters must be created (special ones).
+Only rock walls are in this version. Granite or Quarz walls are implemented but need to be included in the
+game_progression() function of game.stats.py
 
-IDEAS FOR UPCOMING VERSIONS
----------------------------
-
-Include range weapons
+##Ideas for upcoming versions
 
 Monster can pick objects. Kill monster and object is dropped on its spot.
 
@@ -19,11 +20,11 @@ Monster idea: a Monster with high number of moves and low health that attacks pl
 
 Crusher jane may have digging as free action when reaching high levels.
 
-Path smart they go to nearest player even if they cannot reach it because is surrounded by monsters. In this case they should go after another player, if they can reach it.
+Path smart they go to the nearest player even if they cannot reach it because is surrounded by monsters. In this case, they should go after another player if they can reach it.
 
-Search tiles yield a random object (good one, whisky, tobacco or talisman) but cost one move to search and a monster may also appear. Above-mentioned object rarely appear out of search tiles.
+Search tiles yield a random object (good one, whisky, tobacco or talisman) but cost one move to search and a monster may also appear. The above-mentioned object rarely appear out of search tiles.
 
-Save game at beginning of each level. Game deleted if killed(hard mode) or not (smooth mode). To save game, take a snapshot of the position of each token and store it in a dictionary to be able to reconstruct the board. Consider updating token.pos when slide finishes (right now only token.position is updated) and reconstruct the board with pos (may be more efficient)
+Save the game at the beginning of each level. Game is deleted if killed(hard mode) or not (smooth mode). To save the game, take a snapshot of the position of each token and store it in a dictionary to be able to reconstruct the board. Consider updating token.pos when slide finishes (right now only token.position is updated) and reconstruct the board with pos (may be more efficient)
 
 Unbind button at beginning of on_ability_button and bind it again at the end
 
@@ -46,3 +47,7 @@ Hawkins gains experience when blowing with dynamite monsters with high dodging_a
 Monsters that stay on gems make no sense, they should leave the gems, attack player, go back to gem
 
 Monster idea: Giant Earthgrub, chases player and goes accross rock walls by eating them
+
+Pixie: right now it takes gems, but this should be like that for future versions. Pixie should take pickables except for gems (it breaks the game). Write a pick_object() method for monsters. Consider including monster inventory.
+
+Consider including more kinds of tiles to give visual variety to the levels

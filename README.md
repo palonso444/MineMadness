@@ -41,6 +41,8 @@ BUG: wisps pass sometimes above the walls. Should pass always under them
 
 BUG: characters don't level up when killing monsters
 
+BUG: When going to next level, Sawyer loses gained movements due to leveling up
+
 Level number as a popup at beginning of level
 
 Player can assign points to character when leveling up

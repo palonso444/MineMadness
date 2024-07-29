@@ -1,4 +1,4 @@
-This is a complete beta-version mechanic-wise but it is not balanced nor debugged. 
+### This is a complete beta-version mechanic-wise but it is not balanced nor debugged. 
 More monsters must be created.
 
 

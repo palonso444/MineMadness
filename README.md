@@ -43,6 +43,8 @@ BUG: characters don't level up when killing monsters
 
 BUG: When going to next level, Sawyer loses gained movements due to leveling up
 
+BUG: when Sawyer is revived and lands on a tile with powder, character does not appear.
+
 Level number as a popup at beginning of level
 
 Player can assign points to character when leveling up

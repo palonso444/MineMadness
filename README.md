@@ -41,7 +41,7 @@ BUG: wisps pass sometimes above the walls. Should pass always under them
 
 BUG: characters don't level up when killing monsters
 
-BUG: When going to next level, Sawyer loses gained movements due to leveling up
+BUG: Order of characters is not maintained 
 
 BUG: when Sawyer is revived and lands on a tile with powder, character does not appear.
 

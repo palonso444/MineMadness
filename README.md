@@ -43,7 +43,7 @@ BUG: characters don't level up when killing monsters
 
 BUG: Order of characters is not maintained 
 
-BUG: when Sawyer is revived and lands on a tile with powder, character does not appear.
+BUG: when character is revived character token does not appear.
 
 Level number as a popup at beginning of level
 

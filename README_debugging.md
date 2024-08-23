@@ -14,3 +14,5 @@ Print stats when leveling up and ensure they evolve according to level_up() of e
 Objects:
 Ensure fadingtokens are shown when using objects and when effect fades.
 Print stats when using objects and when effect fades and ensure they are modified as they should be.
+
+if an effect is triggered (like drink coffee) and monsters are gone before it fades, it never fades

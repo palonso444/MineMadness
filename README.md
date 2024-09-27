@@ -11,15 +11,7 @@ game_progression() function of game.stats.py
 Ideas for upcoming versions
 ---------------------------
 
-Change gems thematically to another object that is not appealing to monsters. If monsters pick gems it breaks the game. Idea: some kind of plant that only Sawyer can recognize and can pick.
-
-Monsters can pick objects. Kill the monster and the object is dropped on its spot.
-
-Invisible traps are triggered if a player goes to the trap spot
-
 Characters monsters and players have self.hidden property and can hide. Self.armed to check if they use weapons.
-
-Implement overdosing
 
 Monster idea: a Monster with high number of moves and low health that attacks player and goes away so it's hard to kill. Make this feature a monster attribute
 
@@ -31,21 +23,7 @@ Search tiles yield a random object (good one, whisky, tobacco or talisman) but c
 
 Save the game at the beginning of each level. Game is deleted if killed(hard mode) or not (smooth mode). To save the game, take a snapshot of the position of each token and store it in a dictionary to be able to reconstruct the board. Consider updating token.pos when slide finishes (right now only token.position is updated) and reconstruct the board with pos (may be more efficient)
 
-Unbind button at beginning of on_ability_button and bind it again at the end
-
 Pass max number of steps to dynamic movement range and tile.is_activable so range can be set dynamically and does not depend on players attributes 
-
-BUG: sometimes players appear semitransparent when movement range is showed 
-
-BUG: wisps pass sometimes above the walls. Should pass always under them
-
-BUG: characters don't level up when killing monsters
-
-BUG: Order of characters is not maintained 
-
-BUG: when character is revived character token does not appear.
-
-Level number as a popup at beginning of level
 
 Player can assign points to character when leveling up
 
@@ -58,7 +36,3 @@ Hawkins gains experience when blowing with dynamite monsters with high dodging_a
 Monsters that stay on gems make no sense, they should leave the gems, attack player, go back to gem
 
 Monster idea: Giant Earthgrub, chases player and goes accross rock walls by eating them
-
-Pixie: right now it takes gems, but this should be like that for future versions. Pixie should take pickables except for gems (it breaks the game). Write a pick_object() method for monsters. Consider including monster inventory.
-
-Consider including more kinds of tiles to give visual variety to the levels

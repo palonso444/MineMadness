@@ -32,5 +32,3 @@ Use animation transitions property (see documentation) to make sliding not be un
 Hawkins gains experience when blowing with dynamite monsters with high dodging_ability 
 
 Monsters that stay on gems make no sense, they should leave the gems, attack player, go back to gem
-
-Monster idea: Giant Earthgrub, chases player and goes accross rock walls by eating them

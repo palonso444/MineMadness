@@ -1,17 +1,15 @@
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 
 import crapgeon_utils as utils
-#import character_classes as characters
-from player_classes import Player
+
+import player_classes as players
 import monster_classes as monsters
 import token_classes as tokens
 import tile_classes as tiles
 from collections import deque
 from random import choice
 from game_stats import DungeonStats
-from kivy.clock import Clock
-from functools import partial
-from kivy.properties import ListProperty, BooleanProperty
+from kivy.properties import ListProperty
 
 
 class DungeonLayout(GridLayout):
@@ -105,11 +103,11 @@ class DungeonLayout(GridLayout):
     def determine_alive_players(self):
 
         if self.dungeon_level == 1:
-            return Player.player_chars
+            return players.Player.player_chars
             # return "&"
         else:
             live_players = set()
-            for player in Player.exited:
+            for player in players.Player.exited:
                 live_players.add(player.char)
             return live_players
 
@@ -286,7 +284,7 @@ class DungeonLayout(GridLayout):
         tile: tiles.Tile,
         token_kind: str,
         token_species: str,
-        character: characters.Character | None = None,
+        character = None,
     ):
 
         if character is not None:

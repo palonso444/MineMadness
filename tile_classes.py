@@ -7,9 +7,6 @@ from kivy.properties import BooleanProperty
 
 import crapgeon_utils as utils
 
-import character_classes as characters
-import token_classes as tokens
-
 
 class Tile(Button):
 
@@ -22,10 +19,10 @@ class Tile(Button):
         self.col: int = col
         self.position: tuple = (row, col)
         self.kind: str = kind
-        self.token: tokens.SolidToken = (
+        self.token = (
             None  # defined when is by DungeonLayout.create_item
         )
-        self.second_token: tokens.CharacterToken = (
+        self.second_token = (
             None  # tiles can have up to 2 tokens (shovel + monster for instance).
         )
         self.dungeon = dungeon_instance  # need to pass the instance of the dungeon to call dungeon.move_token from the class

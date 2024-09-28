@@ -4,10 +4,7 @@ from kivy.animation import Animation
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty
 
-#from player_classes import Player
-#from monster_classes import Monster
-
-import crapgeon_utils as utils
+from crapgeon_utils import check_if_multiple
 
 
 class SolidToken(Widget):
@@ -343,7 +340,7 @@ class CharacterToken(SolidToken):
             if isinstance(self.character, Monster):
 
                 # if players turn, monster was dodging
-                if utils.check_if_multiple(game.turn, 2):
+                if check_if_multiple(game.turn, 2):
                     self.dungeon.get_tile(self.start.position).dodging_finished = True
                     monster_dodged = True
                 else:

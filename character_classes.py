@@ -1,9 +1,5 @@
 from random import randint
 from abc import ABC
-from player_classes import Player, Sawyer, CrusherJane
-#from monster_classes import Monster
-
-import tile_classes as tiles
 
 
 class Character(ABC):
@@ -56,6 +52,9 @@ class Character(ABC):
 
     def fight_on_tile(self, opponent_tile) -> None:
 
+        from player_classes import Player, Sawyer, CrusherJane
+        from monster_classes import Monster
+
         opponent = opponent_tile.get_character()
         game = self.dungeon.game
         self.stats.remaining_moves -= 1
@@ -107,6 +106,8 @@ class Character(ABC):
         return True
 
     def kill_character(self, tile):
+
+        from player_classes import Player
 
         character = self.__class__.data.pop(self.id)
         self.__class__.rearrange_ids()

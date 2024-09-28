@@ -2,6 +2,7 @@ from random import randint, choice
 from abc import ABC, abstractmethod
 from character_classes import Character
 
+
 import crapgeon_utils as utils
 import tile_classes as tiles
 import game_stats as stats
@@ -41,8 +42,8 @@ class Monster(Character, ABC):
             self.dungeon.get_tile(self.position).dodging_finished = True
 
     def attack_players(self):
-
-        players: list = players.Player.data[:]
+        from player_classes import Player
+        players: list = Player.data[:]
 
         for player in players:
             if utils.are_nearby(self, player) and self.stats.remaining_moves > 0:

@@ -6,7 +6,6 @@ from dungeon_classes import DungeonLayout
 # from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 
-import character_classes as characters
 import player_classes as players
 import monster_classes as monsters
 import crapgeon_utils as utils

@@ -1,6 +1,7 @@
 from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
-from character_classes import Player, Sawyer, CrusherJane, Hawkins, Monster
+from player_classes import Player, Sawyer, CrusherJane, Hawkins
+from monster_classes import Monster
 from random import choice
 
 

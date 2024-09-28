@@ -6,7 +6,8 @@ from dungeon_classes import DungeonLayout
 # from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 
-import character_classes as characters
+import player_classes as players
+import monster_classes as monsters
 import crapgeon_utils as utils
 import interface
 
@@ -42,11 +43,11 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
     def on_dungeon(self, game, dungeon):
 
-        characters.Player.gems = 0
+        players.Player.gems = 0
         dungeon.match_blueprint()
         # characters.Player.set_starting_player_order()
         game.initialize_switches()
-        characters.Player.exited.clear()
+        players.Player.exited.clear()
 
     def initialize_switches(self):
 
@@ -77,7 +78,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
     def update_experience_bar(self):
 
-        if isinstance(self.active_character, characters.Player):
+        if isinstance(self.active_character, players.Player):
             self.ids.experience_bar.max = self.active_character.stats.exp_to_next_level
             self.ids.experience_bar.value = self.active_character.experience
         else:
@@ -87,7 +88,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
         self.ability_button_active = False  # TODO: unbind button instead of this
 
-        if isinstance(self.active_character, characters.Monster):
+        if isinstance(self.active_character, monsters.Monster):
             self.ids.ability_button.disabled = True
             self.ids.ability_button.state = "normal"
 
@@ -95,21 +96,21 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
             self.ids.ability_button.disabled = False
             self.ids.ability_button.state = "down"
 
-        elif isinstance(self.active_character, characters.Sawyer):
+        elif isinstance(self.active_character, players.Sawyer):
             if self.active_character.special_items["powder"] > 0:
                 self.ids.ability_button.disabled = False
             else:
                 self.ids.ability_button.disabled = True
             self.ids.ability_button.state = "normal"
 
-        elif isinstance(self.active_character, characters.Hawkins):
+        elif isinstance(self.active_character, players.Hawkins):
             if self.active_character.special_items["dynamite"] > 0:
                 self.ids.ability_button.disabled = False
             else:
                 self.ids.ability_button.disabled = True
             self.ids.ability_button.state = "normal"
 
-        elif isinstance(self.active_character, characters.CrusherJane):
+        elif isinstance(self.active_character, players.CrusherJane):
             if self.active_character.stats.weapons > 0:
                 self.ids.ability_button.disabled = False
             else:
@@ -122,16 +123,16 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
         # if no monsters in game, players can move indefinitely
         if (
-            isinstance(self.active_character, characters.Player)
+            isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves == 0
-            and characters.Monster.all_out_of_game()
+            and monsters.Monster.all_out_of_game()
         ):
             self.active_character.stats.remaining_moves = (
                 self.active_character.stats.moves
             )
 
         if (
-            isinstance(self.active_character, characters.Player)
+            isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves > 0
         ):
             if self.active_character.using_dynamite():
@@ -140,7 +141,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
                 self.dynamic_movement_range()  # checks if player can still move
 
         else:  # if self.active_character remaining moves == 0
-            if isinstance(self.active_character, characters.Player):
+            if isinstance(self.active_character, players.Player):
                 self.active_character.remove_effects(self.turn)
                 self.active_character.token.remove_selection_circle()
             self.next_character()  # switch turns if character last of character.characters
@@ -149,10 +150,10 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
         if turn is not None:
 
-            if utils.check_if_multiple(turn, 2) or characters.Monster.all_out_of_game():
-                characters.Player.reset_moves()
+            if utils.check_if_multiple(turn, 2) or monsters.Monster.all_out_of_game():
+                players.Player.reset_moves()
             else:
-                characters.Monster.reset_moves()
+                monsters.Monster.reset_moves()
 
             if self.active_character_id == 0:
                 self.active_character_id = None
@@ -165,13 +166,13 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
             if (
                 utils.check_if_multiple(self.turn, 2)
-                or characters.Monster.all_out_of_game()
+                or monsters.Monster.all_out_of_game()
             ):  # if player turn or no monsters
-                self.active_character = characters.Player.data[character_id]
+                self.active_character = players.Player.data[character_id]
 
                 if (
                     self.active_character.has_moved()
-                    and not characters.Monster.all_out_of_game()
+                    and not monsters.Monster.all_out_of_game()
                 ):
                     self.next_character()
 
@@ -192,7 +193,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
             else:  # if monsters turn and monsters in the game
 
                 self.dungeon.activate_which_tiles()  # tiles deactivated in monster turn
-                self.active_character = characters.Monster.data[
+                self.active_character = monsters.Monster.data[
                     self.active_character_id
                 ]
                 self.update_interface()
@@ -203,18 +204,18 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
         exit_tile = self.dungeon.get_tile(self.active_character.position)
 
-        exited_player = characters.Player.data.pop(self.active_character_id)
-        characters.Player.exited.add(exited_player)
+        exited_player = players.Player.data.pop(self.active_character_id)
+        players.Player.exited.add(exited_player)
         self.active_character.rearrange_ids()
         exit_tile.clear_token("player")
 
-        if characters.Player.all_out_of_game():
+        if players.Player.all_out_of_game():
 
-            characters.Monster.data.clear()
+            monsters.Monster.data.clear()
             new_dungeon_level: int = self.dungeon.dungeon_level + 1
             self.generate_next_level(new_dungeon_level)
 
-        elif self.active_character_id == len(characters.Player.data):
+        elif self.active_character_id == len(players.Player.data):
             self.update_switch("turn")
 
         else:
@@ -237,14 +238,14 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
         activate_which_tiles() to check if tiles are activable
         """
 
-        if characters.Monster.all_out_of_game():
+        if monsters.Monster.all_out_of_game():
             players_not_yet_active = {
-                player.position for player in characters.Player.data
+                player.position for player in players.Player.data
             }
         else:
             players_not_yet_active = {
                 player.position
-                for player in characters.Player.data
+                for player in players.Player.data
                 if not player.has_moved()
             }
 
@@ -256,20 +257,20 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
     def switch_character(self, new_active_character):
 
-        index_new_char = characters.Player.data.index(new_active_character)
-        index_old_char = characters.Player.data.index(self.active_character)
+        index_new_char = players.Player.data.index(new_active_character)
+        index_old_char = players.Player.data.index(self.active_character)
         (
-            characters.Player.data[index_old_char],
-            characters.Player.data[index_new_char],
+            players.Player.data[index_old_char],
+            players.Player.data[index_new_char],
         ) = (
-            characters.Player.data[index_new_char],
-            characters.Player.data[index_old_char],
+            players.Player.data[index_new_char],
+            players.Player.data[index_old_char],
         )
-        characters.Player.rearrange_ids()
+        players.Player.rearrange_ids()
         self.active_character.token.remove_selection_circle()
         self.active_character = new_active_character
         self.active_character_id = None
-        self.active_character_id = characters.Player.data.index(self.active_character)
+        self.active_character_id = players.Player.data.index(self.active_character)
 
     def on_inv_object(self, game, inv_object):
 

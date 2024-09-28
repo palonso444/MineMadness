@@ -1,4 +1,4 @@
-Crapgeonenv
+.venv
 bin
 .pytest_cache
 .buildozer

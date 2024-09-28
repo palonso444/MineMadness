@@ -7,9 +7,6 @@ from kivy.properties import BooleanProperty
 
 import crapgeon_utils as utils
 
-import character_classes as characters
-import token_classes as tokens
-
 
 class Tile(Button):
 
@@ -22,10 +19,10 @@ class Tile(Button):
         self.col: int = col
         self.position: tuple = (row, col)
         self.kind: str = kind
-        self.token: tokens.SolidToken = (
+        self.token = (
             None  # defined when is by DungeonLayout.create_item
         )
-        self.second_token: tokens.CharacterToken = (
+        self.second_token = (
             None  # tiles can have up to 2 tokens (shovel + monster for instance).
         )
         self.dungeon = dungeon_instance  # need to pass the instance of the dungeon to call dungeon.move_token from the class
@@ -97,7 +94,8 @@ class Tile(Button):
         tile.token.size = tile.size
 
     def is_activable(self):
-
+        from player_classes import Hawkins
+        from monster_classes import Monster
         player = self.dungeon.game.active_character
 
         if self.has_token(("player", None)):
@@ -108,7 +106,7 @@ class Tile(Button):
                 return True
             if (
                 self.get_character().has_moved()
-                and not characters.Monster.all_out_of_game()
+                and not Monster.all_out_of_game()
             ):
                 return False
             return True
@@ -134,7 +132,7 @@ class Tile(Button):
                 return True
 
         if self.has_token(("wall", "granite")) and isinstance(
-            player, characters.Hawkins
+            player, Hawkins
         ):
             if (
                 utils.are_nearby(self, player)

@@ -1,7 +1,9 @@
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 
 import crapgeon_utils as utils
-import character_classes as characters
+#import character_classes as characters
+from player_classes import Player
+import monster_classes as monsters
 import token_classes as tokens
 import tile_classes as tiles
 from collections import deque
@@ -26,7 +28,7 @@ class DungeonLayout(GridLayout):
         self.cols: int = self.stats.size()
 
         # determines which character shows fadingtokens
-        self.fading_token_character: characters.Player | None = None
+        self.fading_token_character: Player | None = None
         # determines if tokens of Dungeon.fading_tokens_items_queue are displayed in green or red
         self.fading_tokens_effect_fades: bool | None = None
 
@@ -103,11 +105,11 @@ class DungeonLayout(GridLayout):
     def determine_alive_players(self):
 
         if self.dungeon_level == 1:
-            return characters.Player.player_chars
+            return Player.player_chars
             # return "&"
         else:
             live_players = set()
-            for player in characters.Player.exited:
+            for player in Player.exited:
                 live_players.add(player.char)
             return live_players
 
@@ -214,64 +216,64 @@ class DungeonLayout(GridLayout):
                 if token_species == "sawyer":
 
                     if self.dungeon_level == 1:
-                        character = characters.Sawyer()
+                        character = players.Sawyer()
                     else:
-                        character = characters.Player.transfer_player("Sawyer")
+                        character = players.Player.transfer_player("Sawyer")
 
                 elif token_species == "hawkins":
 
                     if self.dungeon_level == 1:
-                        character = characters.Hawkins()
+                        character = players.Hawkins()
                     else:
-                        character = characters.Player.transfer_player("Hawkins")
+                        character = players.Player.transfer_player("Hawkins")
 
                 elif token_species == "crusherjane":
 
                     if self.dungeon_level == 1:
-                        character = characters.CrusherJane()
+                        character = players.CrusherJane()
                     else:
-                        character = characters.Player.transfer_player("Crusher Jane")
+                        character = players.Player.transfer_player("Crusher Jane")
 
             elif token_kind == "monster":
 
                 if token_species == "kobold":
-                    character = characters.Kobold()
+                    character = monsters.Kobold()
 
                 elif token_species == "lizard":
-                    character = characters.BlindLizard()
+                    character = monsters.BlindLizard()
 
                 elif token_species == "blackdeath":
-                    character = characters.BlackDeath()
+                    character = monsters.BlackDeath()
 
                 elif token_species == "hound":
-                    character = characters.CaveHound()
+                    character = monsters.CaveHound()
 
                 elif token_species == "growl":
-                    character = characters.Growl()
+                    character = monsters.Growl()
 
                 elif token_species == "golem":
-                    character = characters.RockGolem()
+                    character = monsters.RockGolem()
 
                 elif token_species == "gnome":
-                    character = characters.DarkGnome()
+                    character = monsters.DarkGnome()
 
                 elif token_species == "nightmare":
-                    character = characters.NightMare()
+                    character = monsters.NightMare()
 
                 elif token_species == "lindworm":
-                    character = characters.LindWorm()
+                    character = monsters.LindWorm()
 
                 elif token_species == "shadow":
-                    character = characters.WanderingShadow()
+                    character = monsters.WanderingShadow()
 
                 elif token_species == "wisp":
-                    character = characters.DepthsWisp()
+                    character = monsters.DepthsWisp()
 
                 elif token_species == "djinn":
-                    character = characters.MountainDjinn()
+                    character = monsters.MountainDjinn()
 
                 elif token_species == "pixie":
-                    character = characters.Pixie()
+                    character = monsters.Pixie()
 
             self.place_item(tile, token_kind, token_species, character)
 
@@ -373,7 +375,7 @@ class DungeonLayout(GridLayout):
             [(start_tile.position, [])]
         )  # start_tile_pos is not included in the path
 
-        excluded_positions: list[tuple] = self.scan(excluded)
+        excluded_positions: set[tuple] = self.scan(excluded)
         excluded_positions.add(start_tile.position)
         if (
             start_tile.has_token(("monster", None))

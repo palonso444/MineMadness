@@ -97,7 +97,8 @@ class Tile(Button):
         tile.token.size = tile.size
 
     def is_activable(self):
-
+        from player_classes import Hawkins
+        from monster_classes import Monster
         player = self.dungeon.game.active_character
 
         if self.has_token(("player", None)):
@@ -108,7 +109,7 @@ class Tile(Button):
                 return True
             if (
                 self.get_character().has_moved()
-                and not characters.Monster.all_out_of_game()
+                and not Monster.all_out_of_game()
             ):
                 return False
             return True
@@ -134,7 +135,7 @@ class Tile(Button):
                 return True
 
         if self.has_token(("wall", "granite")) and isinstance(
-            player, characters.Hawkins
+            player, Hawkins
         ):
             if (
                 utils.are_nearby(self, player)

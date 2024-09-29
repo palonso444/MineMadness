@@ -19,8 +19,6 @@ Crusher jane may have digging as free action when reaching high levels.
 
 Search tiles yield a random object (good one, whisky, tobacco or talisman) but cost one move to search and a monster may also appear. The above-mentioned object rarely appear out of search tiles.
 
-Save the game at the beginning of each level. Game is deleted if killed(hard mode) or not (smooth mode). To save the game, take a snapshot of the position of each token and store it in a dictionary to be able to reconstruct the board. Consider updating token.pos when slide finishes (right now only token.position is updated) and reconstruct the board with pos (may be more efficient)
-
 Pass max number of steps to dynamic movement range and tile.is_activable so range can be set dynamically and does not depend on players attributes 
 
 Monsters that stay on gems make no sense, they should leave the gems, attack player, go back to gem

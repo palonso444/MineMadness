@@ -23,12 +23,4 @@ Save the game at the beginning of each level. Game is deleted if killed(hard mod
 
 Pass max number of steps to dynamic movement range and tile.is_activable so range can be set dynamically and does not depend on players attributes 
 
-Player can assign points to character when leveling up
-
-Hawkins and Crusher Jane can die and game continues. If Sawyer dies game is over.
-
-Use animation transitions property (see documentation) to make sliding not be uniform but resemble steps
-
-Hawkins gains experience when blowing with dynamite monsters with high dodging_ability 
-
 Monsters that stay on gems make no sense, they should leave the gems, attack player, go back to gem

@@ -107,13 +107,9 @@ class Character(ABC):
 
     def kill_character(self, tile):
 
-        from player_classes import Player
-
-        character = self.__class__.data.pop(self.id)
+        del self.__class__.data[self.id]
         self.__class__.rearrange_ids()
         tile.clear_token(self.token.kind)
-        if isinstance(character, Player):
-            Player.dead_data.append(character)
 
     # MOVEMENT METHODS TO IMPLEMENT
 

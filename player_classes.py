@@ -249,6 +249,11 @@ class Player(Character, ABC, EventDispatcher):
             else self.stats.natural_health
         )
 
+    def kill_character(self, tile):
+
+        super().kill_character(tile)
+        self.dead_data.append(self)
+
     def resurrect(self):
 
         self.player_level = self.player_level - 3 if self.player_level > 3 else 1

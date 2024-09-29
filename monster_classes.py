@@ -31,7 +31,7 @@ class Monster(Character, ABC):
         """
         Placeholder needed for fight_on_tile()
         """
-        pass
+        return damage
 
     def unhide(self) -> None:
         """

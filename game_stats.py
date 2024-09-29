@@ -178,7 +178,7 @@ class KoboldStats(MonsterStats):
     moves: int = 5
     random_motility: int = 7
     dodging_ability: int = 10
-    experiece_when_killed: int = 5
+    experience_when_killed: int = 5
 
 
 @dataclass
@@ -188,7 +188,7 @@ class BlindLizardStats(MonsterStats):
     moves: int = 5
     random_motility: int = 4
     dodging_ability: int = 3
-    experiece_when_killed: int = 8
+    experience_when_killed: int = 8
 
 
 @dataclass
@@ -198,7 +198,7 @@ class BlackDeathStats(MonsterStats):
     moves: int = 7
     random_motility: int = 10
     dodging_ability: int = 11
-    experiece_when_killed: int = 30
+    experience_when_killed: int = 30
 
 
 # DIRECT MOVEMENT MONSTERS
@@ -211,7 +211,7 @@ class CaveHoundStats(MonsterStats):
     moves: int = 7
     random_motility: int = 8
     dodging_ability: int = 6
-    experiece_when_killed: int = 10
+    experience_when_killed: int = 10
 
 
 @dataclass
@@ -221,7 +221,7 @@ class GrowlStats(MonsterStats):
     moves: int = 5
     random_motility: int = 5
     dodging_ability: int = 3
-    experiece_when_killed: int = 20
+    experience_when_killed: int = 20
 
 
 @dataclass
@@ -230,7 +230,7 @@ class RockGolemStats(MonsterStats):
     strength: tuple = (5, 10)
     moves: int = 3
     dodging_ability: int = 0
-    experiece_when_killed: int = 45
+    experience_when_killed: int = 45
 
 
 # SMART MOVEMENT MONSTERS
@@ -243,7 +243,7 @@ class DarkGnomeStats(MonsterStats):
     moves: int = 5
     random_motility: int = 5
     dodging_ability: int = 3
-    experiece_when_killed: int = 3
+    experience_when_killed: int = 3
 
 
 @dataclass
@@ -253,7 +253,7 @@ class NightmareStats(MonsterStats):
     random_motility: int = 2
     moves: int = 6
     dodging_ability: int = 6
-    experiece_when_killed: int = 15
+    experience_when_killed: int = 15
 
 
 @dataclass
@@ -262,7 +262,7 @@ class LindWormStats(MonsterStats):
     strength: tuple = (12, 18)
     moves: int = 5
     dodging_ability: int = 4
-    experiece_when_killed: int = 50
+    experience_when_killed: int = 50
 
 
 # GHOSTS
@@ -275,7 +275,7 @@ class WanderingShadowStats(MonsterStats):
     moves: int = 8
     random_motility: int = 9
     dodging_ability: int = 14
-    experiece_when_killed: int = 10
+    experience_when_killed: int = 10
 
 
 @dataclass
@@ -284,7 +284,7 @@ class DepthsWispStats(MonsterStats):
     strength: tuple = (1, 2)
     moves: int = 4
     dodging_ability: int = 10
-    experiece_when_killed: int = 3
+    experience_when_killed: int = 3
 
 
 @dataclass
@@ -293,7 +293,7 @@ class MountainDjinnStats(MonsterStats):
     strength: tuple = (5, 10)
     moves: int = 5
     dodging_ability: int = 5
-    experiece_when_killed: int = 30
+    experience_when_killed: int = 30
 
 
 # SPECIAL MONSTERS
@@ -306,4 +306,4 @@ class PixieStats(MonsterStats):
     moves: int = 5
     random_motility: int = 10
     dodging_ability: int = 7
-    experiece_when_killed: int = 3
+    experience_when_killed: int = 3

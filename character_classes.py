@@ -50,6 +50,9 @@ class Character(ABC):
         self.id: int | None = None
         self.position: tuple | None = None
 
+        # needed for players in fight_on_tile()
+        self.experience_when_killed: int | None = None
+
         # monsters need ability_active for the functioning of the ability_button
         self.ability_active: bool = False
 
@@ -63,20 +66,27 @@ class Character(ABC):
         return False
 
     def _apply_toughness(self, damage):  # needed for everybody for self.fight_on_tile()
-        pass
+        return damage
 
     def update_position(self, position: tuple[int]) -> None:
         self.__class__.data[self.id].position = position
 
-    def fight_on_tile(self, opponent_tile) -> bool:
-
+    def fight_on_tile(self, opponent_tile) -> int | None:
+        """
+        Generic fighting method. See player class for particularities in players
+        :param opponent_tile:
+        :return: experience_when_killed if monster is killed, None otherwise
+        """
         opponent = opponent_tile.get_character()
         self.stats.remaining_moves -= 1
         damage = randint(self.stats.strength[0], self.stats.strength[1])
         damage = opponent._apply_toughness(damage)
-
+        print(damage)
         damage = self.enhance_damage(damage)
-        if self.is_hidden:
+        print(damage)
+        if self.is_hidden():
+            print(self.is_hidden)
+            print(self.ability_active)
             self.unhide()
 
         opponent.stats.health = opponent.stats.health - damage
@@ -90,7 +100,7 @@ class Character(ABC):
         )
 
         if opponent.stats.health <= 0:
-            experience = opponent.experience_when_killed
+            experience: int | None = opponent.stats.experience_when_killed
             opponent.kill_character(opponent_tile)
             return experience
 

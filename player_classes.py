@@ -553,7 +553,7 @@ class Hawkins(Player):
         return False
 
     def enhance_damage(self, damage: int) -> int:
-        pass
+        return damage
 
     def unhide(self) -> None:
         pass

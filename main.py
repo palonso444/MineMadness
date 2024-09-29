@@ -1,6 +1,5 @@
 from kivy.app import App  # type: ignore
 from kivy.uix.boxlayout import BoxLayout  # type: ignore
-from dungeon_classes import DungeonLayout
 
 # from kivy.core.text import LabelBase    # type: ignore
 # from kivy.uix.image import Image    # type: ignore
@@ -8,8 +7,9 @@ from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, St
 
 import player_classes as players
 import monster_classes as monsters
-import crapgeon_utils as utils
-import interface
+from interface import Interfacebutton
+from crapgeon_utils import check_if_multiple
+from dungeon_classes import DungeonLayout
 
 
 # LabelBase.register(name = 'Vollkorn',
@@ -62,7 +62,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
     def update_interface(self):
 
-        for button_type in interface.Interfacebutton.types:
+        for button_type in Interfacebutton.types:
             self.inv_object = button_type
         self.update_switch("ability_button")
         self.update_experience_bar()
@@ -150,7 +150,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
         if turn is not None:
 
-            if utils.check_if_multiple(turn, 2) or monsters.Monster.all_out_of_game():
+            if check_if_multiple(turn, 2) or monsters.Monster.all_out_of_game():
                 players.Player.reset_moves()
             else:
                 monsters.Monster.reset_moves()
@@ -165,7 +165,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
         if character_id is not None:
 
             if (
-                utils.check_if_multiple(self.turn, 2)
+                check_if_multiple(self.turn, 2)
                 or monsters.Monster.all_out_of_game()
             ):  # if player turn or no monsters
                 self.active_character = players.Player.data[character_id]

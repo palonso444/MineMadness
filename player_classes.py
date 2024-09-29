@@ -1,10 +1,10 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from kivy.properties import NumericProperty
 from kivy.event import EventDispatcher
-from character_classes import Character
 
-import crapgeon_utils as utils
-import tile_classes as tiles
+from character_classes import Character
+from crapgeon_utils import match_attribute_to_item, check_if_multiple, tuple_remove
 import game_stats as stats
 
 
@@ -46,6 +46,22 @@ class Player(Character, ABC, EventDispatcher):
 
     @abstractmethod
     def on_player_level(self, instance, value):
+        pass
+
+    @abstractmethod
+    def enhance_damage(self, damage: int) -> int:
+        pass
+
+    @abstractmethod
+    def unhide(self) -> None:
+        pass
+
+    @abstractmethod
+    def use_weapon(self) -> None:
+        """
+        Substracts used weapons in combat (if applicable)
+        """
+
         pass
 
     # INSTANCE METHODS
@@ -124,7 +140,7 @@ class Player(Character, ABC, EventDispatcher):
                 i += 1
 
         if len(attribute_names) > 0:
-            item_names = utils.match_attribute_to_item(attribute_names)
+            item_names = match_attribute_to_item(attribute_names)
             self.dungeon.fading_token_character = self
             self.dungeon.fading_tokens_effect_fades = True
             self.dungeon.fading_tokens_items_queue = item_names
@@ -186,7 +202,7 @@ class Player(Character, ABC, EventDispatcher):
 
         return mov_range
 
-    def pick_object(self, tile: tiles.Tile) -> None:
+    def pick_object(self, tile: Tile) -> None:
 
         game = self.dungeon.game
 
@@ -220,7 +236,7 @@ class Player(Character, ABC, EventDispatcher):
 
             tile.clear_token(tile.token.kind)
 
-    def dig(self, wall_tile: tiles.Tile) -> None:
+    def dig(self, wall_tile: Tile) -> None:
 
         game = self.dungeon.game
 
@@ -241,6 +257,17 @@ class Player(Character, ABC, EventDispatcher):
         # if digging a wall recently created by dynamite
         if wall_tile.dodging_finished:
             wall_tile.dodging_finished = False
+
+    def fight_on_tile(self, opponent_tile) -> None:
+        experience = super().fight_on_tile(opponent_tile)
+        self.use_weapon()
+
+        if experience is not None:
+            game = self.dungeon.game
+            self.experience += experience
+            game.ids.experience_bar.value = self.experience
+
+
 
     def heal(self, extra_points: int):
         self.stats.health = (
@@ -282,7 +309,7 @@ class Player(Character, ABC, EventDispatcher):
         print(self.player_level)
         print(self.stats)
 
-    def _apply_thoughness(self, damage):
+    def _apply_toughness(self, damage):
 
         i = 0
         while i < len(self.effects["thoughness"]):
@@ -374,7 +401,7 @@ class Sawyer(Player):
         self.stats.advantage_strength_incr += 1
         self.stats.recovery_end_of_level += 1
 
-        if not utils.check_if_multiple(value, 2):
+        if not check_if_multiple(value, 2):
             self._level_up_moves(1)
             self._level_up_strength((0, 1))
 
@@ -388,14 +415,26 @@ class Sawyer(Player):
         self.ignores += ("pickable",)
 
     def unhide(self):
+        game=self.dungeon.game
         self.token.color.a = 1  # changes transparency
-        self.ignores = utils.tuple_remove(self.ignores, "pickable")
+        self.ignores = tuple_remove(self.ignores, "pickable")
+        self.ability_active = False
+        game.update_switch("ability_button")
 
     def is_hidden(self):
         if self.ability_active:
             return True
         return False
 
+    def enhance_damage(self, damage) -> int:
+        if self.ability_active:
+            damage += self.stats.advantage_strength_incr
+        return damage
+
+    def use_weapon(self):
+        game=self.dungeon.game
+        self.stats.weapons -= 1
+        game.update_switch("weapons")
 
 class CrusherJane(Player):
     """
@@ -431,11 +470,11 @@ class CrusherJane(Player):
         self._level_up_health(2)
         self._level_up_strength((1, 2))
 
-        if not utils.check_if_multiple(value, 2):
+        if not check_if_multiple(value, 2):
             self.stats.recovery_end_of_level += 1
             self.stats.advantage_strength_incr += 1
 
-        if utils.check_if_multiple(value, 4):
+        if check_if_multiple(value, 4):
             self._level_up_moves(1)
 
         self._update_level_track(value)
@@ -444,6 +483,23 @@ class CrusherJane(Player):
 
         print(self.stats)
 
+    def enhance_damage(self, damage: int) -> int:
+        if self.ability_active:
+            damage += self.stats.advantage_strength_incr
+        return damage
+
+    def unhide(self) -> None:
+        pass
+
+    def use_weapon(self) -> None:
+
+        if self.ability_active:
+            game = self.dungeon.game
+            self.stats.weapons -= 1
+            game.update_switch("weapons")
+            if self.stats.weapons == 0:
+                self.ability_active = False
+                game.update_switch("ability_button")
 
 class Hawkins(Player):
     """Can dig without shovels
@@ -495,3 +551,14 @@ class Hawkins(Player):
         if self.ability_active:
             return True
         return False
+
+    def enhance_damage(self, damage: int) -> int:
+        pass
+
+    def unhide(self) -> None:
+        pass
+
+    def use_weapon(self) -> None:
+        game=self.dungeon.game
+        self.stats.weapons -= 1
+        game.update_switch("weapons")

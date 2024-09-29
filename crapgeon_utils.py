@@ -1,4 +1,4 @@
-import random
+from random import randint
 from collections import deque
 
 
@@ -36,8 +36,8 @@ def check_if_multiple(number: int, multiple_of: int):
 # define a random location in map
 def location(map: list[list[str]]) -> tuple[int]:
 
-    height = random.randint(0, len(map) - 1)
-    width = random.randint(0, len(map[0]) - 1)
+    height = randint(0, len(map) - 1)
+    width = randint(0, len(map[0]) - 1)
     return height, width
 
 

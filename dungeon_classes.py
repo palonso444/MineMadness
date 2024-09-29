@@ -1,15 +1,16 @@
 from kivy.uix.gridlayout import GridLayout  # type: ignore
+from kivy.properties import ListProperty
+from collections import deque
+from random import choice
+
 
 import crapgeon_utils as utils
-
 import player_classes as players
 import monster_classes as monsters
 import token_classes as tokens
 import tile_classes as tiles
-from collections import deque
-from random import choice
 from game_stats import DungeonStats
-from kivy.properties import ListProperty
+
 
 
 class DungeonLayout(GridLayout):
@@ -26,7 +27,7 @@ class DungeonLayout(GridLayout):
         self.cols: int = self.stats.size()
 
         # determines which character shows fadingtokens
-        self.fading_token_character: Player | None = None
+        self.fading_token_character: players.Player | None = None
         # determines if tokens of Dungeon.fading_tokens_items_queue are displayed in green or red
         self.fading_tokens_effect_fades: bool | None = None
 

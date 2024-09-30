@@ -169,7 +169,7 @@ class Tile(Button):
     def has_token(self, token: tuple[str, str] | tuple[str, None] | None = None) -> bool:
 
         if token is None:
-            return self.second_token is not None and self.token is not None
+            return self.second_token is not None or self.token is not None
 
         kind, species = token
 

@@ -21,7 +21,8 @@ class SolidToken(Widget):
         self.circle = None  # token.circle (canvas object) initialized by draw_selection_circle() only in players
         # SceneryToken need this attribute to avoid bugs in Player.dig() and Player.pick_object()
 
-    def update(self, solidtoken, solidtoken_pos):
+    @staticmethod
+    def update(solidtoken, solidtoken_pos):
         solidtoken.shape.pos = solidtoken_pos
         solidtoken.shape.size = solidtoken.size
 

@@ -23,6 +23,8 @@ class Monster(Character, ABC):
         self.chases: tuple = ("player", None)
         self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
 
+        self.ability_display: str = ""
+
     @abstractmethod
     def move(self):
         pass

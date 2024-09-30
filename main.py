@@ -91,17 +91,9 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         if isinstance(self.active_character, monsters.Monster):
             self.ids.ability_button.disabled = True
             self.ids.ability_button.state = "normal"
-        else:
-            # check the condition for each character for the button to be active
-            ability_conditions = {
-                players.Sawyer: lambda: self.active_character.special_items["powder"] > 0,
-                players.Hawkins: lambda: self.active_character.special_items["dynamite"] > 0,
-                players.CrusherJane: lambda: self.active_character.stats.weapons > 0,
-            }
 
-            if self.active_character.ability_active or any(
-                    condition() for player, condition in ability_conditions.items() if
-                    isinstance(self.active_character, player)):
+        elif isinstance(self.active_character, players.Player):
+            if self.ids.ability_button.condition_active:
                 self.ids.ability_button.disabled = False
                 self.ids.ability_button.state = "down" if self.active_character.ability_active else "normal"
             else:

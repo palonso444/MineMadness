@@ -98,6 +98,10 @@ class Player(Character, ABC, EventDispatcher):
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
 
+        self.key_object: str | None = None
+        self.ability_display: str | None = None
+        self.ability_active: bool | None = None
+
     # default using_dynamite() defined in Character class
     # default is_hidden() defined in Character class
 
@@ -402,6 +406,11 @@ class Sawyer(Player):
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
 
+        self.key_object = "powder"
+        self.ability_display: str = "Hide"
+        self.ability_active: bool = False
+
+
     def on_player_level(self, instance, value):
         """Sawyer is a young, unexperienced but dexteritous character. Is it not particularly strong
         but has a lot of cunning that allows her to survive compromised situations.
@@ -463,6 +472,9 @@ class CrusherJane(Player):
 
         self.stats = stats.CrusherJaneStats()
         self._update_level_track(self.player_level)
+
+        self.ability_display: str = "Use Weapons"
+        self.ability_active: bool = False
 
     def on_player_level(self, instance, value):
         """Crusher Jane is a big, strong and not particularly intelligent women. Relies on brute strength and on her
@@ -531,6 +543,10 @@ class Hawkins(Player):
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)
 
+        self.key_object = "dynamite"
+        self.ability_display: str = "Use Dynamite"
+        self.ability_active: bool = False
+
     def on_player_level(self, instance, value):
         """Hawkins is an old and wise man. It is trained by the most difficult situations of life and it is strong
         for his age. But his most valuable asset is his wits.
@@ -545,10 +561,10 @@ class Hawkins(Player):
         self._level_up_health(1)
         self._level_up_strength((0, 1))
 
-        if not utils.check_if_multiple(value, 2):
+        if not check_if_multiple(value, 2):
             self._level_up_strength((1, 0))
 
-        if utils.check_if_multiple(value, 3):
+        if check_if_multiple(value, 3):
             self._level_up_moves(1)
             self.stats.recovery_end_of_level += 1
 

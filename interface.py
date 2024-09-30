@@ -7,18 +7,16 @@ from player_classes import Player
 
 class AbilityButton(ToggleButton):
 
-    def display_text(self):
-
+    @property
+    def condition_active(self):
         character = self.game.active_character
+        if character.name == "Crusher Jane":
+            return character.stats.weapons > 0
+        print(character.inventory)
+        return character.inventory[character.key_object] > 0
 
-        if character.name == "Sawyer":
-            return "Hide"
-        elif character.name == "Hawkins":
-            return "Use Dynamite"
-        elif character.name == "Crusher Jane":
-            return "Use Weapons"
-        elif character.kind == "monster":
-            return ""
+    def display_text(self):
+        return self.game.active_character.ability_display
 
     def on_state(self, instance, value):
 

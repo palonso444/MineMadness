@@ -17,7 +17,7 @@ from dungeon_classes import DungeonLayout
 # fn_italic='fonts/Vollkorn-Italic.ttf'
 
 
-class MineMadnessGame(BoxLayout):  # initlialized in kv file
+class MineMadnessGame(BoxLayout):  # initialized in kv file
 
     # GENERAL PROPERTIES
     dungeon = ObjectProperty(None)
@@ -30,7 +30,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
     # ABILITY PROPERTIES
     ability_button = BooleanProperty(False)
-    # ability_button_active initialized by initializr_switches
+    # ability_button_active initialized by initialize_switches
 
     # INVENTORY PROPERTIES
     inv_object = StringProperty(None, allownone=True)
@@ -41,7 +41,8 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
     weapons = BooleanProperty(None)
     gems = BooleanProperty(None)
 
-    def on_dungeon(self, game, dungeon):
+    @staticmethod
+    def on_dungeon(game, dungeon):
 
         players.Player.gems = 0
         dungeon.match_blueprint()
@@ -125,7 +126,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
         if (
             isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves == 0
-            and monsters.Monster.all_out_of_game()
+            and monsters.Monster.all_dead()
         ):
             self.active_character.stats.remaining_moves = (
                 self.active_character.stats.moves
@@ -150,7 +151,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
         if turn is not None:
 
-            if check_if_multiple(turn, 2) or monsters.Monster.all_out_of_game():
+            if check_if_multiple(turn, 2) or monsters.Monster.all_dead():
                 players.Player.reset_moves()
             else:
                 monsters.Monster.reset_moves()
@@ -166,13 +167,13 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
 
             if (
                 check_if_multiple(self.turn, 2)
-                or monsters.Monster.all_out_of_game()
+                or monsters.Monster.all_dead()
             ):  # if player turn or no monsters
                 self.active_character = players.Player.data[character_id]
 
                 if (
                     self.active_character.has_moved()
-                    and not monsters.Monster.all_out_of_game()
+                    and not monsters.Monster.all_dead()
                 ):
                     self.next_character()
 
@@ -209,7 +210,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
         self.active_character.rearrange_ids()
         exit_tile.clear_token("player")
 
-        if players.Player.all_out_of_game():
+        if players.Player.all_dead():
 
             monsters.Monster.data.clear()
             new_dungeon_level: int = self.dungeon.dungeon_level + 1
@@ -238,7 +239,7 @@ class MineMadnessGame(BoxLayout):  # initlialized in kv file
         activate_which_tiles() to check if tiles are activable
         """
 
-        if monsters.Monster.all_out_of_game():
+        if monsters.Monster.all_dead():
             players_not_yet_active = {
                 player.position for player in players.Player.data
             }

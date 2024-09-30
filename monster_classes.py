@@ -82,7 +82,7 @@ class Monster(Character, ABC):
             if tile.has_token(target_token):
 
                 # if character is hidden.
-                if target_token[0] == "player" and tile.get_character().is_hidden():
+                if target_token[0] == "player" and tile.get_character().is_hidden:
                     continue
 
                 if (  # if tile is full and monster wants to land there

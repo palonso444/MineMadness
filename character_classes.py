@@ -16,15 +16,13 @@ class Character(ABC):
         for character in cls.data:
             character.stats.remaining_moves = character.stats.moves
 
+
     @classmethod
-    def all_out_of_game(cls) -> bool:
+    def all_dead(cls) -> bool:
         """
         Checks if all instances of the class (players or monsters) dead or out of game
         """
-
-        if len(cls.data) == 0:
-            return True
-        return False
+        return len(cls.data) == 0
 
     @abstractmethod
     def enhance_damage(self, damage: int) -> int:
@@ -40,6 +38,9 @@ class Character(ABC):
         """
         pass
 
+    @property
+    def is_hidden(self):  # needed for everybody for self.fight_on_tile()
+        return False
 
     # INSTANCE METHODS
 
@@ -57,9 +58,6 @@ class Character(ABC):
         self.dungeon = None
 
     def using_dynamite(self):  # needed for everybody for Token.on_slide_completed()
-        return False
-
-    def is_hidden(self):  # needed for everybody for self.fight_on_tile()
         return False
 
     def _apply_toughness(self, damage):  # needed for everybody for self.fight_on_tile()
@@ -80,7 +78,7 @@ class Character(ABC):
         damage = opponent._apply_toughness(damage)
         damage = self.enhance_damage(damage)
 
-        if self.is_hidden():
+        if self.is_hidden:
             self.unhide()
         if opponent.is_hidden():
             opponent.unhide()

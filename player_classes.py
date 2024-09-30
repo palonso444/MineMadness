@@ -44,6 +44,13 @@ class Player(Character, ABC, EventDispatcher):
                 player.ability_active = False
                 return player
 
+    @classmethod
+    def all_alive(cls) -> bool:
+        """
+        Checks if all instances of the class (players or monsters) dead or out of game
+        """
+        return len(cls.dead_data) == 0
+
     @abstractmethod
     def on_player_level(self, instance, value):
         pass
@@ -61,8 +68,12 @@ class Player(Character, ABC, EventDispatcher):
         """
         Substracts used weapons in combat (if applicable)
         """
-
         pass
+
+    @property
+    def has_all_gems(self):
+        return Player.gems == self.dungeon.game.total_gems
+
 
     # INSTANCE METHODS
 
@@ -377,6 +388,10 @@ class Sawyer(Player):
     LOW health
     HIGH movement"""
 
+    @property
+    def is_hidden(self):
+        return self.ability_active
+
     def __init__(self):
         super().__init__()
         self.char: str = "%"
@@ -420,11 +435,6 @@ class Sawyer(Player):
         self.ignores = tuple_remove(self.ignores, "pickable")
         self.ability_active = False
         game.update_switch("ability_button")
-
-    def is_hidden(self):
-        if self.ability_active:
-            return True
-        return False
 
     def enhance_damage(self, damage) -> int:
         if self.ability_active:

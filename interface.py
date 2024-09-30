@@ -2,9 +2,7 @@ from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
 from random import choice
 
-from player_classes import Player, Sawyer, CrusherJane, Hawkins
-from monster_classes import Monster
-
+from player_classes import Player
 
 
 class AbilityButton(ToggleButton):
@@ -13,13 +11,13 @@ class AbilityButton(ToggleButton):
 
         character = self.game.active_character
 
-        if isinstance(character, Sawyer):
+        if character.name == "Sawyer":
             return "Hide"
-        elif isinstance(character, Hawkins):
+        elif character.name == "Hawkins":
             return "Use Dynamite"
-        elif isinstance(character, CrusherJane):
+        elif character.name == "Crusher Jane":
             return "Use Weapons"
-        elif isinstance(character, Monster):
+        elif character.kind == "monster":
             return ""
 
     def on_state(self, instance, value):
@@ -30,7 +28,7 @@ class AbilityButton(ToggleButton):
 
             character = self.game.active_character
 
-            if value == "down" and isinstance(character, Hawkins):
+            if value == "down" and character.name == "Hawkins":
                 character.ability_active = True
                 self.game.dungeon.show_effect_token(
                     "dynamite", character.token.shape.pos, character.token.shape.size
@@ -42,11 +40,11 @@ class AbilityButton(ToggleButton):
                 character.ability_active = True
                 self.game.dynamic_movement_range()
 
-                if isinstance(character, Sawyer):
+                if character.name == "Sawyer":
                     character.special_items["powder"] -= 1
                     character.hide()
 
-                elif isinstance(character, CrusherJane):
+                elif character.name == "Crusher Jane":
                     self.game.dungeon.show_effect_token(
                         "armed", character.token.shape.pos, character.token.shape.size
                     )
@@ -57,13 +55,13 @@ class AbilityButton(ToggleButton):
             elif value == "normal":
                 character.ability_active = False
 
-                if isinstance(character, Sawyer):
+                if character.name == "Sawyer":
                     character.unhide()
 
-                elif isinstance(character, Hawkins):
+                elif character.name == "Hawkins":
                     self.game.dynamic_movement_range()
 
-                elif isinstance(character, CrusherJane):
+                elif character.name == "Crusher Jane":
                     self.game.dungeon.show_effect_token(
                         "armed",
                         character.token.shape.pos,
@@ -240,7 +238,7 @@ class TalismanButton(Interfacebutton):
 
     def on_release(self):
 
-        if len(Player.dead_data) == 0:
+        if Player.all_alive():
             character = self.game.active_character
             character.experience = character.stats.exp_to_next_level
 

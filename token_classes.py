@@ -129,7 +129,6 @@ class CharacterToken(SolidToken):
     percentage_natural_health = NumericProperty(None)
 
     def __init__(self, kind, species, character, dungeon_instance, **kwargs):
-        from player_classes import Player # TODO: remove this local import
         super().__init__(kind, species, dungeon_instance, **kwargs)
 
         self.character = character  # links token with character object
@@ -147,7 +146,7 @@ class CharacterToken(SolidToken):
 
         self.bind(pos=self.update, size=self.update)
 
-        if isinstance(self.character, Player):
+        if self.character.kind == "player":
             # bind and initialize health bar
             self.bind(percentage_natural_health=self.calculate_and_display_health_bar)
             self.percentage_natural_health = (
@@ -306,8 +305,6 @@ class CharacterToken(SolidToken):
         animation.start(self.shape)
 
     def on_slide_completed(self, *args):
-        from player_classes import Player #TODO: remove those local imports, move this function to main.py
-        from monster_classes import Monster
         game = self.dungeon.game
         monster_dodged = False
 
@@ -317,11 +314,11 @@ class CharacterToken(SolidToken):
 
         else:  # if goal is reached
 
-            if isinstance(self.character, Player):
+            if self.character.kind == "player":
 
                 if (
                     self.goal.kind == "exit"
-                    and Player.gems == game.total_gems
+                    and self.character.has_all_gems
                 ):
 
                     self.update_on_tiles(self.start, self.goal)  # updates tile.token
@@ -337,7 +334,7 @@ class CharacterToken(SolidToken):
                 self.character.update_position(self.goal.position)
 
             # only attack in monster turn, no attack if dodging
-            if isinstance(self.character, Monster):
+            if self.character.kind == "monster":
 
                 # if players turn, monster was dodging
                 if check_if_multiple(game.turn, 2):

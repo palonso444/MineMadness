@@ -321,42 +321,27 @@ class DungeonLayout(GridLayout):
     def activate_which_tiles(self, tile_positions=None):
 
         for tile in self.children:
-            tile.disabled = True
-
-            if tile_positions:
-                for position in tile_positions:
-                    if (
-                        tile.row == position[0]
-                        and tile.col == position[1]
-                        and tile.is_activable()
-                    ):
-
-                        tile.disabled = False
+            # tile is not disabled if positions matches any in tile_positions and is activable
+            tile.disabled = not (
+                    tile_positions is not None and
+                    any(tile.row == pos[0] and tile.col == pos[1] for pos in tile_positions) and
+                    tile.is_activable
+            )
 
     def get_tile(self, position):
 
         return self.tiles_dict.get(position)
 
     def scan(
-        self, scenery, exclude=False
+        self, scenery: tuple , exclude: bool=False
     ):  # pass scenery as tuple of token.kinds to look for (e.g. ('wall', 'shovel'))
 
-        found_tiles = set()
-        excluded_tiles = set()
-
-        for tile in self.children:
-            for token in scenery:
-
-                if not exclude and tile.has_token((token, None)):
-                    found_tiles.add(tile.position)
-
-                elif exclude and tile.has_token((token, None)):
-                    excluded_tiles.add(tile)
-
         if exclude:
-            for tile in self.children:
-                if tile not in excluded_tiles:
-                    found_tiles.add(tile.position)
+            found_tiles = {tile.position for tile in self.children if
+                           not any(tile.has_token((token, None)) for token in scenery)}
+        else:
+            found_tiles = {tile.position for tile in self.children if
+                           any(tile.has_token((token, None)) for token in scenery)}
 
         return found_tiles
 
@@ -425,7 +410,7 @@ class DungeonLayout(GridLayout):
         return nearby_spaces
 
     def get_nearby_positions(self, position: tuple[int]) -> set[tuple[int]]:
-        """Returns surroundig positions"""
+        """Returns surrounding positions"""
 
         nearby_positions = set()
         directions = ((0, 1), (0, -1), (1, 0), (-1, 0))
@@ -443,9 +428,7 @@ class DungeonLayout(GridLayout):
 
     def check_within_limits(self, position: tuple[int]) -> bool:
 
-        if 0 <= position[0] < self.rows and 0 <= position[1] < self.cols:
-            return True
-        return False
+        return 0 <= position[0] < self.rows and 0 <= position[1] < self.cols
 
     def get_random_tile(self, free: bool = False):
         """

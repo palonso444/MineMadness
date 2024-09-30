@@ -80,7 +80,7 @@ class Character(ABC):
 
         if self.is_hidden:
             self.unhide()
-        if opponent.is_hidden():
+        if opponent.is_hidden:
             opponent.unhide()
 
         opponent.stats.health = opponent.stats.health - damage

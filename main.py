@@ -86,13 +86,13 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             self.ids.experience_bar.value = 0
 
     def on_ability_button(self, *args):
-        self.ability_button_active = False  # Temporarily disable the button
+        self.ability_button_active = False
 
         if isinstance(self.active_character, monsters.Monster):
             self.ids.ability_button.disabled = True
             self.ids.ability_button.state = "normal"
         else:
-            # Check the ability condition for each character
+            # check the condition for each character for the button to be active
             ability_conditions = {
                 players.Sawyer: lambda: self.active_character.special_items["powder"] > 0,
                 players.Hawkins: lambda: self.active_character.special_items["dynamite"] > 0,
@@ -108,7 +108,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                 self.ids.ability_button.disabled = True
                 self.ids.ability_button.state = "normal"
 
-        self.ability_button_active = True  # Re-enable the button
+        self.ability_button_active = True
 
     def on_character_done(self, *args):
 

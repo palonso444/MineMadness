@@ -214,7 +214,7 @@ class Tile(Button):
 
     def get_character(self):
 
-        if self.second_token:
+        if self.second_token and hasattr(self.second_token, "character"):
             return self.second_token.character
-        else:
+        elif self.token and hasattr(self.token, "character"):
             return self.token.character

@@ -50,9 +50,6 @@ class Character(ABC):
         self.id: int | None = None
         self.position: tuple | None = None
 
-        # needed for players in fight_on_tile()
-        self.experience_when_killed: int | None = None
-
         # monsters need ability_active for the functioning of the ability_button
         self.ability_active: bool = False
 
@@ -81,15 +78,15 @@ class Character(ABC):
         self.stats.remaining_moves -= 1
         damage = randint(self.stats.strength[0], self.stats.strength[1])
         damage = opponent._apply_toughness(damage)
-        print(damage)
         damage = self.enhance_damage(damage)
-        print(damage)
+
         if self.is_hidden():
-            print(self.is_hidden)
-            print(self.ability_active)
             self.unhide()
+        if opponent.is_hidden():
+            opponent.unhide()
 
         opponent.stats.health = opponent.stats.health - damage
+
         if opponent.token.percentage_natural_health is not None:
             opponent.token.percentage_natural_health = (
                 opponent.stats.health / opponent.stats.natural_health

@@ -54,20 +54,18 @@ class Monster(Character, ABC):
             self.dungeon.get_tile(self.position).dodging_finished = True
 
     def attack_players(self):
-        from player_classes import Player
-        players: list = Player.data[:]
+        """
+        Manages attack of monsters to surrounding players
+        :return:
+        """
+        surrounding_tiles = [self.dungeon.get_tile(position) for position in self.dungeon.get_nearby_positions(self.position)]
 
-        for player in players:
-            if are_nearby(self, player) and self.stats.remaining_moves > 0:
-
-                if player.is_hidden():
-                    player.unhide()
-                    if isinstance(player, players.Sawyer):
-                        player.ability_active = False
-                        # ability_button updated automatically when players turn
-
-                player_tile: Tile = self.dungeon.get_tile(player.position)
-                self.fight_on_tile(player_tile)
+        for tile in surrounding_tiles:
+            if self.stats.remaining_moves == 0:
+                break
+            character = tile.get_character()
+            if character is not None and character.kind == "player":
+                self.fight_on_tile(tile)
 
     def find_closest_reachable_target(
         self, target_token: tuple[str] = (None, None)

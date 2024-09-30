@@ -50,9 +50,7 @@ def check_for_free_spots(map: list[list[str]]) -> bool:
     return False
 
 
-def are_nearby(
-    item1: object, item2: object
-) -> bool:  # check if two positions are nearby
+def are_nearby(item1: object, item2: object) -> bool:  # check if two positions are nearby
 
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -92,13 +90,9 @@ def create_map(height: int, width: int) -> list[list[str]]:
     map = list()
 
     for y in range(height):
-
         map_width = list()
-
         for x in range(width):
-
             map_width.append(".")
-
         map.append(map_width)
 
     return map

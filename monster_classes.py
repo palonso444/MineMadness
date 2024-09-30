@@ -1,11 +1,11 @@
+from __future__ import annotations
 from random import randint, choice
 from abc import ABC, abstractmethod
-from character_classes import Character
 
+from crapgeon_utils import get_distance, are_nearby
 
-import crapgeon_utils as utils
-import tile_classes as tiles
 import game_stats as stats
+from character_classes import Character
 
 
 class Monster(Character, ABC):
@@ -27,6 +27,18 @@ class Monster(Character, ABC):
     def move(self):
         pass
 
+    def enhance_damage(self, damage: int) -> int:
+        """
+        Placeholder needed for fight_on_tile()
+        """
+        return damage
+
+    def unhide(self) -> None:
+        """
+        Placeholder needed for fight_on_tile()
+        """
+        pass
+
     def try_to_dodge(self):
 
         random_num = randint(1, 10)
@@ -42,37 +54,35 @@ class Monster(Character, ABC):
             self.dungeon.get_tile(self.position).dodging_finished = True
 
     def attack_players(self):
-        from player_classes import Player
-        players: list = Player.data[:]
+        """
+        Manages attack of monsters to surrounding players
+        :return:
+        """
+        surrounding_tiles = [self.dungeon.get_tile(position) for position in self.dungeon.get_nearby_positions(self.position)]
 
-        for player in players:
-            if utils.are_nearby(self, player) and self.stats.remaining_moves > 0:
-
-                if player.is_hidden():
-                    player.unhide()
-                    if isinstance(player, players.Sawyer):
-                        player.ability_active = False
-                        # ability_button updated automatically when players turn
-
-                player_tile: tiles.Tile = self.dungeon.get_tile(player.position)
-                self.fight_on_tile(player_tile)
+        for tile in surrounding_tiles:
+            if self.stats.remaining_moves == 0:
+                break
+            character = tile.get_character()
+            if character is not None and character.kind == "player":
+                self.fight_on_tile(tile)
 
     def find_closest_reachable_target(
         self, target_token: tuple[str] = (None, None)
-    ) -> tiles.Tile | None:  # pass target_token as (token_kind, token_species)
+    ) -> Tile | None:  # pass target_token as (token_kind, token_species)
         """
         Finds closest target based on len(path) and returns the tile where this target is placed
         Returns tile if there is path to tile, None if tile is unreachable"
         """
 
         tiles_and_paths: list = list()
-        start_tile: tiles.Tile = self.dungeon.get_tile(self.position)
+        start_tile: Tile = self.dungeon.get_tile(self.position)
 
         for tile in self.dungeon.children:
             if tile.has_token(target_token):
 
                 # if character is hidden.
-                if target_token[0] == "player" and tile.get_character().is_hidden():
+                if target_token[0] == "player" and tile.get_character().is_hidden:
                     continue
 
                 if (  # if tile is full and monster wants to land there
@@ -97,7 +107,7 @@ class Monster(Character, ABC):
 
         return None if closest_tile_and_path is None else closest_tile_and_path[0]
 
-    def assess_path_smart(self, target_tile: tiles.Tile) -> list[tuple] | None:
+    def assess_path_smart(self, target_tile: Tile) -> list[tuple] | None:
         """
         Returns the path to the closest tile and with access to the target within the range of
         remaining moves of the monster. Returns None if there is no access to the target or all accesses
@@ -105,7 +115,7 @@ class Monster(Character, ABC):
         """
 
         # if target is nearby and cannot share tile with it, don't move
-        if utils.are_nearby(self, target_tile):
+        if are_nearby(self, target_tile):
             return None
 
         accesses: list[list] | None = self._find_accesses(target_tile, smart=True)
@@ -150,7 +160,7 @@ class Monster(Character, ABC):
 
         for access in accesses:
 
-            end_tile: tiles.Tile = self.dungeon.get_tile(access[-1])
+            end_tile: Tile = self.dungeon.get_tile(access[-1])
             path_to_access: list[tuple] | None = self.dungeon.find_shortest_path(
                 self.token.start, end_tile, self.blocked_by
             )
@@ -164,7 +174,7 @@ class Monster(Character, ABC):
 
         return path
 
-    def assess_path_direct(self, target_tile: tiles.Tile) -> list[tuple] | None:
+    def assess_path_direct(self, target_tile: Tile) -> list[tuple] | None:
         """
         Returns the path to the closest tile and with access to the target within the range of
         remaining moves of the monster. Returns None if there is no access to the target or all accesses
@@ -190,7 +200,7 @@ class Monster(Character, ABC):
                 continue
 
             # get distance to player
-            distance_to_target: int = utils.get_distance(
+            distance_to_target: int = get_distance(
                 self.position, target_tile.position
             )
 
@@ -198,17 +208,17 @@ class Monster(Character, ABC):
             for idx, position in enumerate(possible_path):
 
                 # if going to that position means going further away from player, path not valid
-                if distance_to_target <= utils.get_distance(
+                if distance_to_target <= get_distance(
                     position, target_tile.position
                 ):
                     break
 
                 # if going to that position means getting closer to player, path OK so far
-                if distance_to_target > utils.get_distance(
+                if distance_to_target > get_distance(
                     position, target_tile.position
                 ):
                     # update distance to target from this new position
-                    distance_to_target = utils.get_distance(
+                    distance_to_target = get_distance(
                         position, target_tile.position
                     )
 
@@ -383,7 +393,7 @@ class Monster(Character, ABC):
                 )
 
             if end_tile is not None and end_tile.has_token(self.chases):
-                if utils.are_nearby(self, end_tile):
+                if are_nearby(self, end_tile):
                     path = [end_tile.position]
                 else:
                     path.append(end_tile.position)
@@ -527,7 +537,7 @@ class DarkGnome(Monster):
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+        target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
             return self.assess_path_smart(target_tile)
@@ -546,7 +556,7 @@ class NightMare(Monster):
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+        target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
             return self.assess_path_smart(target_tile)
@@ -565,7 +575,7 @@ class LindWorm(Monster):
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+        target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
             return self.assess_path_smart(target_tile)
@@ -616,7 +626,7 @@ class DepthsWisp(Monster):
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+        target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
             return self.assess_path_direct(target_tile)

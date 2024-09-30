@@ -1,4 +1,4 @@
-import random
+from random import randint
 from collections import deque
 
 
@@ -36,8 +36,8 @@ def check_if_multiple(number: int, multiple_of: int):
 # define a random location in map
 def location(map: list[list[str]]) -> tuple[int]:
 
-    height = random.randint(0, len(map) - 1)
-    width = random.randint(0, len(map[0]) - 1)
+    height = randint(0, len(map) - 1)
+    width = randint(0, len(map[0]) - 1)
     return height, width
 
 
@@ -50,9 +50,7 @@ def check_for_free_spots(map: list[list[str]]) -> bool:
     return False
 
 
-def are_nearby(
-    item1: object, item2: object
-) -> bool:  # check if two positions are nearby
+def are_nearby(item1: object, item2: object) -> bool:  # check if two positions are nearby
 
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -92,13 +90,9 @@ def create_map(height: int, width: int) -> list[list[str]]:
     map = list()
 
     for y in range(height):
-
         map_width = list()
-
         for x in range(width):
-
             map_width.append(".")
-
         map.append(map_width)
 
     return map

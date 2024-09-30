@@ -1,5 +1,5 @@
 from random import randint
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class Character(ABC):
@@ -16,14 +16,30 @@ class Character(ABC):
         for character in cls.data:
             character.stats.remaining_moves = character.stats.moves
 
+
     @classmethod
-    def all_out_of_game(cls) -> bool:
+    def all_dead(cls) -> bool:
         """
         Checks if all instances of the class (players or monsters) dead or out of game
         """
+        return len(cls.data) == 0
 
-        if len(cls.data) == 0:
-            return True
+    @abstractmethod
+    def enhance_damage(self, damage: int) -> int:
+        """
+        Enhances damage in combat (if applicable)
+        """
+        pass
+
+    @abstractmethod
+    def unhide(self) -> None:
+        """
+        Reverts hidden state of character
+        """
+        pass
+
+    @property
+    def is_hidden(self):  # needed for everybody for self.fight_on_tile()
         return False
 
     # INSTANCE METHODS
@@ -44,60 +60,44 @@ class Character(ABC):
     def using_dynamite(self):  # needed for everybody for Token.on_slide_completed()
         return False
 
-    def is_hidden(self):  # needed for everybody for self.fight_on_tile()
-        return False
+    def _apply_toughness(self, damage):  # needed for everybody for self.fight_on_tile()
+        return damage
 
     def update_position(self, position: tuple[int]) -> None:
         self.__class__.data[self.id].position = position
 
-    def fight_on_tile(self, opponent_tile) -> None:
-
-        from player_classes import Player, Sawyer, CrusherJane
-        from monster_classes import Monster
-
+    def fight_on_tile(self, opponent_tile) -> int | None:
+        """
+        Generic fighting method. See player class for particularities in players
+        :param opponent_tile:
+        :return: experience_when_killed if monster is killed, None otherwise
+        """
         opponent = opponent_tile.get_character()
-        game = self.dungeon.game
         self.stats.remaining_moves -= 1
         damage = randint(self.stats.strength[0], self.stats.strength[1])
+        damage = opponent._apply_toughness(damage)
+        damage = self.enhance_damage(damage)
 
-        if (
-            isinstance(self, CrusherJane) or isinstance(self, Sawyer)
-        ) and self.ability_active:
-            damage += self.stats.advantage_strength_incr
-
-        if self.is_hidden():
+        if self.is_hidden:
             self.unhide()
-            if isinstance(self, Sawyer):
-                self.ability_active = False
-                game.update_switch("ability_button")
-
-        if "fighting" not in self.free_actions or (
-            isinstance(self, CrusherJane) and self.ability_active
-        ):
-            self.stats.weapons -= 1
-            game.update_switch("weapons")
-            if isinstance(self, CrusherJane) and self.stats.weapons == 0:
-                self.ability_active = False
-                game.update_switch("ability_button")
-
-        if isinstance(opponent, Player):
-            damage = opponent._apply_thoughness(damage)
+        if opponent.is_hidden():
+            opponent.unhide()
 
         opponent.stats.health = opponent.stats.health - damage
+
         if opponent.token.percentage_natural_health is not None:
             opponent.token.percentage_natural_health = (
                 opponent.stats.health / opponent.stats.natural_health
             )
 
-        if opponent.stats.health <= 0:
-            opponent.kill_character(opponent_tile)
-            if isinstance(opponent, Monster):
-                self.experience += opponent.stats.experiece_when_killed
-                game.ids.experience_bar.value = self.experience
-
         self.dungeon.show_damage_token(
             opponent.token.shape.pos, opponent.token.shape.size
         )
+
+        if opponent.stats.health <= 0:
+            experience: int | None = opponent.stats.experience_when_killed
+            opponent.kill_character(opponent_tile)
+            return experience
 
     def has_moved(self) -> bool:
 
@@ -107,13 +107,9 @@ class Character(ABC):
 
     def kill_character(self, tile):
 
-        from player_classes import Player
-
-        character = self.__class__.data.pop(self.id)
+        del self.__class__.data[self.id]
         self.__class__.rearrange_ids()
         tile.clear_token(self.token.kind)
-        if isinstance(character, Player):
-            Player.dead_data.append(character)
 
     # MOVEMENT METHODS TO IMPLEMENT
 

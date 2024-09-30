@@ -86,39 +86,29 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             self.ids.experience_bar.value = 0
 
     def on_ability_button(self, *args):
-
-        self.ability_button_active = False  # TODO: unbind button instead of this
+        self.ability_button_active = False  # Temporarily disable the button
 
         if isinstance(self.active_character, monsters.Monster):
             self.ids.ability_button.disabled = True
             self.ids.ability_button.state = "normal"
+        else:
+            # Check the ability condition for each character
+            ability_conditions = {
+                players.Sawyer: lambda: self.active_character.special_items["powder"] > 0,
+                players.Hawkins: lambda: self.active_character.special_items["dynamite"] > 0,
+                players.CrusherJane: lambda: self.active_character.stats.weapons > 0,
+            }
 
-        elif self.active_character.ability_active:
-            self.ids.ability_button.disabled = False
-            self.ids.ability_button.state = "down"
-
-        elif isinstance(self.active_character, players.Sawyer):
-            if self.active_character.special_items["powder"] > 0:
+            if self.active_character.ability_active or any(
+                    condition() for player, condition in ability_conditions.items() if
+                    isinstance(self.active_character, player)):
                 self.ids.ability_button.disabled = False
+                self.ids.ability_button.state = "down" if self.active_character.ability_active else "normal"
             else:
                 self.ids.ability_button.disabled = True
-            self.ids.ability_button.state = "normal"
+                self.ids.ability_button.state = "normal"
 
-        elif isinstance(self.active_character, players.Hawkins):
-            if self.active_character.special_items["dynamite"] > 0:
-                self.ids.ability_button.disabled = False
-            else:
-                self.ids.ability_button.disabled = True
-            self.ids.ability_button.state = "normal"
-
-        elif isinstance(self.active_character, players.CrusherJane):
-            if self.active_character.stats.weapons > 0:
-                self.ids.ability_button.disabled = False
-            else:
-                self.ids.ability_button.disabled = True
-            self.ids.ability_button.state = "normal"
-
-        self.ability_button_active = True  # TODO: bind button instead of this
+        self.ability_button_active = True  # Re-enable the button
 
     def on_character_done(self, *args):
 

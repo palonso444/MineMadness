@@ -33,6 +33,17 @@ class Player(Character, ABC, EventDispatcher):
         cls.rearrange_ids()
 
     @classmethod
+    def swap_characters(cls, index_char_1, index_char_2):
+        """
+        Swaps the order of 2 characters in cls.data
+        :param index_char_1: index of a character
+        :param index_char_2: index of another character
+        :return: None
+        """
+        cls.data[index_char_2], cls.data[index_char_1] = cls.data[index_char_1], cls.data[index_char_2]
+        cls.rearrange_ids()
+
+    @classmethod
     def transfer_player(cls, name: str) -> Character:
         """
         Heals and disables the ability of exited players and transfers them to the next level.
@@ -91,14 +102,13 @@ class Player(Character, ABC, EventDispatcher):
             "whisky": 0,
             "talisman": 0,
         }
-        self.special_items: dict[str:int] | None = None
         self.effects: dict[str:list] = {"moves": [], "thoughness": [], "strength": []}
         self.state: str | None = None
         self.level_track: dict[int:dict] = {}
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
 
-        self.key_object: str | None = None
+        self.special_items: dict[str:int] | None = None
         self.ability_display: str | None = None
         self.ability_active: bool | None = None
 
@@ -400,13 +410,12 @@ class Sawyer(Player):
         super().__init__()
         self.char: str = "%"
         self.name: str = "Sawyer"
-        self.special_items: dict[str:int] | None = {"powder": 2}
         self.ignores = ("dynamite",)
 
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
 
-        self.key_object = "powder"
+        self.special_items: dict[str:int] | None = {"powder": 2}
         self.ability_display: str = "Hide"
         self.ability_active: bool = False
 
@@ -473,6 +482,7 @@ class CrusherJane(Player):
         self.stats = stats.CrusherJaneStats()
         self._update_level_track(self.player_level)
 
+        self.special_items: dict[str:int] = {"weapons": self.stats.weapons}
         self.ability_display: str = "Use Weapons"
         self.ability_active: bool = False
 
@@ -538,12 +548,11 @@ class Hawkins(Player):
         self.name: str = "Hawkins"
         self.free_actions: tuple = ("digging",)
         self.ignores: tuple = ("gem", "powder")
-        self.special_items: dict[str:int] | None = {"dynamite": 2}
 
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)
 
-        self.key_object = "dynamite"
+        self.special_items: dict[str:int] | None = {"dynamite": 2}
         self.ability_display: str = "Use Dynamite"
         self.ability_active: bool = False
 

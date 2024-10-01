@@ -53,6 +53,8 @@ class Character(ABC):
 
         # monsters need ability_active for the functioning of the ability_button
         self.ability_active: bool = False
+        # monsters need ability_display fot the ability button
+        self.ability_display: str | None = None
 
         self.token = None
         self.dungeon = None

@@ -10,13 +10,12 @@ class AbilityButton(ToggleButton):
     @property
     def condition_active(self):
         character = self.game.active_character
-        if character.name == "Crusher Jane":
-            return character.stats.weapons > 0
-        print(character.inventory)
-        return character.inventory[character.key_object] > 0
+        # for the moment there is only one special item
+        return character.special_items[list(character.special_items.keys())[0]] > 0
 
     def display_text(self):
-        return self.game.active_character.ability_display
+        character = self.game.active_character
+        return character.ability_display if character.ability_display is not None else ""
 
     def on_state(self, instance, value):
 

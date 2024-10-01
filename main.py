@@ -75,10 +75,17 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             switch_value = not switch_value
         elif switch_name == "turn":
             switch_value += 1
+        elif switch_name == "active_character_id":
+            switch_value = self.active_character_id
+            setattr(self, switch_name, None)
+
         setattr(self, switch_name, switch_value)
 
     def update_experience_bar(self):
-
+        """
+        Updates the range of the experience bar according to the current active character.
+        :return: None
+        """
         if isinstance(self.active_character, players.Player):
             self.ids.experience_bar.max = self.active_character.stats.exp_to_next_level
             self.ids.experience_bar.value = self.active_character.experience
@@ -86,51 +93,42 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             self.ids.experience_bar.value = 0
 
     def on_ability_button(self, *args):
-
-        self.ability_button_active = False  # TODO: unbind button instead of this
+        """
+        Updates the state of the ability button depending on the circumstances of the game.
+        :param args: needed for the functioning of the callback. Args are: game instance and a boolean value of
+        the corresponding switch.
+        :return: None
+        """
+        for arg in args:
+            print(arg)
+        self.ability_button_active = False
 
         if isinstance(self.active_character, monsters.Monster):
             self.ids.ability_button.disabled = True
             self.ids.ability_button.state = "normal"
 
-        elif self.active_character.ability_active:
-            self.ids.ability_button.disabled = False
-            self.ids.ability_button.state = "down"
+        elif isinstance(self.active_character, players.Player):
+            self.ids.ability_button.disabled = not self.ids.ability_button.condition_active
+            self.ids.ability_button.state = "down" if self.active_character.ability_active else "normal"
 
-        elif isinstance(self.active_character, players.Sawyer):
-            if self.active_character.special_items["powder"] > 0:
-                self.ids.ability_button.disabled = False
-            else:
-                self.ids.ability_button.disabled = True
-            self.ids.ability_button.state = "normal"
-
-        elif isinstance(self.active_character, players.Hawkins):
-            if self.active_character.special_items["dynamite"] > 0:
-                self.ids.ability_button.disabled = False
-            else:
-                self.ids.ability_button.disabled = True
-            self.ids.ability_button.state = "normal"
-
-        elif isinstance(self.active_character, players.CrusherJane):
-            if self.active_character.stats.weapons > 0:
-                self.ids.ability_button.disabled = False
-            else:
-                self.ids.ability_button.disabled = True
-            self.ids.ability_button.state = "normal"
-
-        self.ability_button_active = True  # TODO: bind button instead of this
+        self.ability_button_active = True
 
     def on_character_done(self, *args):
-
+        """
+        Checks what to do when a character finishes a movement, but it may still have movements left.
+        :param args: needed for the functioning the the callback. Args are: game instance and a boolean value of
+        the corresponding switch.
+        :return: None
+        """
+        for arg in args:
+            print (arg)
         # if no monsters in game, players can move indefinitely
         if (
             isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves == 0
             and monsters.Monster.all_dead()
         ):
-            self.active_character.stats.remaining_moves = (
-                self.active_character.stats.moves
-            )
+            self.active_character.stats.remaining_moves = self.active_character.stats.moves
 
         if (
             isinstance(self.active_character, players.Player)
@@ -147,8 +145,15 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                 self.active_character.token.remove_selection_circle()
             self.next_character()  # switch turns if character last of character.characters
 
-    def on_turn(self, game, turn):
-
+    @staticmethod
+    def on_turn(game, turn):
+        """
+        On new turn, resets movements of the characters (monsters or players). Sets self.active_character_id to 0
+        and updates it if the value was already 0 (there is only one character left).
+        :param game: current instance of the game.
+        :param turn: turn number (even for players, odd for monsters).
+        :return: None
+        """
         if turn is not None:
 
             if check_if_multiple(turn, 2) or monsters.Monster.all_dead():
@@ -156,53 +161,55 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             else:
                 monsters.Monster.reset_moves()
 
-            if self.active_character_id == 0:
-                self.active_character_id = None
+            if game.active_character_id == 0:
+                game.update_switch("active_character_id")
+            else:
+                game.active_character_id = 0
 
-            self.active_character_id = 0
-
-    def on_active_character_id(self, game, character_id):
-
+    @staticmethod
+    def on_active_character_id(game, character_id):
+        """
+        Checks what to do when the active character changes.
+        :param game: current instance of the game.
+        :param character_id: id of the new active character.
+        :return: None
+        """
         if character_id is not None:
+            # if player turn or no monsters
+            if check_if_multiple(game.turn, 2) or monsters.Monster.all_dead():
+                game.active_character = players.Player.data[character_id]
 
-            if (
-                check_if_multiple(self.turn, 2)
-                or monsters.Monster.all_dead()
-            ):  # if player turn or no monsters
-                self.active_character = players.Player.data[character_id]
-
-                if (
-                    self.active_character.has_moved()
-                    and not monsters.Monster.all_dead()
-                ):
-                    self.next_character()
+                if game.active_character.has_moved() and not monsters.Monster.all_dead():
+                    game.next_character()
 
                 else:
-                    self.active_character.token.draw_selection_circle()
-                    self.update_interface()
-                    self.update_switch(
-                        "health"
-                    )  # must be updated here after seting player as active character
-                    self.update_switch("shovels")
-                    self.update_switch("weapons")
+                    game.active_character.token.draw_selection_circle()
+                    game.update_interface()
+                    # health must be updated here after setting player as active character
+                    game.update_switch("health")
+                    game.update_switch("shovels")
+                    game.update_switch("weapons")
 
-                    if self.active_character.using_dynamite():
-                        self.dynamic_movement_range("shooting")
+                    if game.active_character.using_dynamite():
+                        game.dynamic_movement_range("shooting")
                     else:
-                        self.dynamic_movement_range()
+                        game.dynamic_movement_range()
 
             else:  # if monsters turn and monsters in the game
 
-                self.dungeon.activate_which_tiles()  # tiles deactivated in monster turn
-                self.active_character = monsters.Monster.data[
-                    self.active_character_id
-                ]
-                self.update_interface()
-                self.update_switch("health")
-                self.active_character.token.move_monster()
+                game.dungeon.activate_which_tiles()  # tiles deactivated in monster turn
+                game.active_character = monsters.Monster.data[game.active_character_id]
+                game.update_interface()
+                game.update_switch("health")
+                game.active_character.token.move_monster()
 
     def on_player_exited(self, *args):
-
+        """
+        Handles the change of level or turn when the active character exits the level.
+        :param args: needed for the functioning of then callback. Args are: game instance and a boolean value of
+        the corresponding switch.
+        :return: None
+        """
         exit_tile = self.dungeon.get_tile(self.active_character.position)
 
         exited_player = players.Player.data.pop(self.active_character_id)
@@ -210,6 +217,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         self.active_character.rearrange_ids()
         exit_tile.clear_token("player")
 
+        # in this case all out of game
         if players.Player.all_dead():
 
             monsters.Monster.data.clear()
@@ -220,9 +228,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             self.update_switch("turn")
 
         else:
-            temp = self.active_character_id
-            self.active_character_id = None
-            self.active_character_id = temp
+            self.update_switch("active_character_id")
 
     def next_character(self):
 
@@ -234,9 +240,10 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
     def dynamic_movement_range(self, range_kind: str = "movement"):
         """
-        Gets total range of activable tiles (player movement range and other player positions if player
-        did not move if monsters are present, otherwhise all other players positions) and pass it to
-        activate_which_tiles() to check if tiles are activable
+        Gets the total range of activable tiles (player movement range and other player positions if player.
+        did not move if monsters are present, otherwhise all other players positions).
+        :param range_kind: movement or dynamite.
+        :return: None
         """
 
         if monsters.Monster.all_dead():
@@ -257,37 +264,45 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         self.dungeon.activate_which_tiles(positions_in_range)
 
     def switch_character(self, new_active_character):
-
+        """
+        Changes the active character (self.active_character).
+        :param new_active_character: character to be activated.
+        :return: None
+        """
         index_new_char = players.Player.data.index(new_active_character)
         index_old_char = players.Player.data.index(self.active_character)
-        (
-            players.Player.data[index_old_char],
-            players.Player.data[index_new_char],
-        ) = (
-            players.Player.data[index_new_char],
-            players.Player.data[index_old_char],
-        )
-        players.Player.rearrange_ids()
+        players.Player.swap_characters(index_new_char,index_old_char)
+
         self.active_character.token.remove_selection_circle()
         self.active_character = new_active_character
         self.active_character_id = None
         self.active_character_id = players.Player.data.index(self.active_character)
 
-    def on_inv_object(self, game, inv_object):
-
+    @staticmethod
+    def on_inv_object(game, inv_object):
+        """
+        When a character picks up an object enables the corresponding button if applicable.
+        :param game: current instance of the game.
+        :param inv_object: object of the inventory just picked up.
+        :return: None
+        """
         if inv_object is not None:
 
-            character = self.active_character
+            character = game.active_character
 
             if character.inventory is None or character.inventory[inv_object] == 0:
-                self.ids[inv_object + "_button"].disabled = True
+                game.ids[inv_object + "_button"].disabled = True
             else:
-                self.ids[inv_object + "_button"].disabled = False
+                game.ids[inv_object + "_button"].disabled = False
 
-            self.inv_object = None
+            game.inv_object = None
 
     def generate_next_level(self, new_dungeon_level: int) -> None:
-
+        """
+        Removed current level board and generates instantiates a new one.
+        :param new_dungeon_level: number of the next level.
+        :return: None
+        """
         self.children[0].remove_widget(self.dungeon)  # self.children[0] is Scrollview
         new_level = DungeonLayout(dungeon_level=new_dungeon_level, game=self)
         self.children[0].add_widget(new_level)
@@ -300,7 +315,7 @@ class CrapgeonApp(App):
         return MineMadnessGame()
 
 
-######################################################### START APP ##########################################################
+######################################################### START APP ###################################################
 
 
 if __name__ == "__main__":

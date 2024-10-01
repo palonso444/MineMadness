@@ -33,6 +33,17 @@ class Player(Character, ABC, EventDispatcher):
         cls.rearrange_ids()
 
     @classmethod
+    def swap_characters(cls, index_char_1, index_char_2):
+        """
+        Swaps the order of 2 characters in cls.data
+        :param index_char_1: index of a character
+        :param index_char_2: index of another character
+        :return: None
+        """
+        cls.data[index_char_2], cls.data[index_char_1] = cls.data[index_char_1], cls.data[index_char_2]
+        cls.rearrange_ids()
+
+    @classmethod
     def transfer_player(cls, name: str) -> Character:
         """
         Heals and disables the ability of exited players and transfers them to the next level.
@@ -91,12 +102,15 @@ class Player(Character, ABC, EventDispatcher):
             "whisky": 0,
             "talisman": 0,
         }
-        self.special_items: dict[str:int] | None = None
         self.effects: dict[str:list] = {"moves": [], "thoughness": [], "strength": []}
         self.state: str | None = None
         self.level_track: dict[int:dict] = {}
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
+
+        self.special_items: dict[str:int] | None = None
+        self.ability_display: str | None = None
+        self.ability_active: bool | None = None
 
     # default using_dynamite() defined in Character class
     # default is_hidden() defined in Character class
@@ -396,11 +410,15 @@ class Sawyer(Player):
         super().__init__()
         self.char: str = "%"
         self.name: str = "Sawyer"
-        self.special_items: dict[str:int] | None = {"powder": 2}
         self.ignores = ("dynamite",)
 
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
+
+        self.special_items: dict[str:int] | None = {"powder": 2}
+        self.ability_display: str = "Hide"
+        self.ability_active: bool = False
+
 
     def on_player_level(self, instance, value):
         """Sawyer is a young, unexperienced but dexteritous character. Is it not particularly strong
@@ -464,6 +482,10 @@ class CrusherJane(Player):
         self.stats = stats.CrusherJaneStats()
         self._update_level_track(self.player_level)
 
+        self.special_items: dict[str:int] = {"weapons": self.stats.weapons}
+        self.ability_display: str = "Use Weapons"
+        self.ability_active: bool = False
+
     def on_player_level(self, instance, value):
         """Crusher Jane is a big, strong and not particularly intelligent women. Relies on brute strength and on her
         physical endurance to resist the most brutal hits.
@@ -526,10 +548,13 @@ class Hawkins(Player):
         self.name: str = "Hawkins"
         self.free_actions: tuple = ("digging",)
         self.ignores: tuple = ("gem", "powder")
-        self.special_items: dict[str:int] | None = {"dynamite": 2}
 
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)
+
+        self.special_items: dict[str:int] | None = {"dynamite": 2}
+        self.ability_display: str = "Use Dynamite"
+        self.ability_active: bool = False
 
     def on_player_level(self, instance, value):
         """Hawkins is an old and wise man. It is trained by the most difficult situations of life and it is strong
@@ -545,10 +570,10 @@ class Hawkins(Player):
         self._level_up_health(1)
         self._level_up_strength((0, 1))
 
-        if not utils.check_if_multiple(value, 2):
+        if not check_if_multiple(value, 2):
             self._level_up_strength((1, 0))
 
-        if utils.check_if_multiple(value, 3):
+        if check_if_multiple(value, 3):
             self._level_up_moves(1)
             self.stats.recovery_end_of_level += 1
 

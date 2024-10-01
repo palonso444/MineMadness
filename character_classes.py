@@ -53,6 +53,8 @@ class Character(ABC):
 
         # monsters need ability_active for the functioning of the ability_button
         self.ability_active: bool = False
+        # monsters need ability_display fot the ability button
+        self.ability_display: str | None = None
 
         self.token = None
         self.dungeon = None
@@ -80,7 +82,7 @@ class Character(ABC):
 
         if self.is_hidden:
             self.unhide()
-        if opponent.is_hidden():
+        if opponent.is_hidden:
             opponent.unhide()
 
         opponent.stats.health = opponent.stats.health - damage

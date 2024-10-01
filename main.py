@@ -99,8 +99,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         the corresponding switch.
         :return: None
         """
-        for arg in args:
-            print(arg)
         self.ability_button_active = False
 
         if isinstance(self.active_character, monsters.Monster):
@@ -120,8 +118,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         the corresponding switch.
         :return: None
         """
-        for arg in args:
-            print (arg)
         # if no monsters in game, players can move indefinitely
         if (
             isinstance(self.active_character, players.Player)

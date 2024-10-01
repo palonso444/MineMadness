@@ -5,13 +5,14 @@ class Blueprint:
 
     def __init__(self, y_axis: int, x_axis: int,
                  alive_players: tuple,
-                 item_frequencies: dict):
+                 dungeon):
 
         self.y_axis = y_axis
         self.x_axis = x_axis
         self.area = y_axis * x_axis
         self.blueprint = self.create_empty_map(y_axis, x_axis)
-        self.post_init(alive_players, item_frequencies)
+        self.dungeon = dungeon
+        self.post_init(alive_players, self.dungeon.stats.level_progression())
 
     def post_init(self, alive_players, item_frequencies):
         self.populate_blueprint(alive_players, item_frequencies)
@@ -41,25 +42,18 @@ class Blueprint:
     def random_location(self) -> tuple [int, int]:
         return randint(0, self.y_axis - 1), randint(0, self.x_axis - 1)
 
-    def place_single_item(self, item:str, position: tuple) -> None:
-        self.blueprint[position[0]],[position[1]] = item
+    def place_single_item(self, item:str, position: tuple[int,int]) -> tuple [int,int]:
+        self.blueprint[position[0]][position[1]] = item
+        return position
 
     def populate_blueprint(self, alive_players: tuple, item_frequencies: dict):
-        self.place_items_as_group(self.blueprint,
-                                  alive_players,
-                                  min_dist=1)
+        self.place_items_as_group(alive_players, 1)
 
-        self.place_equal_items(self.blueprint, " ", 1)
-        self.place_equal_items(self.blueprint, "o", self.stats.gem_number())
+        self.place_equal_items(" ", 1)
+        self.place_equal_items("o", self.dungeon.stats.gem_number())
 
         for key, value in item_frequencies:
-            self.place_items(
-                self.blueprint,
-                item=key,
-                frequency=value,
-                protected=self.stats.mandatory_items,
-            )
-
+            self.place_items(item=key, frequency=value, protected=self.dungeon.stats.mandatory_items)
 
     def place_items(self, item: str, frequency=0.1, protected=None) -> None:
 
@@ -70,22 +64,23 @@ class Blueprint:
             if not protected or self.get_position(position) not in protected:
                 self.place_single_item(item, position)
 
-    def place_equal_items(self, item: str, number_of_items=1, position=None) -> tuple[int]:
+    def place_equal_items(self, item: str, number_of_items=1, position=None) -> None:
 
         for number in range(number_of_items):
 
-            while self.check_for_free_spots(self.blueprint):
+            while self.check_for_free_spots():
 
                 if not position or not self.spot_is_free(position):  # if position is taken, generates random location
                     position = self.random_location()
 
                 if self.spot_is_free(position):
                     self.place_single_item(item, position)
+                    break
 
-                    if number_of_items == 1:
-                        return (position[0], position[1])
-                    else:
-                        break
+    '''if number_of_items == 1:
+        return position
+    else:
+        break'''
 
     '''@staticmethod
     def place_items_as_group(
@@ -141,7 +136,7 @@ class Blueprint:
                              position: tuple[int, int] | None = None):
 
         items = deque(items)
-        initial_position = self.place_equal_items(items.popleft(), position=position)
+        initial_position = self.place_single_item(items.popleft(), position=position)
         placed_positions = {initial_position}
         tested_positions = {initial_position}
         max_dist = max_dist if max_dist is not None and max_dist >= min_dist else min_dist
@@ -165,8 +160,7 @@ class Blueprint:
                 self.place_equal_items(items.popleft(), position=cand_position)
 
 
-
-    '''@staticmethod
+'''@staticmethod
     def place_items_as_group(
             items: tuple[str],
             min_dist: int,

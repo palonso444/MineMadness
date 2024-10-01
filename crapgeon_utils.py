@@ -36,12 +36,15 @@ def check_if_multiple(number: int, multiple_of: int):
 # define a random location in map
 def location(map: list[list[str]]) -> tuple[int]:
 
+    # TODO: delete
+
     height = randint(0, len(map) - 1)
     width = randint(0, len(map[0]) - 1)
     return height, width
 
 
 def check_for_free_spots(map: list[list[str]]) -> bool:
+    # TODO: delete
 
     for y in range(len(map)):
         for x in range(len(map[y])):
@@ -62,30 +65,16 @@ def are_nearby(item1: object, item2: object) -> bool:  # check if two positions 
 
 
 def get_distance(position1: tuple[int], position2: tuple[int]) -> int:
-
+    # TODO: delete
     return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
-
-
-def get_max_possible_distance(map: list[list[str]], position: tuple[int]) -> int:
-
-    max_distance = get_distance(position, (0, 0))
-
-    if get_distance(position, (0, len(map[0]) - 1)) > max_distance:
-        max_distance = get_distance(position, (0, len(map[0]) - 1))
-
-    if get_distance(position, (len(map) - 1, 0)) > max_distance:
-        max_distance = get_distance(position, (len(map) - 1, 0))
-
-    if get_distance(position, (len(map) - 1, len(map[0]) - 1)) > max_distance:
-        max_distance = get_distance(position, (len(map) - 1, len(map[0]) - 1))
-
-    return max_distance
 
 
 # creates map surface
 
 
 def create_map(height: int, width: int) -> list[list[str]]:
+
+    # TODO: delete
 
     map = list()
 
@@ -109,6 +98,8 @@ def create_map(height: int, width: int) -> list[list[str]]:
 def place_equal_items(
     map: list[list[str]], item: str, number_of_items=1, position=None
 ) -> tuple[int]:
+
+    #TODO: delete
 
     for number in range(number_of_items):
 
@@ -135,7 +126,7 @@ def place_equal_items(
 
 
 def place_items(map: list[list[str]], item: str, frequency=0.1, protected=None) -> None:
-
+    #TODO: delete
     number_of_items = (len(map) * len(map[0])) * frequency
 
     for number in range(int(number_of_items)):
@@ -154,6 +145,7 @@ def place_items_as_group(
     max_dist: int | None = None,
     position: tuple[int] | None = None,
 ):
+    #TODO: delete
 
     items = deque(items)
 

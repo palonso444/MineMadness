@@ -9,6 +9,7 @@ class Blueprint:
 
         self.y_axis = y_axis
         self.x_axis = x_axis
+        self.area = y_axis * x_axis
         self.blueprint = self.create_empty_map(y_axis, x_axis)
         self.post_init(alive_players, item_frequencies)
 
@@ -17,7 +18,7 @@ class Blueprint:
 
 
     @staticmethod
-    def get_distance(position1: tuple[int], position2: tuple[int]) -> int:
+    def get_distance(position1: tuple[int, int], position2: tuple[int, int]) -> int:
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
     @staticmethod
@@ -86,9 +87,8 @@ class Blueprint:
                     else:
                         break
 
-    @staticmethod
+    '''@staticmethod
     def place_items_as_group(
-            map: list[list[str]],
             items: tuple[str],
             min_dist: int,
             max_dist: int | None = None,
@@ -133,39 +133,83 @@ class Blueprint:
                 i += 1
 
             if len(tested_positions) == map_area and item_to_place is not None:
-                tested_positions = set(placed_positions)
+                tested_positions = set(placed_positions)'''
 
     #CHAT GPT CANDIDATE
-    '''def place_items_as_group(
-            map: list[list[str]],
-            items: tuple[str],
-            min_dist: int,
-            max_dist: int | None = None,
-            position: tuple[int] | None = None,
-    ):
+    def place_items_as_group(self, items: tuple[str],
+                             min_dist: int, max_dist: int | None = None,
+                             position: tuple[int, int] | None = None):
+
         items = deque(items)
-        initial_position = place_equal_items(map, items.popleft(), position=position)
-
-        placed_positions = [initial_position]
+        initial_position = self.place_equal_items(items.popleft(), position=position)
+        placed_positions = {initial_position}
         tested_positions = {initial_position}
-
         max_dist = max_dist if max_dist is not None and max_dist >= min_dist else min_dist
-        map_area = len(map) * len(map[0])
 
-        while len(tested_positions) < map_area and items:
-            cand_position = location(map)
+        while len(tested_positions) < self.area and len(items) > 0:
+            cand_position = self.random_location()
 
             if cand_position in tested_positions:
                 continue
 
             tested_positions.add(cand_position)
 
-            if any(get_distance(cand_position, pos) < min_dist for pos in placed_positions):
-                continue
+            if (
+                    all(min_dist <= self.get_distance(cand_position, position)
+                    for position in placed_positions)
+                and any (self.get_distance(cand_position, position) <= max_dist for
+                         position in placed_positions)
+            ):
 
-            if any(min_dist <= get_distance(cand_position, pos) <= max_dist for pos in placed_positions):
-                placed_positions.append(cand_position)
-                place_equal_items(map, items.popleft(), position=cand_position)
+                placed_positions.add(cand_position)
+                self.place_equal_items(items.popleft(), position=cand_position)
 
-        if items:
-            tested_positions = set(placed_positions)'''
+
+
+    '''@staticmethod
+    def place_items_as_group(
+            items: tuple[str],
+            min_dist: int,
+            max_dist: int | None = None,
+            position: tuple[int] | None = None,
+    ):
+
+        items = deque(items)
+
+        initial_position = place_equal_items(map, items.popleft(), position=position)
+
+        placed_positions = [initial_position]
+        tested_positions = {initial_position}
+
+        item_to_place = items.popleft() if len(items) > 0 else None
+        map_area = len(map) * len(map[0])
+        max_dist = min_dist if max_dist is None or max_dist < min_dist else max_dist
+
+        while len(tested_positions) < map_area and item_to_place is not None:
+
+            while True:
+                cand_position = location(map)
+
+                if cand_position not in tested_positions:
+                    tested_positions.add(cand_position)
+                    break
+
+            max_dist_ok = False
+
+            i = 0
+            while i < len(placed_positions):
+
+                if get_distance(cand_position, placed_positions[i]) < min_dist:
+                    break
+                if get_distance(cand_position, placed_positions[i]) <= max_dist:
+                    max_dist_ok = True
+
+                if i == len(placed_positions) - 1 and max_dist_ok:
+                    placed_positions.append(cand_position)
+                    place_equal_items(map, item_to_place, position=cand_position)
+                    item_to_place = items.popleft() if len(items) > 0 else None
+
+                i += 1
+
+            if len(tested_positions) == map_area and item_to_place is not None:
+                tested_positions = set(placed_positions)'''

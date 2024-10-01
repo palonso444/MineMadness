@@ -291,6 +291,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             else:
                 game.ids[inv_object + "_button"].disabled = False
 
+            # needs to be reset to None otherwise it is not possible to pick 2 equal objects in a row
             game.inv_object = None
 
     def generate_next_level(self, new_dungeon_level: int) -> None:

@@ -26,7 +26,8 @@ class DungeonLayout(GridLayout):
         self.stats = DungeonStats(self.dungeon_level)
         self.rows: int = self.stats.size()
         self.cols: int = self.stats.size()
-        self.blueprint: list[list] | None = None
+        self.blueprint = Blueprint(self.rows, self.cols,
+                                   self.determine_alive_players(), dungeon=self)
 
         # determines which character shows fadingtokens
         self.fading_token_character: players.Player | None = None
@@ -47,8 +48,8 @@ class DungeonLayout(GridLayout):
         self.tiles_dict: dict[tuple : tiles.Tile] = (
             dict()
         )  # for faster access to tiles by get_tile()
-        self.blueprint = Blueprint(self.rows, self.cols,
-                                   self.determine_alive_players(), dungeon=self)
+        #self.blueprint = Blueprint(self.rows, self.cols,
+                                   #self.determine_alive_players(), dungeon=self)
         self.game = self.parent.parent
         self.game.total_gems = 0
 

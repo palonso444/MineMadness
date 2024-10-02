@@ -123,7 +123,7 @@ class Blueprint:
         :param min_dist: minimum distance to be kept between ALL items
         :param max_dist: maximum distance to be kept between items
         :param position: position of the first item placed. If not specified, random position is generated
-        :param scatter: if set to True, max_dist is required only to one of the item placed, resulting in a more
+        :param scatter: if set to True, max_dist is required only to one of the items placed, resulting in a more
         scattered positioning but guarantees that all items are placed in most of the cases.
         :return: None
         """

@@ -52,13 +52,13 @@ class DungeonLayout(GridLayout):
 
         for y in range(self.rows):
             for x in range(self.cols):
-                position = y,x
-                if self.blueprint.get_position(position) == "o":
+
+                if self.blueprint.get_position((y,x)) == "o":
 
                     self.game.total_gems += 1
                     tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
 
-                elif self.blueprint.get_position(position) == " ":
+                elif self.blueprint.get_position((y,x)) == " ":
 
                     tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=self)
 

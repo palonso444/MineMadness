@@ -77,10 +77,9 @@ class Blueprint:
         Places the specified item at the specified position of the map. Overwrites position if not free.
         :param item: item to place
         :param position: coordinates of the position where to place the item
-        :return: coordinates where item was placed
+        :return: None
         """
         self.map[position[0]][position[1]] = item
-        return position
 
     def place_items(self, item: str, frequency: float=0.1, protected:tuple | None =None) -> None:
         """
@@ -132,9 +131,9 @@ class Blueprint:
         if position is None:
             position = self.random_location()
 
-        initial_position = self.place_single_item(items.popleft(), position=position)
-        placed_positions = {initial_position}
-        tested_positions = {initial_position}
+        self.place_single_item(items.popleft(), position=position)
+        placed_positions = {position}
+        tested_positions = {position}
 
         max_dist = max_dist if max_dist is not None and max_dist >= min_dist else min_dist
 

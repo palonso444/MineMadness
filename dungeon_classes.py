@@ -3,13 +3,12 @@ from kivy.properties import ListProperty
 from collections import deque
 from random import choice
 
-
-import crapgeon_utils as utils
 import player_classes as players
 import monster_classes as monsters
 import token_classes as tokens
 import tile_classes as tiles
 from game_stats import DungeonStats
+from dungeon_blueprint import Blueprint
 
 
 
@@ -25,6 +24,7 @@ class DungeonLayout(GridLayout):
         self.stats = DungeonStats(self.dungeon_level)
         self.rows: int = self.stats.size()
         self.cols: int = self.stats.size()
+        self.blueprint = self.generate_blueprint(self.rows, self.cols)
 
         # determines which character shows fadingtokens
         self.fading_token_character: players.Player | None = None
@@ -45,20 +45,20 @@ class DungeonLayout(GridLayout):
         self.tiles_dict: dict[tuple : tiles.Tile] = (
             dict()
         )  # for faster access to tiles by get_tile()
-        self.generate_blueprint(self.rows, self.cols)  # initialize map of dungeon
+        #self.blueprint = Blueprint(self.rows, self.cols,
+                                   #self.determine_alive_players(), dungeon=self)
         self.game = self.parent.parent
         self.game.total_gems = 0
 
         for y in range(self.rows):
-
             for x in range(self.cols):
 
-                if self.blueprint[y][x] == "o":
+                if self.blueprint.get_position((y,x)) == "o":
 
                     self.game.total_gems += 1
                     tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
 
-                elif self.blueprint[y][x] == " ":
+                elif self.blueprint.get_position((y,x)) == " ":
 
                     tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=self)
 
@@ -73,33 +73,23 @@ class DungeonLayout(GridLayout):
 
     def generate_blueprint(self, height, width):
 
-        self.blueprint = utils.create_map(height, width)
+        blueprint = Blueprint(height, width)
 
-        utils.place_items_as_group(
-            self.blueprint, self.determine_alive_players(), min_dist=1
-        )
+        blueprint.place_items_as_group(self.determine_alive_players(), min_dist=1)
 
-        utils.place_equal_items(self.blueprint, " ", 1)
-        # utils.place_equal_items(self.blueprint, "x", 1)
-        # utils.place_equal_items(self.blueprint, "P", 1)
-        # utils.place_equal_items(self.blueprint, "o", 1)
-        # utils.place_equal_items(self.blueprint, "H", 1)
-        # utils.place_equal_items(self.blueprint, "G", 1)
-        # utils.place_equal_items(self.blueprint, "j", 1)
-        # utils.place_equal_items(self.blueprint, "c", 3)
-        utils.place_equal_items(self.blueprint, "o", self.stats.gem_number())
+        blueprint.place_equal_items(" ", 1)
+        blueprint.place_equal_items("o", self.stats.gem_number())
 
         for key, value in self.stats.level_progression().items():
 
-            utils.place_items(
-                self.blueprint,
+            blueprint.place_items(
                 item=key,
                 frequency=value,
                 protected=self.stats.mandatory_items,
             )
 
-        # for y in range (len(self.blueprint)):
-        # print (*self.blueprint[y])"""
+        #blueprint.print_map()
+        return blueprint
 
     def determine_alive_players(self):
 
@@ -115,7 +105,7 @@ class DungeonLayout(GridLayout):
     def match_blueprint(self):
 
         for tile in self.children:
-            match self.blueprint[tile.row][tile.col]:
+            match self.blueprint.get_position((tile.row,tile.col)):
 
                 case "%":
                     self.create_item(tile, "player", "sawyer")
@@ -329,7 +319,6 @@ class DungeonLayout(GridLayout):
             )
 
     def get_tile(self, position):
-
         return self.tiles_dict.get(position)
 
     def scan(
@@ -408,6 +397,21 @@ class DungeonLayout(GridLayout):
                 nearby_spaces.add(position)
 
         return nearby_spaces
+
+    @staticmethod
+    def are_nearby(item1, item2) -> bool:  # check if two positions are nearby
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        for direction in directions:
+            row, col = item1.position[0] + direction[0], item1.position[1] + direction[1]
+            if (row, col) == item2.position:
+                return True
+        return False
+
+    @staticmethod
+    def get_distance(position1: tuple[int], position2: tuple[int]) -> int:
+        return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
+
 
     def get_nearby_positions(self, position: tuple[int]) -> set[tuple[int]]:
         """Returns surrounding positions"""

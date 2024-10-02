@@ -1,144 +1,141 @@
 from collections import deque
 from random import randint
 
-class Blueprint:
 
-    def __init__(self, y_axis: int, x_axis: int,
-                 alive_players: tuple,
-                 dungeon):
+class Blueprint:
+    """
+    Program-agnostic module to generate ASCII-based blueprints of dungeon rooms
+    """
+
+    def __init__(self, y_axis: int, x_axis: int):
 
         self.y_axis = y_axis
         self.x_axis = x_axis
         self.area = y_axis * x_axis
-        self.blueprint = self.create_empty_map(y_axis, x_axis)
-        self.dungeon = dungeon
-        self.post_init(alive_players, self.dungeon.stats.level_progression())
-
-    def post_init(self, alive_players, item_frequencies):
-        self.populate_blueprint(alive_players, item_frequencies)
-
+        self.map = self.generate_empty_map(y_axis, x_axis)
 
     @staticmethod
     def get_distance(position1: tuple[int, int], position2: tuple[int, int]) -> int:
+        """
+        Gets the distance between two positions
+        :param position1: coordinates of position 1
+        :param position2:  coordinates of position 2
+        :return: distance between the two positions
+        """
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
     @staticmethod
-    def create_empty_map(y_axis: int, x_axis: int) -> list[list[str]]:
+    def generate_empty_map(y_axis: int, x_axis: int) -> list[list[str]]:
+        """
+        Creates an empty grid of points of the specified dimensions
+        :param y_axis: length of the y-axis
+        :param x_axis: length of the x-axis
+        :return: grid of points
+        """
         return [["." for _ in range(x_axis)] for _ in range(y_axis)]
 
-    def get_position(self, position:tuple):
-        return self.blueprint[position[0]][position[1]]
+    def get_position(self, position:tuple[int,int]) -> str:
+        """
+        Returns the value of the specified position of the grid
+        :param position: coordinates of the position whose value must be returned
+        :return: value of the specified position
+        """
+        return self.map[position[0]][position[1]]
 
-    def spot_is_free(self, position):
+    def spot_is_free(self, position:tuple[int,int]) -> bool:
+        """
+        Returns True if the value of the given position is "." (free)
+        :param position: coordinates of the position
+        :return: True if the position is free, False otherwise
+        """
         return self.get_position(position) == "."
 
     def check_for_free_spots(self) -> bool:
-        for y in range(self.y_axis):
-            for x in range(self.x_axis):
-                if self.spot_is_free((y,x)):
-                    return True
-        return False
+        """
+        Checks if any position of the grid has a value of "." (free)
+        :return: True if there is at least one free position, False otherwise
+        """
+        return any(self.spot_is_free((y, x)) for y in range(self.y_axis) for x in range(self.x_axis))
 
     def random_location(self) -> tuple [int, int]:
+        """
+        Returns a random position of the grid
+        :return: coordinates of the random position
+        """
         return randint(0, self.y_axis - 1), randint(0, self.x_axis - 1)
 
+    def print_map(self) -> None:
+        """
+        Prints the room grid in a pretty and legible way
+        :return: None
+        """
+        for row in self.map:
+            print(" ".join(row))
+
     def place_single_item(self, item:str, position: tuple[int,int]) -> tuple [int,int]:
-        self.blueprint[position[0]][position[1]] = item
+        """
+        Places the specified item at the specified position of the map. Overwrites position if not free.
+        :param item: item to place
+        :param position: coordinates of the position where to place the item
+        :return: coordinates where item was placed
+        """
+        self.map[position[0]][position[1]] = item
         return position
 
-    def populate_blueprint(self, alive_players: tuple, item_frequencies: dict):
-        self.place_items_as_group(alive_players, 1)
-
-        self.place_equal_items(" ", 1)
-        self.place_equal_items("o", self.dungeon.stats.gem_number())
-
-        for key, value in item_frequencies:
-            self.place_items(item=key, frequency=value, protected=self.dungeon.stats.mandatory_items)
-
-    def place_items(self, item: str, frequency=0.1, protected=None) -> None:
-
+    def place_items(self, item: str, frequency: float=0.1, protected:tuple | None =None) -> None:
+        """
+        PLaces an item in approximate numbers defined by the frequency, ranging from 0 to 1. Overwrites items if not
+        specified in parameter "protected"
+        :param item: item to place
+        :param frequency: frequency, ranging from 0 (none placed) to 1 (very frequent)
+        :param protected: tuple containing important items that must not be overwritten
+        :return: None
+        """
         number_of_items = (self.y_axis * self.x_axis) * frequency
 
         for number in range(int(number_of_items)):
             position = self.random_location()
-            if not protected or self.get_position(position) not in protected:
+            if protected is None or self.get_position(position) not in protected:
                 self.place_single_item(item, position)
 
-    def place_equal_items(self, item: str, number_of_items=1, position=None) -> None:
-
+    def place_equal_items(self, item: str, number_of_items=1) -> None:
+        """
+        Places items in an exact number. Does not overwrite occupied positions.
+        :param item: item to place
+        :param number_of_items: number of items to place
+        :return: None
+        """
         for number in range(number_of_items):
 
             while self.check_for_free_spots():
-
-                if not position or not self.spot_is_free(position):  # if position is taken, generates random location
-                    position = self.random_location()
+                position = self.random_location()
 
                 if self.spot_is_free(position):
                     self.place_single_item(item, position)
                     break
 
-    '''if number_of_items == 1:
-        return position
-    else:
-        break'''
-
-    '''@staticmethod
-    def place_items_as_group(
-            items: tuple[str],
-            min_dist: int,
-            max_dist: int | None = None,
-            position: tuple[int] | None = None,
-    ):
-
-        items = deque(items)
-
-        initial_position = place_equal_items(map, items.popleft(), position=position)
-
-        placed_positions = [initial_position]
-        tested_positions = {initial_position}
-
-        item_to_place = items.popleft() if len(items) > 0 else None
-        map_area = len(map) * len(map[0])
-        max_dist = min_dist if max_dist is None or max_dist < min_dist else max_dist
-
-        while len(tested_positions) < map_area and item_to_place is not None:
-
-            while True:
-                cand_position = location(map)
-
-                if cand_position not in tested_positions:
-                    tested_positions.add(cand_position)
-                    break
-
-            max_dist_ok = False
-
-            i = 0
-            while i < len(placed_positions):
-
-                if get_distance(cand_position, placed_positions[i]) < min_dist:
-                    break
-                if get_distance(cand_position, placed_positions[i]) <= max_dist:
-                    max_dist_ok = True
-
-                if i == len(placed_positions) - 1 and max_dist_ok:
-                    placed_positions.append(cand_position)
-                    place_equal_items(map, item_to_place, position=cand_position)
-                    item_to_place = items.popleft() if len(items) > 0 else None
-
-                i += 1
-
-            if len(tested_positions) == map_area and item_to_place is not None:
-                tested_positions = set(placed_positions)'''
-
-    #CHAT GPT CANDIDATE
-    def place_items_as_group(self, items: tuple[str],
-                             min_dist: int, max_dist: int | None = None,
-                             position: tuple[int, int] | None = None):
+    def place_items_as_group(self, items: tuple, min_dist: int, max_dist: int | None = None,
+                             position: tuple[int, int] | None = None, scatter:bool = True) -> None:
+        """
+        Places items grouped between a minimum and maximum distance. Items not possible to place between specified
+        distances are skipped.
+        :param items: tuple containing the items to place grouped
+        :param min_dist: minimum distance to be kept between ALL items
+        :param max_dist: maximum distance to be kept between items
+        :param position: position of the first item placed. If not specified, random position is generated
+        :param scatter: if set to True, max_dist is required only to one of the item placed, resulting in a more
+        scattered positioning but guarantees that all items are placed in most of the cases.
+        :return: None
+        """
 
         items = deque(items)
+        if position is None:
+            position = self.random_location()
+
         initial_position = self.place_single_item(items.popleft(), position=position)
         placed_positions = {initial_position}
         tested_positions = {initial_position}
+
         max_dist = max_dist if max_dist is not None and max_dist >= min_dist else min_dist
 
         while len(tested_positions) < self.area and len(items) > 0:
@@ -149,61 +146,22 @@ class Blueprint:
 
             tested_positions.add(cand_position)
 
-            if (
-                    all(min_dist <= self.get_distance(cand_position, position)
-                    for position in placed_positions)
-                and any (self.get_distance(cand_position, position) <= max_dist for
-                         position in placed_positions)
-            ):
+            if all(min_dist <= self.get_distance(cand_position, position) for position in placed_positions):
 
-                placed_positions.add(cand_position)
-                self.place_equal_items(items.popleft(), position=cand_position)
+                if ((scatter and any (self.get_distance(cand_position, position) <= max_dist
+                                      for position in placed_positions)) or
+                        (not scatter and all(self.get_distance(cand_position, position) <= max_dist
+                                             for position in placed_positions))):
+
+                    placed_positions.add(cand_position)
+                    self.place_single_item(items.popleft(), position=cand_position)
 
 
-'''@staticmethod
-    def place_items_as_group(
-            items: tuple[str],
-            min_dist: int,
-            max_dist: int | None = None,
-            position: tuple[int] | None = None,
-    ):
+if __name__ == "__main__":
 
-        items = deque(items)
-
-        initial_position = place_equal_items(map, items.popleft(), position=position)
-
-        placed_positions = [initial_position]
-        tested_positions = {initial_position}
-
-        item_to_place = items.popleft() if len(items) > 0 else None
-        map_area = len(map) * len(map[0])
-        max_dist = min_dist if max_dist is None or max_dist < min_dist else max_dist
-
-        while len(tested_positions) < map_area and item_to_place is not None:
-
-            while True:
-                cand_position = location(map)
-
-                if cand_position not in tested_positions:
-                    tested_positions.add(cand_position)
-                    break
-
-            max_dist_ok = False
-
-            i = 0
-            while i < len(placed_positions):
-
-                if get_distance(cand_position, placed_positions[i]) < min_dist:
-                    break
-                if get_distance(cand_position, placed_positions[i]) <= max_dist:
-                    max_dist_ok = True
-
-                if i == len(placed_positions) - 1 and max_dist_ok:
-                    placed_positions.append(cand_position)
-                    place_equal_items(map, item_to_place, position=cand_position)
-                    item_to_place = items.popleft() if len(items) > 0 else None
-
-                i += 1
-
-            if len(tested_positions) == map_area and item_to_place is not None:
-                tested_positions = set(placed_positions)'''
+    test = Blueprint(10,10)
+    #test.place_single_item("%", (1,1))
+    #test.place_items("4", 0.5)
+    #test.place_equal_items("2",99)
+    #test.place_items_as_group(("A","B","C", "D", "E"),1, 2, scatter=True)
+    test.print_map()

@@ -5,7 +5,6 @@ from kivy.properties import BooleanProperty
 # from kivy.properties import Clock
 # from kivy.graphics import Ellipse, Color
 
-from crapgeon_utils import are_nearby
 from monster_classes import Monster
 
 
@@ -64,7 +63,7 @@ class Tile(Button):
 
         if (
                 self.has_token(("wall", "rock"))
-                and are_nearby(self, player)
+                and self.dungeon.are_nearby(self, player)
                 and player.stats.remaining_moves >= player.stats.digging_moves
                 and not player.using_dynamite()
         ):
@@ -74,7 +73,7 @@ class Tile(Button):
 
         if self.has_token(("wall", "granite")) and player.name == "Hawkins":
             if (
-                    are_nearby(self, player)
+                    self.dungeon.are_nearby(self, player)
                     and player.stats.remaining_moves >= player.stats.digging_moves
                     and player.stats.shovels > 0
             ):
@@ -87,7 +86,7 @@ class Tile(Button):
 
         if (
                 self.has_token(("monster", None))
-                and are_nearby(self, player)
+                and self.dungeon.are_nearby(self, player)
                 and ((player.stats.weapons > 0 or "fighting" in player.free_actions))
         ):
             return True

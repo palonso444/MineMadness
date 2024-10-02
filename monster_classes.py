@@ -2,8 +2,6 @@ from __future__ import annotations
 from random import randint, choice
 from abc import ABC, abstractmethod
 
-from crapgeon_utils import get_distance, are_nearby
-
 import game_stats as stats
 from character_classes import Character
 
@@ -115,7 +113,7 @@ class Monster(Character, ABC):
         """
 
         # if target is nearby and cannot share tile with it, don't move
-        if are_nearby(self, target_tile):
+        if self.dungeon.are_nearby(self, target_tile):
             return None
 
         accesses: list[list] | None = self._find_accesses(target_tile, smart=True)
@@ -200,7 +198,7 @@ class Monster(Character, ABC):
                 continue
 
             # get distance to player
-            distance_to_target: int = get_distance(
+            distance_to_target: int = self.dungeon.get_distance(
                 self.position, target_tile.position
             )
 
@@ -208,17 +206,17 @@ class Monster(Character, ABC):
             for idx, position in enumerate(possible_path):
 
                 # if going to that position means going further away from player, path not valid
-                if distance_to_target <= get_distance(
+                if distance_to_target <= self.dungeon.get_distance(
                     position, target_tile.position
                 ):
                     break
 
                 # if going to that position means getting closer to player, path OK so far
-                if distance_to_target > get_distance(
+                if distance_to_target > self.dungeon.get_distance(
                     position, target_tile.position
                 ):
                     # update distance to target from this new position
-                    distance_to_target = get_distance(
+                    distance_to_target = self.dungeon.get_distance(
                         position, target_tile.position
                     )
 
@@ -393,7 +391,7 @@ class Monster(Character, ABC):
                 )
 
             if end_tile is not None and end_tile.has_token(self.chases):
-                if are_nearby(self, end_tile):
+                if self.dungeon.are_nearby(self, end_tile):
                     path = [end_tile.position]
                 else:
                     path.append(end_tile.position)

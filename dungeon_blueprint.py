@@ -91,7 +91,7 @@ class Blueprint:
         :param protected: tuple containing important items that must not be overwritten
         :return: None
         """
-        number_of_items = (self.y_axis * self.x_axis) * frequency
+        number_of_items = self.area * frequency
 
         for number in range(int(number_of_items)):
             position = self.random_location()

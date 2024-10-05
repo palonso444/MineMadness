@@ -89,7 +89,6 @@ class Character(ABC):
         """
         self.position = position
 
-
     def unhide(self) -> None:
         """
         Placeholder, needed for Monster.fight_on_tile()
@@ -142,7 +141,6 @@ class Character(ABC):
             experience: int | None = opponent.stats.experience_when_killed
             opponent.kill_character(opponent_tile)
             return experience
-
 
     def kill_character(self, tile: Tile):
         """

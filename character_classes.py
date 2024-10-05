@@ -5,7 +5,7 @@ from abc import ABC
 
 class Character(ABC):
 
-    data: list | None = None
+    data: list[Character] | None = None
 
     @classmethod
     def rearrange_ids(cls) -> None:
@@ -81,13 +81,6 @@ class Character(ABC):
         :return: True if character has moved, False otherwise
         """
         return self.stats.remaining_moves < self.stats.moves
-
-    def update_position(self, position: tuple[int: int]) -> None:
-        """
-        Updates the position attribute of the character
-        :return: None
-        """
-        self.position = position
 
     def unhide(self) -> None:
         """

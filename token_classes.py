@@ -323,7 +323,7 @@ class CharacterToken(SolidToken):
                 ):
 
                     self.update_on_tiles(self.start, self.goal)  # updates tile.token
-                    self.character.update_position(self.goal.position)
+                    self.character.position = self.goal.position
                     game.update_switch("player_exited")
                     return
 
@@ -332,7 +332,7 @@ class CharacterToken(SolidToken):
 
             if self.start != self.goal:
                 self.update_on_tiles(self.start, self.goal)  # updates tile.token
-                self.character.update_position(self.goal.position)
+                self.character.position = self.goal.position
 
             # only attack in monster turn, no attack if dodging
             if self.character.kind == "monster":

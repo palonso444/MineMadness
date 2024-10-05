@@ -1,3 +1,4 @@
+from __future__ import annotations
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 from kivy.properties import ListProperty
 from collections import deque
@@ -9,7 +10,6 @@ import token_classes as tokens
 import tile_classes as tiles
 from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
-
 
 
 class DungeonLayout(GridLayout):
@@ -38,38 +38,35 @@ class DungeonLayout(GridLayout):
             "Depth: " + str(self.dungeon_level * 30) + " ft."
         )
 
-    def on_pos(self, *args):
+    @staticmethod
+    def on_pos(dungeon: DungeonLayout, pos: list [int, int]) -> None:
 
-        self.display_depth()  # dysplays depth in level_label of interface
+        """
+        This function is triggered when the dungeon is positioned the beginning of each level
+        It initializes DungeonLayout.tiles.dict and places the tiles on the dungeon. Also counts the gems.
+        :param dungeon: Instance of the dungeon corresponding to the current level
+        :param pos: position (actual position on the screen) of the dungeon instance
+        :return: None
+        """
+        dungeon.display_depth()  # dysplays depth in level_label of interface
 
-        self.tiles_dict: dict[tuple : tiles.Tile] = (
-            dict()
-        )  # for faster access to tiles by get_tile()
-        #self.blueprint = Blueprint(self.rows, self.cols,
-                                   #self.determine_alive_players(), dungeon=self)
-        self.game = self.parent.parent
-        self.game.total_gems = 0
+        dungeon.tiles_dict = dict ()
+        dungeon.game = dungeon.parent.parent
+        blueprint = dungeon.blueprint
+        dungeon.game.total_gems = dungeon.stats.gem_number()
 
-        for y in range(self.rows):
-            for x in range(self.cols):
+        for y in range(blueprint.y_axis):
+            for x in range(blueprint.x_axis):
 
-                if self.blueprint.get_position((y,x)) == "o":
-
-                    self.game.total_gems += 1
-                    tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
-
-                elif self.blueprint.get_position((y,x)) == " ":
-
-                    tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=self)
-
+                if blueprint.get_position((y,x)) == " ":
+                    tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=dungeon)
                 else:
+                    tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=dungeon)
 
-                    tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
+                dungeon.tiles_dict[tile.position] = tile
+                dungeon.add_widget(tile)
 
-                self.tiles_dict[tile.position] = tile
-                self.add_widget(tile)
-
-        self.game.dungeon = self  # Adds dungeon as MineMadnessGame class attribute
+        dungeon.game.dungeon = dungeon  # Adds dungeon as MineMadnessGame class attribute
 
     def generate_blueprint(self, height, width):
 

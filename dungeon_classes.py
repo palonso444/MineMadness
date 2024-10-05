@@ -40,7 +40,6 @@ class DungeonLayout(GridLayout):
 
     @staticmethod
     def on_pos(dungeon: DungeonLayout, pos: list [int, int]) -> None:
-
         """
         This function is triggered when the dungeon is positioned the beginning of each level
         It initializes DungeonLayout.tiles.dict and places the tiles on the dungeon. Also counts the gems.
@@ -48,17 +47,15 @@ class DungeonLayout(GridLayout):
         :param pos: position (actual position on the screen) of the dungeon instance
         :return: None
         """
-        dungeon.display_depth()  # dysplays depth in level_label of interface
+        dungeon.display_depth()  # displays depth in level_label of interface
 
         dungeon.tiles_dict = dict ()
-        dungeon.game = dungeon.parent.parent
-        blueprint = dungeon.blueprint
-        dungeon.game.total_gems = dungeon.stats.gem_number()
+        dungeon.game.total_gems = dungeon.stats.gem_number()  # self.game defined in kv file
 
-        for y in range(blueprint.y_axis):
-            for x in range(blueprint.x_axis):
+        for y in range(dungeon.blueprint.y_axis):
+            for x in range(dungeon.blueprint.x_axis):
 
-                if blueprint.get_position((y,x)) == " ":
+                if dungeon.blueprint.get_position((y,x)) == " ":
                     tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=dungeon)
                 else:
                     tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=dungeon)
@@ -66,24 +63,18 @@ class DungeonLayout(GridLayout):
                 dungeon.tiles_dict[tile.position] = tile
                 dungeon.add_widget(tile)
 
-        dungeon.game.dungeon = dungeon  # Adds dungeon as MineMadnessGame class attribute
+        dungeon.game.dungeon = dungeon  # links dungeon with main (MineMadnessGame)
 
     def generate_blueprint(self, height, width):
 
         blueprint = Blueprint(height, width)
 
         blueprint.place_items_as_group(self.determine_alive_players(), min_dist=1)
-
         blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         for key, value in self.stats.level_progression().items():
-
-            blueprint.place_items(
-                item=key,
-                frequency=value,
-                protected=self.stats.mandatory_items,
-            )
+            blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
 
         #blueprint.print_map()
         return blueprint

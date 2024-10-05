@@ -95,6 +95,8 @@ class Player(Character, ABC, EventDispatcher):
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
         self.free_actions: tuple = (None,)
         self.ignores: tuple = (None,)
+
+        # attributes exclusive of Player class
         self.inventory: dict[str:int] = {
             "jerky": 2,
             "coffee": 0,
@@ -104,16 +106,11 @@ class Player(Character, ABC, EventDispatcher):
         }
         self.effects: dict[str:list] = {"moves": [], "thoughness": [], "strength": []}
         self.state: str | None = None
+        self.special_items: dict[str:int] | None = None
         self.level_track: dict[int:dict] = {}
+
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
-
-        self.special_items: dict[str:int] | None = None
-        self.ability_display: str | None = None
-        self.ability_active: bool | None = None
-
-    # default using_dynamite() defined in Character class
-    # default is_hidden() defined in Character class
 
     def on_experience(self, instance, value):
 
@@ -582,10 +579,9 @@ class Hawkins(Player):
         print(self.level_track)
         print(self.stats)
 
+    @property
     def using_dynamite(self):
-        if self.ability_active:
-            return True
-        return False
+        return self.ability_active
 
     def enhance_damage(self, damage: int) -> int:
         return damage

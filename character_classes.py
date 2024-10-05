@@ -1,78 +1,120 @@
+from __future__ import annotations
 from random import randint
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 class Character(ABC):
 
+    data: list | None = None
+
     @classmethod
     def rearrange_ids(cls) -> None:
-
+        """
+        Rearranges characters ids to match their order in Character.data list
+        :return: None
+        """
         for character in cls.data:
             character.id = cls.data.index(character)
 
     @classmethod
     def reset_moves(cls) -> None:
-
+        """
+        Resets remaining moves of all characters of the class back to the maximum
+        :return: None
+        """
         for character in cls.data:
             character.stats.remaining_moves = character.stats.moves
-
 
     @classmethod
     def all_dead(cls) -> bool:
         """
-        Checks if all instances of the class (players or monsters) dead or out of game
+        Checks if all instances characters of the class are dead or out of game
+        :return:: True if all are dead or out of game, False otherwise
         """
         return len(cls.data) == 0
 
-    @abstractmethod
-    def enhance_damage(self, damage: int) -> int:
-        """
-        Enhances damage in combat (if applicable)
-        """
-        pass
-
-    @abstractmethod
-    def unhide(self) -> None:
-        """
-        Reverts hidden state of character
-        """
-        pass
-
-    @property
-    def is_hidden(self):  # needed for everybody for self.fight_on_tile()
-        return False
-
-    # INSTANCE METHODS
 
     def __init__(self):
 
+        """
+        Those are common attributes to all characters (Players and Monsters).
+        Initialized to corresponding type when instantiating Player or Monster, except
+        id, position, token and dungeon, initialized in DungeonLayout.place_item()
+        Exclusive attributes of each class are added within corresponding classes.
+        """
+        self.char: str | None = None
         self.name: str | None = None
-        self.inventory: dict | None = None
-        self.id: int | None = None
-        self.position: tuple | None = None
+        self.id: int | None = None   # initialized in DungeonLayot.place_item()
+        self.kind: str | None = None
+        self.position: tuple[int:int] | None = None  # initialized in DungeonLayot.place_item()
+        self.token: Token | None = None  # initialized in DungeonLayot.place_item()
+        self.dungeon: DungeonLayout | None = None  # initialized in DungeonLayot.place_item()
+        self.stats: CharacterStats | None = None
+        self.blocked_by: tuple | None = None
+        self.cannot_share_tile_with: tuple | None = None
+        self.free_actions: tuple | None = None
+        self.ignores: tuple | None = None
+        self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
+        self.ability_display: str | None = None  # needed for AbilityButton.display_text()
 
-        # monsters need ability_active for the functioning of the ability_button
-        self.ability_active: bool = False
-        # monsters need ability_display fot the ability button
-        self.ability_display: str | None = None
 
-        self.token = None
-        self.dungeon = None
-
-    def using_dynamite(self):  # needed for everybody for Token.on_slide_completed()
+    @property
+    def is_hidden(self) -> bool:  # needed for everybody for self.fight_on_tile()
+        """
+        Checks if the character is hidden
+        :return: True if character is hidden, False otherwise
+        """
         return False
 
-    def _apply_toughness(self, damage):  # needed for everybody for self.fight_on_tile()
+    @property
+    def using_dynamite(self) -> bool:  # needed for everybody for Token.on_slide_completed()
+        """
+        Checks if the character is using dynamite
+        :return: True if character is using dynamite, False otherwise
+        """
+        return False
+
+    @property
+    def has_moved(self) -> bool:
+        """
+        Checks if the character has moved this turn
+        :return: True if character has moved, False otherwise
+        """
+        return self.stats.remaining_moves < self.stats.moves
+
+    def update_position(self, position: tuple[int: int]) -> None:
+        """
+        Updates the position attribute of the character
+        :return: None
+        """
+        self.position = position
+
+
+    def unhide(self) -> None:
+        """
+        Placeholder, needed for Monster.fight_on_tile()
+        """
+        pass
+
+    def enhance_damage(self, damage: int) -> int:
+        """
+        Placeholder, needed for Monster.fight_on_tile()
+        :return:: enhanced damage (if applicable)
+        """
         return damage
 
-    def update_position(self, position: tuple[int]) -> None:
-        self.__class__.data[self.id].position = position
-
-    def fight_on_tile(self, opponent_tile) -> int | None:
+    def _apply_toughness(self, damage: int) -> int:  # needed for everybody for self.fight_on_tile()
         """
-        Generic fighting method. See player class for particularities in players
-        :param opponent_tile:
-        :return: experience_when_killed if monster is killed, None otherwise
+        Placeholder, needed for Monster.fight_on_tile()
+        :return: reduced damage
+        """
+        return damage
+
+    def fight_on_tile(self, opponent_tile: Tile) -> int | None:
+        """
+        Generic fighting method. See Player class for particularities in players
+        :param opponent_tile: tile in which the opponent is located
+        :return: experience_when_killed of dead opponent
         """
         opponent = opponent_tile.get_character()
         self.stats.remaining_moves -= 1
@@ -101,14 +143,13 @@ class Character(ABC):
             opponent.kill_character(opponent_tile)
             return experience
 
-    def has_moved(self) -> bool:
 
-        if self.stats.remaining_moves == self.stats.moves:
-            return False
-        return True
-
-    def kill_character(self, tile):
-
+    def kill_character(self, tile: Tile):
+        """
+        Removes the character from the game
+        :param tile:: tile in which the character to kill is located
+        :return: None
+        """
         del self.__class__.data[self.id]
         self.__class__.rearrange_ids()
         tile.clear_token(self.token.kind)

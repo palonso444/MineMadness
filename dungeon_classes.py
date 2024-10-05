@@ -280,10 +280,10 @@ class DungeonLayout(GridLayout):
 
         if character is not None:
 
+            character.id = len(character.__class__.data)  # Delete __class__
             character.position = tile.position
             character.dungeon = self
-            character.id = len(character.__class__.data)
-            character.__class__.data.append(character)
+            character.__class__.data.append(character)  # Delete __class__
 
             tile.token = tokens.CharacterToken(
                 kind=token_kind,

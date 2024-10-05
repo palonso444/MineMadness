@@ -130,7 +130,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves > 0
         ):
-            if self.active_character.using_dynamite():
+            if self.active_character.using_dynamite:
                 self.dynamic_movement_range("shooting")
             else:
                 self.dynamic_movement_range()  # checks if player can still move
@@ -175,7 +175,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             if check_if_multiple(game.turn, 2) or monsters.Monster.all_dead():
                 game.active_character = players.Player.data[character_id]
 
-                if game.active_character.has_moved() and not monsters.Monster.all_dead():
+                if game.active_character.has_moved and not monsters.Monster.all_dead():
                     game.next_character()
 
                 else:
@@ -186,7 +186,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                     game.update_switch("shovels")
                     game.update_switch("weapons")
 
-                    if game.active_character.using_dynamite():
+                    if game.active_character.using_dynamite:
                         game.dynamic_movement_range("shooting")
                     else:
                         game.dynamic_movement_range()
@@ -250,7 +250,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             players_not_yet_active = {
                 player.position
                 for player in players.Player.data
-                if not player.has_moved()
+                if not player.has_moved
             }
 
         player_movement_range = self.active_character.get_range(

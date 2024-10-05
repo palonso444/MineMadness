@@ -40,12 +40,12 @@ class Tile(Button):
 
         if self.has_token(("player", None)):
 
-            if player.using_dynamite():
+            if player.using_dynamite:
                 return False
             if self.get_character() == player:
                 return True
             if (
-                    self.get_character().has_moved()
+                    self.get_character().has_moved
                     and not Monster.all_dead()
             ):
                 return False
@@ -65,7 +65,7 @@ class Tile(Button):
                 self.has_token(("wall", "rock"))
                 and self.dungeon.are_nearby(self, player)
                 and player.stats.remaining_moves >= player.stats.digging_moves
-                and not player.using_dynamite()
+                and not player.using_dynamite
         ):
 
             if player.stats.shovels > 0 or "digging" in player.free_actions:
@@ -92,7 +92,7 @@ class Tile(Button):
             return True
 
         if (
-                player.using_dynamite()
+                player.using_dynamite
                 and dynamite_path is not None
                 and len(dynamite_path) <= player.stats.shooting_range
         ):
@@ -108,7 +108,7 @@ class Tile(Button):
         player = self.dungeon.game.active_character
         game = self.dungeon.game
 
-        if player.using_dynamite():
+        if player.using_dynamite:
             player.special_items["dynamite"] -= 1
             player.stats.remaining_moves -= 1
             player.ability_active = (

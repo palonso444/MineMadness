@@ -18,23 +18,13 @@ class Monster(Character, ABC):
         self.blocked_by = ("wall", "player")
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
         self.free_actions: tuple = ("fighting",)  # no need of weapons to fight
-        self.chases: tuple = ("player", None)
         self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
+
+        # exclusive of Monster class
+        self.chases: tuple = ("player", None)
 
     @abstractmethod
     def move(self):
-        pass
-
-    def enhance_damage(self, damage: int) -> int:
-        """
-        Placeholder needed for fight_on_tile()
-        """
-        return damage
-
-    def unhide(self) -> None:
-        """
-        Placeholder needed for fight_on_tile()
-        """
         pass
 
     def try_to_dodge(self):
@@ -593,13 +583,15 @@ class WanderingShadow(Monster):
 
     def __init__(self):
         super().__init__()
+        self.char: str = "S"
+        self.name: str = "Wandering Shadow"
+        self.stats = stats.WanderingShadowStats()
+
         self.blocked_by: tuple = ()
         self.cannot_share_tile_with: tuple = ("monster", "player")
         self.ignores: tuple = self.ignores + ("rock",)
 
-        self.char: str = "S"
-        self.name: str = "Wandering Shadow"
-        self.stats = stats.WanderingShadowStats()
+
 
     def move(self):
 
@@ -614,13 +606,15 @@ class DepthsWisp(Monster):
 
     def __init__(self):
         super().__init__()
+        self.char: str = "W"
+        self.name: str = "Depths Wisp"
+        self.stats = stats.DepthsWispStats()
+
         self.blocked_by: tuple = ()
         self.cannot_share_tile_with: tuple = ("monster", "player")
         self.ignores: tuple = self.ignores + ("rock",)
 
-        self.char: str = "W"
-        self.name: str = "Depths Wisp"
-        self.stats = stats.DepthsWispStats()
+
 
     def move(self):
 
@@ -641,13 +635,15 @@ class MountainDjinn(Monster):
 
     def __init__(self):
         super().__init__()
+        self.char: str = "D"
+        self.name: str = "Mountain Djinn"
+        self.stats = stats.MountainDjinnStats()
+
         self.blocked_by: tuple = ()
         self.cannot_share_tile_with: tuple = ("monster", "player")
         self.ignores: tuple = self.ignores + ("rock",)
 
-        self.char: str = "D"
-        self.name: str = "Mountain Djinn"
-        self.stats = stats.MountainDjinnStats()
+
 
     def move(self):
 
@@ -675,9 +671,11 @@ class Pixie(Monster):
         super().__init__()
         self.char: str = "P"
         self.name: str = "Pixie"
-        self.chases: tuple = ("pickable", None)
-        self.ignores: tuple = self.ignores + ("gem",)
         self.stats = stats.PixieStats()
+
+        self.ignores: tuple = self.ignores + ("gem",)
+        self.chases: tuple = ("pickable", None)
+
 
     def move(self):
 

@@ -3,7 +3,7 @@ from random import randint, choice
 from abc import ABC, abstractmethod
 
 import game_stats as stats
-from character_classes import Character
+from character_class import Character
 
 
 class Monster(Character, ABC):

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from kivy.properties import NumericProperty
 from kivy.event import EventDispatcher
 
-from character_classes import Character
+from character_class import Character
 from crapgeon_utils import match_attribute_to_item, check_if_multiple, tuple_remove
 import game_stats as stats
 

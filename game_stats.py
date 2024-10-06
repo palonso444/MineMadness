@@ -8,15 +8,15 @@ class DungeonStats:
     mandatory_items: tuple[str] = ("%", "?", "&", " ", "o")
 
     def __init__(self, dungeon_level: int):
-        self.level = dungeon_level
+        self.stats_level = dungeon_level
 
     def size(self):
 
-        return 6 + int(self.level * 0.2)
+        return 6 + int(self.stats_level * 0.2)
 
     def gem_number(self):
 
-        gem_number = int(self.level * 0.2)
+        gem_number = int(self.stats_level * 0.2)
         gem_number = 1 if gem_number < 1 else gem_number
         return gem_number
 
@@ -25,18 +25,18 @@ class DungeonStats:
         wall_frequency = randint(2, 6) * 0.1
 
         monster_frequencies = {
-            "K": 0.2 / self.level if self.level < 3 else 0,
-            "L": 0.025 * self.level if self.level < 4 else 0,
-            "B": randint(0, 3) * 0.02 if self.level > 1 else 0,
-            "H": 0.025 * self.level if 2 < self.level < 4 else 0,
-            "G": 0.025 * self.level if self.level > 3 else 0,
-            "R": 0.015 * self.level if self.level > 4 else 0,
-            "O": 0.1 / self.level if self.level < 4 else 0,
-            "N": 0.015 * self.level if 3 < self.level < 6 else 0,
-            "Y": 0.001 * self.level if 4 < self.level < 8 else 0,
+            "K": 0.2 / self.stats_level if self.stats_level < 3 else 0,
+            "L": 0.025 * self.stats_level if self.stats_level < 4 else 0,
+            "B": randint(0, 3) * 0.02 if self.stats_level > 1 else 0,
+            "H": 0.025 * self.stats_level if 2 < self.stats_level < 4 else 0,
+            "G": 0.025 * self.stats_level if self.stats_level > 3 else 0,
+            "R": 0.015 * self.stats_level if self.stats_level > 4 else 0,
+            "O": 0.1 / self.stats_level if self.stats_level < 4 else 0,
+            "N": 0.015 * self.stats_level if 3 < self.stats_level < 6 else 0,
+            "Y": 0.001 * self.stats_level if 4 < self.stats_level < 8 else 0,
             "S": randint(0, 2) * 0.025,
-            "W": 0.05 * self.level if self.level < 3 else 0,
-            "D": 0.002 * self.level if 4 < self.level < 8 else 0,
+            "W": 0.05 * self.stats_level if self.stats_level < 3 else 0,
+            "D": 0.002 * self.stats_level if 4 < self.stats_level < 8 else 0,
             "P": randint(0, 1) * 0.05,
         }
 
@@ -50,9 +50,9 @@ class DungeonStats:
             "c": total_monster_frequency * 0.06,
             "w": total_monster_frequency * 0.06,
             "l": total_monster_frequency * 0.06,
-            "t": randint(0, 1) * self.level * 0.02 if self.level > 2 else 0,
-            "h": randint(0, 1) * self.level * 0.02,
-            "d": randint(0, 1) * self.level * 0.02,
+            "t": randint(0, 1) * self.stats_level * 0.02 if self.stats_level > 2 else 0,
+            "h": randint(0, 1) * self.stats_level * 0.02,
+            "d": randint(0, 1) * self.stats_level * 0.02,
         }
 
         all_frequencies = {**monster_frequencies, **item_frequencies}

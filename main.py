@@ -301,7 +301,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         :return: None
         """
         self.children[0].remove_widget(self.dungeon)  # self.children[0] is Scrollview
-        new_level = DungeonLayout(dungeon_level=new_dungeon_level, game=self)
+        new_level = DungeonLayout(dungeon_level=new_dungeon_level)
         self.children[0].add_widget(new_level)
         self.turn = None
 

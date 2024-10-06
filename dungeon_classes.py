@@ -16,22 +16,21 @@ class DungeonLayout(GridLayout):
 
     fading_tokens_items_queue = ListProperty([])
 
-    def __init__(self, dungeon_level: int = 1, game=None, **kwargs):
+    def __init__(self, dungeon_level: int = 1, **kwargs):
         super().__init__(**kwargs)
-        self.tiles_dict: dict[tuple : tiles.Tile] | None = None
-
-        self.dungeon_level = dungeon_level
-        self.stats = DungeonStats(self.dungeon_level)
+        self.dungeon_level: int = dungeon_level
+        self.stats: DungeonStats = DungeonStats(dungeon_level)
         self.rows: int = self.stats.size()
         self.cols: int = self.stats.size()
-        self.blueprint = self.generate_blueprint(self.rows, self.cols)
+        self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
+        self.game: MineMadnessGame | None = None
+        self.tiles_dict: dict[tuple: tiles.Tile] | None = None
 
         # determines which character shows fadingtokens
-        self.fading_token_character: players.Player | None = None
+        self.fading_token_character: Player | None = None
         # determines if tokens of Dungeon.fading_tokens_items_queue are displayed in green or red
         self.fading_tokens_effect_fades: bool | None = None
 
-        self.game = game
 
     def display_depth(self):
         self.game.ids.level_label.text = (
@@ -41,16 +40,13 @@ class DungeonLayout(GridLayout):
     @staticmethod
     def on_pos(dungeon: DungeonLayout, pos: list [int, int]) -> None:
         """
-        This function is triggered when the dungeon is positioned the beginning of each level
+        Triggered when the dungeon is positioned the beginning of each level
         It initializes DungeonLayout.tiles.dict and places the tiles on the dungeon. Also counts the gems.
         :param dungeon: Instance of the dungeon corresponding to the current level
         :param pos: position (actual position on the screen) of the dungeon instance
         :return: None
         """
-        dungeon.display_depth()  # displays depth in level_label of interface
-
         dungeon.tiles_dict = dict ()
-        dungeon.game.total_gems = dungeon.stats.gem_number()  # self.game defined in kv file
 
         for y in range(dungeon.blueprint.y_axis):
             for x in range(dungeon.blueprint.x_axis):
@@ -63,24 +59,35 @@ class DungeonLayout(GridLayout):
                 dungeon.tiles_dict[tile.position] = tile
                 dungeon.add_widget(tile)
 
+        dungeon.game = dungeon.parent.parent
+        dungeon.game.total_gems = dungeon.stats.gem_number()  # self.game defined in kv file
+        dungeon.display_depth()  # displays depth in level_label of interface
         dungeon.game.dungeon = dungeon  # links dungeon with main (MineMadnessGame)
 
-    def generate_blueprint(self, height, width):
-
-        blueprint = Blueprint(height, width)
+    def generate_blueprint(self, y_axis, x_axis) -> Blueprint:
+        """
+        Places items on DungeonLayout.blueprint depending on DungeonLayout.stats
+        :param y_axis: length of y_axis of the blueprint
+        :param x_axis: length of x_axis of the blueprint
+        :return: complete blueprint of the dungeon
+        """
+        blueprint = Blueprint(y_axis, x_axis)
 
         blueprint.place_items_as_group(self.determine_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
-        for key, value in self.stats.level_progression().items():
-            blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
+        #for key, value in self.stats.level_progression().items():
+            #blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
 
         #blueprint.print_map()
         return blueprint
 
-    def determine_alive_players(self):
-
+    def determine_alive_players(self) -> set[str] | tuple[str:str:str]:
+        """
+        Determines the number of alive players
+        :return: set or tuple containing the characters representing live players
+        """
         if self.dungeon_level == 1:
             return players.Player.player_chars
             # return "&"

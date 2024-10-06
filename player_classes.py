@@ -48,7 +48,7 @@ class Player(Character, ABC, EventDispatcher):
         return len(cls.data) == len(cls.player_chars)
 
     @classmethod
-    def determine_alive_players(cls) -> set[str] | tuple[str:str:str]:
+    def get_alive_players(cls) -> set[str] | tuple[str:str:str]:
         """
         Determines the number of alive players at the end of a level
         :return: set or tuple containing the characters representing live players

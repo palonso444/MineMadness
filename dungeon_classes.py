@@ -1,6 +1,6 @@
 from __future__ import annotations
 from kivy.uix.gridlayout import GridLayout  # type: ignore
-from kivy.properties import ListProperty
+from kivy.properties import ListProperty, NumericProperty
 from collections import deque
 from random import choice
 
@@ -13,35 +13,34 @@ from dungeon_blueprint import Blueprint
 
 
 class DungeonLayout(GridLayout):
-
+    """
+    Class defining the board of the game. The level is determined by the MineMadnessGame class. The rest of
+    features are determied by DungeonLayout.DungeonStats
+    """
     fading_tokens_items_queue = ListProperty([])
 
-    def __init__(self, dungeon_level: int = 1, **kwargs):
+    def __init__(self, game: MineMadnessGame | None = None, **kwargs):
         super().__init__(**kwargs)
-        self.dungeon_level: int = dungeon_level
-        self.stats: DungeonStats = DungeonStats(dungeon_level)
-        self.rows: int = self.stats.size()
-        self.cols: int = self.stats.size()
-        self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
-        self.game: MineMadnessGame | None = None
-        self.tiles_dict: dict[tuple: tiles.Tile] | None = None
+        if game is not None:
+            self.game: MineMadnessGame = game
+            self.dungeon_level: int = game.level
+            self.stats: DungeonStats = DungeonStats(self.dungeon_level)
+            self.rows: int = self.stats.size()
+            self.cols: int = self.stats.size()
+            self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
 
+        self.tiles_dict: dict[tuple: tiles.Tile] | None = None
         # determines which character shows fadingtokens
         self.fading_token_character: Player | None = None
         # determines if tokens of Dungeon.fading_tokens_items_queue are displayed in green or red
         self.fading_tokens_effect_fades: bool | None = None
 
 
-    def display_depth(self):
-        self.game.ids.level_label.text = (
-            "Depth: " + str(self.dungeon_level * 30) + " ft."
-        )
-
     @staticmethod
     def on_pos(dungeon: DungeonLayout, pos: list [int, int]) -> None:
         """
         Triggered when the dungeon is positioned the beginning of each level
-        It initializes DungeonLayout.tiles.dict and places the tiles on the dungeon. Also counts the gems.
+        It initializes DungeonLayout.tiles.dict and prepares the floor of the dungeon, placing the exit
         :param dungeon: Instance of the dungeon corresponding to the current level
         :param pos: position (actual position on the screen) of the dungeon instance
         :return: None
@@ -59,9 +58,6 @@ class DungeonLayout(GridLayout):
                 dungeon.tiles_dict[tile.position] = tile
                 dungeon.add_widget(tile)
 
-        dungeon.game = dungeon.parent.parent
-        dungeon.game.total_gems = dungeon.stats.gem_number()  # self.game defined in kv file
-        dungeon.display_depth()  # displays depth in level_label of interface
         dungeon.game.dungeon = dungeon  # links dungeon with main (MineMadnessGame)
 
     def generate_blueprint(self, y_axis, x_axis) -> Blueprint:
@@ -73,194 +69,187 @@ class DungeonLayout(GridLayout):
         """
         blueprint = Blueprint(y_axis, x_axis)
 
-        blueprint.place_items_as_group(players.Player.determine_alive_players(), min_dist=1)
+        blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
-        #for key, value in self.stats.level_progression().items():
-            #blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
+        for key, value in self.stats.level_progression().items():
+            blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
 
         #blueprint.print_map()
         return blueprint
 
 
     def match_blueprint(self):
+        """
+        Matches the symbols of the DungeonLayout.blueprint with the corresponding tokens and characters
+        :return: None
+        """
 
         for tile in self.children:
+            character = None
+            token_kind = None
+            token_species = None
             match self.blueprint.get_position((tile.row,tile.col)):
 
                 case "%":
-                    self.create_item(tile, "player", "sawyer")
-
-                case "?":
-                    self.create_item(tile, "player", "hawkins")
-
-                case "&":
-                    self.create_item(tile, "player", "crusherjane")
-
-                case "K":
-                    self.create_item(tile, "monster", "kobold")
-
-                case "L":
-                    self.create_item(tile, "monster", "lizard")
-
-                case "B":
-                    self.create_item(tile, "monster", "blackdeath")
-
-                case "H":
-                    self.create_item(tile, "monster", "hound")
-
-                case "G":
-                    self.create_item(tile, "monster", "growl")
-
-                case "R":
-                    self.create_item(tile, "monster", "golem")
-
-                case "O":
-                    self.create_item(tile, "monster", "gnome")
-
-                case "N":
-                    self.create_item(tile, "monster", "nightmare")
-
-                case "Y":
-                    self.create_item(tile, "monster", "lindworm")
-
-                case "S":
-                    self.create_item(tile, "monster", "shadow")
-
-                case "W":
-                    self.create_item(tile, "monster", "wisp")
-
-                case "D":
-                    self.create_item(tile, "monster", "djinn")
-
-                case "P":
-                    self.create_item(tile, "monster", "pixie")
-
-                case "#":
-                    self.create_item(tile, "wall", "rock")
-
-                case "{":
-                    self.create_item(tile, "wall", "granite")
-
-                case "*":
-                    self.create_item(tile, "wall", "quartz")
-
-                case "p":
-                    self.create_item(tile, "pickable", "shovel")
-
-                case "x":
-                    self.create_item(tile, "pickable", "weapon")
-
-                case "j":
-                    self.create_item(tile, "pickable", "jerky")
-
-                case "c":
-                    self.create_item(tile, "pickable", "coffee")
-
-                case "l":
-                    self.create_item(tile, "pickable", "tobacco")
-
-                case "w":
-                    self.create_item(tile, "pickable", "whisky")
-
-                case "t":
-                    self.create_item(tile, "pickable", "talisman")
-
-                case "h":
-                    self.create_item(tile, "pickable", "powder")
-
-                case "d":
-                    self.create_item(tile, "pickable", "dynamite")
-
-                case "o":
-                    self.create_item(tile, "pickable", "gem")
-
-    def create_item(self, tile, token_kind, token_species):
-
-        # this function cannot be a match due to function calls in between cases
-
-        if token_kind == "player" or token_kind == "monster":
-
-            if token_kind == "player":
-
-                if token_species == "sawyer":
-
                     if self.dungeon_level == 1:
+                        token_kind = "player"
+                        token_species = "sawyer"
                         character = players.Sawyer()
                     else:
                         character = players.Player.transfer_player("Sawyer")
 
-                elif token_species == "hawkins":
-
+                case "?":
                     if self.dungeon_level == 1:
+                        token_kind = "player"
+                        token_species = "hawkins"
                         character = players.Hawkins()
                     else:
                         character = players.Player.transfer_player("Hawkins")
 
-                elif token_species == "crusherjane":
-
+                case "&":
                     if self.dungeon_level == 1:
+                        token_kind = "player"
+                        token_species = "crusherjane"
                         character = players.CrusherJane()
                     else:
                         character = players.Player.transfer_player("Crusher Jane")
 
-            elif token_kind == "monster":
-
-                if token_species == "kobold":
+                case "K":
+                    token_kind="monster"
+                    token_species = "kobold"
                     character = monsters.Kobold()
 
-                elif token_species == "lizard":
+                case "L":
+                    token_kind = "monster"
+                    token_species = "lizard"
                     character = monsters.BlindLizard()
 
-                elif token_species == "blackdeath":
+                case "B":
+                    token_kind = "monster"
+                    token_species = "blackdeath"
                     character = monsters.BlackDeath()
 
-                elif token_species == "hound":
+                case "H":
+                    token_kind = "monster"
+                    token_species = "hound"
                     character = monsters.CaveHound()
 
-                elif token_species == "growl":
+                case "G":
+                    token_kind = "monster"
+                    token_species = "growl"
                     character = monsters.Growl()
 
-                elif token_species == "golem":
-                    character = monsters.RockGolem()
+                case "R":
+                    token_kind = "monster"
+                    token_species = "golem"
+                    character=monsters.RockGolem()
 
-                elif token_species == "gnome":
-                    character = monsters.DarkGnome()
+                case "O":
+                    token_kind = "monster"
+                    token_species = "gnome"
+                    character=monsters.DarkGnome()
 
-                elif token_species == "nightmare":
-                    character = monsters.NightMare()
+                case "N":
+                    token_kind = "monster"
+                    token_species = "nightmare"
+                    character=monsters.NightMare()
 
-                elif token_species == "lindworm":
-                    character = monsters.LindWorm()
+                case "Y":
+                    token_kind = "monster"
+                    token_species = "lindworm"
+                    character=monsters.LindWorm()
 
-                elif token_species == "shadow":
-                    character = monsters.WanderingShadow()
+                case "S":
+                    token_kind = "monster"
+                    token_species = "shadow"
+                    character=monsters.WanderingShadow()
 
-                elif token_species == "wisp":
-                    character = monsters.DepthsWisp()
+                case "W":
+                    token_kind = "monster"
+                    token_species = "wisp"
+                    character=monsters.DepthsWisp()
 
-                elif token_species == "djinn":
-                    character = monsters.MountainDjinn()
+                case "D":
+                    token_kind = "monster"
+                    token_species = "djinn"
+                    character=monsters.MountainDjinn()
 
-                elif token_species == "pixie":
-                    character = monsters.Pixie()
+                case "P":
+                    token_kind = "monster"
+                    token_species = "pixie"
+                    character=monsters.Pixie()
+
+                case "#":
+                    token_kind = "wall"
+                    token_species = "rock"
+
+                case "{":
+                    token_kind = "wall"
+                    token_species = "granite"
+
+                case "*":
+                    token_kind = "wall"
+                    token_species = "quartz"
+
+                case "p":
+                    token_kind = "pickable"
+                    token_species = "shovel"
+
+                case "x":
+                    token_kind = "pickable"
+                    token_species = "weapon"
+
+                case "j":
+                    token_kind = "pickable"
+                    token_species = "jerky"
+
+                case "c":
+                    token_kind = "pickable"
+                    token_species = "coffee"
+
+                case "l":
+                    token_kind = "pickable"
+                    token_species = "tobacco"
+
+                case "w":
+                    token_kind = "pickable"
+                    token_species = "whisky"
+
+                case "t":
+                    token_kind = "pickable"
+                    token_species = "talisman"
+
+                case "h":
+                    token_kind = "pickable"
+                    token_species = "powder"
+
+                case "d":
+                    token_kind = "pickable"
+                    token_species = "dynamite"
+
+                case "o":
+                    token_kind = "pickable"
+                    token_species = "gem"
 
             self.place_item(tile, token_kind, token_species, character)
 
-        else:
 
-            self.place_item(tile, token_kind, token_species)
+    def place_item(self, tile: tiles.Tile, token_kind: str,
+                   token_species: str,character: Character | None,):
+        """
+        Places tokens on the tiles
+        :param tile: tile in which item must be placed
+        :param token_kind: Token.kind of the token to be placed
+        :param token_species: Token.species of the token to be placed
+        :param character: character (if any) associated with the token
+        :return: None
+        """
 
-    def place_item(
-        self,
-        tile: tiles.Tile,
-        token_kind: str,
-        token_species: str,
-        character = None,
-    ):
-
-        if character is not None:
+        if (character is not None
+                and token_kind is not None
+                and token_species is not None):
 
             character.id = len(character.__class__.data)  # Delete __class__
             character.position = tile.position
@@ -277,8 +266,10 @@ class DungeonLayout(GridLayout):
             )
 
             character.token = tile.token
+            tile.bind(pos=tile.update_token, size=tile.update_token)
 
-        else:
+        elif (token_kind is not None
+              and token_species is not None):
 
             tile.token = tokens.SceneryToken(
                 kind=token_kind,
@@ -288,7 +279,7 @@ class DungeonLayout(GridLayout):
                 size=tile.size,
             )
 
-        tile.bind(pos=tile.update_token, size=tile.update_token)
+            tile.bind(pos=tile.update_token, size=tile.update_token)
 
     def activate_which_tiles(self, tile_positions=None):
 

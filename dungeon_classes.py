@@ -73,7 +73,7 @@ class DungeonLayout(GridLayout):
         """
         blueprint = Blueprint(y_axis, x_axis)
 
-        blueprint.place_items_as_group(self.determine_alive_players(), min_dist=1)
+        blueprint.place_items_as_group(players.Player.determine_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
@@ -83,19 +83,6 @@ class DungeonLayout(GridLayout):
         #blueprint.print_map()
         return blueprint
 
-    def determine_alive_players(self) -> set[str] | tuple[str:str:str]:
-        """
-        Determines the number of alive players
-        :return: set or tuple containing the characters representing live players
-        """
-        if self.dungeon_level == 1:
-            return players.Player.player_chars
-            # return "&"
-        else:
-            live_players = set()
-            for player in players.Player.exited:
-                live_players.add(player.char)
-            return live_players
 
     def match_blueprint(self):
 

@@ -56,7 +56,7 @@ class DungeonLayout(GridLayout):
         :param item2: second item
         :return: True if they are nearby, False otherwise
         """
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        directions = (-1, 0), (1, 0), (0, -1), (0, 1)
 
         return any(
             (item1.position[0] + dx, item1.position[1] + dy) == item2.position
@@ -371,7 +371,7 @@ class DungeonLayout(GridLayout):
         Returns None if there is no possible path.
         """
 
-        directions: list[tuple] = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        directions: tuple = (-1, 0), (1, 0), (0, -1), (0, 1)
         queue: deque = deque(
             [(start_tile.position, [])]
         )  # start_tile_pos is not included in the path
@@ -409,7 +409,7 @@ class DungeonLayout(GridLayout):
 
     def get_nearby_positions(self, position: tuple[int]) -> set[tuple[int:int]]:
         """Returns surrounding positions"""
-        directions = ((0, 1), (0, -1), (1, 0), (-1, 0))
+        directions = (0, 1), (0, -1), (1, 0), (-1, 0)
 
         return {
             (position[0] + dx, position[1] + dy)

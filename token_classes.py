@@ -333,6 +333,12 @@ class CharacterToken(SolidToken):
             if self.start != self.goal:
                 self.update_on_tiles(self.start, self.goal)  # updates tile.token
                 self.character.position = self.goal.position
+                self.pos = self.shape.pos  # updates pos of Token according to its shape
+                print("TOKEN POS (self.pos)")
+                print (self.pos)
+                print ("SHAPE POS (self.shape.pos)")
+                print (self.shape.pos)
+
 
             # only attack in monster turn, no attack if dodging
             if self.character.kind == "monster":

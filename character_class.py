@@ -95,7 +95,7 @@ class Character(ABC):
         """
         return damage
 
-    def _apply_toughness(self, damage: int) -> int:  # needed for everybody for self.fight_on_tile()
+    def apply_toughness(self, damage: int) -> int:  # needed for everybody for self.fight_on_tile()
         """
         Placeholder, needed for Monster.fight_on_tile()
         :return: reduced damage
@@ -111,7 +111,7 @@ class Character(ABC):
         opponent = opponent_tile.get_character()
         self.stats.remaining_moves -= 1
         damage = randint(self.stats.strength[0], self.stats.strength[1])
-        damage = opponent._apply_toughness(damage)
+        damage = opponent.apply_toughness(damage)
         damage = self.enhance_damage(damage)
 
         if self.is_hidden:

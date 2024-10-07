@@ -347,7 +347,7 @@ class Player(Character, ABC, EventDispatcher):
         print(self.player_level)
         print(self.stats)
 
-    def _apply_toughness(self, damage):
+    def apply_toughness(self, damage):
 
         i = 0
         while i < len(self.effects["thoughness"]):

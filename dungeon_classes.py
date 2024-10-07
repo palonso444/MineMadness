@@ -15,12 +15,14 @@ from dungeon_blueprint import Blueprint
 class DungeonLayout(GridLayout):
     """
     Class defining the board of the game. The level is determined by the MineMadnessGame class. The rest of
-    features are determied by DungeonLayout.DungeonStats
+    features are determined by DungeonLayout.DungeonStats
     """
     fading_tokens_items_queue = ListProperty([])
 
     def __init__(self, game: MineMadnessGame | None = None, **kwargs):
         super().__init__(**kwargs)
+
+        # game is passed as argument from level 2 onwards
         if game is not None:
             self.game: MineMadnessGame = game
             self.dungeon_level: int = game.level
@@ -29,12 +31,37 @@ class DungeonLayout(GridLayout):
             self.cols: int = self.stats.size()
             self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
 
-        self.tiles_dict: dict[tuple: tiles.Tile] | None = None
+        self.tiles_dict: dict[tuple: Tile] | None = None
+
         # determines which character shows fadingtokens
         self.fading_token_character: Player | None = None
         # determines if tokens of Dungeon.fading_tokens_items_queue are displayed in green or red
         self.fading_tokens_effect_fades: bool | None = None
 
+    @staticmethod
+    def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
+        """
+        Returns the distance (in number of movements) between 2 positions of the dungeon
+        :param position1: first position
+        :param position2: second position
+        :return: distance between the two positions
+        """
+        return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
+
+    @staticmethod
+    def are_nearby(item1: Token, item2: Token) -> bool:
+        """
+        Checks if two tokens in the dungeon have nearby positions
+        :param item1: first item
+        :param item2: second item
+        :return: True if they are nearby, False otherwise
+        """
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        return any(
+            (item1.position[0] + dx, item1.position[1] + dy) == item2.position
+            for dx, dy in directions
+        )
 
     @staticmethod
     def on_pos(dungeon: DungeonLayout, pos: list [int, int]) -> None:
@@ -51,16 +78,16 @@ class DungeonLayout(GridLayout):
             for x in range(dungeon.blueprint.x_axis):
 
                 if dungeon.blueprint.get_position((y,x)) == " ":
-                    tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=dungeon)
+                    tile: Tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=dungeon)
                 else:
-                    tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=dungeon)
+                    tile: Tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=dungeon)
 
                 dungeon.tiles_dict[tile.position] = tile
                 dungeon.add_widget(tile)
 
         dungeon.game.dungeon = dungeon  # links dungeon with main (MineMadnessGame)
 
-    def generate_blueprint(self, y_axis, x_axis) -> Blueprint:
+    def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """
         Places items on DungeonLayout.blueprint depending on DungeonLayout.stats
         :param y_axis: length of y_axis of the blueprint
@@ -233,11 +260,13 @@ class DungeonLayout(GridLayout):
                     token_kind = "pickable"
                     token_species = "gem"
 
-            self.place_item(tile, token_kind, token_species, character)
+            # empty spaces ("." or " ")
+            if token_kind is not None and token_species is not None:
+                self.place_item(tile, token_kind, token_species, character)
 
 
-    def place_item(self, tile: tiles.Tile, token_kind: str,
-                   token_species: str,character: Character | None,):
+    def place_item(self, tile: Tile, token_kind: str,
+                   token_species: str, character: Character | None):
         """
         Places tokens on the tiles
         :param tile: tile in which item must be placed
@@ -247,9 +276,7 @@ class DungeonLayout(GridLayout):
         :return: None
         """
 
-        if (character is not None
-                and token_kind is not None
-                and token_species is not None):
+        if character is not None:
 
             character.id = len(character.__class__.data)  # Delete __class__
             character.position = tile.position
@@ -266,10 +293,8 @@ class DungeonLayout(GridLayout):
             )
 
             character.token = tile.token
-            tile.bind(pos=tile.update_token, size=tile.update_token)
 
-        elif (token_kind is not None
-              and token_species is not None):
+        else:
 
             tile.token = tokens.SceneryToken(
                 kind=token_kind,
@@ -279,33 +304,66 @@ class DungeonLayout(GridLayout):
                 size=tile.size,
             )
 
-            tile.bind(pos=tile.update_token, size=tile.update_token)
+        tile.bind(pos=tile.update_token, size=tile.update_token)
 
-    def activate_which_tiles(self, tile_positions=None):
+    def get_tile(self, position: tuple [int:int]) -> Tile:
+        """
+        Returns the tile at the specified coordinates
+        :param position: coordinates of the tile
+        :return: tile
+        """
+        return self.tiles_dict.get(position)
 
+    def get_random_tile(self, free: bool = False) -> Tile:
+        """
+        Returns a random tile from the dungeon
+        :param free: bool specifying if the returned tile must be free (with no tokens)
+        :return: random tile
+        """
+
+        tiles_checked: set = set()
+        total_tiles = len(self.children)
+
+        while len(tiles_checked) < total_tiles:
+            tile = choice(self.children)
+            if free and tile.has_token():
+                tiles_checked.add(self.children.index(tile))
+                continue
+
+            return tile
+
+    def check_within_limits(self, position: tuple[int: int]) -> bool:
+        """
+        Check if a position lies within the limits of the dungeon
+        :param position: position
+        :return: True if lies within limits, False otherwise
+        """
+        return 0 <= position[0] < self.rows and 0 <= position[1] < self.cols
+
+    def activate_which_tiles(self, tile_positions: list[tuple[int:int]] | None =None) -> None:
+        """
+        Activates the activable tiles within a range of positions
+        :param tile_positions: coordinates of the tiles to activate if activable
+        :return: None
+        """
         for tile in self.children:
-            # tile is not disabled if positions matches any in tile_positions and is activable
+            # tile is not disabled if positions matches any in tile_positions and is tile.is_activable()
             tile.disabled = not (
                     tile_positions is not None and
                     any(tile.row == pos[0] and tile.col == pos[1] for pos in tile_positions) and
                     tile.is_activable
             )
 
-    def get_tile(self, position):
-        return self.tiles_dict.get(position)
-
     def scan(
         self, scenery: tuple , exclude: bool=False
     ):  # pass scenery as tuple of token.kinds to look for (e.g. ('wall', 'shovel'))
 
         if exclude:
-            found_tiles = {tile.position for tile in self.children if
+            return {tile.position for tile in self.children if
                            not any(tile.has_token((token, None)) for token in scenery)}
         else:
-            found_tiles = {tile.position for tile in self.children if
+            return {tile.position for tile in self.children if
                            any(tile.has_token((token, None)) for token in scenery)}
-
-        return found_tiles
 
     def find_shortest_path(
         self, start_tile, end_tile, excluded=tuple()
@@ -352,78 +410,15 @@ class DungeonLayout(GridLayout):
 
         return None
 
-    def get_surrounding_spaces(
-        self, position: tuple[int], cannot_share_tile_with: tuple[str]
-    ) -> set[tuple[int]]:
-        """Returns surrounding positions of given position in which tiles are not occupied"""
-
-        nearby_positions = self.get_nearby_positions(position)
-        nearby_spaces = set()
-
-        for position in nearby_positions:
-            end_tile = self.get_tile(position)
-
-            if not any(
-                end_tile.has_token((token_kind, None))
-                for token_kind in cannot_share_tile_with
-            ):
-                nearby_spaces.add(position)
-
-        return nearby_spaces
-
-    @staticmethod
-    def are_nearby(item1, item2) -> bool:  # check if two positions are nearby
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-
-        for direction in directions:
-            row, col = item1.position[0] + direction[0], item1.position[1] + direction[1]
-            if (row, col) == item2.position:
-                return True
-        return False
-
-    @staticmethod
-    def get_distance(position1: tuple[int], position2: tuple[int]) -> int:
-        return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
-
-
-    def get_nearby_positions(self, position: tuple[int]) -> set[tuple[int]]:
+    def get_nearby_positions(self, position: tuple[int]) -> set[tuple[int:int]]:
         """Returns surrounding positions"""
-
-        nearby_positions = set()
         directions = ((0, 1), (0, -1), (1, 0), (-1, 0))
 
-        for direction in directions:
-
-            if self.check_within_limits(
-                (position[0] + direction[0], position[1] + direction[1])
-            ):
-
-                nearby_positions.add(
-                    (position[0] + direction[0], position[1] + direction[1])
-                )
-        return nearby_positions
-
-    def check_within_limits(self, position: tuple[int]) -> bool:
-
-        return 0 <= position[0] < self.rows and 0 <= position[1] < self.cols
-
-    def get_random_tile(self, free: bool = False):
-        """
-        Returns a random tile from the dungeon. If free, it will return a tile with no tokens
-        """
-
-        tiles_checked: set = set()
-        total_tiles = len(self.children)
-
-        while len(tiles_checked) < total_tiles:
-            tile = choice(self.children)
-            if free:
-                if tile.has_token():
-                    tiles_checked.add(self.children.index(tile))
-                else:
-                    return tile
-            else:
-                return tile
+        return {
+            (position[0] + dx, position[1] + dy)
+            for dx, dy in directions
+            if self.check_within_limits((position[0] + dx, position[1] + dy))
+        }
 
     def show_damage_token(self, position, size):
 

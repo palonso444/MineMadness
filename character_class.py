@@ -126,9 +126,10 @@ class Character(ABC):
                 opponent.stats.health / opponent.stats.natural_health
             )
 
-        self.dungeon.show_damage_token(
-            opponent.token.shape.pos, opponent.token.shape.size
-        )
+        #self.dungeon.show_damage_token(
+            #opponent.token.shape.pos, opponent.token.shape.size
+        #)
+        opponent.token.show_damage(opponent.token.shape.pos, opponent.token.shape.size)
 
         if opponent.stats.health <= 0:
             experience: int | None = opponent.stats.experience_when_killed

@@ -368,3 +368,7 @@ class CharacterToken(SolidToken):
             start_tile.second_token = None
         else:
             start_tile.token = None
+
+    def show_damage(self, position, size):
+        with self.dungeon.canvas:
+            DamageToken(pos=position, size=size, dungeon=self)

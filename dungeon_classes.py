@@ -87,6 +87,37 @@ class DungeonLayout(GridLayout):
 
         dungeon.game.dungeon = dungeon  # links dungeon with main (MineMadnessGame)
 
+    @staticmethod
+    def on_fading_tokens_items_queue(dungeon, queue):
+        if len(queue) > 0:
+            dungeon.show_effect_token(
+                dungeon.fading_tokens_items_queue[0],
+                dungeon.fading_token_character.token.shape.pos,
+                dungeon.fading_token_character.token.shape.size,
+                dungeon.fading_tokens_effect_fades,
+            )
+
+    def remove_item_if_in_queue(self, animation, fading_token):
+        if fading_token.item in self.fading_tokens_items_queue:
+            self.fading_tokens_items_queue.remove(fading_token.item)
+
+    def show_damage_token(self, position, size):
+        with self.canvas:
+            tokens.DamageToken(pos=position, size=size, dungeon=self)
+
+    def show_digging_token(self, position, size):
+        with self.canvas:
+            tokens.DiggingToken(pos=position, size=size, dungeon=self)
+
+    def show_effect_token(self, item: str, pos, size, effect_fades: bool = False):
+        """
+        Item is the item causing effect, see tokens.EffectToken class for more details.
+        """
+        with self.canvas:
+            tokens.EffectToken(
+                item=item, pos=pos, size=size, dungeon=self, effect_fades=effect_fades
+            )
+
     def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """
         Places items on DungeonLayout.blueprint depending on DungeonLayout.stats
@@ -329,9 +360,23 @@ class DungeonLayout(GridLayout):
 
             return tile
 
+    def get_nearby_positions(self, position: tuple[int: int]) -> set[tuple[int:int]]:
+        """
+        Returns the nearby positions of the specified position
+        :param position: coordinates of the position
+        :return: set of nearby positions
+        """
+        directions = (0, 1), (0, -1), (1, 0), (-1, 0)
+
+        return {
+            (position[0] + dx, position[1] + dy)
+            for dx, dy in directions
+            if self.check_within_limits((position[0] + dx, position[1] + dy))
+        }
+
     def check_within_limits(self, position: tuple[int: int]) -> bool:
         """
-        Check if a position lies within the limits of the dungeon
+        Checks if a position lies within the limits of the dungeon
         :param position: position
         :return: True if lies within limits, False otherwise
         """
@@ -351,16 +396,22 @@ class DungeonLayout(GridLayout):
                     tile.is_activable
             )
 
-    def scan(
-        self, scenery: tuple , exclude: bool=False
-    ):  # pass scenery as tuple of token.kinds to look for (e.g. ('wall', 'shovel'))
-
+    def scan(self, token_kinds: list[str] , exclude: bool=False):
+        """
+        Returns a set with coordinates of tiles having none (exclude set to True) or at least one (exclude set to False)
+        of Tokens of the specified token_kinds
+        :param token_kinds: token kinds to scan
+        :param exclude: determines if search is exclusive (returns coordinates of tiles NOT having
+        any Token of the token_kinds provided) or inclusive (returns coordinates of tiles having at least a
+        Token of ONE of the token_kind provided)
+        :return: set with the ccordinates of the tiles.
+        """
         if exclude:
             return {tile.position for tile in self.children if
-                           not any(tile.has_token((token, None)) for token in scenery)}
+                           not any(tile.has_token((token, None)) for token in token_kinds)}
         else:
             return {tile.position for tile in self.children if
-                           any(tile.has_token((token, None)) for token in scenery)}
+                           any(tile.has_token((token, None)) for token in token_kinds )}
 
     def find_shortest_path(
         self, start_tile, end_tile, excluded=tuple()
@@ -370,7 +421,6 @@ class DungeonLayout(GridLayout):
         e.g. [(0,1), (0,2), (1,2)]. Start tile position NOT INCLUDED in path. End tile included.
         Returns None if there is no possible path.
         """
-
         directions: tuple = (-1, 0), (1, 0), (0, -1), (0, 1)
         queue: deque = deque(
             [(start_tile.position, [])]
@@ -406,48 +456,3 @@ class DungeonLayout(GridLayout):
                         queue.append(((row, col), path + [(row, col)]))
 
         return None
-
-    def get_nearby_positions(self, position: tuple[int]) -> set[tuple[int:int]]:
-        """Returns surrounding positions"""
-        directions = (0, 1), (0, -1), (1, 0), (-1, 0)
-
-        return {
-            (position[0] + dx, position[1] + dy)
-            for dx, dy in directions
-            if self.check_within_limits((position[0] + dx, position[1] + dy))
-        }
-
-    def show_damage_token(self, position, size):
-
-        with self.canvas:
-            tokens.DamageToken(pos=position, size=size, dungeon=self)
-
-    def show_digging_token(self, position, size):
-
-        with self.canvas:
-            tokens.DiggingToken(pos=position, size=size, dungeon=self)
-
-    def show_effect_token(self, item: str, pos, size, effect_fades: bool = False):
-        """
-        Item is the item causing effect, see tokens.EffectToken class for more details.
-        """
-
-        with self.canvas:
-            tokens.EffectToken(
-                item=item, pos=pos, size=size, dungeon=self, effect_fades=effect_fades
-            )
-
-    def on_fading_tokens_items_queue(self, instance, queue):
-
-        if len(queue) > 0:
-            self.show_effect_token(
-                self.fading_tokens_items_queue[0],
-                self.fading_token_character.token.shape.pos,
-                self.fading_token_character.token.shape.size,
-                self.fading_tokens_effect_fades,
-            )
-
-    def remove_item_if_in_queue(self, instance, fading_token):
-
-        if fading_token.item in self.fading_tokens_items_queue:
-            self.fading_tokens_items_queue.remove(fading_token.item)

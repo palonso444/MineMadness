@@ -117,7 +117,7 @@ class Player(Character, ABC, EventDispatcher):
             "jerky": 2,
             "coffee": 0,
             "tobacco": 0,
-            "whisky": 0,
+            "whisky": 10,
             "talisman": 0,
         }
         self.effects: dict[str:list] = {"moves": [], "thoughness": [], "strength": []}

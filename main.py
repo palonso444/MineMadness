@@ -11,7 +11,6 @@ from interface import Interfacebutton
 from crapgeon_utils import check_if_multiple
 from dungeon_classes import DungeonLayout
 
-
 # LabelBase.register(name = 'Vollkorn',
 # fn_regular= 'fonts/Vollkorn-Regular.ttf',
 # fn_italic='fonts/Vollkorn-Italic.ttf'
@@ -42,7 +41,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.level = 1
+        self.level: int = 1
         self.active_character: Character | None = None  # defined by MineMadnessGame.on_active_character_id()
         self.total_gems: int | None = None  # defined by MineMadnessGame.DungeonLayout.on_pos()
 

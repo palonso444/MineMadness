@@ -112,7 +112,6 @@ class DungeonLayout(GridLayout):
         Matches the symbols of the DungeonLayout.blueprint with the corresponding tokens and characters
         :return: None
         """
-
         for tile in self.children:
             character = None
             token_kind = None
@@ -275,7 +274,6 @@ class DungeonLayout(GridLayout):
         :param character: character (if any) associated with the token
         :return: None
         """
-
         if character is not None:
 
             character.id = len(character.__class__.data)  # Delete __class__
@@ -320,7 +318,6 @@ class DungeonLayout(GridLayout):
         :param free: bool specifying if the returned tile must be free (with no tokens)
         :return: random tile
         """
-
         tiles_checked: set = set()
         total_tiles = len(self.children)
 

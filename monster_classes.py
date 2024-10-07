@@ -30,9 +30,10 @@ class Monster(Character, ABC):
     def try_to_dodge(self):
 
         random_num = randint(1, 10)
-        surrounding_spaces = self.dungeon.get_surrounding_spaces(
-            self.position, self.cannot_share_tile_with
-        )
+        surrounding_spaces = {self.dungeon.get_tile(position).position
+                              for position in self.dungeon.get_nearby_positions(self.position)
+                              if not self.dungeon.get_tile(position).has_token()}
+
         trigger = random_num + (4 - len(surrounding_spaces))
 
         if trigger <= self.stats.dodging_ability and len(surrounding_spaces) > 0:

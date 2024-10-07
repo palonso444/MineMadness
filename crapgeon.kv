@@ -9,7 +9,6 @@
     size_hint: None, None
     height: self.minimum_height
     width: self.minimum_width
-    game: root
 
 <Label>:
     text_size: self.size    # needed to make halign work  
@@ -49,14 +48,12 @@
 <MineMadnessGame>:
     orientation: 'vertical'
     padding: '5dp'
-    level: 1
-
-    active_character: None
 
     on_active_character_id: 
         name_label.text = str(root.active_character.name)
         ability_button.text = ability_button.display_text()
 
+    on_level: level_label.text = "Depth: " + str(self.level * 30) + " ft."
     on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.stats.shovels)
     on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.stats.weapons)
     on_gems: gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
@@ -143,4 +140,8 @@
     
         DungeonLayout:
             game: root
-            # initialized in python file
+            dungeon_level: 1
+            stats: DungeonStats(self.dungeon_level)
+            rows: self.stats.size()
+            cols: self.stats.size()
+            blueprint: self.generate_blueprint(self.rows, self.cols)

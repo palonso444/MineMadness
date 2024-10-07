@@ -44,6 +44,22 @@ class Player(Character, ABC, EventDispatcher):
         cls.rearrange_ids()
 
     @classmethod
+    def all_players_alive(cls):
+        return len(cls.data) == len(cls.player_chars)
+
+    @classmethod
+    def get_alive_players(cls) -> set[str] | tuple[str:str:str]:
+        """
+        Determines the number of alive players at the end of a level
+        :return: set or tuple containing the characters representing live players
+        """
+        if cls.all_alive():
+            return cls.player_chars
+            # return "&"
+        else:
+            return {player.char for player in cls.exited}
+
+    @classmethod
     def transfer_player(cls, name: str) -> Character:
         """
         Heals and disables the ability of exited players and transfers them to the next level.
@@ -101,7 +117,7 @@ class Player(Character, ABC, EventDispatcher):
             "jerky": 2,
             "coffee": 0,
             "tobacco": 0,
-            "whisky": 0,
+            "whisky": 10,
             "talisman": 0,
         }
         self.effects: dict[str:list] = {"moves": [], "thoughness": [], "strength": []}

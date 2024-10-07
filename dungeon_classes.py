@@ -1,5 +1,6 @@
+from __future__ import annotations
 from kivy.uix.gridlayout import GridLayout  # type: ignore
-from kivy.properties import ListProperty
+from kivy.properties import ListProperty, NumericProperty
 from collections import deque
 from random import choice
 
@@ -11,273 +12,299 @@ from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
 
 
-
 class DungeonLayout(GridLayout):
-
+    """
+    Class defining the board of the game. The level is determined by the MineMadnessGame class. The rest of
+    features are determined by DungeonLayout.DungeonStats
+    """
     fading_tokens_items_queue = ListProperty([])
 
-    def __init__(self, dungeon_level: int = 1, game=None, **kwargs):
+    def __init__(self, game: MineMadnessGame | None = None, **kwargs):
         super().__init__(**kwargs)
-        self.tiles_dict: dict[tuple : tiles.Tile] | None = None
 
-        self.dungeon_level = dungeon_level
-        self.stats = DungeonStats(self.dungeon_level)
-        self.rows: int = self.stats.size()
-        self.cols: int = self.stats.size()
-        self.blueprint = self.generate_blueprint(self.rows, self.cols)
+        # game is passed as argument from level 2 onwards
+        if game is not None:
+            self.game: MineMadnessGame = game
+            self.dungeon_level: int = game.level
+            self.stats: DungeonStats = DungeonStats(self.dungeon_level)
+            self.rows: int = self.stats.size()
+            self.cols: int = self.stats.size()
+            self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
+
+        self.tiles_dict: dict[tuple: Tile] | None = None
 
         # determines which character shows fadingtokens
-        self.fading_token_character: players.Player | None = None
+        self.fading_token_character: Player | None = None
         # determines if tokens of Dungeon.fading_tokens_items_queue are displayed in green or red
         self.fading_tokens_effect_fades: bool | None = None
 
-        self.game = game
+    @staticmethod
+    def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
+        """
+        Returns the distance (in number of movements) between 2 positions of the dungeon
+        :param position1: first position
+        :param position2: second position
+        :return: distance between the two positions
+        """
+        return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
-    def display_depth(self):
-        self.game.ids.level_label.text = (
-            "Depth: " + str(self.dungeon_level * 30) + " ft."
+    @staticmethod
+    def are_nearby(item1: Token, item2: Token) -> bool:
+        """
+        Checks if two tokens in the dungeon have nearby positions
+        :param item1: first item
+        :param item2: second item
+        :return: True if they are nearby, False otherwise
+        """
+        directions = (-1, 0), (1, 0), (0, -1), (0, 1)
+
+        return any(
+            (item1.position[0] + dx, item1.position[1] + dy) == item2.position
+            for dx, dy in directions
         )
 
-    def on_pos(self, *args):
+    @staticmethod
+    def on_pos(dungeon: DungeonLayout, pos: list [int, int]) -> None:
+        """
+        Triggered when the dungeon is positioned the beginning of each level
+        It initializes DungeonLayout.tiles.dict and prepares the floor of the dungeon, placing the exit
+        :param dungeon: Instance of the dungeon corresponding to the current level
+        :param pos: position (actual position on the screen) of the dungeon instance
+        :return: None
+        """
+        dungeon.tiles_dict = dict ()
 
-        self.display_depth()  # dysplays depth in level_label of interface
+        for y in range(dungeon.blueprint.y_axis):
+            for x in range(dungeon.blueprint.x_axis):
 
-        self.tiles_dict: dict[tuple : tiles.Tile] = (
-            dict()
-        )  # for faster access to tiles by get_tile()
-        #self.blueprint = Blueprint(self.rows, self.cols,
-                                   #self.determine_alive_players(), dungeon=self)
-        self.game = self.parent.parent
-        self.game.total_gems = 0
-
-        for y in range(self.rows):
-            for x in range(self.cols):
-
-                if self.blueprint.get_position((y,x)) == "o":
-
-                    self.game.total_gems += 1
-                    tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
-
-                elif self.blueprint.get_position((y,x)) == " ":
-
-                    tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=self)
-
+                if dungeon.blueprint.get_position((y,x)) == " ":
+                    tile: Tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=dungeon)
                 else:
+                    tile: Tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=dungeon)
 
-                    tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
+                dungeon.tiles_dict[tile.position] = tile
+                dungeon.add_widget(tile)
 
-                self.tiles_dict[tile.position] = tile
-                self.add_widget(tile)
+        dungeon.game.dungeon = dungeon  # links dungeon with main (MineMadnessGame)
 
-        self.game.dungeon = self  # Adds dungeon as MineMadnessGame class attribute
+    @staticmethod
+    def on_fading_tokens_items_queue(dungeon, queue):
+        if len(queue) > 0:
+            dungeon.show_effect_token(
+                dungeon.fading_tokens_items_queue[0],
+                dungeon.fading_token_character.token.shape.pos,
+                dungeon.fading_token_character.token.shape.size,
+                dungeon.fading_tokens_effect_fades,
+            )
 
-    def generate_blueprint(self, height, width):
+    def remove_item_if_in_queue(self, animation, fading_token):
+        if fading_token.item in self.fading_tokens_items_queue:
+            self.fading_tokens_items_queue.remove(fading_token.item)
 
-        blueprint = Blueprint(height, width)
+    def show_damage_token(self, position, size):
+        with self.canvas:
+            tokens.DamageToken(pos=position, size=size, dungeon=self)
 
-        blueprint.place_items_as_group(self.determine_alive_players(), min_dist=1)
+    def show_digging_token(self, position, size):
+        with self.canvas:
+            tokens.DiggingToken(pos=position, size=size, dungeon=self)
 
+    def show_effect_token(self, item: str, pos, size, effect_fades: bool = False):
+        """
+        Item is the item causing effect, see tokens.EffectToken class for more details.
+        """
+        with self.canvas:
+            tokens.EffectToken(
+                item=item, pos=pos, size=size, dungeon=self, effect_fades=effect_fades
+            )
+
+    def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
+        """
+        Places items on DungeonLayout.blueprint depending on DungeonLayout.stats
+        :param y_axis: length of y_axis of the blueprint
+        :param x_axis: length of x_axis of the blueprint
+        :return: complete blueprint of the dungeon
+        """
+        blueprint = Blueprint(y_axis, x_axis)
+
+        blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         for key, value in self.stats.level_progression().items():
-
-            blueprint.place_items(
-                item=key,
-                frequency=value,
-                protected=self.stats.mandatory_items,
-            )
+            blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
 
         #blueprint.print_map()
         return blueprint
 
-    def determine_alive_players(self):
-
-        if self.dungeon_level == 1:
-            return players.Player.player_chars
-            # return "&"
-        else:
-            live_players = set()
-            for player in players.Player.exited:
-                live_players.add(player.char)
-            return live_players
 
     def match_blueprint(self):
-
+        """
+        Matches the symbols of the DungeonLayout.blueprint with the corresponding tokens and characters
+        :return: None
+        """
         for tile in self.children:
+            character = None
+            token_kind = None
+            token_species = None
             match self.blueprint.get_position((tile.row,tile.col)):
 
                 case "%":
-                    self.create_item(tile, "player", "sawyer")
-
-                case "?":
-                    self.create_item(tile, "player", "hawkins")
-
-                case "&":
-                    self.create_item(tile, "player", "crusherjane")
-
-                case "K":
-                    self.create_item(tile, "monster", "kobold")
-
-                case "L":
-                    self.create_item(tile, "monster", "lizard")
-
-                case "B":
-                    self.create_item(tile, "monster", "blackdeath")
-
-                case "H":
-                    self.create_item(tile, "monster", "hound")
-
-                case "G":
-                    self.create_item(tile, "monster", "growl")
-
-                case "R":
-                    self.create_item(tile, "monster", "golem")
-
-                case "O":
-                    self.create_item(tile, "monster", "gnome")
-
-                case "N":
-                    self.create_item(tile, "monster", "nightmare")
-
-                case "Y":
-                    self.create_item(tile, "monster", "lindworm")
-
-                case "S":
-                    self.create_item(tile, "monster", "shadow")
-
-                case "W":
-                    self.create_item(tile, "monster", "wisp")
-
-                case "D":
-                    self.create_item(tile, "monster", "djinn")
-
-                case "P":
-                    self.create_item(tile, "monster", "pixie")
-
-                case "#":
-                    self.create_item(tile, "wall", "rock")
-
-                case "{":
-                    self.create_item(tile, "wall", "granite")
-
-                case "*":
-                    self.create_item(tile, "wall", "quartz")
-
-                case "p":
-                    self.create_item(tile, "pickable", "shovel")
-
-                case "x":
-                    self.create_item(tile, "pickable", "weapon")
-
-                case "j":
-                    self.create_item(tile, "pickable", "jerky")
-
-                case "c":
-                    self.create_item(tile, "pickable", "coffee")
-
-                case "l":
-                    self.create_item(tile, "pickable", "tobacco")
-
-                case "w":
-                    self.create_item(tile, "pickable", "whisky")
-
-                case "t":
-                    self.create_item(tile, "pickable", "talisman")
-
-                case "h":
-                    self.create_item(tile, "pickable", "powder")
-
-                case "d":
-                    self.create_item(tile, "pickable", "dynamite")
-
-                case "o":
-                    self.create_item(tile, "pickable", "gem")
-
-    def create_item(self, tile, token_kind, token_species):
-
-        # this function cannot be a match due to function calls in between cases
-
-        if token_kind == "player" or token_kind == "monster":
-
-            if token_kind == "player":
-
-                if token_species == "sawyer":
-
                     if self.dungeon_level == 1:
+                        token_kind = "player"
+                        token_species = "sawyer"
                         character = players.Sawyer()
                     else:
                         character = players.Player.transfer_player("Sawyer")
 
-                elif token_species == "hawkins":
-
+                case "?":
                     if self.dungeon_level == 1:
+                        token_kind = "player"
+                        token_species = "hawkins"
                         character = players.Hawkins()
                     else:
                         character = players.Player.transfer_player("Hawkins")
 
-                elif token_species == "crusherjane":
-
+                case "&":
                     if self.dungeon_level == 1:
+                        token_kind = "player"
+                        token_species = "crusherjane"
                         character = players.CrusherJane()
                     else:
                         character = players.Player.transfer_player("Crusher Jane")
 
-            elif token_kind == "monster":
-
-                if token_species == "kobold":
+                case "K":
+                    token_kind="monster"
+                    token_species = "kobold"
                     character = monsters.Kobold()
 
-                elif token_species == "lizard":
+                case "L":
+                    token_kind = "monster"
+                    token_species = "lizard"
                     character = monsters.BlindLizard()
 
-                elif token_species == "blackdeath":
+                case "B":
+                    token_kind = "monster"
+                    token_species = "blackdeath"
                     character = monsters.BlackDeath()
 
-                elif token_species == "hound":
+                case "H":
+                    token_kind = "monster"
+                    token_species = "hound"
                     character = monsters.CaveHound()
 
-                elif token_species == "growl":
+                case "G":
+                    token_kind = "monster"
+                    token_species = "growl"
                     character = monsters.Growl()
 
-                elif token_species == "golem":
-                    character = monsters.RockGolem()
+                case "R":
+                    token_kind = "monster"
+                    token_species = "golem"
+                    character=monsters.RockGolem()
 
-                elif token_species == "gnome":
-                    character = monsters.DarkGnome()
+                case "O":
+                    token_kind = "monster"
+                    token_species = "gnome"
+                    character=monsters.DarkGnome()
 
-                elif token_species == "nightmare":
-                    character = monsters.NightMare()
+                case "N":
+                    token_kind = "monster"
+                    token_species = "nightmare"
+                    character=monsters.NightMare()
 
-                elif token_species == "lindworm":
-                    character = monsters.LindWorm()
+                case "Y":
+                    token_kind = "monster"
+                    token_species = "lindworm"
+                    character=monsters.LindWorm()
 
-                elif token_species == "shadow":
-                    character = monsters.WanderingShadow()
+                case "S":
+                    token_kind = "monster"
+                    token_species = "shadow"
+                    character=monsters.WanderingShadow()
 
-                elif token_species == "wisp":
-                    character = monsters.DepthsWisp()
+                case "W":
+                    token_kind = "monster"
+                    token_species = "wisp"
+                    character=monsters.DepthsWisp()
 
-                elif token_species == "djinn":
-                    character = monsters.MountainDjinn()
+                case "D":
+                    token_kind = "monster"
+                    token_species = "djinn"
+                    character=monsters.MountainDjinn()
 
-                elif token_species == "pixie":
-                    character = monsters.Pixie()
+                case "P":
+                    token_kind = "monster"
+                    token_species = "pixie"
+                    character=monsters.Pixie()
 
-            self.place_item(tile, token_kind, token_species, character)
+                case "#":
+                    token_kind = "wall"
+                    token_species = "rock"
 
-        else:
+                case "{":
+                    token_kind = "wall"
+                    token_species = "granite"
 
-            self.place_item(tile, token_kind, token_species)
+                case "*":
+                    token_kind = "wall"
+                    token_species = "quartz"
 
-    def place_item(
-        self,
-        tile: tiles.Tile,
-        token_kind: str,
-        token_species: str,
-        character = None,
-    ):
+                case "p":
+                    token_kind = "pickable"
+                    token_species = "shovel"
 
+                case "x":
+                    token_kind = "pickable"
+                    token_species = "weapon"
+
+                case "j":
+                    token_kind = "pickable"
+                    token_species = "jerky"
+
+                case "c":
+                    token_kind = "pickable"
+                    token_species = "coffee"
+
+                case "l":
+                    token_kind = "pickable"
+                    token_species = "tobacco"
+
+                case "w":
+                    token_kind = "pickable"
+                    token_species = "whisky"
+
+                case "t":
+                    token_kind = "pickable"
+                    token_species = "talisman"
+
+                case "h":
+                    token_kind = "pickable"
+                    token_species = "powder"
+
+                case "d":
+                    token_kind = "pickable"
+                    token_species = "dynamite"
+
+                case "o":
+                    token_kind = "pickable"
+                    token_species = "gem"
+
+            # empty spaces ("." or " ")
+            if token_kind is not None and token_species is not None:
+                self.place_item(tile, token_kind, token_species, character)
+
+
+    def place_item(self, tile: Tile, token_kind: str,
+                   token_species: str, character: Character | None):
+        """
+        Places tokens on the tiles
+        :param tile: tile in which item must be placed
+        :param token_kind: Token.kind of the token to be placed
+        :param token_species: Token.species of the token to be placed
+        :param character: character (if any) associated with the token
+        :return: None
+        """
         if character is not None:
 
             character.id = len(character.__class__.data)  # Delete __class__
@@ -308,31 +335,83 @@ class DungeonLayout(GridLayout):
 
         tile.bind(pos=tile.update_token, size=tile.update_token)
 
-    def activate_which_tiles(self, tile_positions=None):
+    def get_tile(self, position: tuple [int:int]) -> Tile:
+        """
+        Returns the tile at the specified coordinates
+        :param position: coordinates of the tile
+        :return: tile
+        """
+        return self.tiles_dict.get(position)
 
+    def get_random_tile(self, free: bool = False) -> Tile:
+        """
+        Returns a random tile from the dungeon
+        :param free: bool specifying if the returned tile must be free (with no tokens)
+        :return: random tile
+        """
+        tiles_checked: set = set()
+        total_tiles = len(self.children)
+
+        while len(tiles_checked) < total_tiles:
+            tile = choice(self.children)
+            if free and tile.has_token():
+                tiles_checked.add(self.children.index(tile))
+                continue
+
+            return tile
+
+    def get_nearby_positions(self, position: tuple[int: int]) -> set[tuple[int:int]]:
+        """
+        Returns the nearby positions of the specified position
+        :param position: coordinates of the position
+        :return: set of nearby positions
+        """
+        directions = (0, 1), (0, -1), (1, 0), (-1, 0)
+
+        return {
+            (position[0] + dx, position[1] + dy)
+            for dx, dy in directions
+            if self.check_within_limits((position[0] + dx, position[1] + dy))
+        }
+
+    def check_within_limits(self, position: tuple[int: int]) -> bool:
+        """
+        Checks if a position lies within the limits of the dungeon
+        :param position: position
+        :return: True if lies within limits, False otherwise
+        """
+        return 0 <= position[0] < self.rows and 0 <= position[1] < self.cols
+
+    def activate_which_tiles(self, tile_positions: list[tuple[int:int]] | None =None) -> None:
+        """
+        Activates the activable tiles within a range of positions
+        :param tile_positions: coordinates of the tiles to activate if activable
+        :return: None
+        """
         for tile in self.children:
-            # tile is not disabled if positions matches any in tile_positions and is activable
+            # tile is not disabled if positions matches any in tile_positions and is tile.is_activable()
             tile.disabled = not (
                     tile_positions is not None and
                     any(tile.row == pos[0] and tile.col == pos[1] for pos in tile_positions) and
                     tile.is_activable
             )
 
-    def get_tile(self, position):
-        return self.tiles_dict.get(position)
-
-    def scan(
-        self, scenery: tuple , exclude: bool=False
-    ):  # pass scenery as tuple of token.kinds to look for (e.g. ('wall', 'shovel'))
-
+    def scan(self, token_kinds: list[str] , exclude: bool=False):
+        """
+        Returns a set with coordinates of tiles having none (exclude set to True) or at least one (exclude set to False)
+        of Tokens of the specified token_kinds
+        :param token_kinds: token kinds to scan
+        :param exclude: determines if search is exclusive (returns coordinates of tiles NOT having
+        any Token of the token_kinds provided) or inclusive (returns coordinates of tiles having at least a
+        Token of ONE of the token_kind provided)
+        :return: set with the ccordinates of the tiles.
+        """
         if exclude:
-            found_tiles = {tile.position for tile in self.children if
-                           not any(tile.has_token((token, None)) for token in scenery)}
+            return {tile.position for tile in self.children if
+                           not any(tile.has_token((token, None)) for token in token_kinds)}
         else:
-            found_tiles = {tile.position for tile in self.children if
-                           any(tile.has_token((token, None)) for token in scenery)}
-
-        return found_tiles
+            return {tile.position for tile in self.children if
+                           any(tile.has_token((token, None)) for token in token_kinds )}
 
     def find_shortest_path(
         self, start_tile, end_tile, excluded=tuple()
@@ -342,8 +421,7 @@ class DungeonLayout(GridLayout):
         e.g. [(0,1), (0,2), (1,2)]. Start tile position NOT INCLUDED in path. End tile included.
         Returns None if there is no possible path.
         """
-
-        directions: list[tuple] = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        directions: tuple = (-1, 0), (1, 0), (0, -1), (0, 1)
         queue: deque = deque(
             [(start_tile.position, [])]
         )  # start_tile_pos is not included in the path
@@ -378,111 +456,3 @@ class DungeonLayout(GridLayout):
                         queue.append(((row, col), path + [(row, col)]))
 
         return None
-
-    def get_surrounding_spaces(
-        self, position: tuple[int], cannot_share_tile_with: tuple[str]
-    ) -> set[tuple[int]]:
-        """Returns surrounding positions of given position in which tiles are not occupied"""
-
-        nearby_positions = self.get_nearby_positions(position)
-        nearby_spaces = set()
-
-        for position in nearby_positions:
-            end_tile = self.get_tile(position)
-
-            if not any(
-                end_tile.has_token((token_kind, None))
-                for token_kind in cannot_share_tile_with
-            ):
-                nearby_spaces.add(position)
-
-        return nearby_spaces
-
-    @staticmethod
-    def are_nearby(item1, item2) -> bool:  # check if two positions are nearby
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-
-        for direction in directions:
-            row, col = item1.position[0] + direction[0], item1.position[1] + direction[1]
-            if (row, col) == item2.position:
-                return True
-        return False
-
-    @staticmethod
-    def get_distance(position1: tuple[int], position2: tuple[int]) -> int:
-        return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
-
-
-    def get_nearby_positions(self, position: tuple[int]) -> set[tuple[int]]:
-        """Returns surrounding positions"""
-
-        nearby_positions = set()
-        directions = ((0, 1), (0, -1), (1, 0), (-1, 0))
-
-        for direction in directions:
-
-            if self.check_within_limits(
-                (position[0] + direction[0], position[1] + direction[1])
-            ):
-
-                nearby_positions.add(
-                    (position[0] + direction[0], position[1] + direction[1])
-                )
-        return nearby_positions
-
-    def check_within_limits(self, position: tuple[int]) -> bool:
-
-        return 0 <= position[0] < self.rows and 0 <= position[1] < self.cols
-
-    def get_random_tile(self, free: bool = False):
-        """
-        Returns a random tile from the dungeon. If free, it will return a tile with no tokens
-        """
-
-        tiles_checked: set = set()
-        total_tiles = len(self.children)
-
-        while len(tiles_checked) < total_tiles:
-            tile = choice(self.children)
-            if free:
-                if tile.has_token():
-                    tiles_checked.add(self.children.index(tile))
-                else:
-                    return tile
-            else:
-                return tile
-
-    def show_damage_token(self, position, size):
-
-        with self.canvas:
-            tokens.DamageToken(pos=position, size=size, dungeon=self)
-
-    def show_digging_token(self, position, size):
-
-        with self.canvas:
-            tokens.DiggingToken(pos=position, size=size, dungeon=self)
-
-    def show_effect_token(self, item: str, pos, size, effect_fades: bool = False):
-        """
-        Item is the item causing effect, see tokens.EffectToken class for more details.
-        """
-
-        with self.canvas:
-            tokens.EffectToken(
-                item=item, pos=pos, size=size, dungeon=self, effect_fades=effect_fades
-            )
-
-    def on_fading_tokens_items_queue(self, instance, queue):
-
-        if len(queue) > 0:
-            self.show_effect_token(
-                self.fading_tokens_items_queue[0],
-                self.fading_token_character.token.shape.pos,
-                self.fading_token_character.token.shape.size,
-                self.fading_tokens_effect_fades,
-            )
-
-    def remove_item_if_in_queue(self, instance, fading_token):
-
-        if fading_token.item in self.fading_tokens_items_queue:
-            self.fading_tokens_items_queue.remove(fading_token.item)

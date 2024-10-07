@@ -11,7 +11,6 @@ from interface import Interfacebutton
 from crapgeon_utils import check_if_multiple
 from dungeon_classes import DungeonLayout
 
-
 # LabelBase.register(name = 'Vollkorn',
 # fn_regular= 'fonts/Vollkorn-Regular.ttf',
 # fn_italic='fonts/Vollkorn-Italic.ttf'
@@ -20,13 +19,12 @@ from dungeon_classes import DungeonLayout
 class MineMadnessGame(BoxLayout):  # initialized in kv file
 
     # GENERAL PROPERTIES
+    level = NumericProperty(None)
     dungeon = ObjectProperty(None)
     turn = NumericProperty(None, allownone=True)
     active_character_id = NumericProperty(None, allownone=True)
     character_done = BooleanProperty(False)
     player_exited = BooleanProperty(False)
-    # self.active_character -> initialized and defined by on_active_character_id()
-    # self.total_gems -> initialized and defined by DungeonLayout.on_pos()
 
     # ABILITY PROPERTIES
     ability_button = BooleanProperty(False)
@@ -41,9 +39,16 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
     weapons = BooleanProperty(None)
     gems = BooleanProperty(None)
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.level: int = 1
+        self.active_character: Character | None = None  # defined by MineMadnessGame.on_active_character_id()
+        self.total_gems: int | None = None  # defined by MineMadnessGame.DungeonLayout.on_pos()
+
     @staticmethod
     def on_dungeon(game, dungeon):
 
+        game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
         dungeon.match_blueprint()
         # characters.Player.set_starting_player_order()
@@ -51,7 +56,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         players.Player.exited.clear()
 
     def initialize_switches(self):
-
         self.turn = 0  # even for players, odd for monsters. Player starts
 
         self.health = False
@@ -217,8 +221,8 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         if players.Player.all_dead():
 
             monsters.Monster.data.clear()
-            new_dungeon_level: int = self.dungeon.dungeon_level + 1
-            self.generate_next_level(new_dungeon_level)
+            self.level += 1
+            self.generate_next_level(self.level)
 
         elif self.active_character_id == len(players.Player.data):
             self.update_switch("turn")
@@ -301,8 +305,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         :return: None
         """
         self.children[0].remove_widget(self.dungeon)  # self.children[0] is Scrollview
-        new_level = DungeonLayout(dungeon_level=new_dungeon_level, game=self)
-        self.children[0].add_widget(new_level)
+        self.children[0].add_widget(DungeonLayout(game=self))
         self.turn = None
 
 

@@ -156,7 +156,8 @@ class Tile(Button):
             if self.has_token(("monster", None)):
                 self.get_character().kill_character(self)
             self.clear_token()  # remove all other tokens, pickables, etc. if any
-            self.dungeon.create_item(self, "wall", "rock")
+            self.dungeon.place_item(self, "wall", "rock", None)
+            #self.dungeon.instantiate_character(self, "wall", "rock")
             self.dungeon.show_effect_token(
                 "explosion", self.token.shape.pos, self.token.shape.size
             )

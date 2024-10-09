@@ -27,7 +27,7 @@ class AbilityButton(ToggleButton):
 
             if value == "down" and character.name == "Hawkins":
                 character.ability_active = True
-                self.game.dungeon.show_effect_token(
+                character.token.show_effect_token(
                     "dynamite", character.token.shape.pos, character.token.shape.size
                 )
                 self.game.dynamic_movement_range("shooting")
@@ -42,7 +42,7 @@ class AbilityButton(ToggleButton):
                     character.hide()
 
                 elif character.name == "Crusher Jane":
-                    self.game.dungeon.show_effect_token(
+                    character.token.show_effect_token(
                         "armed", character.token.shape.pos, character.token.shape.size
                     )
 
@@ -59,7 +59,7 @@ class AbilityButton(ToggleButton):
                     self.game.dynamic_movement_range()
 
                 elif character.name == "Crusher Jane":
-                    self.game.dungeon.show_effect_token(
+                    character.token.show_effect_token(
                         "armed",
                         character.token.shape.pos,
                         character.token.shape.size,
@@ -122,7 +122,7 @@ class JerkyButton(Interfacebutton):
         character.heal(effect_size)
 
         self.game.update_switch("health")
-        self.game.dungeon.show_effect_token(
+        character.token.show_effect_token(
             "jerky", character.token.shape.pos, character.token.shape.size
         )
         # this updates health bar
@@ -153,7 +153,7 @@ class CoffeeButton(Interfacebutton):
             }
         )
 
-        self.game.dungeon.show_effect_token(
+        character.token.show_effect_token(
             "coffee", character.token.shape.pos, character.token.shape.size
         )
         self.apply_cost("coffee")
@@ -182,7 +182,7 @@ class TobaccoButton(Interfacebutton):
         print("TOBACCO END TURN")
         print(self.game.turn + self.stats.effect_duration)
 
-        self.game.dungeon.show_effect_token(
+        character.token.show_effect_token(
             "tobacco", character.token.shape.pos, character.token.shape.size
         )
         self.apply_cost("tobacco")
@@ -221,7 +221,7 @@ class WhiskyButton(Interfacebutton):
             }
         )
 
-        self.game.dungeon.show_effect_token(
+        character.token.show_effect_token(
             "whisky", character.token.shape.pos, character.token.shape.size
         )
         self.apply_cost("whisky")
@@ -235,11 +235,12 @@ class TalismanButton(Interfacebutton):
 
     def on_release(self):
 
+        character = self.game.active_character
         if Player.all_alive():
             character = self.game.active_character
             character.experience = character.stats.exp_to_next_level
 
-            self.game.dungeon.show_effect_token(
+            character.token.show_effect_token(
                 "talisman_level_up",
                 character.token.shape.pos,
                 character.token.shape.size,
@@ -251,7 +252,7 @@ class TalismanButton(Interfacebutton):
             player.unbind(experience=player.on_experience)
             player.unbind(player_level=player.on_player_level)
             player.resurrect()
-            self.game.dungeon.show_effect_token(
+            character.token.show_effect_token(
                 "talisman_back",
                 player.token.shape.pos,
                 player.token.shape.size,

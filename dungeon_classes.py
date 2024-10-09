@@ -17,7 +17,7 @@ class DungeonLayout(GridLayout):
     Class defining the board of the game. The level is determined by the MineMadnessGame class. The rest of
     features are determined by DungeonLayout.DungeonStats
     """
-    fading_tokens_items_queue = ListProperty([])
+    #fading_tokens_items_queue = ListProperty([])
 
     def __init__(self, game: MineMadnessGame | None = None, **kwargs):
         super().__init__(**kwargs)
@@ -87,29 +87,6 @@ class DungeonLayout(GridLayout):
 
         dungeon.game.dungeon = dungeon  # links dungeon with main (MineMadnessGame)
 
-    @staticmethod
-    def on_fading_tokens_items_queue(dungeon, queue):
-        if len(queue) > 0:
-            dungeon.show_effect_token(
-                dungeon.fading_tokens_items_queue[0],
-                dungeon.fading_token_character.token.shape.pos,
-                dungeon.fading_token_character.token.shape.size,
-                dungeon.fading_tokens_effect_fades,
-            )
-
-    def remove_item_if_in_queue(self, animation, fading_token):
-        if fading_token.item in self.fading_tokens_items_queue:
-            self.fading_tokens_items_queue.remove(fading_token.item)
-
-    def show_effect_token(self, item: str, pos, size, effect_fades: bool = False):
-        """
-        Item is the item causing effect, see tokens.EffectToken class for more details.
-        """
-        with self.canvas:
-            tokens.EffectToken(
-                item=item, pos=pos, size=size, dungeon=self, effect_fades=effect_fades
-            )
-
     def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """
         Places items on DungeonLayout.blueprint depending on DungeonLayout.stats
@@ -121,10 +98,12 @@ class DungeonLayout(GridLayout):
 
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
+        blueprint.place_equal_items("c", 6)
+        blueprint.place_equal_items("K", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
-        for key, value in self.stats.level_progression().items():
-            blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
+        #for key, value in self.stats.level_progression().items():
+            #blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
 
         #blueprint.print_map()
         return blueprint
@@ -341,6 +320,7 @@ class DungeonLayout(GridLayout):
         :param free: bool specifying if the returned tile must be free (with no tokens)
         :return: random tile
         """
+        # USE TILES DICT FOR THAT!!
         tiles_checked: set = set()
         total_tiles = len(self.children)
 
@@ -352,7 +332,7 @@ class DungeonLayout(GridLayout):
 
             return tile
 
-    def get_nearby_positions(self, position: tuple[int: int]) -> set[tuple[int:int]]:
+    def get_nearby_positions(self, position: tuple[int:int]) -> set[tuple[int:int]]:
         """
         Returns the nearby positions of the specified position
         :param position: coordinates of the position

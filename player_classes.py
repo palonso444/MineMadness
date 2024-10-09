@@ -6,6 +6,7 @@ from kivy.event import EventDispatcher
 from character_class import Character
 from crapgeon_utils import match_attribute_to_item, check_if_multiple, tuple_remove
 import game_stats as stats
+from token_classes import EffectToken
 
 
 class Player(Character, ABC, EventDispatcher):
@@ -151,7 +152,6 @@ class Player(Character, ABC, EventDispatcher):
         """
         Removes all effects for which the effect is over
         """
-
         attribute_names = list()
 
         # attributes are: "moves", "thoughness", "strength"
@@ -178,10 +178,7 @@ class Player(Character, ABC, EventDispatcher):
                 i += 1
 
         if len(attribute_names) > 0:
-            item_names = match_attribute_to_item(attribute_names)
-            self.dungeon.fading_token_character = self
-            self.dungeon.fading_tokens_effect_fades = True
-            self.dungeon.fading_tokens_items_queue = item_names
+            self.token.fading_tokens_queue = match_attribute_to_item(attribute_names)
 
     def get_range(self, dungeon_layout, range_kind: str):
         # TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
@@ -286,10 +283,7 @@ class Player(Character, ABC, EventDispatcher):
                 game.update_switch("shovels")
         self.stats.remaining_moves -= self.stats.digging_moves
 
-        self.dungeon.show_digging_token(
-            wall_tile.token.shape.pos, wall_tile.token.shape.size
-        )
-
+        wall_tile.get_token("wall").show_digging()
         wall_tile.clear_token("wall")
 
         # if digging a wall recently created by dynamite

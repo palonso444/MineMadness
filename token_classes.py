@@ -1,8 +1,9 @@
+from __future__ import annotations
 from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
 from kivy.animation import Animation
 
 from kivy.uix.widget import Widget
-from kivy.properties import NumericProperty
+from kivy.properties import NumericProperty, ListProperty
 
 from crapgeon_utils import check_if_multiple
 
@@ -41,22 +42,21 @@ class SolidToken(Widget):
 
 class FadingToken(Widget):
 
-    def __init__(self, dungeon, **kwargs):
+    def __init__(self, character_token: CharacterToken, **kwargs):
         super().__init__(**kwargs)
         self.opacity = 0
         self.final_opacity = None
-        self.dungeon = dungeon
+        self.character_token = character_token
         self.duration: int | None = None
 
     def fade(self):
 
         def fade_out(*args):
 
-            fading = Animation(opacity=0, duration=self.duration)
+            fading_out = Animation(opacity=0, duration=self.duration)
             if isinstance(self, EffectToken):
-                # remove item from Dungeon.fading_tokens_items_queue
-                fading.bind(on_complete=self.dungeon.remove_item_if_in_queue)
-            fading.start(self)
+                fading_out.bind(on_complete=self.character_token.remove_token_if_in_queue)
+            fading_out.start(self)
 
         fading = Animation(opacity=self.final_opacity, duration=self.duration)
         fading.bind(on_complete=fade_out)
@@ -97,13 +97,14 @@ class EffectToken(FadingToken):
     In case of items with more than 1 possible effects, introduce as "item" name_effect (example: talisman_level_up)
     """
 
-    def __init__(self, item: str, dungeon, effect_fades: bool = False, **kwargs):
-        super().__init__(dungeon, **kwargs)
+    def __init__(self, item: str, character_token, effect_ends: bool, **kwargs):
+        super().__init__(character_token, **kwargs)
         self.final_opacity = 1
         self.duration = 0.6
         self.item = item
+        self.effect_ends: bool = effect_ends
 
-        if effect_fades:
+        if effect_ends:
             self.source = "./fadingtokens/" + self.item + "_fades_token.png"
         else:
             self.source = "./fadingtokens/" + self.item + "_effect_token.png"
@@ -124,20 +125,23 @@ class SceneryToken(SolidToken):
 
         self.bind(pos=self.update, size=self.update)
 
+    def show_digging(self):
+        with self.dungeon.canvas:
+            DiggingToken(pos=self.pos, size=self.size, dungeon=self)
+
 
 class CharacterToken(SolidToken):
 
     percentage_natural_health = NumericProperty(None)
+    fading_tokens_queue = ListProperty([])
 
     def __init__(self, kind, species, character, dungeon_instance, **kwargs):
         super().__init__(kind, species, dungeon_instance, **kwargs)
 
         self.character = character  # links token with character object
-
         self.start = None  # all defined when token is moved by move()
         self.goal = None
         self.path = None
-
         self.bar = None  # health bar, monsters need it None to avoid crashing when Token.slide()
         self.negative_bar = None  # red portion of the health bar
 
@@ -153,6 +157,30 @@ class CharacterToken(SolidToken):
             self.percentage_natural_health = (
                 self.character.stats.health / self.character.stats.natural_health
             )
+
+    @staticmethod
+    def on_fading_tokens_queue(character_token, fading_tokens_queue):
+        if len(fading_tokens_queue) > 0:
+            character_token.show_effect_token(fading_tokens_queue[0], character_token.pos,
+                                              character_token.size, effect_ends=True)
+
+    def remove_token_if_in_queue(self, animation, fading_token):
+        """
+        Bound to end of fading_out animation
+        :param animation:
+        :param fading_token:
+        :return:
+        """
+        if fading_token.item in self.fading_tokens_queue:
+            self.fading_tokens_queue.remove(fading_token.item)
+
+    def show_effect_token(self, item, pos, size, effect_ends=False):
+        """
+        Item is the item causing effect, see tokens.EffectToken class for more details.
+        """
+        with self.dungeon.canvas:
+            EffectToken(item=item, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
+
 
     def calculate_and_display_health_bar(self, instance, percentage_natural_health):
 
@@ -368,3 +396,8 @@ class CharacterToken(SolidToken):
             start_tile.second_token = None
         else:
             start_tile.token = None
+
+    def show_damage(self):
+        with self.dungeon.canvas:
+            DamageToken(pos=self.pos, size=self.size, dungeon=self)
+

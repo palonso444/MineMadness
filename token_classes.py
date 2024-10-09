@@ -124,6 +124,10 @@ class SceneryToken(SolidToken):
 
         self.bind(pos=self.update, size=self.update)
 
+    def show_digging(self):
+        with self.dungeon.canvas:
+            DiggingToken(pos=self.pos, size=self.size, dungeon=self)
+
 
 class CharacterToken(SolidToken):
 
@@ -369,6 +373,7 @@ class CharacterToken(SolidToken):
         else:
             start_tile.token = None
 
-    def show_damage(self, position, size):
+    def show_damage(self):
         with self.dungeon.canvas:
-            DamageToken(pos=position, size=size, dungeon=self)
+            DamageToken(pos=self.pos, size=self.size, dungeon=self)
+

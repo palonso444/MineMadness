@@ -1,3 +1,4 @@
+from __future__ import annotations
 from kivy.uix.button import Button  # type: ignore
 from kivy.properties import BooleanProperty
 
@@ -210,3 +211,10 @@ class Tile(Button):
             return self.second_token.character
         elif self.token and hasattr(self.token, "character"):
             return self.token.character
+
+    def get_token(self, token_kind: str) -> Token | None:
+
+        if self.second_token is not None and self.second_token.kind == token_kind:
+            return self.second_token
+        elif self.token is not None and self.token.kind == token_kind:
+            return self.token

@@ -286,10 +286,7 @@ class Player(Character, ABC, EventDispatcher):
                 game.update_switch("shovels")
         self.stats.remaining_moves -= self.stats.digging_moves
 
-        self.dungeon.show_digging_token(
-            wall_tile.token.shape.pos, wall_tile.token.shape.size
-        )
-
+        wall_tile.get_token("wall").show_digging()
         wall_tile.clear_token("wall")
 
         # if digging a wall recently created by dynamite

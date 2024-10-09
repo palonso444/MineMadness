@@ -101,10 +101,6 @@ class DungeonLayout(GridLayout):
         if fading_token.item in self.fading_tokens_items_queue:
             self.fading_tokens_items_queue.remove(fading_token.item)
 
-    def show_digging_token(self, position, size):
-        with self.canvas:
-            tokens.DiggingToken(pos=position, size=size, dungeon=self)
-
     def show_effect_token(self, item: str, pos, size, effect_fades: bool = False):
         """
         Item is the item causing effect, see tokens.EffectToken class for more details.

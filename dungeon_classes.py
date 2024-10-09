@@ -32,11 +32,7 @@ class DungeonLayout(GridLayout):
             self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
 
         self.tiles_dict: dict[tuple: Tile] | None = None
-
-        # determines which character shows fadingtokens
-        self.fading_token_character: Player | None = None
-        # determines if tokens of Dungeon.fading_tokens_items_queue are displayed in green or red
-        self.fading_tokens_effect_fades: bool | None = None
+        
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:

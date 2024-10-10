@@ -317,16 +317,15 @@ class DungeonLayout(GridLayout):
         :return: random tile
         """
         # USE TILES DICT FOR THAT!!
-        tiles_checked: set = set()
-        total_tiles = len(self.children)
 
-        while len(tiles_checked) < total_tiles:
-            tile = choice(self.children)
+        tile_positions: list = self.tiles_dict.keys()
+
+        while tile_positions:
+            tile = self.get_tile(choice(tile_positions))
             if free and tile.has_token():
-                tiles_checked.add(self.children.index(tile))
-                continue
-
-            return tile
+                tile.positions.remove(tile.position)
+            else:
+                return tile
 
     def get_nearby_positions(self, position: tuple[int:int]) -> set[tuple[int:int]]:
         """

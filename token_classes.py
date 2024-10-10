@@ -290,7 +290,7 @@ class CharacterToken(SolidToken):
             self.goal = end_tile
 
             self.path = self.dungeon.find_shortest_path(
-                self.start, self.goal, (self.character.blocked_by)
+                self.start.position, self.goal.position, (self.character.blocked_by)
             )
 
             self.dungeon.activate_which_tiles()  # tiles desactivated while moving

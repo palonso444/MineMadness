@@ -53,18 +53,18 @@ class Tile(Button):
             return True
 
         path = self.dungeon.find_shortest_path(
-            self.dungeon.get_tile(player.position), self, player.blocked_by
+            self.dungeon.get_tile(player.position).position, self.position, player.blocked_by
         )
 
         dynamite_path = self.dungeon.find_shortest_path(
-            self.dungeon.get_tile(player.position),
-            self,
+            self.dungeon.get_tile(player.position).position,
+            self.position,
             tuple(item for item in player.blocked_by if item != "monster"),
         )
 
         if (
                 self.has_token(("wall", "rock"))
-                and self.dungeon.are_nearby(self, player)
+                and self.dungeon.are_nearby(self.position, player.position)
                 and player.stats.remaining_moves >= player.stats.digging_moves
                 and not player.using_dynamite
         ):
@@ -74,7 +74,7 @@ class Tile(Button):
 
         if self.has_token(("wall", "granite")) and player.name == "Hawkins":
             if (
-                    self.dungeon.are_nearby(self, player)
+                    self.dungeon.are_nearby(self.position, player.position)
                     and player.stats.remaining_moves >= player.stats.digging_moves
                     and player.stats.shovels > 0
             ):
@@ -87,8 +87,8 @@ class Tile(Button):
 
         if (
                 self.has_token(("monster", None))
-                and self.dungeon.are_nearby(self, player)
-                and ((player.stats.weapons > 0 or "fighting" in player.free_actions))
+                and self.dungeon.are_nearby(self.position, player.position)
+                and (player.stats.weapons > 0 or "fighting" in player.free_actions)
         ):
             return True
 

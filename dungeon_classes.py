@@ -1,6 +1,5 @@
 from __future__ import annotations
 from kivy.uix.gridlayout import GridLayout  # type: ignore
-from kivy.properties import ListProperty, NumericProperty
 from collections import deque
 from random import choice
 
@@ -45,17 +44,17 @@ class DungeonLayout(GridLayout):
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
     @staticmethod
-    def are_nearby(item1: Token, item2: Token) -> bool:
+    def are_nearby(position_1: tuple[int:int], position_2: tuple[int:int]) -> bool:
         """
-        Checks if two tokens in the dungeon have nearby positions
-        :param item1: first item
-        :param item2: second item
+        Checks if two positions in the dungeon have nearby positions
+        :param position_1: first position
+        :param position_2: second position
         :return: True if they are nearby, False otherwise
         """
         directions = (-1, 0), (1, 0), (0, -1), (0, 1)
 
         return any(
-            (item1.position[0] + dx, item1.position[1] + dy) == item2.position
+            (position_1[0] + dx, position_1[1] + dy) == position_2
             for dx, dy in directions
         )
 
@@ -98,8 +97,8 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items("K", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
-        #for key, value in self.stats.level_progression().items():
-            #blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
+        for key, value in self.stats.level_progression().items():
+            blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
 
         #blueprint.print_map()
         return blueprint
@@ -306,7 +305,7 @@ class DungeonLayout(GridLayout):
         """
         Returns the tile at the specified coordinates
         :param position: coordinates of the tile
-        :return: tile
+        :return: tile at the specified coordinates
         """
         return self.tiles_dict.get(position)
 
@@ -371,7 +370,7 @@ class DungeonLayout(GridLayout):
         :param exclude: determines if search is exclusive (returns coordinates of tiles NOT having
         any Token of the token_kinds provided) or inclusive (returns coordinates of tiles having at least a
         Token of ONE of the token_kind provided)
-        :return: set with the ccordinates of the tiles.
+        :return: set with the coordinates of the tiles.
         """
         if exclude:
             return {tile.position for tile in self.children if
@@ -381,7 +380,7 @@ class DungeonLayout(GridLayout):
                            any(tile.has_token((token, None)) for token in token_kinds )}
 
     def find_shortest_path(
-        self, start_tile, end_tile, excluded=tuple()
+        self, start_tile_position, end_tile_position, excluded: list[str]|None = None
     ) -> list[tuple] | None:
         """
         Returns the shortest path from start_tile to end_tile in the form of list of positions
@@ -390,22 +389,25 @@ class DungeonLayout(GridLayout):
         """
         directions: tuple = (-1, 0), (1, 0), (0, -1), (0, 1)
         queue: deque = deque(
-            [(start_tile.position, [])]
+            [(start_tile_position, [])]
         )  # start_tile_pos is not included in the path
 
-        excluded_positions: set[tuple] = self.scan(excluded)
-        excluded_positions.add(start_tile.position)
+        excluded_positions = set()
+        if excluded is not None:
+            excluded_positions: set[tuple] = self.scan(excluded)
+        excluded_positions.add(start_tile_position)
+
         if (
-            start_tile.has_token(("monster", None))
-            and end_tile.position in excluded_positions
+                self.get_tile(start_tile_position).has_token(("monster", None))
+            and end_tile_position in excluded_positions
         ):
-            excluded_positions.remove(end_tile.position)
+            excluded_positions.remove(end_tile_position)
 
         while queue:
 
             current_position, path = queue.popleft()
 
-            if current_position == end_tile.position:
+            if current_position == end_tile_position:
                 return path if len(path) > 0 else None
 
             for direction in directions:

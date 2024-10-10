@@ -80,7 +80,7 @@ class Monster(Character, ABC):
                 ):
                     continue
                 path = self.dungeon.find_shortest_path(
-                    start_tile, tile, self.blocked_by
+                    start_tile.position, tile.position, self.blocked_by
                 )
                 tiles_and_paths.append((tile, path))
 
@@ -104,7 +104,7 @@ class Monster(Character, ABC):
         """
 
         # if target is nearby and cannot share tile with it, don't move
-        if self.dungeon.are_nearby(self, target_tile):
+        if self.dungeon.are_nearby(self.position, target_tile.position):
             return None
 
         accesses: list[list] | None = self._find_accesses(target_tile, smart=True)
@@ -114,8 +114,8 @@ class Monster(Character, ABC):
 
             # if access is unreachable or too far away, remove access
             path_access_end: list[tuple] | None = self.dungeon.find_shortest_path(
-                self.token.start,
-                self.dungeon.get_tile(accesses[i][-1]),
+                self.token.start.position,
+                self.dungeon.get_tile(accesses[i][-1]).position,
                 self.blocked_by,
             )
             if (
@@ -133,10 +133,10 @@ class Monster(Character, ABC):
             # if access end further away from target than monster is, remove access
             else:
                 monster_to_target: list[tuple] = self.dungeon.find_shortest_path(
-                    self.token.start, target_tile, self.blocked_by
+                    self.token.start.position, target_tile.position, self.blocked_by
                 )
                 target_to_access_end: list[tuple] = self.dungeon.find_shortest_path(
-                    target_tile, self.dungeon.get_tile(accesses[i][-1]), self.blocked_by
+                    target_tile.position, self.dungeon.get_tile(accesses[i][-1]).position, self.blocked_by
                 )
 
                 if len(target_to_access_end) > len(monster_to_target):
@@ -151,7 +151,7 @@ class Monster(Character, ABC):
 
             end_tile: Tile = self.dungeon.get_tile(access[-1])
             path_to_access: list[tuple] | None = self.dungeon.find_shortest_path(
-                self.token.start, end_tile, self.blocked_by
+                self.token.start.position, end_tile.position, self.blocked_by
             )
             if path_to_access is not None:
                 if path is None or len(path) > len(path_to_access):
@@ -181,7 +181,7 @@ class Monster(Character, ABC):
 
             access_tile = self.dungeon.get_tile(access[-1])
             possible_path: list[tuple] = self.dungeon.find_shortest_path(
-                self.token.start, access_tile, self.blocked_by
+                self.token.start.position, access_tile.position, self.blocked_by
             )
 
             # if access unreachable or too far away, check another one
@@ -303,12 +303,12 @@ class Monster(Character, ABC):
                 smart
             ):  # smart creatures avoid tiles where, althogh closer in position, the path to target is longer
                 path: list[tuple] = self.dungeon.find_shortest_path(
-                    target_tile, scanned_tile, self.blocked_by
+                    target_tile.position, scanned_tile.position, self.blocked_by
                 )
 
             else:
                 path: list[tuple] = self.dungeon.find_shortest_path(
-                    target_tile, scanned_tile
+                    target_tile.position, scanned_tile.position
                 )
 
             if path:
@@ -382,7 +382,7 @@ class Monster(Character, ABC):
                 )
 
             if end_tile is not None and end_tile.has_token(self.chases):
-                if self.dungeon.are_nearby(self, end_tile):
+                if self.dungeon.are_nearby(self.position, end_tile.position):
                     path = [end_tile.position]
                 else:
                     path.append(end_tile.position)

@@ -58,6 +58,19 @@ class Character(ABC):
         self.ability_display: str | None = None  # needed for AbilityButton.display_text()
 
 
+    def setup_character(self, tile: Tile, dungeon: DungeonLayout):
+        """
+        Sets up the character when its CharacterToken is placed onto the tile
+        :param tile: tile upon the CharacterToken is placed
+        :param dungeon: dungeon in which the tile belongs
+        :return: None
+        """
+
+        self.id = len(self.__class__.data)
+        self.position = tile.position
+        self.dungeon = dungeon
+        self.__class__.data.append(self)
+
     @property
     def is_hidden(self) -> bool:  # needed for everybody for self.fight_on_tile()
         """

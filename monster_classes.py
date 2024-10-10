@@ -10,8 +10,6 @@ class Monster(Character, ABC):
 
     data: list = list()
 
-    # INSTANCE METHODS
-
     def __init__(self):
         super().__init__()
         self.kind: str = "monster"
@@ -290,7 +288,7 @@ class Monster(Character, ABC):
         paths = list()
 
         # look which tile positions are free in the dungeon among ALL tiles
-        scanned: list[tuple] = self.dungeon.scan(
+        scanned: list[tuple] = self.dungeon.scan_tiles(
             self.cannot_share_tile_with, exclude=True
         )
 

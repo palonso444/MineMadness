@@ -16,7 +16,6 @@ class DungeonLayout(GridLayout):
     Class defining the board of the game. The level is determined by the MineMadnessGame class. The rest of
     features are determined by DungeonLayout.DungeonStats
     """
-    #fading_tokens_items_queue = ListProperty([])
 
     def __init__(self, game: MineMadnessGame | None = None, **kwargs):
         super().__init__(**kwargs)
@@ -103,8 +102,7 @@ class DungeonLayout(GridLayout):
         #blueprint.print_map()
         return blueprint
 
-
-    def match_blueprint(self):
+    def match_blueprint(self) -> None:
         """
         Matches the symbols of the DungeonLayout.blueprint with the corresponding tokens and characters
         :return: None
@@ -260,9 +258,8 @@ class DungeonLayout(GridLayout):
             if token_kind is not None and token_species is not None:
                 self.place_item(tile, token_kind, token_species, character)
 
-
     def place_item(self, tile: Tile, token_kind: str,
-                   token_species: str, character: Character | None):
+                   token_species: str, character: Character | None) -> None:
         """
         Places tokens on the tiles
         :param tile: tile in which item must be placed
@@ -271,33 +268,21 @@ class DungeonLayout(GridLayout):
         :param character: character (if any) associated with the token
         :return: None
         """
-        if character is not None:
+        token_args = {
+            'kind': token_kind,
+            'species': token_species,
+            'character': character,
+            'dungeon_instance': self,
+            'pos': tile.pos,
+            'size': tile.size,
+        }
 
-            character.id = len(character.__class__.data)  # Delete __class__
-            character.position = tile.position
-            character.dungeon = self
-            character.__class__.data.append(character)  # Delete __class__
-
-            tile.token = tokens.CharacterToken(
-                kind=token_kind,
-                species=token_species,
-                character=character,
-                dungeon_instance=self,
-                pos=tile.pos,
-                size=tile.size,
-            )
-
+        if token_kind == "player" or token_kind == "monster":
+            character.setup_character(tile=tile, dungeon=self)
+            tile.token = tokens.CharacterToken(**token_args)
             character.token = tile.token
-
         else:
-
-            tile.token = tokens.SceneryToken(
-                kind=token_kind,
-                species=token_species,
-                dungeon_instance=self,
-                pos=tile.pos,
-                size=tile.size,
-            )
+            tile.token = tokens.SceneryToken(**token_args)
 
         tile.bind(pos=tile.update_token, size=tile.update_token)
 
@@ -315,8 +300,6 @@ class DungeonLayout(GridLayout):
         :param free: bool specifying if the returned tile must be free (with no tokens)
         :return: random tile
         """
-        # USE TILES DICT FOR THAT!!
-
         tile_positions: list = self.tiles_dict.keys()
 
         while tile_positions:
@@ -362,7 +345,7 @@ class DungeonLayout(GridLayout):
                     tile.is_activable
             )
 
-    def scan(self, token_kinds: list[str] , exclude: bool=False):
+    def scan_tiles(self, token_kinds: list[str], exclude: bool=False) -> set[tuple[int:int]]:
         """
         Returns a set with coordinates of tiles having none (exclude set to True) or at least one (exclude set to False)
         of Tokens of the specified token_kinds
@@ -394,7 +377,7 @@ class DungeonLayout(GridLayout):
 
         excluded_positions = set()
         if excluded is not None:
-            excluded_positions: set[tuple] = self.scan(excluded)
+            excluded_positions: set[tuple] = self.scan_tiles(excluded)
         excluded_positions.add(start_tile_position)
 
         if (

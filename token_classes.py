@@ -10,11 +10,12 @@ from crapgeon_utils import check_if_multiple
 
 class SolidToken(Widget):
 
-    def __init__(self, kind, species, dungeon_instance, **kwargs):
+    def __init__(self, kind, species, character: Character, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(**kwargs)
 
         self.kind = kind  # defines if pickable or wall
         self.species = species
+        self.character = character
         self.dungeon = dungeon_instance
         self.source = "./tokens/" + self.species + "token.png"
 
@@ -46,7 +47,7 @@ class FadingToken(Widget):
         super().__init__(**kwargs)
         self.opacity = 0
         self.final_opacity = None
-        self.character_token = character_token
+        self.character_token: CharacterToken = character_token
         self.duration: int | None = None
 
     def fade(self):
@@ -117,8 +118,8 @@ class EffectToken(FadingToken):
 
 class SceneryToken(SolidToken):
 
-    def __init__(self, kind, species, dungeon_instance, **kwargs):
-        super().__init__(kind, species, dungeon_instance, **kwargs)
+    def __init__(self, kind, species, character, dungeon_instance, **kwargs):
+        super().__init__(kind, species, character, dungeon_instance, **kwargs)
 
         with self.dungeon.canvas:
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
@@ -136,9 +137,8 @@ class CharacterToken(SolidToken):
     fading_tokens_queue = ListProperty([])
 
     def __init__(self, kind, species, character, dungeon_instance, **kwargs):
-        super().__init__(kind, species, dungeon_instance, **kwargs)
+        super().__init__(kind, species, character, dungeon_instance, **kwargs)
 
-        self.character = character  # links token with character object
         self.start = None  # all defined when token is moved by move()
         self.goal = None
         self.path = None

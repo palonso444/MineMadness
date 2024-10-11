@@ -139,10 +139,10 @@ class Tile(Button):
                 start_tile.token.kind == "player"
                 and start_tile.token.character == player
             ):
-                start_tile.token.move_player(start_tile, self)
+                start_tile.token.move_player_token(start_tile, self)
 
             else:
-                start_tile.second_token.move_player(start_tile, self)
+                start_tile.second_token.move_player_token(start_tile, self)
 
     def fall_dynamite_on_tile(self):
 

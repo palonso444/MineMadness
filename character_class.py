@@ -139,9 +139,6 @@ class Character(ABC):
                 opponent.stats.health / opponent.stats.natural_health
             )
 
-        #self.dungeon.show_damage_token(
-            #opponent.token.shape.pos, opponent.token.shape.size
-        #)
         opponent.token.show_damage()
 
         if opponent.stats.health <= 0:

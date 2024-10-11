@@ -5,7 +5,7 @@ from random import choice
 
 import player_classes as players
 import monster_classes as monsters
-import token_classes as tokens
+import solid_tokens as tokens
 import tile_classes as tiles
 from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
@@ -283,8 +283,11 @@ class DungeonLayout(GridLayout):
             'size': tile.size,
         }
 
-        if token_kind == "player" or token_kind == "monster":
-            tile.token = tokens.CharacterToken(**token_args)
+        if token_kind == "player":
+            tile.token = tokens.PlayerToken(**token_args)
+            character.token = tile.token
+        elif token_kind == "monster":
+            tile.token = tokens.MonsterToken(**token_args)
             character.token = tile.token
         else:
             tile.token = tokens.SceneryToken(**token_args)

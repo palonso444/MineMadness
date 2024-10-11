@@ -123,6 +123,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         :return: None
         """
         # if no monsters in game, players can move indefinitely
+        print("CHARACTER_DONE")
         if (
             isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves == 0
@@ -210,6 +211,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         the corresponding switch.
         :return: None
         """
+        print("PLAYER_EXITED")
         # in this case all out of game
         if players.Player.all_dead():
 

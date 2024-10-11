@@ -63,7 +63,7 @@ class AbilityButton(ToggleButton):
                         "armed",
                         character.token.shape.pos,
                         character.token.shape.size,
-                        effect_fades=True,
+                        effect_ends=True,
                     )
 
                 self.game.update_switch("ability_button")

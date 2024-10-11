@@ -27,16 +27,11 @@ class Monster(Character, ABC):
         pass
 
     def behave(self, tile: Tile) -> bool:
-        """
-        Returns True if player exited, False otherwise. Always False because monsters never exit
-        :param tile:
-        :return:
-        """
         if check_if_multiple(self.dungeon.game.turn, 2):  # if players turn, monster was dodging
             self.dungeon.get_tile(self.token.start.position).dodging_finished = True
         else:
             self.attack_players()
-        return False
+            self.dungeon.game.update_switch("character_done")
 
     def try_to_dodge(self):
 

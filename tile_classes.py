@@ -7,6 +7,7 @@ from kivy.properties import BooleanProperty
 # from kivy.graphics import Ellipse, Color
 
 from monster_classes import Monster
+from fading_tokens import EffectToken
 
 
 class Tile(Button):
@@ -157,9 +158,7 @@ class Tile(Button):
             self.clear_token()  # remove all other tokens, pickables, etc. if any
             self.dungeon.place_item(self, "wall", "rock", None)
             #self.dungeon.instantiate_character(self, "wall", "rock")
-            self.dungeon.show_effect_token(
-                "explosion", self.token.shape.pos, self.token.shape.size
-            )
+            self.show_explosion()
             self.on_dodging_finished = False
 
             self.dungeon.game.update_switch("character_done")
@@ -205,7 +204,7 @@ class Tile(Button):
             if token is getattr(self, attr):
                 setattr(self, attr, None)
 
-    def incorporate_token(self,token):
+    def incorporate_token(self, token):
         if self.token and (
             self.token.kind in token.character.ignores
             or self.token.species in token.character.ignores
@@ -227,3 +226,11 @@ class Tile(Button):
             return self.second_token
         elif self.token is not None and self.token.kind == token_kind:
             return self.token
+
+    def show_explosion(self):
+        """
+        Shows an explosion
+        """
+        pass
+        #with self.dungeon.canvas:
+            #EffectToken("explosion", self.pos, self.size)

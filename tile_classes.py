@@ -120,8 +120,6 @@ class Tile(Button):
             self.fall_dynamite_on_tile()
 
         elif self.has_token(("player", None)) and self.get_character() != player:
-            print("SWITCH CHARACTER")
-            print(self.get_character())
             game.switch_character(self.get_character())
 
         elif self.has_token(("wall", None)):
@@ -200,10 +198,21 @@ class Tile(Button):
         self.dungeon.canvas.remove(token.shape)
         token.remove_selection_circle()
         token.remove_health_bar()
+        self.set_token_to_none(token)
 
+    def set_token_to_none(self, token):
         for attr in ['token', 'second_token']:
             if token is getattr(self, attr):
                 setattr(self, attr, None)
+
+    def incorporate_token(self,token):
+        if self.token and (
+            self.token.kind in token.character.ignores
+            or self.token.species in token.character.ignores
+        ):
+            self.second_token = token
+        else:
+            self.token = token
 
     def get_character(self):
 

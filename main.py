@@ -210,13 +210,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         the corresponding switch.
         :return: None
         """
-        exit_tile = self.dungeon.get_tile(self.active_character.position)
-
-        exited_player = players.Player.data.pop(self.active_character_id)
-        players.Player.exited.add(exited_player)
-        self.active_character.rearrange_ids()
-        exit_tile.clear_token("player")
-
         # in this case all out of game
         if players.Player.all_dead():
 

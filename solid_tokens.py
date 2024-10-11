@@ -90,35 +90,19 @@ class CharacterToken(SolidToken):
         This should be abstractmethod when resolved metaclass conflict
         :return: None
         """
-        # len(path) is always <= monster.stats.remaining_moves
         if len(self.path) > 0:
             self.slide(self.path)
-            return False
-
-        elif self.start != self.goal: # update position if goal is reached
-            self.update_on_tiles(self.start, self.goal)  # updates tile.token
-            self.character.position = self.goal.position
-            self.pos = self.shape.pos  # updates pos of Token according to its shape
-            print("TOKEN POS (self.pos)")
-            print(self.pos)
-            print("SHAPE POS (self.shape.pos)")
-            print(self.shape.pos)
-            return True
-
-    def update_on_tiles(self, start_tile, end_tile):
-
-        if end_tile.token and (
-            end_tile.token.kind in self.character.ignores
-            or end_tile.token.species in self.character.ignores
-        ):
-            end_tile.second_token = self
         else:
-            end_tile.token = self
+            character_exited = self.character.behave(self.goal)
 
-        if start_tile.second_token:
-            start_tile.second_token = None
-        else:
-            start_tile.token = None
+            if not character_exited:
+                if self.start != self.goal: # update position if goal is reached
+                    self.start.set_token_to_none(self)
+                    self.goal.incorporate_token(self)
+                    self.character.position = self.goal.position
+                    self.pos = self.shape.pos  # updates pos of Token according to its shape
+
+                self.dungeon.game.update_switch("character_done")
 
     def show_damage(self):
         with self.dungeon.canvas:
@@ -283,25 +267,6 @@ class PlayerToken(CharacterToken):
         animation.bind(on_progress=self.update_health_bar)
         animation.start(self.shape)
 
-    def on_slide_completed(self, *args):
-        goal_reached = super().on_slide_completed(*args)
-
-        if goal_reached:
-            print(self.goal.has_token(("pickable", None)))
-            game = self.dungeon.game
-            if self.goal.kind == "exit" and self.character.has_all_gems:
-
-                self.update_on_tiles(self.start, self.goal)  # updates tile.token
-                self.character.position = self.goal.position
-                game.update_switch("player_exited")
-                return
-
-            elif self.goal.has_token(("pickable", None)):
-                print("PICK OBJECT")
-                self.character.pick_object(self.goal)
-
-            self.dungeon.game.update_switch("character_done")
-
 
 class MonsterToken(CharacterToken):
 
@@ -330,15 +295,3 @@ class MonsterToken(CharacterToken):
     def slide(self, path):
         animation = super().slide(path)
         animation.start(self.shape)
-
-    def on_slide_completed(self, *args):
-        goal_reached = super().on_slide_completed(*args)
-
-        if goal_reached:
-            game = self.dungeon.game
-            if check_if_multiple(game.turn, 2): # if players turn, monster was dodging
-                self.dungeon.get_tile(self.start.position).dodging_finished = True
-            else:
-                self.character.attack_players()
-                self.dungeon.game.update_switch("character_done")
-

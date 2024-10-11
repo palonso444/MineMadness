@@ -1,6 +1,6 @@
 from __future__ import annotations
 from random import randint
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class Character(ABC):
@@ -70,6 +70,15 @@ class Character(ABC):
         self.position = position
         self.dungeon = dungeon
         self.__class__.data.append(self)
+
+    @abstractmethod
+    def behave(self, tile: Tile) -> None:
+        """
+        Abstract method defining the behavior of a character when landing on a new tile
+        :param tile: tile where character lands
+        :return: None
+        """
+        pass
 
     @property
     def is_hidden(self) -> bool:  # needed for everybody for self.fight_on_tile()

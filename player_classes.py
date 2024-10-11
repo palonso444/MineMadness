@@ -235,6 +235,24 @@ class Player(Character, ABC, EventDispatcher):
 
         return mov_range
 
+    def behave(self, tile:Tile) -> bool:
+        """
+        Returns True if player exited, False otherwise
+        :param tile:
+        :return:
+        """
+        if tile.kind == "exit" and self.has_all_gems:
+            Player.exited.add(self)
+            self.rearrange_ids()
+            tile.clear_token("player")
+            self.dungeon.game.update_switch("player_exited")
+            return True
+
+        elif tile.has_token(("pickable", None)):
+            print("PICK OBJECT")
+            self.pick_object(tile)
+            return False
+
     def pick_object(self, tile: Tile) -> None:
 
         game = self.dungeon.game

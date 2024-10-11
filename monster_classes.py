@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 import game_stats as stats
 from character_class import Character
+from crapgeon_utils import check_if_multiple
 
 
 class Monster(Character, ABC):
@@ -25,6 +26,18 @@ class Monster(Character, ABC):
     def move(self):
         pass
 
+    def behave(self, tile: Tile) -> bool:
+        """
+        Returns True if player exited, False otherwise. Always False because monsters never exit
+        :param tile:
+        :return:
+        """
+        if check_if_multiple(self.dungeon.game.turn, 2):  # if players turn, monster was dodging
+            self.dungeon.get_tile(self.token.start.position).dodging_finished = True
+        else:
+            self.attack_players()
+        return False
+
     def try_to_dodge(self):
 
         random_num = randint(1, 10)
@@ -45,6 +58,7 @@ class Monster(Character, ABC):
         Manages attack of monsters to surrounding players
         :return:
         """
+        print ("ATTACK")
         surrounding_tiles = [self.dungeon.get_tile(position) for position in self.dungeon.get_nearby_positions(self.position)]
 
         for tile in surrounding_tiles:

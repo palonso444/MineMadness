@@ -4,9 +4,8 @@ from kivy.properties import NumericProperty
 from kivy.event import EventDispatcher
 
 from character_class import Character
-from crapgeon_utils import match_attribute_to_item, check_if_multiple, tuple_remove
+from crapgeon_utils import check_if_multiple, tuple_remove
 import game_stats as stats
-from token_classes import EffectToken
 
 
 class Player(Character, ABC, EventDispatcher):
@@ -118,10 +117,10 @@ class Player(Character, ABC, EventDispatcher):
             "jerky": 2,
             "coffee": 0,
             "tobacco": 0,
-            "whisky": 10,
+            "whisky": 2,
             "talisman": 0,
         }
-        self.effects: dict[str:list] = {"moves": [], "thoughness": [], "strength": []}
+        self.effects: dict[str:list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
         self.special_items: dict[str:int] | None = None
         self.level_track: dict[int:dict] = {}
@@ -154,7 +153,7 @@ class Player(Character, ABC, EventDispatcher):
         """
         attribute_names = list()
 
-        # attributes are: "moves", "thoughness", "strength"
+        # attributes are: "moves", "toughness", "strength"
         for attribute, effects in self.effects.items():
 
             i = 0
@@ -177,8 +176,7 @@ class Player(Character, ABC, EventDispatcher):
                     continue
                 i += 1
 
-        if len(attribute_names) > 0:
-            self.token.fading_tokens_queue = match_attribute_to_item(attribute_names)
+        self.token.fading_tokens_queue = attribute_names
 
     def get_range(self, dungeon_layout, range_kind: str):
         # TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
@@ -344,15 +342,15 @@ class Player(Character, ABC, EventDispatcher):
     def apply_toughness(self, damage):
 
         i = 0
-        while i < len(self.effects["thoughness"]):
-            self.effects["thoughness"][i]["size"] -= damage
+        while i < len(self.effects["toughness"]):
+            self.effects["toughness"][i]["size"] -= damage
 
-            if self.effects["thoughness"][i]["size"] <= 0:
-                damage = abs(self.effects["thoughness"][i]["size"])
-                self.effects["thoughness"].remove(self.effects["thoughness"][i])
+            if self.effects["toughness"][i]["size"] <= 0:
+                damage = abs(self.effects["toughness"][i]["size"])
+                self.effects["toughness"].remove(self.effects["toughness"][i])
                 continue
 
-            elif self.effects["thoughness"][i]["size"] > 0:
+            elif self.effects["toughness"][i]["size"] > 0:
                 damage = 0
                 break
 

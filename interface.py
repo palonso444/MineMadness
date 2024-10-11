@@ -123,7 +123,7 @@ class JerkyButton(Interfacebutton):
 
         self.game.update_switch("health")
         character.token.show_effect_token(
-            "jerky", character.token.shape.pos, character.token.shape.size
+            "heal", character.token.shape.pos, character.token.shape.size
         )
         # this updates health bar
         character.token.percentage_natural_health = (
@@ -154,14 +154,14 @@ class CoffeeButton(Interfacebutton):
         )
 
         character.token.show_effect_token(
-            "coffee", character.token.shape.pos, character.token.shape.size
+            "moves", character.token.shape.pos, character.token.shape.size
         )
         self.apply_cost("coffee")
 
 
 class TobaccoButton(Interfacebutton):
     """
-    Increases thoughness (armor-like effect)
+    Increases toughness (armor-like effect)
     """
 
     def on_release(self):
@@ -170,9 +170,9 @@ class TobaccoButton(Interfacebutton):
 
         effect_size = self.get_effect_size(character, "natural_health")
 
-        character.stats.thoughness += effect_size
+        character.stats.toughness += effect_size
 
-        character.effects["thoughness"].append(
+        character.effects["toughness"].append(
             {
                 "size": effect_size,
                 "end_turn": self.game.turn + self.stats.effect_duration,
@@ -183,7 +183,7 @@ class TobaccoButton(Interfacebutton):
         print(self.game.turn + self.stats.effect_duration)
 
         character.token.show_effect_token(
-            "tobacco", character.token.shape.pos, character.token.shape.size
+            "toughness", character.token.shape.pos, character.token.shape.size
         )
         self.apply_cost("tobacco")
 
@@ -222,7 +222,7 @@ class WhiskyButton(Interfacebutton):
         )
 
         character.token.show_effect_token(
-            "whisky", character.token.shape.pos, character.token.shape.size
+            "strength", character.token.shape.pos, character.token.shape.size
         )
         self.apply_cost("whisky")
 
@@ -241,7 +241,7 @@ class TalismanButton(Interfacebutton):
             character.experience = character.stats.exp_to_next_level
 
             character.token.show_effect_token(
-                "talisman_level_up",
+                "level_up",
                 character.token.shape.pos,
                 character.token.shape.size,
             )
@@ -253,7 +253,7 @@ class TalismanButton(Interfacebutton):
             player.unbind(player_level=player.on_player_level)
             player.resurrect()
             character.token.show_effect_token(
-                "talisman_back",
+                "resurrect",
                 player.token.shape.pos,
                 player.token.shape.size,
             )

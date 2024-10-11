@@ -102,7 +102,7 @@ class TalismanStats(ItemStats):
 @dataclass
 class CharacterStats(ABC):
 
-    thoughness: int = 0
+    toughness: int = 0
     health: int | None = None
     strength: tuple | None = None
     moves: int | None = None

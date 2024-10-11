@@ -58,7 +58,7 @@ class Character(ABC):
         self.ability_display: str | None = None  # needed for AbilityButton.display_text()
 
 
-    def setup_character(self, tile: Tile, dungeon: DungeonLayout):
+    def setup_character(self, position:tuple[int:int], dungeon: DungeonLayout):
         """
         Sets up the character when its CharacterToken is placed onto the tile
         :param tile: tile upon the CharacterToken is placed
@@ -67,7 +67,7 @@ class Character(ABC):
         """
 
         self.id = len(self.__class__.data)
-        self.position = tile.position
+        self.position = position
         self.dungeon = dungeon
         self.__class__.data.append(self)
 

@@ -108,10 +108,11 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         for tile in self.children:
+            tile_position = (tile.row,tile.col)
             character = None
             token_kind = None
             token_species = None
-            match self.blueprint.get_position((tile.row,tile.col)):
+            match self.blueprint.get_position(tile_position):
 
                 case "%":
                     if self.dungeon_level == 1:
@@ -254,7 +255,10 @@ class DungeonLayout(GridLayout):
                     token_kind = "pickable"
                     token_species = "gem"
 
-            # empty spaces ("." or " ")
+            if character is not None:
+                character.setup_character(position=tile_position, dungeon=self)
+
+            # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
                 self.place_item(tile, token_kind, token_species, character)
 
@@ -278,7 +282,6 @@ class DungeonLayout(GridLayout):
         }
 
         if token_kind == "player" or token_kind == "monster":
-            character.setup_character(tile=tile, dungeon=self)
             tile.token = tokens.CharacterToken(**token_args)
             character.token = tile.token
         else:

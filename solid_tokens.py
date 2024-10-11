@@ -90,7 +90,20 @@ class CharacterToken(SolidToken):
         This should be abstractmethod when resolved metaclass conflict
         :return: None
         """
-        pass
+        # len(path) is always <= monster.stats.remaining_moves
+        if len(self.path) > 0:
+            self.slide(self.path)
+            return False
+
+        elif self.start != self.goal: # update position if goal is reached
+            self.update_on_tiles(self.start, self.goal)  # updates tile.token
+            self.character.position = self.goal.position
+            self.pos = self.shape.pos  # updates pos of Token according to its shape
+            print("TOKEN POS (self.pos)")
+            print(self.pos)
+            print("SHAPE POS (self.shape.pos)")
+            print(self.shape.pos)
+            return True
 
     def update_on_tiles(self, start_tile, end_tile):
 
@@ -271,52 +284,24 @@ class PlayerToken(CharacterToken):
         animation.start(self.shape)
 
     def on_slide_completed(self, *args):
-        game = self.dungeon.game
-        monster_dodged = False
+        goal_reached = super().on_slide_completed(*args)
 
-        # len(path) is always <= monster.stats.remaining_moves
-        if len(self.path) > 0:
-            self.slide(self.path)
+        if goal_reached:
+            print(self.goal.has_token(("pickable", None)))
+            game = self.dungeon.game
+            if self.goal.kind == "exit" and self.character.has_all_gems:
 
-        else:  # if goal is reached
-
-            if self.character.kind == "player":
-
-                if (
-                        self.goal.kind == "exit"
-                        and self.character.has_all_gems
-                ):
-
-                    self.update_on_tiles(self.start, self.goal)  # updates tile.token
-                    self.character.position = self.goal.position
-                    game.update_switch("player_exited")
-                    return
-
-                elif self.goal.has_token(("pickable", None)):
-                    self.character.pick_object(self.goal)
-
-            if self.start != self.goal:
                 self.update_on_tiles(self.start, self.goal)  # updates tile.token
                 self.character.position = self.goal.position
-                self.pos = self.shape.pos  # updates pos of Token according to its shape
-                print("TOKEN POS (self.pos)")
-                print(self.pos)
-                print("SHAPE POS (self.shape.pos)")
-                print(self.shape.pos)
+                game.update_switch("player_exited")
+                return
 
-            # only attack in monster turn, no attack if dodging
-            if self.character.kind == "monster":
+            elif self.goal.has_token(("pickable", None)):
+                print("PICK OBJECT")
+                self.character.pick_object(self.goal)
 
-                # if players turn, monster was dodging
-                if check_if_multiple(game.turn, 2):
-                    self.dungeon.get_tile(self.start.position).dodging_finished = True
-                    monster_dodged = True
-                else:
-                    self.character.attack_players()
+            self.dungeon.game.update_switch("character_done")
 
-            # if monster dodged switch is updated in "on_dodging_finished()"
-            if not monster_dodged:
-                game.update_switch("character_done")
 
 class MonsterToken(CharacterToken):
 
@@ -333,7 +318,6 @@ class MonsterToken(CharacterToken):
             self.dungeon.game.update_switch("character_done")
 
         else:
-
             goal_index = (
                 self.character.stats.remaining_moves - 1
                 if self.character.stats.remaining_moves - 1 < len(self.path)
@@ -348,51 +332,13 @@ class MonsterToken(CharacterToken):
         animation.start(self.shape)
 
     def on_slide_completed(self, *args):
-        game = self.dungeon.game
-        monster_dodged = False
+        goal_reached = super().on_slide_completed(*args)
 
-        # len(path) is always <= monster.stats.remaining_moves
-        if len(self.path) > 0:
-            self.slide(self.path)
-
-        else:  # if goal is reached
-
-            if self.character.kind == "player":
-
-                if (
-                    self.goal.kind == "exit"
-                    and self.character.has_all_gems
-                ):
-
-                    self.update_on_tiles(self.start, self.goal)  # updates tile.token
-                    self.character.position = self.goal.position
-                    game.update_switch("player_exited")
-                    return
-
-                elif self.goal.has_token(("pickable", None)):
-                    self.character.pick_object(self.goal)
-
-            if self.start != self.goal:
-                self.update_on_tiles(self.start, self.goal)  # updates tile.token
-                self.character.position = self.goal.position
-                self.pos = self.shape.pos  # updates pos of Token according to its shape
-                print("TOKEN POS (self.pos)")
-                print (self.pos)
-                print ("SHAPE POS (self.shape.pos)")
-                print (self.shape.pos)
-
-
-            # only attack in monster turn, no attack if dodging
-            if self.character.kind == "monster":
-
-                # if players turn, monster was dodging
-                if check_if_multiple(game.turn, 2):
-                    self.dungeon.get_tile(self.start.position).dodging_finished = True
-                    monster_dodged = True
-                else:
-                    self.character.attack_players()
-
-            # if monster dodged switch is updated in "on_dodging_finished()"
-            if not monster_dodged:
-                game.update_switch("character_done")
+        if goal_reached:
+            game = self.dungeon.game
+            if check_if_multiple(game.turn, 2): # if players turn, monster was dodging
+                self.dungeon.get_tile(self.start.position).dodging_finished = True
+            else:
+                self.character.attack_players()
+                self.dungeon.game.update_switch("character_done")
 

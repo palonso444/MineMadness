@@ -284,13 +284,16 @@ class DungeonLayout(GridLayout):
         }
 
         if token_kind == "player":
-            tile.token = tokens.PlayerToken(**token_args)
-            character.token = tile.token
+            token = (tokens.PlayerToken(**token_args))
+            tile.tokens.append (token)
+            character.token = token
         elif token_kind == "monster":
-            tile.token = tokens.MonsterToken(**token_args)
-            character.token = tile.token
+            token = tokens.MonsterToken(**token_args)
+            tile.tokens.append (token)
+            character.token = token
         else:
-            tile.token = tokens.SceneryToken(**token_args)
+            token = tokens.SceneryToken(**token_args)
+            tile.tokens.append(token)
 
         tile.bind(pos=tile.update_token, size=tile.update_token)
 

@@ -123,7 +123,7 @@ class Player(Character, ABC, EventDispatcher):
         self.effects: dict[str:list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
         self.special_items: dict[str:int] | None = None
-        self.level_track: dict[int:dict] = {}
+        self.level_track: dict[int:dict] = dict()
 
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)

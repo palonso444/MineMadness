@@ -21,12 +21,7 @@ class Tile(Button):
         self.col: int = col
         self.position: tuple = (row, col)
         self.kind: str = kind
-        self.token = (
-            None  # defined when is by DungeonLayout.create_item
-        )
-        self.second_token = (
-            None  # tiles can have up to 2 tokens (shovel + monster for instance).
-        )
+        self.tokens: list = list()
         self.dungeon = dungeon_instance  # need to pass the instance of the dungeon to call dungeon.move_token from the class
 
     @staticmethod
@@ -164,18 +159,12 @@ class Tile(Button):
             self.dungeon.game.update_switch("character_done")
 
 
-    def has_token(self, token: tuple[str, str] | tuple[str, None] | None = None) -> bool:
+    def has_token(self, token: tuple[str,str] | tuple[str,None] | None = None) -> bool:
 
         if token is None:
-            return self.second_token is not None or self.token is not None
-
+            return len(self.tokens) > 0
         kind, species = token
-
-        for tile_token in [self.second_token, self.token]:
-            if tile_token is not None and tile_token.kind == kind and (species is None or tile_token.species == species):
-                return True
-
-        return False
+        return any(token.kind == kind and (species is None or token.species == species) for token in self.tokens)
 
     def clear_token(self, token_kind: str | None = None) -> None:
 
@@ -197,35 +186,13 @@ class Tile(Button):
         self.dungeon.canvas.remove(token.shape)
         token.remove_selection_circle()
         token.remove_health_bar()
-        self.set_token_to_none(token)
-
-    def set_token_to_none(self, token):
-        for attr in ['token', 'second_token']:
-            if token is getattr(self, attr):
-                setattr(self, attr, None)
-
-    def incorporate_token(self, token):
-        if self.token and (
-            self.token.kind in token.character.ignores
-            or self.token.species in token.character.ignores
-        ):
-            self.second_token = token
-        else:
-            self.token = token
+        self.tokens.remove(token)
 
     def get_character(self):
-
-        if self.second_token and hasattr(self.second_token, "character"):
-            return self.second_token.character
-        elif self.token and hasattr(self.token, "character"):
-            return self.token.character
+        return [token.character for token in self.tokens if token.character is not None]
 
     def get_token(self, token_kind: str) -> Token | None:
-
-        if self.second_token is not None and self.second_token.kind == token_kind:
-            return self.second_token
-        elif self.token is not None and self.token.kind == token_kind:
-            return self.token
+        return [token for token in self.tokens if token_kind == token_kind]
 
     def show_explosion(self):
         """

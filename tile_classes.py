@@ -188,11 +188,19 @@ class Tile(Button):
         token.remove_health_bar()
         self.tokens.remove(token)
 
-    def get_character(self):
-        return [token.character for token in self.tokens if token.character is not None]
+    def get_character(self) -> Character:
+        return next((token.character for token in self.tokens if token.character is not None),None)
 
     def get_token(self, token_kind: str) -> Token | None:
-        return [token for token in self.tokens if token_kind == token_kind]
+        """
+        This function is intended to return a list of all tokens on the Tile sharing the same token_kind
+        In this version of the game two Tokens of the same kind cannot share Tile
+        Next versions of the game might consider implementing multiple tokens of same kind on same Tile
+        :param token_kind:
+        :return:
+        """
+        tokens = [token for token in self.tokens if token_kind == token_kind]
+        return tokens [0]
 
     def show_explosion(self):
         """

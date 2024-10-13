@@ -124,13 +124,12 @@ class Character(ABC):
         """
         return damage
 
-    def fight_on_tile(self, opponent_tile: Tile) -> int | None:
+    def fight_opponent(self, opponent: Character) -> Character:
         """
         Generic fighting method. See Player class for particularities in players
-        :param opponent_tile: tile in which the opponent is located
+        :param opponent: opponent character
         :return: experience_when_killed of dead opponent
         """
-        opponent = opponent_tile.get_character()
         self.stats.remaining_moves -= 1
         damage = randint(self.stats.strength[0], self.stats.strength[1])
         damage = opponent.apply_toughness(damage)
@@ -142,18 +141,9 @@ class Character(ABC):
             opponent.unhide()
 
         opponent.stats.health = opponent.stats.health - damage
-
-        if opponent.token.percentage_natural_health is not None:
-            opponent.token.percentage_natural_health = (
-                opponent.stats.health / opponent.stats.natural_health
-            )
-
         opponent.token.show_damage()
 
-        if opponent.stats.health <= 0:
-            experience: int | None = opponent.stats.experience_when_killed
-            opponent.kill_character(opponent_tile)
-            return experience
+        return opponent
 
     def kill_character(self, tile: Tile):
         """
@@ -163,7 +153,7 @@ class Character(ABC):
         """
         del self.__class__.data[self.id]
         self.__class__.rearrange_ids()
-        tile.clear_token(self.token.kind)
+        self.token.delete_token(tile)
 
     # MOVEMENT METHODS TO IMPLEMENT
 

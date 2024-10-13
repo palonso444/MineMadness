@@ -92,7 +92,7 @@ class DungeonLayout(GridLayout):
 
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        blueprint.place_equal_items("c", 3)
+        blueprint.place_equal_items("#", 3)
         blueprint.place_equal_items("w", 3)
         blueprint.place_equal_items("l", 3)
         blueprint.place_equal_items("O", 1)
@@ -254,7 +254,7 @@ class DungeonLayout(GridLayout):
                     token_species = "dynamite"
 
                 case "o":
-                    token_kind = "pickable"
+                    token_kind = "treasure"
                     token_species = "gem"
 
             if character is not None:
@@ -284,15 +284,16 @@ class DungeonLayout(GridLayout):
         }
 
         if token_kind == "player":
-            tile.token = tokens.PlayerToken(**token_args)
-            character.token = tile.token
+            token = tokens.PlayerToken(**token_args)
+            character.token = token
         elif token_kind == "monster":
-            tile.token = tokens.MonsterToken(**token_args)
-            character.token = tile.token
+            token = tokens.MonsterToken(**token_args)
+            character.token = token
         else:
-            tile.token = tokens.SceneryToken(**token_args)
+            token = tokens.SceneryToken(**token_args)
 
-        tile.bind(pos=tile.update_token, size=tile.update_token)
+        tile.tokens[token_kind] = token
+        tile.bind(pos=tile.update_tokens, size=tile.update_tokens)
 
     def get_tile(self, position: tuple [int:int]) -> Tile:
         """
@@ -365,10 +366,10 @@ class DungeonLayout(GridLayout):
         """
         if exclude:
             return {tile.position for tile in self.children if
-                           not any(tile.has_token((token, None)) for token in token_kinds)}
+                           not any(tile.has_token(token) for token in token_kinds)}
         else:
             return {tile.position for tile in self.children if
-                           any(tile.has_token((token, None)) for token in token_kinds )}
+                           any(tile.has_token(token) for token in token_kinds )}
 
     def find_shortest_path(
         self, start_tile_position, end_tile_position, excluded: list[str]|None = None
@@ -389,7 +390,7 @@ class DungeonLayout(GridLayout):
         excluded_positions.add(start_tile_position)
 
         if (
-                self.get_tile(start_tile_position).has_token(("monster", None))
+                self.get_tile(start_tile_position).has_token("monster")
             and end_tile_position in excluded_positions
         ):
             excluded_positions.remove(end_tile_position)

@@ -65,6 +65,9 @@ class Monster(Character, ABC):
     def fight_on_tile(self, opponent_tile: Tile) -> None:
         opponent = opponent_tile.tokens["player"].character
         self.fight_opponent(opponent)
+        opponent.token.percentage_natural_health = (
+                opponent.stats.health / opponent.stats.natural_health
+        )
 
     def find_closest_reachable_target(
         self, target_token: tuple[str] = (None, None)

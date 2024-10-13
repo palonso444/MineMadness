@@ -142,10 +142,10 @@ class Character(ABC):
 
         opponent.stats.health = opponent.stats.health - damage
 
-        if opponent.token.percentage_natural_health is not None:
+        '''if opponent.token.percentage_natural_health is not None:
             opponent.token.percentage_natural_health = (
                 opponent.stats.health / opponent.stats.natural_health
-            )
+            )'''
 
         opponent.token.show_damage()
 

@@ -124,7 +124,7 @@ class Character(ABC):
         """
         return damage
 
-    def fight_opponent(self, opponent: Character) -> int | None:
+    def fight_opponent(self, opponent: Character) -> Character:
         """
         Generic fighting method. See Player class for particularities in players
         :param opponent: opponent character
@@ -141,18 +141,9 @@ class Character(ABC):
             opponent.unhide()
 
         opponent.stats.health = opponent.stats.health - damage
-
-        '''if opponent.token.percentage_natural_health is not None:
-            opponent.token.percentage_natural_health = (
-                opponent.stats.health / opponent.stats.natural_health
-            )'''
-
         opponent.token.show_damage()
 
-        if opponent.stats.health <= 0:
-            experience: int | None = opponent.stats.experience_when_killed
-            opponent.kill_character(opponent_tile)
-            return experience
+        return opponent
 
     def kill_character(self, tile: Tile):
         """
@@ -162,7 +153,7 @@ class Character(ABC):
         """
         del self.__class__.data[self.id]
         self.__class__.rearrange_ids()
-        tile.clear_token(self.token.kind)
+        tile.delete_token(self.token.kind)
 
     # MOVEMENT METHODS TO IMPLEMENT
 

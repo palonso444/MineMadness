@@ -20,7 +20,7 @@ class Monster(Character, ABC):
         self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
 
         # exclusive of Monster class
-        self.chases: tuple = ("player", None)
+        self.chases: str = "player"
 
     @abstractmethod
     def move(self):
@@ -64,14 +64,15 @@ class Monster(Character, ABC):
 
     def fight_on_tile(self, opponent_tile: Tile) -> None:
         opponent = opponent_tile.tokens["player"].character
-        self.fight_opponent(opponent)
+        opponent = self.fight_opponent(opponent)
         opponent.token.percentage_natural_health = (
                 opponent.stats.health / opponent.stats.natural_health
         )
 
-    def find_closest_reachable_target(
-        self, target_token: tuple[str] = (None, None)
-    ) -> Tile | None:  # pass target_token as (token_kind, token_species)
+        if opponent.stats.health <= 0:
+            opponent.kill_character(opponent_tile)
+
+    def find_closest_reachable_target(self, target_token: str) -> Tile | None:  # pass target_token as (token_kind, token_species)
         """
         Finds closest target based on len(path) and returns the tile where this target is placed
         Returns tile if there is path to tile, None if tile is unreachable"
@@ -83,15 +84,12 @@ class Monster(Character, ABC):
         for tile in self.dungeon.children:
             if tile.has_token(target_token):
 
-                # if character is hidden.
-                if target_token[0] == "player" and tile.tokens["player"].is_hidden:
+                if target_token == "player" and tile.tokens["player"].character.is_hidden:
                     continue
 
-                if (  # if tile is full and monster wants to land there
-                    target_token[0] not in self.cannot_share_tile_with
-                    and tile.second_token is not None
-                ):
-                    continue
+                #if any(tile.has_token(token_kind) for token_kind in self.cannot_share_tile_with):
+                    #continue
+
                 path = self.dungeon.find_shortest_path(
                     start_tile.position, tile.position, self.blocked_by
                 )
@@ -171,7 +169,7 @@ class Monster(Character, ABC):
                     path = path_to_access
 
         # this allows monster to end on pickables
-        if self.chases[0] not in self.cannot_share_tile_with:
+        if self.chases not in self.cannot_share_tile_with:
             path = self._add_target_position_to_path(path)
 
         return path
@@ -229,7 +227,7 @@ class Monster(Character, ABC):
                     path = possible_path
 
         # this makes monster able to end on pickables
-        if self.chases[0] not in self.cannot_share_tile_with:
+        if self.chases not in self.cannot_share_tile_with:
             path = self._add_target_position_to_path(path)
 
         return path
@@ -337,15 +335,7 @@ class Monster(Character, ABC):
     def _goes_through(self, tile):
 
         if tile:
-
-            if tile.token and tile.token.kind in self.blocked_by:
-                return False
-            if tile.second_token and tile.second_token.kind in self.blocked_by:
-                return False
-
-            return True
-
-        return False
+            return all(tile.tokens[token_kind] is None for token_kind in self.blocked_by)
 
     def _check_free_landing(self, path: list[tuple]):
 
@@ -688,7 +678,7 @@ class Pixie(Monster):
         self.stats = stats.PixieStats()
 
         self.ignores: tuple = self.ignores + ("gem",)
-        self.chases: tuple = ("pickable", None)
+        self.chases: str = "pickable"
 
 
     def move(self):
@@ -696,7 +686,7 @@ class Pixie(Monster):
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if self.dungeon.get_tile(self.position).has_token(self.chases):
-            self.dungeon.get_tile(self.position).clear_token("pickable")
+            self.dungeon.get_tile(self.position).delete_token("pickable")
 
         elif target_tile is not None:
             return self.assess_path_smart(target_tile)

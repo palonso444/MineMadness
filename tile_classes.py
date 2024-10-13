@@ -157,7 +157,7 @@ class Tile(Button):
         if self.dodging_finished:
             if self.has_token("monster"):
                 self.tokens["monster"].character.kill_character(self)
-            self.clear_token()  # remove all other tokens, pickables, etc. if any
+            self.delete_token()  # remove all other tokens, pickables, etc. if any
             self.dungeon.place_item(self, "wall", "rock", None)
             #self.dungeon.instantiate_character(self, "wall", "rock")
             self.show_explosion()
@@ -169,33 +169,20 @@ class Tile(Button):
     def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
 
         if token_kind is None:
+            if token_species is not None:
+                raise ValueError("token_kind cannot be None and token_species not None")
             return any(token is not None for token in self.tokens.values())
 
         return (self.tokens[token_kind] is not None and
-                (token_species is None or self.token[token_kind].species == token_species))
+                (token_species is None or self.tokens[token_kind].species == token_species))
 
 
-    def clear_token(self, token_kind: str | None = None) -> None:
+    def delete_token(self, token_kind: str | None = None) -> None:
 
-        if token_kind is None:
-            if self.second_token is not None:
-                self._delete_token(self.second_token)
+        print("DELETE TOKEN")
+        self.tokens[token_kind].delete_token()
+        self.tokens[token_kind] = None
 
-            if self.token is not None:
-                self._delete_token(self.token)
-
-        elif self.second_token and self.second_token.kind == token_kind:
-            self._delete_token(self.second_token)
-
-        elif self.token and self.token.kind == token_kind:
-            self._delete_token(self.token)
-
-
-    def _delete_token(self, token):
-        self.dungeon.canvas.remove(token.shape)
-        token.remove_selection_circle()
-        token.remove_health_bar()
-        self.tokens[token.kind] = None
 
     def show_explosion(self):
         """

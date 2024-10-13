@@ -42,6 +42,9 @@ class SolidToken(Widget):
         """
         pass
 
+    def delete_token(self):
+        self.dungeon.canvas.remove(self.shape)
+
 class SceneryToken(SolidToken):
 
     def __init__(self, kind, species, character, dungeon_instance, **kwargs):
@@ -244,6 +247,11 @@ class PlayerToken(CharacterToken):
         self.dungeon.canvas.remove(self.circle)
         self.circle = None
         self.circle_color = None
+
+    def delete_token(self):
+        super().delete_token()
+        #self.remove_selection_circle()
+        self.remove_health_bar()
 
     def move_player_token(self, start_tile, end_tile):
 

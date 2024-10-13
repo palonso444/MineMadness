@@ -25,6 +25,9 @@ class SolidToken(Widget):
         solid_token.shape.pos = solid_token_pos
         solid_token.shape.size = solid_token.size
 
+    def get_current_tile(self):
+        return self.dungeon.get_tile(self.position)
+
     def delete_token(self, tile: Tile):
         tile.tokens[self.kind] = None
         self.dungeon.canvas.remove(self.shape)
@@ -59,12 +62,12 @@ class CharacterToken(SolidToken):
 
         self.bind(pos=self.update, size=self.update)
 
-    def slide(self, path):
+    def slide(self):
         """
         This should be abstractmethod when resolved metaclass conflict
         :return: None
         """
-        next_tile = self.dungeon.get_tile(path.pop(0))
+        next_tile = self.dungeon.get_tile(self.path.pop(0))
 
         if self.character.stats.remaining_moves is not None:  # sometimes when dodging
             self.character.stats.remaining_moves -= 1
@@ -73,13 +76,13 @@ class CharacterToken(SolidToken):
         animation.bind(on_complete=self.on_slide_completed)
         return animation
 
-    def on_slide_completed(self, *args):
+    def on_slide_completed(self, animation, token_shape):
         """
         This should be abstractmethod when resolved metaclass conflict
         :return: None
         """
         if len(self.path) > 0:
-            self.slide(self.path)
+            self.slide()
         else:
             if self.start != self.goal: # update position if goal is reached
                 self.start.tokens[self.kind] = None
@@ -246,16 +249,17 @@ class PlayerToken(CharacterToken):
         else:
             self.start = start_tile
             self.goal = end_tile
+            start_tile.tokens[self.kind] = None
             self.path = self.dungeon.find_shortest_path(
-                self.start.position, self.goal.position, self.character.blocked_by
+                start_tile.position, end_tile.position, self.character.blocked_by
             )
             self.dungeon.activate_which_tiles()  # tiles disabled while moving
 
-            self.slide(self.path)
+            self.slide()
 
 
-    def slide(self, path):
-        animation = super().slide(path)
+    def slide(self):
+        animation = super().slide()
         animation.bind(on_progress=self.update_circle)
         animation.bind(on_progress=self.update_health_bar)
         animation.start(self.shape)
@@ -282,8 +286,8 @@ class MonsterToken(CharacterToken):
             )
             self.goal = self.dungeon.get_tile(self.path[goal_index])
 
-            self.slide(self.path)
+            self.slide()
 
-    def slide(self, path):
-        animation = super().slide(path)
+    def slide(self):
+        animation = super().slide()
         animation.start(self.shape)

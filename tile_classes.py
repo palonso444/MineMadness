@@ -8,6 +8,7 @@ from kivy.properties import BooleanProperty
 
 from monster_classes import Monster
 from fading_tokens import EffectToken
+from solid_tokens import CharacterToken, SceneryToken
 
 
 class Tile(Button):
@@ -21,28 +22,35 @@ class Tile(Button):
         self.col: int = col
         self.position: tuple = (row, col)
         self.kind: str = kind
-        self.tokens: list = list()
+        self.tokens: dict [str:Token | None] = {
+            "player": None,
+            "monster": None,
+            "wall": None,
+            "pickable": None,
+            "treasure": None
+        }
         self.dungeon = dungeon_instance  # need to pass the instance of the dungeon to call dungeon.move_token from the class
 
     @staticmethod
-    def update_token(tile, tile_pos):
-
-        tile.token.pos = tile_pos
-        tile.token.size = tile.size
+    def update_tokens(tile, tile_pos):
+        for token in tile.tokens.values():
+            if token is not None:
+                token.pos = tile_pos
+                token.size = tile.size
 
     @property
     def is_activable(self):
 
         player = self.dungeon.game.active_character
 
-        if self.has_token(("player", None)):
+        if self.has_token("player"):
 
             if player.using_dynamite:
                 return False
-            if self.get_character() == player:
+            if self.tokens["player"].character == player:
                 return True
             if (
-                    self.get_character().has_moved
+                    self.tokens["player"].character.has_moved
                     and not Monster.all_dead()
             ):
                 return False
@@ -59,7 +67,7 @@ class Tile(Button):
         )
 
         if (
-                self.has_token(("wall", "rock"))
+                self.has_token("wall", "rock")
                 and self.dungeon.are_nearby(self.position, player.position)
                 and player.stats.remaining_moves >= player.stats.digging_moves
                 and not player.using_dynamite
@@ -68,7 +76,7 @@ class Tile(Button):
             if player.stats.shovels > 0 or "digging" in player.free_actions:
                 return True
 
-        if self.has_token(("wall", "granite")) and player.name == "Hawkins":
+        if self.has_token("wall", "granite") and player.name == "Hawkins":
             if (
                     self.dungeon.are_nearby(self.position, player.position)
                     and player.stats.remaining_moves >= player.stats.digging_moves
@@ -77,12 +85,12 @@ class Tile(Button):
                 return True
 
         if (
-                self.has_token(("wall", "granite")) or self.has_token(("wall", "quartz"))
+                self.has_token("wall", "granite") or self.has_token("wall", "quartz")
         ) and player.using_dynamite():
             return True
 
         if (
-                self.has_token(("monster", None))
+                self.has_token("monster")
                 and self.dungeon.are_nearby(self.position, player.position)
                 and (player.stats.weapons > 0 or "fighting" in player.free_actions)
         ):
@@ -115,14 +123,14 @@ class Tile(Button):
 
             self.fall_dynamite_on_tile()
 
-        elif self.has_token(("player", None)) and self.get_character() != player:
-            game.switch_character(self.get_character())
+        elif self.has_token("player") and self.tokens["player"].character != player:
+            game.switch_character(self.tokens["player"].character)
 
-        elif self.has_token(("wall", None)):
+        elif self.has_token("wall"):
             player.dig(self)
             game.update_switch("character_done")
 
-        elif self.has_token(("monster", None)):
+        elif self.has_token("monster"):
             player.fight_on_tile(self)
             game.update_switch("character_done")
 
@@ -130,26 +138,25 @@ class Tile(Button):
             start_tile = self.dungeon.get_tile(player.position)
 
             if (
-                start_tile.token.kind == "player"
-                and start_tile.token.character == player
+                start_tile.tokens["player"].character == player
             ):
-                start_tile.token.move_player_token(start_tile, self)
+                start_tile.tokens["player"].move_player_token(start_tile, self)
 
             else:
                 start_tile.second_token.move_player_token(start_tile, self)
 
     def fall_dynamite_on_tile(self):
 
-        if self.has_token(("monster", None)):
-            self.get_character().try_to_dodge()
+        if self.has_token("monster"):
+            self.tokens["monster"].character.try_to_dodge()
         else:
             self.dodging_finished = True
 
     def on_dodging_finished(self, *args):
 
         if self.dodging_finished:
-            if self.has_token(("monster", None)):
-                self.get_character().kill_character(self)
+            if self.has_token("monster"):
+                self.tokens["monster"].character.kill_character(self)
             self.clear_token()  # remove all other tokens, pickables, etc. if any
             self.dungeon.place_item(self, "wall", "rock", None)
             #self.dungeon.instantiate_character(self, "wall", "rock")
@@ -159,12 +166,14 @@ class Tile(Button):
             self.dungeon.game.update_switch("character_done")
 
 
-    def has_token(self, token: tuple[str,str] | tuple[str,None] | None = None) -> bool:
+    def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
 
-        if token is None:
-            return len(self.tokens) > 0
-        kind, species = token
-        return any(token.kind == kind and (species is None or token.species == species) for token in self.tokens)
+        if token_kind is None:
+            return any(token is not None for token in self.tokens.values())
+
+        return (self.tokens[token_kind] is not None and
+                (token_species is None or self.token[token_kind].species == token_species))
+
 
     def clear_token(self, token_kind: str | None = None) -> None:
 
@@ -186,21 +195,7 @@ class Tile(Button):
         self.dungeon.canvas.remove(token.shape)
         token.remove_selection_circle()
         token.remove_health_bar()
-        self.tokens.remove(token)
-
-    def get_character(self) -> Character:
-        return next((token.character for token in self.tokens if token.character is not None),None)
-
-    def get_token(self, token_kind: str) -> Token | None:
-        """
-        This function is intended to return a list of all tokens on the Tile sharing the same token_kind
-        In this version of the game two Tokens of the same kind cannot share Tile
-        Next versions of the game might consider implementing multiple tokens of same kind on same Tile
-        :param token_kind:
-        :return:
-        """
-        tokens = [token for token in self.tokens if token_kind == token_kind]
-        return tokens [0]
+        self.tokens[token.kind] = None
 
     def show_explosion(self):
         """

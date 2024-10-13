@@ -95,14 +95,14 @@ class CharacterToken(SolidToken):
             self.slide(self.path)
         else:
             if self.start != self.goal: # update position if goal is reached
-                self.start.tokens.remove(self)
+                self.start.tokens[self.kind] = None
                 #self.goal.incorporate_token(self)
                 self.character.position = self.goal.position
                 self.pos = self.shape.pos  # updates pos of Token according to its shape
 
             self.character.behave(self.goal)
             if self.start != self.goal:
-                self.goal.tokens.append(self) # move this upwards when self.tokens is a list
+                self.goal.tokens[self.kind] = self # move this upwards when self.tokens is a list
 
             #self.dungeon.game.update_switch("character_done")
 

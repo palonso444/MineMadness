@@ -59,9 +59,12 @@ class Monster(Character, ABC):
         for tile in surrounding_tiles:
             if self.stats.remaining_moves == 0:
                 break
-            character = tile.get_character()
-            if character is not None and character.kind == "player":
+            if tile.has_token("player"):
                 self.fight_on_tile(tile)
+
+    def fight_on_tile(self, opponent_tile: Tile) -> None:
+        opponent = opponent_tile.tokens["player"].character
+        self.fight_opponent(opponent)
 
     def find_closest_reachable_target(
         self, target_token: tuple[str] = (None, None)
@@ -78,7 +81,7 @@ class Monster(Character, ABC):
             if tile.has_token(target_token):
 
                 # if character is hidden.
-                if target_token[0] == "player" and tile.get_character().is_hidden:
+                if target_token[0] == "player" and tile.tokens["player"].is_hidden:
                     continue
 
                 if (  # if tile is full and monster wants to land there
@@ -350,7 +353,7 @@ class Monster(Character, ABC):
 
             if (
                 any(
-                    self.dungeon.get_tile(position).has_token((token_kind, None))
+                    self.dungeon.get_tile(position).has_token(token_kind)
                     for token_kind in self.cannot_share_tile_with
                 )
                 # position != self.position is necessary for random moves

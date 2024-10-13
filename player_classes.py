@@ -244,7 +244,7 @@ class Player(Character, ABC, EventDispatcher):
             tile.clear_token("player")
             self.dungeon.game.update_switch("player_exited")
 
-        elif tile.has_token(("pickable", None)):
+        elif tile.has_token("pickable"):
             print("PICK OBJECT")
             self.pick_object(tile)
             self.dungeon.game.update_switch("character_done")
@@ -297,7 +297,7 @@ class Player(Character, ABC, EventDispatcher):
                 game.update_switch("shovels")
         self.stats.remaining_moves -= self.stats.digging_moves
 
-        wall_tile.get_token("wall").show_digging()
+        wall_tile.tokens["wall"].show_digging()
         wall_tile.clear_token("wall")
 
         # if digging a wall recently created by dynamite
@@ -305,7 +305,8 @@ class Player(Character, ABC, EventDispatcher):
             wall_tile.dodging_finished = False
 
     def fight_on_tile(self, opponent_tile) -> None:
-        experience = super().fight_on_tile(opponent_tile)
+        opponent = opponent_tile.tokens["monster"].character
+        experience = self.fight_opponent(opponent)
         self.use_weapon()
 
         if experience is not None:

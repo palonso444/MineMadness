@@ -31,7 +31,6 @@ class Monster(Character, ABC):
             self.dungeon.get_tile(self.token.start.position).dodging_finished = True
         else:
             self.attack_players()
-            self.dungeon.game.update_switch("character_done")
 
     def try_to_dodge(self):
 
@@ -685,10 +684,10 @@ class Pixie(Monster):
 
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
-        if self.dungeon.get_tile(self.position).has_token(self.chases):
-            self.dungeon.get_tile(self.position).delete_token("pickable")
+        #if self.dungeon.get_tile(self.position).has_token(self.chases): FIX
+            #self.dungeon.get_tile(self.position).delete_token("pickable")
 
-        elif target_tile is not None:
+        if target_tile is not None:
             return self.assess_path_smart(target_tile)
 
         else:

@@ -153,7 +153,7 @@ class Character(ABC):
         """
         del self.__class__.data[self.id]
         self.__class__.rearrange_ids()
-        tile.delete_token(self.token.kind)
+        self.token.delete_token(tile)
 
     # MOVEMENT METHODS TO IMPLEMENT
 

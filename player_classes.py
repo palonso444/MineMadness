@@ -234,39 +234,29 @@ class Player(Character, ABC, EventDispatcher):
         return mov_range
 
     def behave(self, tile:Tile) -> None:
-        print("BEHAVE")
-        print(tile.position)
         if tile.kind == "exit" and self.has_all_gems:
             Player.exited.add(self)
             self.rearrange_ids()
-            tile.delete_token("player")
+            self.token.delete_token(tile)
             self.dungeon.game.update_switch("player_exited")
 
         elif tile.has_token("pickable"):
-            print("PICK OBJECT")
             self.pick_object(tile)
-            self.dungeon.game.update_switch("character_done")
-        else:
-            self.dungeon.game.update_switch("character_done")
+        elif tile.has_token("treasure"):
+            self.pick_treasure(tile)
 
     def pick_object(self, tile: Tile) -> None:
 
         game = self.dungeon.game
-
-        if tile.has_token("treasure") and "treasure" not in self.ignores:
-            Player.gems += 1
-            game.update_switch("gems")
-
         # if tile.token.species not in self.ignores:
-        if tile.tokens["pickable"].kind not in self.ignores:
-            if any(tile.has_token("pickable", token_species) for token_species in self.special_items
-                   if self.special_items is not None):
+        if "pickable" not in self.ignores:
+            if tile.tokens["pickable"].species in self.special_items:
                 self.special_items[tile.token.species] += 1
                 game.update_switch("ability_button")
 
-            elif tile.token.species in self.inventory.keys():
-                self.inventory[tile.token.species] += 1
-                game.inv_object = tile.token.species
+            elif tile.tokens["pickable"].species in self.inventory.keys():
+                self.inventory[tile.tokens["pickable"].species] += 1
+                game.inv_object = tile.tokens["pickable"].species
 
             else:
                 character_attribute = getattr(self.stats, tile.token.species + "s")
@@ -275,22 +265,27 @@ class Player(Character, ABC, EventDispatcher):
                 game.update_switch(tile.token.species + "s")
                 game.update_switch("ability_button")  # for Crusher Jane
 
-            tile.delete_token(tile.token.kind)
+            tile.tokens["pickable"].delete_token(tile)
+
+    def pick_treasure(self, tile:Tile)-> None:
+        game=self.dungeon.game
+        if "treasure" not in self.ignores:
+            Player.gems += 1
+            game.update_switch("gems")
+            tile.tokens["treasure"].delete_token(tile)
 
     def dig(self, wall_tile: Tile) -> None:
 
         game = self.dungeon.game
 
         if self.stats.shovels > 0:
-            if "digging" not in self.free_actions or wall_tile.has_token(
-                ("wall", "granite")
-            ):
+            if "digging" not in self.free_actions or wall_tile.has_token("wall", "granite"):
                 self.stats.shovels -= 1
                 game.update_switch("shovels")
         self.stats.remaining_moves -= self.stats.digging_moves
 
         wall_tile.tokens["wall"].show_digging()
-        wall_tile.delete_token("wall")
+        wall_tile.tokens["wall"].delete_token(wall_tile)
 
         # if digging a wall recently created by dynamite
         if wall_tile.dodging_finished:
@@ -315,7 +310,6 @@ class Player(Character, ABC, EventDispatcher):
         )
 
     def kill_character(self, tile):
-
         super().kill_character(tile)
         self.dead_data.append(self)
 

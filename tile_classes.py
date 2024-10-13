@@ -137,13 +137,11 @@ class Tile(Button):
         else:
             start_tile = self.dungeon.get_tile(player.position)
 
-            if (
-                start_tile.tokens["player"].character == player
-            ):
+            if start_tile.tokens["player"].character == player:
                 start_tile.tokens["player"].move_player_token(start_tile, self)
 
-            else:
-                start_tile.second_token.move_player_token(start_tile, self)
+            #else:
+                #start_tile.second_token.move_player_token(start_tile, self)
 
     def fall_dynamite_on_tile(self):
 
@@ -176,12 +174,6 @@ class Tile(Button):
         return (self.tokens[token_kind] is not None and
                 (token_species is None or self.tokens[token_kind].species == token_species))
 
-
-    def delete_token(self, token_kind: str | None = None) -> None:
-
-        print("DELETE TOKEN")
-        self.tokens[token_kind].delete_token()
-        self.tokens[token_kind] = None
 
 
     def show_explosion(self):

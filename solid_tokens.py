@@ -18,31 +18,15 @@ class SolidToken(Widget):
         self.character = character
         self.dungeon = dungeon_instance
         self.source = "./tokens/" + self.species + "token.png"
-
         self.shape = None  # token.shape (canvas object) initialized in each subclass
-
-        # SceneryToken need this attribute to avoid bugs in Player.dig() and Player.pick_object()
-        self.circle = None  # token.circle (canvas object) initialized by draw_selection_circle() only in players
-        self.circle_color = None  # declare here for consistency
 
     @staticmethod
     def update(solid_token, solid_token_pos):
         solid_token.shape.pos = solid_token_pos
         solid_token.shape.size = solid_token.size
 
-    def remove_selection_circle(self):
-        """
-        Placeholder to avoid crashing by Tile.clear_token()
-        """
-        pass
-
-    def remove_health_bar(self):
-        """
-        Placeholder to avoid crashing by Tile.clear_token()
-        """
-        pass
-
-    def delete_token(self):
+    def delete_token(self, tile: Tile):
+        tile.tokens[self.kind] = None
         self.dungeon.canvas.remove(self.shape)
 
 class SceneryToken(SolidToken):
@@ -99,15 +83,13 @@ class CharacterToken(SolidToken):
         else:
             if self.start != self.goal: # update position if goal is reached
                 self.start.tokens[self.kind] = None
-                #self.goal.incorporate_token(self)
+                self.goal.tokens[self.kind] = self
                 self.character.position = self.goal.position
                 self.pos = self.shape.pos  # updates pos of Token according to its shape
 
-            self.character.behave(self.goal)
-            if self.start != self.goal:
-                self.goal.tokens[self.kind] = self # move this upwards when self.tokens is a list
+                self.character.behave(self.goal)
 
-            #self.dungeon.game.update_switch("character_done")
+            self.dungeon.game.update_switch("character_done")
 
     def show_damage(self):
         with self.dungeon.canvas:
@@ -122,6 +104,8 @@ class PlayerToken(CharacterToken):
     def __init__(self, kind, species, character, dungeon_instance, **kwargs):
         super().__init__(kind, species, character, dungeon_instance, **kwargs)
 
+        self.circle = None
+        self.circle_color = None
         self.bar = None  # health bar, monsters need it None to avoid crashing when Token.slide()
         self.negative_bar = None  # red portion of the health bar
         self.bind(percentage_natural_health=self.calculate_and_display_health_bar)
@@ -243,14 +227,14 @@ class PlayerToken(CharacterToken):
         )
 
     def remove_selection_circle(self):
-
         self.dungeon.canvas.remove(self.circle)
         self.circle = None
         self.circle_color = None
 
-    def delete_token(self):
-        super().delete_token()
-        #self.remove_selection_circle()
+    def delete_token(self, tile: Tile):
+        super().delete_token(tile)
+        if self.circle is not None:  # to avoid interferences with MineMadnessGame.on_character_done()
+            self.remove_selection_circle()
         self.remove_health_bar()
 
     def move_player_token(self, start_tile, end_tile):

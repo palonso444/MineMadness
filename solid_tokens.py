@@ -1,84 +1,105 @@
 from __future__ import annotations
-from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
+from kivy.graphics import Ellipse, Rectangle, Color, Line, VertexInstruction  # type: ignore
 from kivy.animation import Animation
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ListProperty
 
-from crapgeon_utils import check_if_multiple
 from fading_tokens import DamageToken, DiggingToken, EffectToken
 
 
 class SolidToken(Widget):
-
-    def __init__(self, kind, species, character: Character, dungeon_instance: DungeonLayout, **kwargs):
+    """
+    Base class defining all Tokens that stay on the board for extended periods of time
+    """
+    def __init__(self, kind: str, species:str, character: Character, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(**kwargs)
 
-        self.kind = kind  # defines if pickable or wall
-        self.species = species
-        self.character = character
-        self.dungeon = dungeon_instance
-        self.source = "./tokens/" + self.species + "token.png"
-        self.shape = None  # token.shape (canvas object) initialized in each subclass
+        self.kind: str = kind
+        self.species: str = species
+        self.character: Character = character
+        self.dungeon: DungeonLayout = dungeon_instance
+        self.source: str = "./tokens/" + self.species + "token.png"
+        self.shape: VertexInstruction | None = None  # token.shape (canvas object) initialized in each subclass
 
     @staticmethod
-    def update(solid_token, solid_token_pos):
+    def update_pos(solid_token, solid_token_pos) -> None:
+        """
+        Callback updating the position of the shape of the Token upon positioning on the board
+        :param solid_token: SolidToken to update size and position of its shape
+        :param solid_token_pos: position of the token
+        :return: None
+        """
         solid_token.shape.pos = solid_token_pos
-        solid_token.shape.size = solid_token.size
 
-    def get_current_tile(self):
-        return self.dungeon.get_tile(self.position)
+    def get_current_tile(self) -> Tile:
+        """
+        Returns the Tile corresponding to the current position of the Token
+        :return:
+        """
+        return self.dungeon.get_tile(self.character.position)
 
-    def delete_token(self, tile: Tile):
+    def delete_token(self, tile: Tile) -> None:
+        """
+        Completely erases the Token from the game
+        :param tile: Tile in which the Token is located
+        :return: None
+        """
         tile.tokens[self.kind] = None
         self.dungeon.canvas.remove(self.shape)
 
 class SceneryToken(SolidToken):
-
-    def __init__(self, kind, species, character, dungeon_instance, **kwargs):
+    """
+    Base class defining Tokens without associated Character
+    """
+    def __init__(self, kind: str, species: str, character: None, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, character, dungeon_instance, **kwargs)
 
         with self.dungeon.canvas:
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 
-        self.bind(pos=self.update, size=self.update)
+        self.bind(pos=self.update_pos)
 
-    def show_digging(self):
-        with self.dungeon.canvas:
+    def show_digging(self) -> None:
+        """
+        Shows the on the Token the FadingToken corresponding to the digging action of a Player
+        :return: None
+        """
+        with self.dungeon.canvas.after:
             DiggingToken(pos=self.pos, size=self.size, dungeon=self)
 
 
 class CharacterToken(SolidToken):
-
-    def __init__(self, kind, species, character, dungeon_instance, **kwargs):
+    """
+    Base class defining all Tokens with associated Character
+    """
+    def __init__(self, kind: str, species: str, character: CharacterToken, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, character, dungeon_instance, **kwargs)
 
-        self.start = None  # all defined when token is moved by move()
-        self.goal = None
-        self.path = None
+        self.start: Tile | None = None  # all defined when token is moved by move()
+        self.goal: Tile | None = None
+        self.path: list[tuple[int,int]] | None = None
 
         with self.dungeon.canvas:
             self.color = Color(1, 1, 1, 1)
             self.shape = Ellipse(pos=self.pos, size=self.size, source=self.source)
 
-        self.bind(pos=self.update, size=self.update)
+        self.bind(pos=self.update_pos)
+
 
     def slide(self):
         """
-        This should be abstractmethod when resolved metaclass conflict
+        Instantiates the Animation object to slide the Token 1 step along the route determined in CharacterToken.path
         :return: None
         """
+        self.character.stats.remaining_moves -= 1
         next_tile = self.dungeon.get_tile(self.path.pop(0))
-
-        if self.character.stats.remaining_moves is not None:  # sometimes when dodging
-            self.character.stats.remaining_moves -= 1
-
         animation = Animation(pos=next_tile.pos, duration=0.2)
         animation.bind(on_complete=self.on_slide_completed)
         return animation
 
     def on_slide_completed(self, animation, token_shape):
         """
-        This should be abstractmethod when resolved metaclass conflict
+        Callback triggered when the slide is completed on Character turn
         :return: None
         """
         if len(self.path) > 0:
@@ -88,9 +109,13 @@ class CharacterToken(SolidToken):
                 self.start.tokens[self.kind] = None
                 self.goal.tokens[self.kind] = self
                 self.character.position = self.goal.position
-                self.pos = self.shape.pos  # updates pos of Token according to its shape
+                self.pos = self.shape.pos
 
-                self.character.behave(self.goal)
+                self.start = None
+                self.goal = None
+                self.path = None
+
+                self.character.behave(self.get_current_tile())
 
             self.dungeon.game.update_switch("character_done")
 

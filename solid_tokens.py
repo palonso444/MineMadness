@@ -105,20 +105,23 @@ class CharacterToken(SolidToken):
         """
         if len(self.path) > 0:
             self.slide()
-        else:
-            if self.start != self.goal: # update position if goal is reached
-                self.start.remove_token(self.kind)
-                self.goal.set_token(self)
-                self.character.position = self.goal.position
-                self.pos: tuple[int,int] = self.shape.pos
 
-                self.start: Tile | None = None
-                self.goal: Tile | None = None
-                self.path: list[tuple[int,int]] | None = None
+        elif self.start != self.goal: # update position if goal is reached
+            self.start.remove_token(self.kind)
+            self.goal.set_token(self)
+            self.character.position = self.goal.position
+            self.pos: tuple[int,int] = self.shape.pos
 
+            self.start: Tile | None = None
+            self.goal: Tile | None = None
+            self.path: list[tuple[int,int]] | None = None
+
+            if self.get_current_tile().kind == "exit" and self.character.has_all_gems:
+                self.character.exit_level()
+                self.dungeon.game.update_switch("player_exited")
+            else:
                 self.character.behave(self.get_current_tile())
-
-            self.dungeon.game.update_switch("character_done")
+                self.dungeon.game.update_switch("character_done")
 
     def show_damage(self) -> None:
         """
@@ -177,40 +180,36 @@ class PlayerToken(CharacterToken):
             EffectToken(item=item, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
     @staticmethod
-    def display_health_bar(player_token, percentage_natural_health):
+    def display_health_bar(token, percentage_natural_health):
 
-        if player_token.green_bar is not None and player_token.red_bar is not None:
-            player_token.remove_health_bar()
+        if token.green_bar is not None and token.red_bar is not None:
+            token.remove_health_bar()
 
-        bar_pos_x = player_token.pos[0] + (player_token.size[0] * 0.1)
-        bar_pos_y = player_token.pos[1] + (player_token.size[1] * 0.1)
+        bar_pos_x = token.pos[0] + (token.size[0] * 0.1)
+        bar_pos_y = token.pos[1] + (token.size[1] * 0.1)
+        bar_length = token.size[0] * 0.8  # total horizontal length of the bar
+        bar_thickness = token.size[1] * 0.1
 
-        bar_length = player_token.size[0] * 0.8  # total horizontal length of the bar
-        bar_thickness = player_token.size[1] * 0.1
-
-        # canvas.after to ensure bar is displayed on top of charactertoken
-        with player_token.dungeon.canvas.after:
-
-            # green portion of health bar
-            player_token.bar_color = Color(0, 1, 0, 1)
-            player_token.green_bar = Rectangle(
+        # canvas.after to ensure bar is displayed on top of CharacterToken
+        with token.dungeon.canvas.after:
+            # green
+            token.bar_color = Color(0, 1, 0, 1)
+            token.green_bar = Rectangle(
                 pos=(bar_pos_x, bar_pos_y),
                 size=(bar_length * percentage_natural_health, bar_thickness),
             )
-
-            # red portion of health bar
-            player_token.bar_color = Color(1, 0, 0, 1)
-            player_token.red_bar = Rectangle(
+            # red
+            token.bar_color = Color(1, 0, 0, 1)
+            token.red_bar = Rectangle(
                 # x position of red bar is bar_pos_x + length of green portion of bar
-                pos=(bar_pos_x + player_token.green_bar.size[0], bar_pos_y),
+                pos=(bar_pos_x + token.green_bar.size[0], bar_pos_y),
                 size=(bar_length * (1 - percentage_natural_health), bar_thickness),
             )
 
-        player_token.bind(pos=player_token.update_health_bar, size=player_token.update_health_bar)
+        token.bind(pos=token.move_health_bar, size=token.move_health_bar)
 
-    def update_health_bar(self, *args):
+    def move_health_bar(self, *args):
 
-        # update green portion of health bar
         self.green_bar.pos = (
             self.shape.pos[0] + self.size[0] * 0.1,
             self.shape.pos[1] + self.size[1] * 0.1,
@@ -219,8 +218,6 @@ class PlayerToken(CharacterToken):
             self.size[0] * 0.8 * self.percentage_natural_health,
             self.size[1] * 0.1,
         )
-
-        # update red portion of health bar
         self.red_bar.pos = (
             # x position of bar is token_pos + 0.1 margin + size of green portion of bar
             self.shape.pos[0] + (self.size[0] * 0.1) + self.green_bar.size[0],
@@ -295,7 +292,7 @@ class PlayerToken(CharacterToken):
     def slide(self):
         animation = super().slide()
         animation.bind(on_progress=self.update_circle)
-        animation.bind(on_progress=self.update_health_bar)
+        animation.bind(on_progress=self.move_health_bar)
         animation.start(self.shape)
 
 

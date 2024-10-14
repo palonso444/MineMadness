@@ -107,8 +107,8 @@ class CharacterToken(SolidToken):
             self.slide()
         else:
             if self.start != self.goal: # update position if goal is reached
-                self.start.tokens[self.kind]: Token | None = None
-                self.goal.tokens[self.kind]: Token | None = self
+                self.start.remove_token(self.kind)
+                self.goal.set_token(self)
                 self.character.position = self.goal.position
                 self.pos: tuple[int,int] = self.shape.pos
 

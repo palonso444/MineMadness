@@ -72,7 +72,8 @@ class CharacterToken(SolidToken):
     """
     Base class defining all Tokens with associated Character
     """
-    def __init__(self, kind: str, species: str, character: CharacterToken, dungeon_instance: DungeonLayout, **kwargs):
+    def __init__(self, kind: str, species: str, character: CharacterToken,
+                 dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, character, dungeon_instance, **kwargs)
 
         self.start: Tile | None = None  # all defined when token is moved by move()
@@ -86,18 +87,18 @@ class CharacterToken(SolidToken):
         self.bind(pos=self.update_pos)
 
 
-    def slide(self):
+    def slide(self) -> Animation:
         """
         Instantiates the Animation object to slide the Token 1 step along the route determined in CharacterToken.path
-        :return: None
+        :return: Animation object ready to start
         """
         self.character.stats.remaining_moves -= 1
-        next_tile = self.dungeon.get_tile(self.path.pop(0))
+        next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
         animation = Animation(pos=next_tile.pos, duration=0.2)
         animation.bind(on_complete=self.on_slide_completed)
         return animation
 
-    def on_slide_completed(self, animation, token_shape):
+    def on_slide_completed(self, animation: Animation, token_shape:VertexInstruction) -> None:
         """
         Callback triggered when the slide is completed on Character turn
         :return: None
@@ -106,37 +107,45 @@ class CharacterToken(SolidToken):
             self.slide()
         else:
             if self.start != self.goal: # update position if goal is reached
-                self.start.tokens[self.kind] = None
-                self.goal.tokens[self.kind] = self
+                self.start.tokens[self.kind]: Token | None = None
+                self.goal.tokens[self.kind]: Token | None = self
                 self.character.position = self.goal.position
-                self.pos = self.shape.pos
+                self.pos: tuple[int,int] = self.shape.pos
 
-                self.start = None
-                self.goal = None
-                self.path = None
+                self.start: Tile | None = None
+                self.goal: Tile | None = None
+                self.path: list[tuple[int,int]] | None = None
 
                 self.character.behave(self.get_current_tile())
 
             self.dungeon.game.update_switch("character_done")
 
-    def show_damage(self):
-        with self.dungeon.canvas:
+    def show_damage(self) -> None:
+        """
+        Shows the on the Token the FadingToken corresponding to damage
+        :return: None
+        """
+        with self.dungeon.canvas.after:
             DamageToken(pos=self.pos, size=self.size, dungeon=self)
 
 
 class PlayerToken(CharacterToken):
-
+    """
+    Class defining Tokens representing Players
+    """
     percentage_natural_health = NumericProperty(None)
     fading_tokens_queue = ListProperty([])
 
-    def __init__(self, kind, species, character, dungeon_instance, **kwargs):
+    def __init__(self, kind: str, species: str, character: Character,
+                 dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, character, dungeon_instance, **kwargs)
 
-        self.circle = None
-        self.circle_color = None
-        self.bar = None  # health bar, monsters need it None to avoid crashing when Token.slide()
-        self.negative_bar = None  # red portion of the health bar
-        self.bind(percentage_natural_health=self.calculate_and_display_health_bar)
+        self.circle: VertexInstruction | None = None
+        self.circle_color: VertexInstruction | None = None
+        self.green_bar: VertexInstruction | None = None
+        self.red_bar: VertexInstruction | None = None
+
+        self.bind(percentage_natural_health=self.display_health_bar)
         self.post_init()
 
     def post_init(self):
@@ -168,9 +177,9 @@ class PlayerToken(CharacterToken):
             EffectToken(item=item, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
     @staticmethod
-    def calculate_and_display_health_bar(player_token, percentage_natural_health):
+    def display_health_bar(player_token, percentage_natural_health):
 
-        if player_token.bar is not None and player_token.negative_bar is not None:
+        if player_token.green_bar is not None and player_token.red_bar is not None:
             player_token.remove_health_bar()
 
         bar_pos_x = player_token.pos[0] + (player_token.size[0] * 0.1)
@@ -184,16 +193,16 @@ class PlayerToken(CharacterToken):
 
             # green portion of health bar
             player_token.bar_color = Color(0, 1, 0, 1)
-            player_token.bar = Rectangle(
+            player_token.green_bar = Rectangle(
                 pos=(bar_pos_x, bar_pos_y),
                 size=(bar_length * percentage_natural_health, bar_thickness),
             )
 
             # red portion of health bar
             player_token.bar_color = Color(1, 0, 0, 1)
-            player_token.negative_bar = Rectangle(
+            player_token.red_bar = Rectangle(
                 # x position of red bar is bar_pos_x + length of green portion of bar
-                pos=(bar_pos_x + player_token.bar.size[0], bar_pos_y),
+                pos=(bar_pos_x + player_token.green_bar.size[0], bar_pos_y),
                 size=(bar_length * (1 - percentage_natural_health), bar_thickness),
             )
 
@@ -202,32 +211,32 @@ class PlayerToken(CharacterToken):
     def update_health_bar(self, *args):
 
         # update green portion of health bar
-        self.bar.pos = (
+        self.green_bar.pos = (
             self.shape.pos[0] + self.size[0] * 0.1,
             self.shape.pos[1] + self.size[1] * 0.1,
         )
-        self.bar.size = (
+        self.green_bar.size = (
             self.size[0] * 0.8 * self.percentage_natural_health,
             self.size[1] * 0.1,
         )
 
         # update red portion of health bar
-        self.negative_bar.pos = (
+        self.red_bar.pos = (
             # x position of bar is token_pos + 0.1 margin + size of green portion of bar
-            self.shape.pos[0] + (self.size[0] * 0.1) + self.bar.size[0],
+            self.shape.pos[0] + (self.size[0] * 0.1) + self.green_bar.size[0],
             self.shape.pos[1] + (self.size[1] * 0.1),
         )
-        self.negative_bar.size = (
+        self.red_bar.size = (
             self.size[0] * 0.8 * (1 - self.percentage_natural_health),
             self.size[1] * 0.1,
         )
 
     def remove_health_bar(self):
 
-        for bar in [self.bar, self.negative_bar]:
+        for bar in [self.green_bar, self.red_bar]:
             self.dungeon.canvas.after.remove(bar)
-        self.bar = None
-        self.negative_bar = None
+        self.green_bar = None
+        self.red_bar = None
 
     def draw_selection_circle(self):
 
@@ -291,7 +300,9 @@ class PlayerToken(CharacterToken):
 
 
 class MonsterToken(CharacterToken):
-
+    """
+    Class defining Tokens representing Monsters
+    """
     def __init__(self, kind, species, character, dungeon_instance, **kwargs):
         super().__init__(kind, species, character, dungeon_instance, **kwargs)
 

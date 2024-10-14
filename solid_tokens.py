@@ -16,6 +16,7 @@ class SolidToken(Widget):
 
         self.kind: str = kind
         self.species: str = species
+        self.position: tuple [int:int] = None   # IMPLEMENT
         self.character: Character = character
         self.dungeon: DungeonLayout = dungeon_instance
         self.source: str = "./tokens/" + self.species + "token.png"
@@ -36,7 +37,7 @@ class SolidToken(Widget):
         Returns the Tile corresponding to the current position of the Token
         :return:
         """
-        return self.dungeon.get_tile(self.character.position)
+        return self.dungeon.get_tile(self.character.position)   # this won't work for SceneryTokens! position attribute for Tokens
 
     def delete_token(self, tile: Tile) -> None:
         """
@@ -75,9 +76,6 @@ class CharacterToken(SolidToken):
     def __init__(self, kind: str, species: str, character: CharacterToken,
                  dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, character, dungeon_instance, **kwargs)
-
-        self.start: Tile | None = None  # all defined when token is moved by move()
-        self.goal: Tile | None = None
         self.path: list[tuple[int,int]] | None = None
 
         with self.dungeon.canvas:
@@ -86,7 +84,7 @@ class CharacterToken(SolidToken):
 
         self.bind(pos=self.update_pos)
 
-
+    # refactor to get_movement_animation
     def slide(self) -> Animation:
         """
         Instantiates the Animation object to slide the Token 1 step along the route determined in CharacterToken.path
@@ -95,25 +93,26 @@ class CharacterToken(SolidToken):
         self.character.stats.remaining_moves -= 1
         next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
         animation = Animation(pos=next_tile.pos, duration=0.2)
-        animation.bind(on_complete=self.on_slide_completed)
+        animation.bind(on_complete=lambda animation_obj, token_shape: self.on_slide_completed(animation,
+                                                                                          token_shape,
+                                                                                          next_tile))
         return animation
 
-    def on_slide_completed(self, animation: Animation, token_shape:VertexInstruction) -> None:
+    def on_slide_completed(self, animation_obj: Animation,
+                           token_shape:VertexInstruction,
+                           next_tile: Tile) -> None:
         """
         Callback triggered when the slide is completed on Character turn
         :return: None
         """
-        if len(self.path) > 0:
+        if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
             self.slide()
 
-        elif self.start != self.goal: # update position if goal is reached
-            self.start.remove_token(self.kind)
-            self.goal.set_token(self)
-            self.character.position = self.goal.position
+        # on tile release check that avoid moving character if is not meant to move
+        else:
+            next_tile.set_token(self)
+            self.character.position = next_tile.position
             self.pos: tuple[int,int] = self.shape.pos
-
-            self.start: Tile | None = None
-            self.goal: Tile | None = None
             self.path: list[tuple[int,int]] | None = None
 
             if self.get_current_tile().kind == "exit" and self.character.has_all_gems:
@@ -278,14 +277,11 @@ class PlayerToken(CharacterToken):
             self.dungeon.game.update_switch("character_done")
 
         else:
-            self.start = start_tile
-            self.goal = end_tile
-            start_tile.tokens[self.kind] = None
+            start_tile.remove_token(self.kind)
             self.path = self.dungeon.find_shortest_path(
                 start_tile.position, end_tile.position, self.character.blocked_by
             )
             self.dungeon.activate_which_tiles()  # tiles disabled while moving
-
             self.slide()
 
 
@@ -293,7 +289,7 @@ class PlayerToken(CharacterToken):
         animation = super().slide()
         animation.bind(on_progress=self.update_circle)
         animation.bind(on_progress=self.move_health_bar)
-        animation.start(self.shape)
+        animation.start(self) # change with self.shape if fails
 
 
 class MonsterToken(CharacterToken):
@@ -305,22 +301,13 @@ class MonsterToken(CharacterToken):
 
     def move_monster_token(self):
 
-        self.start = self.dungeon.get_tile(self.character.position)
         self.path = self.character.move()
 
         if self.path is None:  # if it cannot move, will try directly to attack players
-            self.character.behave(self.start)
-
+            self.character.behave(self.get_current_tile())
         else:
-            goal_index = (
-                self.character.stats.remaining_moves - 1
-                if self.character.stats.remaining_moves - 1 < len(self.path)
-                else len(self.path) - 1
-            )
-            self.goal = self.dungeon.get_tile(self.path[goal_index])
-
             self.slide()
 
     def slide(self):
         animation = super().slide()
-        animation.start(self.shape)
+        animation.start(self) # change with self.shape if fails

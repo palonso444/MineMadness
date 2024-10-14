@@ -31,6 +31,12 @@ class Tile(Button):
         }
         self.dungeon = dungeon_instance  # need to pass the instance of the dungeon to call dungeon.move_token from the class
 
+    def set_token(self, token: Token) -> None:
+        self.tokens[token.kind] = Token
+
+    def get_token(self, token_kind) -> Token:
+        return self.tokens[token_kind]
+
     @staticmethod
     def update_tokens(tile, tile_pos):
         for token in tile.tokens.values():

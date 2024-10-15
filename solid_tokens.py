@@ -131,11 +131,11 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             self.pos: tuple[int,int] = self.shape.pos
             self.path: list[tuple[int,int]] | None = None
 
-            if self.get_current_tile().kind == "exit" and self.character.has_all_gems:
+            if next_tile.kind == "exit" and self.character.has_all_gems:
                 self.character.exit_level()
                 self.dungeon.game.update_switch("player_exited")
             else:
-                self.character.behave(self.get_current_tile())
+                self.character.behave(next_tile)
                 self.dungeon.game.update_switch("character_done")
 
     def show_damage(self) -> None:

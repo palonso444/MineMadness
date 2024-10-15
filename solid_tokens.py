@@ -220,7 +220,7 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         if token.green_bar is not None and token.red_bar is not None:
-            token.remove_health_bar()
+            token._remove_health_bar()
 
         bar_pos_x = token.pos[0] + (token.size[0] * 0.1)
         bar_pos_y = token.pos[1] + (token.size[1] * 0.1)
@@ -267,17 +267,7 @@ class PlayerToken(CharacterToken):
             self.size[0] * 0.8 * (1 - self.remaining_health),
             self.size[1] * 0.1,
         )
-
-    def remove_health_bar(self) -> None:
-        """
-        Removes the health bar
-        :return: None
-        """
-        for bar in [self.green_bar, self.red_bar]:
-            self.dungeon.canvas.after.remove(bar)
-        self.green_bar = None
-        self.red_bar = None
-
+        
     def display_selection_circle(self) -> None:
         """
         Displays the selection circle around the CharacterToken
@@ -310,15 +300,6 @@ class PlayerToken(CharacterToken):
             self.width / 2,  # radius of circle = CharacterToken.width / 2
         )
 
-    def remove_selection_circle(self) -> None:
-        """
-        Removes the selection circle
-        :return: None
-        """
-        self.dungeon.canvas.remove(self.circle)
-        self.circle = None
-        self.circle_color = None
-
     def delete_token(self, tile: Tile) -> None:
         """
         Completely erases the PlayerToken from the board along with the health bar and the selection circle
@@ -329,7 +310,7 @@ class PlayerToken(CharacterToken):
         if self.circle is not None:  # to avoid interferences with MineMadnessGame.on_character_done()
             self.remove_selection_circle()
         if self.green_bar is not None and self.red_bar is not None:
-            self.remove_health_bar()
+            self._remove_health_bar()
 
     def move_token(self, start_position: tuple [int,int], end_position: tuple[int,int]) -> None:
         """
@@ -350,7 +331,6 @@ class PlayerToken(CharacterToken):
             self.dungeon.activate_which_tiles()  # tiles disabled while moving
             self.slide_one_step()
 
-
     def slide_one_step(self) -> None:
         """
         Ends the setup of the slide animation and starts it
@@ -361,6 +341,25 @@ class PlayerToken(CharacterToken):
         animation.bind(on_progress=self.move_health_bar)
         self.character.stats.remaining_moves -= 1
         animation.start(self) # change with self.shape if fails
+
+    def _remove_health_bar(self) -> None:
+        """
+        Removes the health bar
+        :return: None
+        """
+        for bar in [self.green_bar, self.red_bar]:
+            self.dungeon.canvas.after.remove(bar)
+        self.green_bar = None
+        self.red_bar = None
+
+    def remove_selection_circle(self) -> None:
+        """
+        Removes the selection circle
+        :return: None
+        """
+        self.dungeon.canvas.remove(self.circle)
+        self.circle = None
+        self.circle_color = None
 
 
 class MonsterToken(CharacterToken):

@@ -63,7 +63,7 @@ class AbilityButton(ToggleButton):
                         "armed",
                         character.token.shape.pos,
                         character.token.shape.size,
-                        effect_fades=True,
+                        effect_ends=True,
                     )
 
                 self.game.update_switch("ability_button")
@@ -126,7 +126,7 @@ class JerkyButton(Interfacebutton):
             "heal", character.token.shape.pos, character.token.shape.size
         )
         # this updates health bar
-        character.token.percentage_natural_health = (
+        character.token.remaining_health = (
             character.stats.health / character.stats.natural_health
         )
         self.apply_cost("jerky")

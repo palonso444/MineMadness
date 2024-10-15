@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 import game_stats as stats
 from character_class import Character
+from crapgeon_utils import check_if_multiple
 
 
 class Monster(Character, ABC):
@@ -19,11 +20,25 @@ class Monster(Character, ABC):
         self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
 
         # exclusive of Monster class
-        self.chases: tuple = ("player", None)
+        self.chases: str = "player"
 
     @abstractmethod
     def move(self):
         pass
+
+    @property
+    def has_all_gems(self) -> bool:
+        """
+        Placeholder, Monsters are not able to collect gems. Needed to avoid crashing when landing on exit Tile
+        :return: False
+        """
+        return False
+
+    def behave(self, tile: Tile) -> bool:
+        if check_if_multiple(self.dungeon.game.turn, 2):  # if players turn, monster was dodging
+            self.dungeon.get_tile(self.token.start.position).dodging_finished = True
+        else:
+            self.attack_players()
 
     def try_to_dodge(self):
 
@@ -45,18 +60,26 @@ class Monster(Character, ABC):
         Manages attack of monsters to surrounding players
         :return:
         """
+        print ("ATTACK")
         surrounding_tiles = [self.dungeon.get_tile(position) for position in self.dungeon.get_nearby_positions(self.position)]
 
         for tile in surrounding_tiles:
             if self.stats.remaining_moves == 0:
                 break
-            character = tile.get_character()
-            if character is not None and character.kind == "player":
+            if tile.has_token("player"):
                 self.fight_on_tile(tile)
 
-    def find_closest_reachable_target(
-        self, target_token: tuple[str] = (None, None)
-    ) -> Tile | None:  # pass target_token as (token_kind, token_species)
+    def fight_on_tile(self, opponent_tile: Tile) -> None:
+        opponent = opponent_tile.tokens["player"].character
+        opponent = self.fight_opponent(opponent)
+        opponent.token.remaining_health = (
+                opponent.stats.health / opponent.stats.natural_health
+        )
+
+        if opponent.stats.health <= 0:
+            opponent.kill_character(opponent_tile)
+
+    def find_closest_reachable_target(self, target_token: str) -> Tile | None:  # pass target_token as (token_kind, token_species)
         """
         Finds closest target based on len(path) and returns the tile where this target is placed
         Returns tile if there is path to tile, None if tile is unreachable"
@@ -68,15 +91,12 @@ class Monster(Character, ABC):
         for tile in self.dungeon.children:
             if tile.has_token(target_token):
 
-                # if character is hidden.
-                if target_token[0] == "player" and tile.get_character().is_hidden:
+                if target_token == "player" and tile.tokens["player"].character.is_hidden:
                     continue
 
-                if (  # if tile is full and monster wants to land there
-                    target_token[0] not in self.cannot_share_tile_with
-                    and tile.second_token is not None
-                ):
-                    continue
+                #if any(tile.has_token(token_kind) for token_kind in self.cannot_share_tile_with):
+                    #continue
+
                 path = self.dungeon.find_shortest_path(
                     start_tile.position, tile.position, self.blocked_by
                 )
@@ -112,7 +132,7 @@ class Monster(Character, ABC):
 
             # if access is unreachable or too far away, remove access
             path_access_end: list[tuple] | None = self.dungeon.find_shortest_path(
-                self.token.start.position,
+                self.token.position,
                 self.dungeon.get_tile(accesses[i][-1]).position,
                 self.blocked_by,
             )
@@ -131,7 +151,7 @@ class Monster(Character, ABC):
             # if access end further away from target than monster is, remove access
             else:
                 monster_to_target: list[tuple] = self.dungeon.find_shortest_path(
-                    self.token.start.position, target_tile.position, self.blocked_by
+                    self.token.position, target_tile.position, self.blocked_by
                 )
                 target_to_access_end: list[tuple] = self.dungeon.find_shortest_path(
                     target_tile.position, self.dungeon.get_tile(accesses[i][-1]).position, self.blocked_by
@@ -149,14 +169,14 @@ class Monster(Character, ABC):
 
             end_tile: Tile = self.dungeon.get_tile(access[-1])
             path_to_access: list[tuple] | None = self.dungeon.find_shortest_path(
-                self.token.start.position, end_tile.position, self.blocked_by
+                self.position, end_tile.position, self.blocked_by
             )
             if path_to_access is not None:
                 if path is None or len(path) > len(path_to_access):
                     path = path_to_access
 
         # this allows monster to end on pickables
-        if self.chases[0] not in self.cannot_share_tile_with:
+        if self.chases not in self.cannot_share_tile_with:
             path = self._add_target_position_to_path(path)
 
         return path
@@ -214,7 +234,7 @@ class Monster(Character, ABC):
                     path = possible_path
 
         # this makes monster able to end on pickables
-        if self.chases[0] not in self.cannot_share_tile_with:
+        if self.chases not in self.cannot_share_tile_with:
             path = self._add_target_position_to_path(path)
 
         return path
@@ -274,7 +294,7 @@ class Monster(Character, ABC):
         self.token.start = start_tile
         self.token.goal = end_tile
         self.token.path = [end_position]
-        self.token.slide(self.token.path)
+        self.token.setup_animation(self.token.path)
 
     def _find_accesses(
         self, target_tile: tiles.Tile, smart: bool = True
@@ -322,15 +342,7 @@ class Monster(Character, ABC):
     def _goes_through(self, tile):
 
         if tile:
-
-            if tile.token and tile.token.kind in self.blocked_by:
-                return False
-            if tile.second_token and tile.second_token.kind in self.blocked_by:
-                return False
-
-            return True
-
-        return False
+            return all(tile.tokens[token_kind] is None for token_kind in self.blocked_by)
 
     def _check_free_landing(self, path: list[tuple]):
 
@@ -341,7 +353,7 @@ class Monster(Character, ABC):
 
             if (
                 any(
-                    self.dungeon.get_tile(position).has_token((token_kind, None))
+                    self.dungeon.get_tile(position).has_token(token_kind)
                     for token_kind in self.cannot_share_tile_with
                 )
                 # position != self.position is necessary for random moves
@@ -673,17 +685,17 @@ class Pixie(Monster):
         self.stats = stats.PixieStats()
 
         self.ignores: tuple = self.ignores + ("gem",)
-        self.chases: tuple = ("pickable", None)
+        self.chases: str = "pickable"
 
 
     def move(self):
 
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
-        if self.dungeon.get_tile(self.position).has_token(self.chases):
-            self.dungeon.get_tile(self.position).clear_token("pickable")
+        #if self.dungeon.get_tile(self.position).has_token(self.chases): FIX
+            #self.dungeon.get_tile(self.position).delete_token("pickable")
 
-        elif target_tile is not None:
+        if target_tile is not None:
             return self.assess_path_smart(target_tile)
 
         else:

@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from kivy.app import App  # type: ignore
 from kivy.uix.boxlayout import BoxLayout  # type: ignore
 
@@ -123,6 +125,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         :return: None
         """
         # if no monsters in game, players can move indefinitely
+        print("CHARACTER_DONE")
         if (
             isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves == 0
@@ -183,7 +186,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                     game.next_character()
 
                 else:
-                    game.active_character.token.draw_selection_circle()
+                    game.active_character.token.display_selection_circle()
                     game.update_interface()
                     # health must be updated here after setting player as active character
                     game.update_switch("health")
@@ -201,7 +204,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                 game.active_character = monsters.Monster.data[game.active_character_id]
                 game.update_interface()
                 game.update_switch("health")
-                game.active_character.token.move_monster()
+                game.active_character.token.move_token()
 
     def on_player_exited(self, *args):
         """
@@ -210,13 +213,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         the corresponding switch.
         :return: None
         """
-        exit_tile = self.dungeon.get_tile(self.active_character.position)
-
-        exited_player = players.Player.data.pop(self.active_character_id)
-        players.Player.exited.add(exited_player)
-        self.active_character.rearrange_ids()
-        exit_tile.clear_token("player")
-
+        print("PLAYER_EXITED")
         # in this case all out of game
         if players.Player.all_dead():
 

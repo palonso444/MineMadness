@@ -1,0 +1,101 @@
+from __future__ import annotations
+from abc import ABC, ABCMeta
+from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
+from kivy.animation import Animation
+from kivy.uix.widget import Widget
+
+
+class WidgetABCMeta(ABCMeta,type(Widget)):
+    """
+    Base metaclass allowing to make FadingToken an abstract class (otherwise there is conflict because inherits from
+    Widget, so it cannot inherit from ABC inherently)
+    """
+    pass
+
+class FadingToken(Widget, ABC, metaclass=WidgetABCMeta):
+    """
+    Base abstract class defining all Tokens that fade in and out without remaining on the board
+    """
+    def __init__(self, character_token: CharacterToken, **kwargs):
+        super().__init__(**kwargs)
+        self.opacity = 0  # FadingTokens start invisible. None is not allowed
+        self.final_opacity: int | None = None
+        self.character_token: CharacterToken = character_token
+        self.duration: int | None = None
+
+    def fade(self) -> None:
+        """
+        Handles the fading (in and out) of the FadingToken
+        :return: None
+        """
+        fading = Animation(opacity=self.final_opacity, duration=self.duration)
+        fading.bind(on_complete=self._fade_out)
+        fading.start(self)
+
+    @staticmethod
+    def _fade_out(animation: Animation, token: FadingToken) -> None:
+        """
+        Handles the fading out of the FadingToken
+        :param animation: fade Animation object
+        :param token: FadingToken which is about to fade out
+        :return: None
+        """
+        fading_out = Animation(opacity=0, duration=token.duration)
+        if isinstance(token, EffectToken):
+            fading_out.bind(on_complete=token.character_token.remove_attribute_if_in_queue)
+        fading_out.start(token)
+
+
+class DamageToken(FadingToken):
+    """
+    Class defining the FadingTokens representing damage
+    """
+    def __init__(self, dungeon: DungeonLayout, **kwargs):
+        super().__init__(dungeon, **kwargs)
+        self.final_opacity = 0.4
+        self.duration = 0.2
+
+        with self.canvas:
+            self.color = Color(1, 0, 0, 1)
+            self.shape = Ellipse(pos=self.pos, size=self.size)
+
+        self.fade()
+
+
+class DiggingToken(FadingToken):
+    """
+    Class defining the FadingTokens representing digging
+    """
+    def __init__(self, dungeon: DungeonLayout, **kwargs):
+        super().__init__(dungeon, **kwargs)
+        self.final_opacity = 0.7
+        self.duration = 0.2
+
+        with self.canvas:
+            self.color = Color(0.58, 0.294, 0, 1)
+            self.shape = Rectangle(pos=self.pos, size=self.size)
+
+        self.fade()
+
+
+class EffectToken(FadingToken):
+    """
+    Class defining the FadingTokens representing effects on Character attributes (moves, strength, etc.)
+    """
+
+    def __init__(self, target_attr: str, character_token: CharacterToken, effect_ends: bool, **kwargs):
+        super().__init__(character_token, **kwargs)
+        self.final_opacity = 1
+        self.duration = 0.6
+        self.target_attr = target_attr
+        self.effect_ends: bool = effect_ends  # determines if effect start or ends
+
+        if effect_ends:
+            self.source = f"./fadingtokens/{self.target_attr}_fades_token.png"
+        else:
+            self.source = f"./fadingtokens/{self.target_attr}_effect_token.png"
+
+        with self.canvas:
+            self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
+
+        self.fade()

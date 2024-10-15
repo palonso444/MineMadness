@@ -72,6 +72,14 @@ class Character(ABC):
         self.__class__.data.append(self)
 
     @abstractmethod
+    def has_all_gems(self) -> bool:
+        """
+        Defines if the all the characters of the team (Players or Monsters) have all gems collected
+        :return: bool
+        """
+        pass
+
+    @abstractmethod
     def behave(self, tile: Tile) -> None:
         """
         Abstract method defining the behavior of a character when landing on a new tile

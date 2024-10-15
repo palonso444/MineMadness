@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from kivy.app import App  # type: ignore
 from kivy.uix.boxlayout import BoxLayout  # type: ignore
 

@@ -7,8 +7,8 @@ from kivy.properties import BooleanProperty
 # from kivy.graphics import Ellipse, Color
 
 from monster_classes import Monster
-from fading_tokens import EffectToken
-from solid_tokens import CharacterToken, SceneryToken
+from tokens_fading import EffectToken
+from tokens_solid import CharacterToken, SceneryToken
 
 
 class Tile(Button):

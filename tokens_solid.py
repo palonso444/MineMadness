@@ -1,11 +1,11 @@
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
-from kivy.graphics import Ellipse, Rectangle, Color, Line, VertexInstruction  # type: ignore
+from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
 from kivy.animation import Animation
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ListProperty
 
-from fading_tokens import DamageToken, DiggingToken, EffectToken, FadingToken
+from tokens_fading import DamageToken, DiggingToken, EffectToken
 
 class WidgetABCMeta(ABCMeta,type(Widget)):
     """
@@ -28,7 +28,7 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.character: Character = character
         self.dungeon: DungeonLayout = dungeon_instance
         self.source: str = "./tokens/" + self.species + "token.png"
-        self.shape: VertexInstruction | None = None  # token.shape (canvas object) initialized in each subclass
+        self.shape: Ellipse | Rectangle | None = None  # token.shape (canvas object) initialized in each subclass
 
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:
@@ -80,9 +80,10 @@ class SceneryToken(SolidToken):
 
 class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
     """
-    Base abstract class defining all Tokens with associated Character
+    Base abstract class defining all Tokens with associated Character. It represents all the aspects related
+    to Character display (picture and health bar, if applicable) and its movement on the board
     """
-    def __init__(self, kind: str, species: str, position: tuple[int,int], character: CharacterToken,
+    def __init__(self, kind: str, species: str, position: tuple[int,int], character: Character,
                  dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
         self.path: list[tuple[int,int]] | None = None
@@ -114,10 +115,11 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         return animation
 
     def on_slide_completed(self, animation_obj: Animation,
-                           token_shape:VertexInstruction,
-                           next_tile: Tile) -> None:
+                           token_shape: Ellipse,
+                           current_tile: Tile) -> None:
         """
-        Callback triggered when the slide is completed on Character turn
+        Callback triggered when the slide is completed on Character turn. Handles behavior of Character depending
+        on Tile.kind
         :return: None
         """
         if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
@@ -125,17 +127,17 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
 
         # on tile release check that avoid moving character if is not meant to move
         else:
-            next_tile.set_token(self)
-            self.position = next_tile.position
-            self.character.position = next_tile.position
+            current_tile.set_token(self)
+            self.position = current_tile.position
+            self.character.position = current_tile.position
             self.pos: tuple[int,int] = self.shape.pos
             self.path: list[tuple[int,int]] | None = None
 
-            if next_tile.kind == "exit" and self.character.has_all_gems:
+            if current_tile.kind == "exit" and self.character.has_all_gems:
                 self.character.exit_level()
                 self.dungeon.game.update_switch("player_exited")
             else:
-                self.character.behave(next_tile)
+                self.character.behave(current_tile)
                 self.dungeon.game.update_switch("character_done")
 
     def show_damage(self) -> None:
@@ -158,10 +160,10 @@ class PlayerToken(CharacterToken):
                  dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
-        self.circle: VertexInstruction | None = None
-        self.circle_color: VertexInstruction | None = None
-        self.green_bar: VertexInstruction | None = None
-        self.red_bar: VertexInstruction | None = None
+        self.circle: Line | None = None
+        self.circle_color: Line | None = None
+        self.green_bar: Rectangle | None = None
+        self.red_bar: Rectangle | None = None
 
         self.bind(remaining_health=self._display_health_bar)
         self.post_init()
@@ -194,8 +196,8 @@ class PlayerToken(CharacterToken):
         :param fading_token: FadingToken fading out
         :return: None
         """
-        if fading_token.item in self.modified_attributes:
-            self.modified_attributes.remove(fading_token.item)
+        if fading_token.target_attr in self.modified_attributes:
+            self.modified_attributes.remove(fading_token.target_attr)
 
     def show_effect_token(self, attribute: str, pos: tuple [float,float],
                           size: tuple [float,float], effect_ends: bool =False) -> None:
@@ -208,7 +210,7 @@ class PlayerToken(CharacterToken):
         :return: 
         """
         with self.dungeon.canvas:
-            EffectToken(item=attribute, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
+            EffectToken(target_attr=attribute, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
     @staticmethod
     def _display_health_bar(token: PlayerToken, percent_natural_health: float) -> None:
@@ -228,14 +230,12 @@ class PlayerToken(CharacterToken):
         bar_thickness = token.size[1] * 0.1
 
         with token.dungeon.canvas.after:
-            # green
-            token.bar_color = Color(0, 1, 0, 1)
+            token.bar_color = Color(0, 1, 0, 1)  # green
             token.green_bar = Rectangle(
                 pos=(bar_pos_x, bar_pos_y),
                 size=(bar_length * percent_natural_health, bar_thickness),
             )
-            # red
-            token.bar_color = Color(1, 0, 0, 1)
+            token.bar_color = Color(1, 0, 0, 1)  # red
             token.red_bar = Rectangle(
                 # x position of red bar is bar_pos_x + length of green portion of bar
                 pos=(bar_pos_x + token.green_bar.size[0], bar_pos_y),
@@ -251,21 +251,13 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         self.green_bar.pos = (
-            self.shape.pos[0] + self.size[0] * 0.1,
-            self.shape.pos[1] + self.size[1] * 0.1,
-        )
-        self.green_bar.size = (
-            self.size[0] * 0.8 * self.remaining_health,
-            self.size[1] * 0.1,
+            self.pos[0] + self.size[0] * 0.1,
+            self.pos[1] + self.size[1] * 0.1,
         )
         self.red_bar.pos = (
             # x position of bar is token_pos + 0.1 margin + size of green portion of bar
-            self.shape.pos[0] + (self.size[0] * 0.1) + self.green_bar.size[0],
-            self.shape.pos[1] + (self.size[1] * 0.1),
-        )
-        self.red_bar.size = (
-            self.size[0] * 0.8 * (1 - self.remaining_health),
-            self.size[1] * 0.1,
+            self.pos[0] + (self.size[0] * 0.1) + self.green_bar.size[0],
+            self.pos[1] + (self.size[1] * 0.1),
         )
 
     def _remove_health_bar(self) -> None:
@@ -273,8 +265,8 @@ class PlayerToken(CharacterToken):
         Removes the health bar
         :return: None
         """
-        for bar in [self.green_bar, self.red_bar]:
-            self.dungeon.canvas.after.remove(bar)
+        self.dungeon.canvas.after.remove(self.green_bar)
+        self.dungeon.canvas.after.remove(self.red_bar)
         self.green_bar = None
         self.red_bar = None
 
@@ -303,9 +295,9 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         self.circle.circle = (  # self is CharacterToken, self.circle is Line
-            self.shape.pos[0]  # center_x of circle = CharacterToken.pos[0] (x)
+            self.pos[0]  # center_x of circle = CharacterToken.pos[0] (x)
             + self.width / 2,
-            self.shape.pos[1]  # center_y of circle = CharacterToken.pos[1] (y)
+            self.pos[1]  # center_y of circle = CharacterToken.pos[1] (y)
             + self.height / 2,
             self.width / 2,  # radius of circle = CharacterToken.width / 2
         )
@@ -378,6 +370,7 @@ class MonsterToken(CharacterToken):
 
         if self.path is None:  # if it cannot move, will try directly to attack players
             self.character.behave(self.get_current_tile())
+            self.dungeon.game.update_switch("character_done")
         else:
             self._slide_one_step()
 

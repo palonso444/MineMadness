@@ -26,6 +26,14 @@ class Monster(Character, ABC):
     def move(self):
         pass
 
+    @property
+    def has_all_gems(self) -> bool:
+        """
+        Placeholder, Monsters are not able to collect gems. Needed to avoid crashing when landing on exit Tile
+        :return: False
+        """
+        return False
+
     def behave(self, tile: Tile) -> bool:
         if check_if_multiple(self.dungeon.game.turn, 2):  # if players turn, monster was dodging
             self.dungeon.get_tile(self.token.start.position).dodging_finished = True

@@ -5,7 +5,7 @@ from random import choice
 
 import player_classes as players
 import monster_classes as monsters
-import solid_tokens as tokens
+import tokens_solid as tokens
 import tile_classes as tiles
 from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint

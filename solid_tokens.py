@@ -94,7 +94,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.bind(pos=self.update_pos)
 
     @abstractmethod
-    def slide_one_step(self) -> None:
+    def _slide_one_step(self) -> None:
         """
         Abstractmethod for starting the slide animation
         :return: None
@@ -121,7 +121,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
-            self.slide_one_step()
+            self._slide_one_step()
 
         # on tile release check that avoid moving character if is not meant to move
         else:
@@ -163,7 +163,7 @@ class PlayerToken(CharacterToken):
         self.green_bar: VertexInstruction | None = None
         self.red_bar: VertexInstruction | None = None
 
-        self.bind(remaining_health=self.display_health_bar)
+        self.bind(remaining_health=self._display_health_bar)
         self.post_init()
 
     def post_init(self) -> None:
@@ -211,7 +211,7 @@ class PlayerToken(CharacterToken):
             EffectToken(item=attribute, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
     @staticmethod
-    def display_health_bar(token: PlayerToken, percent_natural_health: float) -> None:
+    def _display_health_bar(token: PlayerToken, percent_natural_health: float) -> None:
         """
         Callback triggered when Player.percent_natural_health is modified. Displays the updated health_bar
         depending on the current percent_natural_health
@@ -242,9 +242,9 @@ class PlayerToken(CharacterToken):
                 size=(bar_length * (1 - percent_natural_health), bar_thickness),
             )
 
-        token.bind(pos=token.move_health_bar, size=token.move_health_bar)
+        token.bind(pos=token._move_health_bar, size=token._move_health_bar)
 
-    def move_health_bar(self, *args) -> None:
+    def _move_health_bar(self, *args) -> None:
         """
         Callback triggered during sliding animation. Moves the health_bar along with the PlayerToken
         :param args: This function receives variable number of arguments. They cannot be typehint
@@ -267,7 +267,17 @@ class PlayerToken(CharacterToken):
             self.size[0] * 0.8 * (1 - self.remaining_health),
             self.size[1] * 0.1,
         )
-        
+
+    def _remove_health_bar(self) -> None:
+        """
+        Removes the health bar
+        :return: None
+        """
+        for bar in [self.green_bar, self.red_bar]:
+            self.dungeon.canvas.after.remove(bar)
+        self.green_bar = None
+        self.red_bar = None
+
     def display_selection_circle(self) -> None:
         """
         Displays the selection circle around the CharacterToken
@@ -284,9 +294,9 @@ class PlayerToken(CharacterToken):
                 width=1.5,
             )
 
-        self.bind(pos=self.move_selection_circle, size=self.move_selection_circle)
+        self.bind(pos=self._move_selection_circle, size=self._move_selection_circle)
 
-    def move_selection_circle(self, *args) -> None:
+    def _move_selection_circle(self, *args) -> None:
         """
         Callback triggered during sliding animation. Moves the selection_circle along with the PlayerToken
         :param args: This function receives variable number of arguments. They cannot be typehint
@@ -299,6 +309,15 @@ class PlayerToken(CharacterToken):
             + self.height / 2,
             self.width / 2,  # radius of circle = CharacterToken.width / 2
         )
+
+    def remove_selection_circle(self) -> None:
+        """
+        Removes the selection circle
+        :return: None
+        """
+        self.dungeon.canvas.remove(self.circle)
+        self.circle = None
+        self.circle_color = None
 
     def delete_token(self, tile: Tile) -> None:
         """
@@ -329,38 +348,18 @@ class PlayerToken(CharacterToken):
                 start_position, end_position, self.character.blocked_by
             )
             self.dungeon.activate_which_tiles()  # tiles disabled while moving
-            self.slide_one_step()
+            self._slide_one_step()
 
-    def slide_one_step(self) -> None:
+    def _slide_one_step(self) -> None:
         """
         Ends the setup of the slide animation and starts it
         :return: None
         """
         animation = super().setup_animation()
-        animation.bind(on_progress=self.move_selection_circle)
-        animation.bind(on_progress=self.move_health_bar)
+        animation.bind(on_progress=self._move_selection_circle)
+        animation.bind(on_progress=self._move_health_bar)
         self.character.stats.remaining_moves -= 1
         animation.start(self) # change with self.shape if fails
-
-    def _remove_health_bar(self) -> None:
-        """
-        Removes the health bar
-        :return: None
-        """
-        for bar in [self.green_bar, self.red_bar]:
-            self.dungeon.canvas.after.remove(bar)
-        self.green_bar = None
-        self.red_bar = None
-
-    def remove_selection_circle(self) -> None:
-        """
-        Removes the selection circle
-        :return: None
-        """
-        self.dungeon.canvas.remove(self.circle)
-        self.circle = None
-        self.circle_color = None
-
 
 class MonsterToken(CharacterToken):
     """
@@ -380,9 +379,9 @@ class MonsterToken(CharacterToken):
         if self.path is None:  # if it cannot move, will try directly to attack players
             self.character.behave(self.get_current_tile())
         else:
-            self.slide_one_step()
+            self._slide_one_step()
 
-    def slide_one_step(self) -> None:
+    def _slide_one_step(self) -> None:
         """
         Starts the slide animation
         :return: None

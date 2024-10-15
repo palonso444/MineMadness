@@ -184,7 +184,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                     game.next_character()
 
                 else:
-                    game.active_character.token.draw_selection_circle()
+                    game.active_character.token.display_selection_circle()
                     game.update_interface()
                     # health must be updated here after setting player as active character
                     game.update_switch("health")
@@ -202,7 +202,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                 game.active_character = monsters.Monster.data[game.active_character_id]
                 game.update_interface()
                 game.update_switch("health")
-                game.active_character.token.move_monster_token()
+                game.active_character.token.move_token()
 
     def on_player_exited(self, *args):
         """

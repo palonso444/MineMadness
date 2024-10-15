@@ -64,7 +64,7 @@ class Monster(Character, ABC):
     def fight_on_tile(self, opponent_tile: Tile) -> None:
         opponent = opponent_tile.tokens["player"].character
         opponent = self.fight_opponent(opponent)
-        opponent.token.percentage_natural_health = (
+        opponent.token.remaining_health = (
                 opponent.stats.health / opponent.stats.natural_health
         )
 
@@ -286,7 +286,7 @@ class Monster(Character, ABC):
         self.token.start = start_tile
         self.token.goal = end_tile
         self.token.path = [end_position]
-        self.token.slide(self.token.path)
+        self.token.setup_animation(self.token.path)
 
     def _find_accesses(
         self, target_tile: tiles.Tile, smart: bool = True

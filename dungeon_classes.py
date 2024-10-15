@@ -277,6 +277,7 @@ class DungeonLayout(GridLayout):
         token_args = {
             'kind': token_kind,
             'species': token_species,
+            'position': tile.position,
             'character': character,
             'dungeon_instance': self,
             'pos': tile.pos,

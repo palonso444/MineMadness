@@ -20,7 +20,7 @@ class FadingToken(Widget):
 
             fading_out = Animation(opacity=0, duration=self.duration)
             if isinstance(self, EffectToken):
-                fading_out.bind(on_complete=self.character_token.remove_token_if_in_queue)
+                fading_out.bind(on_complete=self.character_token.remove_attribute_if_in_queue)
             fading_out.start(self)
 
         fading = Animation(opacity=self.final_opacity, duration=self.duration)

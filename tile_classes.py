@@ -147,7 +147,7 @@ class Tile(Button):
             start_tile = self.dungeon.get_tile(player.position)
 
             if start_tile.tokens["player"].character == player:
-                start_tile.tokens["player"].move_player_token(start_tile, self)
+                start_tile.tokens["player"].move_token(player.position, self.position)
 
             #else:
                 #start_tile.second_token.move_player_token(start_tile, self)

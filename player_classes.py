@@ -174,7 +174,7 @@ class Player(Character, ABC, EventDispatcher):
                     continue
                 i += 1
 
-        self.token.fading_tokens_queue = attribute_names
+        self.token.modified_attributes = attribute_names
 
     def get_range(self, dungeon_layout, range_kind: str):
         # TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT

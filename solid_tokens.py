@@ -1,22 +1,30 @@
 from __future__ import annotations
+from abc import ABC, ABCMeta, abstractmethod
 from kivy.graphics import Ellipse, Rectangle, Color, Line, VertexInstruction  # type: ignore
 from kivy.animation import Animation
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ListProperty
 
-from fading_tokens import DamageToken, DiggingToken, EffectToken
+from fading_tokens import DamageToken, DiggingToken, EffectToken, FadingToken
 
+class WidgetABCMeta(ABCMeta,type(Widget)):
+    """
+    Base metaclass allowing to make SolidToken an abstract class (otherwise there is conflict because inherits from
+    Widget, so it cannot inherit from ABC inherently)
+    """
+    pass
 
-class SolidToken(Widget):
+class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
     """
-    Base class defining all Tokens that stay on the board for extended periods of time
+    Base abstract class defining all Tokens that stay on the board for extended periods of time
     """
-    def __init__(self, kind: str, species:str, character: Character, dungeon_instance: DungeonLayout, **kwargs):
+    def __init__(self, kind: str, species:str, position: tuple[int,int],
+                 character: Character, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(**kwargs)
 
         self.kind: str = kind
         self.species: str = species
-        self.position: tuple [int:int] = None   # IMPLEMENT
+        self.position: tuple [int:int] = position
         self.character: Character = character
         self.dungeon: DungeonLayout = dungeon_instance
         self.source: str = "./tokens/" + self.species + "token.png"
@@ -37,7 +45,7 @@ class SolidToken(Widget):
         Returns the Tile corresponding to the current position of the Token
         :return:
         """
-        return self.dungeon.get_tile(self.character.position)   # this won't work for SceneryTokens! position attribute for Tokens
+        return self.dungeon.get_tile(self.position)   # this won't work for SceneryTokens! position attribute for Tokens
 
     def delete_token(self, tile: Tile) -> None:
         """
@@ -52,8 +60,9 @@ class SceneryToken(SolidToken):
     """
     Base class defining Tokens without associated Character
     """
-    def __init__(self, kind: str, species: str, character: None, dungeon_instance: DungeonLayout, **kwargs):
-        super().__init__(kind, species, character, dungeon_instance, **kwargs)
+    def __init__(self, kind: str, species: str, position: tuple[int,int],
+                 character: None, dungeon_instance: DungeonLayout, **kwargs):
+        super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
         with self.dungeon.canvas:
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
@@ -69,13 +78,13 @@ class SceneryToken(SolidToken):
             DiggingToken(pos=self.pos, size=self.size, dungeon=self)
 
 
-class CharacterToken(SolidToken):
+class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
     """
-    Base class defining all Tokens with associated Character
+    Base abstract class defining all Tokens with associated Character
     """
-    def __init__(self, kind: str, species: str, character: CharacterToken,
+    def __init__(self, kind: str, species: str, position: tuple[int,int], character: CharacterToken,
                  dungeon_instance: DungeonLayout, **kwargs):
-        super().__init__(kind, species, character, dungeon_instance, **kwargs)
+        super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
         self.path: list[tuple[int,int]] | None = None
 
         with self.dungeon.canvas:
@@ -84,13 +93,19 @@ class CharacterToken(SolidToken):
 
         self.bind(pos=self.update_pos)
 
-    # refactor to get_movement_animation
-    def slide(self) -> Animation:
+    @abstractmethod
+    def slide_one_step(self) -> None:
+        """
+        Abstractmethod for starting the slide animation
+        :return: None
+        """
+        pass
+
+    def setup_animation(self) -> Animation:
         """
         Instantiates the Animation object to slide the Token 1 step along the route determined in CharacterToken.path
         :return: Animation object ready to start
         """
-        self.character.stats.remaining_moves -= 1
         next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
         animation = Animation(pos=next_tile.pos, duration=0.2)
         animation.bind(on_complete=lambda animation_obj, token_shape: self.on_slide_completed(animation,
@@ -106,11 +121,12 @@ class CharacterToken(SolidToken):
         :return: None
         """
         if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
-            self.slide()
+            self.slide_one_step()
 
         # on tile release check that avoid moving character if is not meant to move
         else:
             next_tile.set_token(self)
+            self.position = next_tile.position
             self.character.position = next_tile.position
             self.pos: tuple[int,int] = self.shape.pos
             self.path: list[tuple[int,int]] | None = None
@@ -135,52 +151,74 @@ class PlayerToken(CharacterToken):
     """
     Class defining Tokens representing Players
     """
-    percentage_natural_health = NumericProperty(None)
-    fading_tokens_queue = ListProperty([])
+    remaining_health = NumericProperty(None)
+    modified_attributes = ListProperty([])
 
-    def __init__(self, kind: str, species: str, character: Character,
+    def __init__(self, kind: str, species: str, character: Player, position: tuple[int,int],
                  dungeon_instance: DungeonLayout, **kwargs):
-        super().__init__(kind, species, character, dungeon_instance, **kwargs)
+        super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
         self.circle: VertexInstruction | None = None
         self.circle_color: VertexInstruction | None = None
         self.green_bar: VertexInstruction | None = None
         self.red_bar: VertexInstruction | None = None
 
-        self.bind(percentage_natural_health=self.display_health_bar)
+        self.bind(remaining_health=self.display_health_bar)
         self.post_init()
 
-    def post_init(self):
-        self.percentage_natural_health = (
+    def post_init(self) -> None:
+        """
+        Changes the value of remaining_health to initialize health bar
+        :return: None
+        """
+        self.remaining_health = (
                 self.character.stats.health / self.character.stats.natural_health
         )
 
     @staticmethod
-    def on_fading_tokens_queue(character_token, fading_tokens_queue):
-        if len(fading_tokens_queue) > 0:
-            character_token.show_effect_token(fading_tokens_queue[0], character_token.pos,
+    def on_modified_attributes(character_token: CharacterToken, modified_attributes: list[str]) -> None:
+        """
+        Shows FadingTokens for the effect modifying the next attribute on the queue
+        :param character_token: CharacterToken on which FadingToken is shown
+        :param modified_attributes: queue of currently modified attributes
+        :return: 
+        """
+        if len(modified_attributes) > 0:
+            character_token.show_effect_token(modified_attributes[0], character_token.pos,
                                               character_token.size, effect_ends=True)
 
-    def remove_token_if_in_queue(self, animation, fading_token):
+    def remove_attribute_if_in_queue(self, animation: Animation, fading_token:FadingToken) -> None:
         """
-        Bound to end of fading_out animation
-        :param animation:
-        :param fading_token:
-        :return:
+        Triggered when fading_out animation of FadingToken is completed
+        :param animation: animation object of fading_out
+        :param fading_token: FadingToken fading out
+        :return: None
         """
-        if fading_token.item in self.fading_tokens_queue:
-            self.fading_tokens_queue.remove(fading_token.item)
+        if fading_token.item in self.modified_attributes:
+            self.modified_attributes.remove(fading_token.item)
 
-    def show_effect_token(self, item, pos, size, effect_ends=False):
+    def show_effect_token(self, attribute: str, pos: tuple [float,float],
+                          size: tuple [float,float], effect_ends: bool =False) -> None:
         """
-        Item is the item causing effect, see tokens.EffectToken class for more details.
+        Shows the FadingToken of the effect modifying the specified character attribute
+        :param attribute: attribute being modified
+        :param pos: position of (on the screen) of the CharacterToken that shows the FadingToken
+        :param size: size of the CharacterToken that shows the FadingToken
+        :param effect_ends: specifies if the effect ends (red FadingToken) of begins (green FadingToken)
+        :return: 
         """
         with self.dungeon.canvas:
-            EffectToken(item=item, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
+            EffectToken(item=attribute, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
     @staticmethod
-    def display_health_bar(token, percentage_natural_health):
-
+    def display_health_bar(token: PlayerToken, percent_natural_health: float) -> None:
+        """
+        Callback triggered when Player.percent_natural_health is modified. Displays the updated health_bar
+        depending on the current percent_natural_health
+        :param token: PlayerToken showing the bar
+        :param percent_natural_health: current percent_natural_health
+        :return: None
+        """
         if token.green_bar is not None and token.red_bar is not None:
             token.remove_health_bar()
 
@@ -189,32 +227,35 @@ class PlayerToken(CharacterToken):
         bar_length = token.size[0] * 0.8  # total horizontal length of the bar
         bar_thickness = token.size[1] * 0.1
 
-        # canvas.after to ensure bar is displayed on top of CharacterToken
         with token.dungeon.canvas.after:
             # green
             token.bar_color = Color(0, 1, 0, 1)
             token.green_bar = Rectangle(
                 pos=(bar_pos_x, bar_pos_y),
-                size=(bar_length * percentage_natural_health, bar_thickness),
+                size=(bar_length * percent_natural_health, bar_thickness),
             )
             # red
             token.bar_color = Color(1, 0, 0, 1)
             token.red_bar = Rectangle(
                 # x position of red bar is bar_pos_x + length of green portion of bar
                 pos=(bar_pos_x + token.green_bar.size[0], bar_pos_y),
-                size=(bar_length * (1 - percentage_natural_health), bar_thickness),
+                size=(bar_length * (1 - percent_natural_health), bar_thickness),
             )
 
         token.bind(pos=token.move_health_bar, size=token.move_health_bar)
 
-    def move_health_bar(self, *args):
-
+    def move_health_bar(self, *args) -> None:
+        """
+        Callback triggered during sliding animation. Moves the health_bar along with the PlayerToken
+        :param args: This function receives variable number of arguments. They cannot be typehint
+        :return: None
+        """
         self.green_bar.pos = (
             self.shape.pos[0] + self.size[0] * 0.1,
             self.shape.pos[1] + self.size[1] * 0.1,
         )
         self.green_bar.size = (
-            self.size[0] * 0.8 * self.percentage_natural_health,
+            self.size[0] * 0.8 * self.remaining_health,
             self.size[1] * 0.1,
         )
         self.red_bar.pos = (
@@ -223,19 +264,25 @@ class PlayerToken(CharacterToken):
             self.shape.pos[1] + (self.size[1] * 0.1),
         )
         self.red_bar.size = (
-            self.size[0] * 0.8 * (1 - self.percentage_natural_health),
+            self.size[0] * 0.8 * (1 - self.remaining_health),
             self.size[1] * 0.1,
         )
 
-    def remove_health_bar(self):
-
+    def remove_health_bar(self) -> None:
+        """
+        Removes the health bar
+        :return: None
+        """
         for bar in [self.green_bar, self.red_bar]:
             self.dungeon.canvas.after.remove(bar)
         self.green_bar = None
         self.red_bar = None
 
-    def draw_selection_circle(self):
-
+    def display_selection_circle(self) -> None:
+        """
+        Displays the selection circle around the CharacterToken
+        :return: None
+        """
         with self.dungeon.canvas:
             self.circle_color = Color(1, 1, 0, 1)
             self.circle = Line(
@@ -247,10 +294,14 @@ class PlayerToken(CharacterToken):
                 width=1.5,
             )
 
-        self.bind(pos=self.update_circle, size=self.update_circle)
+        self.bind(pos=self.move_selection_circle, size=self.move_selection_circle)
 
-    def update_circle(self, *args):
-
+    def move_selection_circle(self, *args) -> None:
+        """
+        Callback triggered during sliding animation. Moves the selection_circle along with the PlayerToken
+        :param args: This function receives variable number of arguments. They cannot be typehint
+        :return: None
+        """
         self.circle.circle = (  # self is CharacterToken, self.circle is Line
             self.shape.pos[0]  # center_x of circle = CharacterToken.pos[0] (x)
             + self.width / 2,
@@ -259,36 +310,56 @@ class PlayerToken(CharacterToken):
             self.width / 2,  # radius of circle = CharacterToken.width / 2
         )
 
-    def remove_selection_circle(self):
+    def remove_selection_circle(self) -> None:
+        """
+        Removes the selection circle
+        :return: None
+        """
         self.dungeon.canvas.remove(self.circle)
         self.circle = None
         self.circle_color = None
 
-    def delete_token(self, tile: Tile):
+    def delete_token(self, tile: Tile) -> None:
+        """
+        Completely erases the PlayerToken from the board along with the health bar and the selection circle
+        :param tile: Tile in which the PlayerToken is located
+        :return: None
+        """
         super().delete_token(tile)
         if self.circle is not None:  # to avoid interferences with MineMadnessGame.on_character_done()
             self.remove_selection_circle()
-        self.remove_health_bar()
+        if self.green_bar is not None and self.red_bar is not None:
+            self.remove_health_bar()
 
-    def move_player_token(self, start_tile, end_tile):
-
-        if start_tile == end_tile:  # if character stays in place
+    def move_token(self, start_position: tuple [int,int], end_position: tuple[int,int]) -> None:
+        """
+        Initializes the movement of the PlayerToken
+        :param start_position: starting position
+        :param end_position: target position
+        :return: None
+        """
+        if start_position == end_position:  # if character stays in place
             self.character.stats.remaining_moves = 0
             self.dungeon.game.update_switch("character_done")
 
         else:
-            start_tile.remove_token(self.kind)
+            self.dungeon.get_tile(start_position).remove_token(self.kind)
             self.path = self.dungeon.find_shortest_path(
-                start_tile.position, end_tile.position, self.character.blocked_by
+                start_position, end_position, self.character.blocked_by
             )
             self.dungeon.activate_which_tiles()  # tiles disabled while moving
-            self.slide()
+            self.slide_one_step()
 
 
-    def slide(self):
-        animation = super().slide()
-        animation.bind(on_progress=self.update_circle)
+    def slide_one_step(self) -> None:
+        """
+        Ends the setup of the slide animation and starts it
+        :return: None
+        """
+        animation = super().setup_animation()
+        animation.bind(on_progress=self.move_selection_circle)
         animation.bind(on_progress=self.move_health_bar)
+        self.character.stats.remaining_moves -= 1
         animation.start(self) # change with self.shape if fails
 
 
@@ -296,18 +367,27 @@ class MonsterToken(CharacterToken):
     """
     Class defining Tokens representing Monsters
     """
-    def __init__(self, kind, species, character, dungeon_instance, **kwargs):
-        super().__init__(kind, species, character, dungeon_instance, **kwargs)
+    def __init__(self, kind: str, species: str, position: tuple [int,int],
+                 character: Monster, dungeon_instance: DungeonLayout, **kwargs):
+        super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
-    def move_monster_token(self):
-
+    def move_token(self) -> None:
+        """
+        Initializes the movement of the MonsterToken
+        :return: None
+        """
         self.path = self.character.move()
 
         if self.path is None:  # if it cannot move, will try directly to attack players
             self.character.behave(self.get_current_tile())
         else:
-            self.slide()
+            self.slide_one_step()
 
-    def slide(self):
-        animation = super().slide()
-        animation.start(self) # change with self.shape if fails
+    def slide_one_step(self) -> None:
+        """
+        Starts the slide animation
+        :return: None
+        """
+        animation = super().setup_animation()
+        self.character.stats.remaining_moves -= 1
+        animation.start(self)

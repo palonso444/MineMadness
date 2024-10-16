@@ -138,9 +138,9 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             and self.active_character.stats.remaining_moves > 0
         ):
             if self.active_character.using_dynamite:
-                self.dynamic_movement_range("shooting")
+                self.activate_accessible_tiles("shooting")
             else:
-                self.dynamic_movement_range()  # checks if player can still move
+                self.activate_accessible_tiles()  # checks if player can still move
 
         else:  # if self.active_character remaining moves == 0
             if isinstance(self.active_character, players.Player):
@@ -194,9 +194,9 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                     game.update_switch("weapons")
 
                     if game.active_character.using_dynamite:
-                        game.dynamic_movement_range("shooting")
+                        game.activate_accessible_tiles("shooting")
                     else:
-                        game.dynamic_movement_range()
+                        game.activate_accessible_tiles()
 
             else:  # if monsters turn and monsters in the game
 
@@ -235,11 +235,10 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         else:  # if end of characters list reached (all have moved)
             self.update_switch("turn")
 
-    def dynamic_movement_range(self, range_kind: str = "movement"):
+    def activate_accessible_tiles(self) -> None:
         """
         Gets the total range of activable tiles (player movement range and other player positions if player.
-        did not move if monsters are present, otherwhise all other players positions).
-        :param range_kind: movement or dynamite.
+        did not move if monsters are present, otherwise all other players positions).
         :return: None
         """
 
@@ -249,13 +248,13 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             }
         else:
             players_not_yet_active = {
-                player.position
+                player.token.position
                 for player in players.Player.data
                 if not player.has_moved
             }
 
-        player_movement_range = self.active_character.get_range(
-            self.dungeon, range_kind
+        player_movement_range = self.active_character.token.get_movement_range(
+            self.active_character.stats.remaining_moves
         )
         positions_in_range = players_not_yet_active.union(player_movement_range)
         self.dungeon.activate_which_tiles(positions_in_range)

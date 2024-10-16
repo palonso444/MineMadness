@@ -176,62 +176,6 @@ class Player(Character, ABC, EventDispatcher):
 
         self.token.modified_attributes = attribute_names
 
-    def get_range(self, dungeon_layout, range_kind: str):
-        # TODO: DO NOT ACTIVATE IF WALLS ARE PRESENT
-        # TODO: better as method of Player Class
-
-        mov_range: set[tuple] = set()
-        if range_kind == "movement":
-            remaining_moves = self.stats.remaining_moves
-        elif range_kind == "shooting":
-            remaining_moves = self.stats.shooting_range
-
-        # GET CURRENT PLAYER POSITION
-        mov_range.add((self.position[0], self.position[1]))
-
-        for move in range(
-            1, remaining_moves + 1
-        ):  # starts at 1 not to include current player position again
-
-            # INCLUDE ALL POSSIBLE MOVES ON THE SAME ROW AS PLAYER
-            self._get_lateral_range(self.position[0], move, mov_range, dungeon_layout)
-            remaining_moves -= 1
-
-            if self.position[0] - move >= 0:  # if height within range up
-
-                # INCLUDE ALL POSSIBLE MOVES DIRECTION UP
-                mov_range.add(
-                    (self.position[0] - move, self.position[1])
-                )  # one step up.
-
-                for side_move in range(1, remaining_moves + 1):  # one step both sides
-
-                    self._get_lateral_range(
-                        self.position[0] - move,
-                        side_move,
-                        mov_range,
-                        dungeon_layout,
-                    )
-
-            if (
-                self.position[0] + move < dungeon_layout.rows
-            ):  # if height within range down
-
-                # INCLUDE ALL POSSIBLE MOVES DIRECTION DOWN
-                mov_range.add(
-                    (self.position[0] + move, self.position[1])
-                )  # one step down.
-
-                for side_move in range(1, remaining_moves + 1):  # one step both sides
-
-                    self._get_lateral_range(
-                        self.position[0] + move,
-                        side_move,
-                        mov_range,
-                        dungeon_layout,
-                    )
-
-        return mov_range
 
     def behave(self, tile:Tile) -> None:
         if tile.has_token("pickable"):
@@ -368,16 +312,6 @@ class Player(Character, ABC, EventDispatcher):
             "strength": self.stats.natural_strength,
         }
 
-    def _get_lateral_range(
-        self, y_position: int, side_move: int, mov_range: list[tuple], dungeon_layout
-    ) -> None:
-
-        if self.position[1] - side_move >= 0:  # if room in left side
-            mov_range.add((y_position, self.position[1] - side_move))  # one step left.
-
-        if self.position[1] + side_move < dungeon_layout.cols:  # if room in right side
-            mov_range.add((y_position, self.position[1] + side_move))  # one step right
-
     def _level_up_health(self, increase: int) -> None:
 
         self.stats.natural_health += increase
@@ -388,7 +322,7 @@ class Player(Character, ABC, EventDispatcher):
         self.stats.natural_moves += increase
         self.stats.moves += increase
         self.stats.remaining_moves += increase
-        self.dungeon.game.dynamic_movement_range()
+        self.dungeon.game.activate_accessible_tiles()
 
     def _level_up_strength(self, increase: tuple[int]) -> None:
 
@@ -466,7 +400,7 @@ class Sawyer(Player):
         return damage
 
     def subtract_weapon(self):
-        game=self.dungeon.game
+        game=self.token.dungeon.game
         self.stats.weapons -= 1
         game.update_switch("weapons")
 

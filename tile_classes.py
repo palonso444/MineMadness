@@ -66,18 +66,18 @@ class Tile(Button):
             return True
 
         path = self.dungeon.find_shortest_path(
-            self.dungeon.get_tile(player.position).position, self.position, player.blocked_by
+            self.dungeon.get_tile(player.token.position).position, self.position, player.blocked_by
         )
 
         dynamite_path = self.dungeon.find_shortest_path(
-            self.dungeon.get_tile(player.position).position,
+            self.dungeon.get_tile(player.token.position).position,
             self.position,
             tuple(item for item in player.blocked_by if item != "monster"),
         )
 
         if (
                 self.has_token("wall", "rock")
-                and self.dungeon.are_nearby(self.position, player.position)
+                and self.dungeon.are_nearby(self.position, player.token.position)
                 and player.stats.remaining_moves >= player.stats.digging_moves
                 and not player.using_dynamite
         ):
@@ -87,7 +87,7 @@ class Tile(Button):
 
         if self.has_token("wall", "granite") and player.name == "Hawkins":
             if (
-                    self.dungeon.are_nearby(self.position, player.position)
+                    self.dungeon.are_nearby(self.position, player.token.position)
                     and player.stats.remaining_moves >= player.stats.digging_moves
                     and player.stats.shovels > 0
             ):
@@ -100,7 +100,7 @@ class Tile(Button):
 
         if (
                 self.has_token("monster")
-                and self.dungeon.are_nearby(self.position, player.position)
+                and self.dungeon.are_nearby(self.position, player.token.position)
                 and (player.stats.weapons > 0 or "fighting" in player.free_actions)
         ):
             return True
@@ -144,13 +144,10 @@ class Tile(Button):
             game.update_switch("character_done")
 
         else:
-            start_tile = self.dungeon.get_tile(player.position)
+            start_tile = self.dungeon.get_tile(player.token.position)
 
             if start_tile.tokens["player"].character == player:
-                start_tile.tokens["player"].move_token(player.position, self.position)
-
-            #else:
-                #start_tile.second_token.move_player_token(start_tile, self)
+                start_tile.tokens["player"].move_token(player.token.position, self.position)
 
     def fall_dynamite_on_tile(self):
 

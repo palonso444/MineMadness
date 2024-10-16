@@ -46,9 +46,7 @@ class Character(ABC):
         self.name: str | None = None
         self.id: int | None = None   # initialized in DungeonLayot.place_item()
         self.kind: str | None = None
-        self.position: tuple[int:int] | None = None  # initialized in DungeonLayot.place_item()
         self.token: Token | None = None  # initialized in DungeonLayot.place_item()
-        self.dungeon: DungeonLayout | None = None  # initialized in DungeonLayot.place_item()
         self.stats: CharacterStats | None = None
         self.blocked_by: tuple | None = None
         self.cannot_share_tile_with: tuple | None = None
@@ -58,17 +56,12 @@ class Character(ABC):
         self.ability_display: str | None = None  # needed for AbilityButton.display_text()
 
 
-    def setup_character(self, position:tuple[int:int], dungeon: DungeonLayout):
+    def setup_character(self):
         """
         Sets up the character when its CharacterToken is placed onto the tile
-        :param tile: tile upon the CharacterToken is placed
-        :param dungeon: dungeon in which the tile belongs
         :return: None
         """
-
         self.id = len(self.__class__.data)
-        self.position = position
-        self.dungeon = dungeon
         self.__class__.data.append(self)
 
     @abstractmethod

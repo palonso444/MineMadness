@@ -30,12 +30,12 @@ class AbilityButton(ToggleButton):
                 character.token.show_effect_token(
                     "dynamite", character.token.shape.pos, character.token.shape.size
                 )
-                self.game.dynamic_movement_range("shooting")
+                self.game.activate_accessible_tiles("shooting")
 
             elif value == "down":
                 character.stats.remaining_moves -= 1
                 character.ability_active = True
-                self.game.dynamic_movement_range()
+                self.game.activate_accessible_tiles()
 
                 if character.name == "Sawyer":
                     character.special_items["powder"] -= 1
@@ -56,7 +56,7 @@ class AbilityButton(ToggleButton):
                     character.unhide()
 
                 elif character.name == "Hawkins":
-                    self.game.dynamic_movement_range()
+                    self.game.activate_accessible_tiles()
 
                 elif character.name == "Crusher Jane":
                     character.token.show_effect_token(
@@ -81,7 +81,7 @@ class Interfacebutton(Button):
         self.game.inv_object = item  # this disables the button, if necessary
 
         character.stats.remaining_moves -= self.stats.use_time
-        self.game.dynamic_movement_range()
+        self.game.activate_accessible_tiles()
 
         character.check_if_overdose(item)
 

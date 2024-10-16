@@ -1,5 +1,7 @@
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
+from audioop import reverse
+
 from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
 from kivy.animation import Animation
 from kivy.uix.widget import Widget
@@ -81,7 +83,7 @@ class SceneryToken(SolidToken):
 class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
     """
     Base abstract class defining all Tokens with associated Character. It represents all the aspects related
-    to Character display (picture and health bar, if applicable) and its movement on the board
+    to their physical representation on the board (picture, position, health bar(if applicable)) and its movement
     """
     def __init__(self, kind: str, species: str, position: tuple[int,int], character: Character,
                  dungeon_instance: DungeonLayout, **kwargs):
@@ -129,7 +131,6 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         else:
             current_tile.set_token(self)
             self.position = current_tile.position
-            self.character.position = current_tile.position
             self.pos: tuple[int,int] = self.shape.pos
             self.path: list[tuple[int,int]] | None = None
 
@@ -322,6 +323,47 @@ class PlayerToken(CharacterToken):
             self.remove_selection_circle()
         if self.green_bar is not None and self.red_bar is not None:
             self._remove_health_bar()
+
+    def get_movement_range(self, steps: int) -> set[tuple[int,int]]:
+        """
+        Returns a set with all the potential positions of the Tiles where the Token can move
+        :param steps: remaining_moves of the Token.Character
+        :return: set with the positions of all Tiles within movement range
+        """
+        mov_range = self._get_horizontal_range(self.position[0], steps)  # row where token is
+
+        vertical_shift = 1
+        for lateral_steps in range(steps, 0, -1): # 0 is not inclusive but Token row is already added
+
+            y_position = self.position [0] - vertical_shift  # move upwards
+            if y_position >= 0:
+                mov_range = mov_range.union(self._get_horizontal_range(y_position, lateral_steps))
+
+            y_position = self.position[0] + vertical_shift  # move downwards
+            if y_position < self.dungeon.rows:
+                mov_range = mov_range.union(self._get_horizontal_range(y_position, lateral_steps))
+
+            vertical_shift += 1
+
+        return mov_range
+
+    def _get_horizontal_range(self, y_position: int, lateral_steps: int) -> set[tuple[int,int]]:
+        """
+        Returns the positions of all Tiles within a row and within the range given by lateral_steps
+        :param y_position: y_axis value of the row. x_axis is where the Token sits.
+        :param lateral_steps: number of steps to take to each side
+        :return: set with all the Tile positions within the row
+        """
+        horizontal_range: set = set()
+
+        for step in range(0, lateral_steps):
+            if self.position[1] - step >= 0:
+                horizontal_range.add((y_position, self.position[1] - step)) # add whole row left
+
+            if self.position[1] + step < self.dungeon.cols:
+                horizontal_range.add((y_position, self.position[1] + step))  # add whole row right
+
+        return horizontal_range
 
     def move_token(self, start_position: tuple [int,int], end_position: tuple[int,int]) -> None:
         """

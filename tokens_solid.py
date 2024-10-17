@@ -330,12 +330,12 @@ class PlayerToken(CharacterToken):
         :param steps: remaining_moves of the Token.Character
         :return: set with the positions of all Tiles within movement range
         """
-        mov_range = self._get_horizontal_range(self.position[0], steps)  # row where token is
+        mov_range: set = self._get_horizontal_range(self.position[0], steps)  # row where token is
 
-        vertical_shift = 1
+        vertical_shift: int = 1
         for lateral_steps in range(steps, 0, -1): # 0 is not inclusive but Token row is already added
 
-            y_position = self.position [0] - vertical_shift  # move upwards
+            y_position: int = self.position [0] - vertical_shift  # move upwards
             if y_position >= 0:
                 mov_range = mov_range.union(self._get_horizontal_range(y_position, lateral_steps))
 

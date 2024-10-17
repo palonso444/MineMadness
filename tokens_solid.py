@@ -381,7 +381,7 @@ class PlayerToken(CharacterToken):
             self.path = self.dungeon.find_shortest_path(
                 start_position, end_position, self.character.blocked_by
             )
-            self.dungeon.activate_which_tiles()  # tiles disabled while moving
+            self.dungeon.enable_tiles()  # tiles disabled while moving
             self._slide_one_step()
 
     def _slide_one_step(self) -> None:

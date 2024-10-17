@@ -294,7 +294,7 @@ class DungeonLayout(GridLayout):
             token = tokens.SceneryToken(**token_args)
 
         tile.tokens[token_kind] = token
-        tile.bind(pos=tile.update_tokens, size=tile.update_tokens)
+        tile.bind(pos=tile.update_tokens_size_and_pos, size=tile.update_tokens_size_and_pos)
 
     def get_tile(self, position: tuple [int:int]) -> Tile:
         """
@@ -341,19 +341,23 @@ class DungeonLayout(GridLayout):
         """
         return 0 <= position[0] < self.rows and 0 <= position[1] < self.cols
 
-    def activate_which_tiles(self, tile_positions: list[tuple[int:int]] | None =None) -> None:
+
+    def disable_all_tiles(self):
         """
-        Activates the activable tiles within a range of positions
-        :param tile_positions: coordinates of the tiles to activate if activable
+        Disables all Tiles of the DungeonLayout
         :return: None
         """
         for tile in self.children:
-            # tile is not disabled if positions matches any in tile_positions and is tile.is_activable()
-            tile.disabled = not (
-                    tile_positions is not None and
-                    any(tile.row == pos[0] and tile.col == pos[1] for pos in tile_positions) and
-                    tile.is_activable
-            )
+            tile.disabled = True
+
+    def enable_tiles(self, tile_positions: set[tuple[int:int]]) -> None:
+        """
+        Activates the Tiles within a range of positions
+        :param tile_positions: coordinates of the tiles to activate if activable
+        :return: None
+        """
+        for position in tile_positions:
+            self.get_tile(position).check_if_enable()
 
     def scan_tiles(self, token_kinds: list[str], exclude: bool=False) -> set[tuple[int:int]]:
         """

@@ -200,7 +200,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
             else:  # if monsters turn and monsters in the game
 
-                game.dungeon.activate_which_tiles()  # tiles deactivated in monster turn
+                game.dungeon.enable_tiles()  # tiles deactivated in monster turn
                 game.active_character = monsters.Monster.data[game.active_character_id]
                 game.update_interface()
                 game.update_switch("health")
@@ -257,7 +257,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             self.active_character.stats.remaining_moves
         )
         positions_in_range = players_not_yet_active.union(player_movement_range)
-        self.dungeon.activate_which_tiles(positions_in_range)
+        self.dungeon.enable_tiles(positions_in_range)
 
     def switch_character(self, new_active_character):
         """

@@ -41,41 +41,47 @@ class Tile(Button):
         self.tokens[token_kind] = None
 
     @staticmethod
-    def update_tokens(tile, tile_pos):
+    def update_tokens_size_and_pos(tile, tile_pos):
         for token in tile.tokens.values():
             if token is not None:
                 token.pos = tile_pos
                 token.size = tile.size
 
-    @property
-    def is_activable(self):
-
-        player = self.dungeon.game.active_character
+    def check_if_enable(self):
 
         if self.has_token("player"):
+            self._check_with_player_token()
+        elif self.has_token("monster"):
+            self._check_with_monster_token()
+        elif self.has_token("wall"):
+            self._check_with_wall_token()
 
-            if player.using_dynamite:
-                return False
-            if self.tokens["player"].character == player:
-                return True
-            if (
-                    self.tokens["player"].character.has_moved
-                    and not Monster.all_dead()
-            ):
-                return False
-            return True
+    def _check_with_monster_token(self):
+        pass
 
-        path = self.dungeon.find_shortest_path(
-            self.dungeon.get_tile(player.token.position).position, self.position, player.blocked_by
-        )
 
-        dynamite_path = self.dungeon.find_shortest_path(
-            self.dungeon.get_tile(player.token.position).position,
-            self.position,
-            tuple(item for item in player.blocked_by if item != "monster"),
-        )
+    def _check_with_wall_token(self):
 
-        if (
+        active_player = self.dungeon.game.active_character
+
+        if active_player.using_dynamite:
+            return not self.has_token("wall","rock")
+
+        elif self.dungeon.are_nearby(self.position, active_player.token.position):
+
+            if self.has_token("wall","rock"):
+                return (active_player.stats.remaining_moves >= active_player.stats.digging_moves and
+                        (active_player.stats.shovels > 0 or
+                         "digging" in active_player.free_actions))
+
+            elif self.has_token("wall","granite"):
+                return ("digging" in active_player.free_actions and
+                        active_player.stats.remaining_moves >= active_player.stats.digging_moves and
+                        active_player.stats.shovels > 0)
+
+        return False
+
+        '''        if (
                 self.has_token("wall", "rock")
                 and self.dungeon.are_nearby(self.position, player.token.position)
                 and player.stats.remaining_moves >= player.stats.digging_moves
@@ -96,7 +102,49 @@ class Tile(Button):
         if (
                 self.has_token("wall", "granite") or self.has_token("wall", "quartz")
         ) and player.using_dynamite():
-            return True
+            return True'''
+
+    def _check_with_player_token(self):
+
+        active_player = self.dungeon.game.active_character
+
+        if active_player.using_dynamite:
+            return False
+        if self.get_token("player").has_moved and not Monster.all_dead():
+            return False
+
+        return True
+
+        '''if self.has_token("player"):
+    
+            if player.using_dynamite:
+                return False
+            if self.tokens["player"].character == player:
+                return True
+            if (
+                    self.tokens["player"].character.has_moved
+                    and not Monster.all_dead()
+            ):
+                return False
+            return True'''
+
+
+
+
+    @property
+    def is_activable(self):
+
+        player = self.dungeon.game.active_character
+
+        path = self.dungeon.find_shortest_path(
+            self.dungeon.get_tile(player.token.position).position, self.position, player.blocked_by
+        )
+
+        dynamite_path = self.dungeon.find_shortest_path(
+            self.dungeon.get_tile(player.token.position).position,
+            self.position,
+            tuple(item for item in player.blocked_by if item != "monster"),
+        )
 
         if (
                 self.has_token("monster")

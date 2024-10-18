@@ -49,26 +49,37 @@ class Monster(Character, ABC):
         """
         return True
 
+    def can_dodge(self, center_position) -> tuple[int,int] | None:
+
+        nearby_spaces: set[tuple[int,int]] = self.token.dungeon.get_nearby_spaces(center_position,
+                                                                                  self.cannot_share_tile_with)
+        random_num = randint(1, 10)
+        trigger = random_num + (4 - len(nearby_spaces))
+        if trigger <= self.stats.dodging_ability and len(nearby_spaces) > 0:
+            return choice(list(nearby_spaces))
+        else:
+            return None
+
     def behave(self, tile: Tile) -> bool:
         if check_if_multiple(self.token.dungeon.game.turn, 2):  # if players turn, monster was dodging
             self.token.dungeon.get_tile(self.token.start.position).dodging_finished = True
         else:
             self.attack_players()
 
-    def try_to_dodge(self):
-
-        random_num = randint(1, 10)
-        surrounding_spaces = {self.token.dungeon.get_tile(position).position
-                              for position in self.token.dungeon.get_nearby_positions(self.token.position)
-                              if not self.token.dungeon.get_tile(position).has_token()}
-
-        trigger = random_num + (4 - len(surrounding_spaces))
-
-        if trigger <= self.stats.dodging_ability and len(surrounding_spaces) > 0:
-            end_position = choice(list(surrounding_spaces))
-            self._dodge(end_position)
-        else:
-            self.token.dungeon.get_tile(self.token.position).dodging_finished = True
+    def generate_dodge_path(self):
+        """
+        Returns dodging path
+        :return:
+        """
+        path: list[tuple[int,int]] = list()
+        center_position = self.token.position
+        for move in range(self.stats.dodging_moves):
+            next_position: tuple[int,int] = self.can_dodge(center_position)
+            if next_position is None:
+                break
+            path.append(next_position)
+            center_position = next_position
+        return path if len(path) > 0 else None
 
     def attack_players(self):
         """

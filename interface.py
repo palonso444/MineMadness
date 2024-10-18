@@ -30,7 +30,7 @@ class AbilityButton(ToggleButton):
                 character.token.show_effect_token(
                     "dynamite", character.token.shape.pos, character.token.shape.size
                 )
-                self.game.activate_accessible_tiles("shooting")
+                self.game.activate_accessible_tiles(character.stats.shooting_range)
 
             elif value == "down":
                 character.stats.remaining_moves -= 1
@@ -56,7 +56,7 @@ class AbilityButton(ToggleButton):
                     character.unhide()
 
                 elif character.name == "Hawkins":
-                    self.game.activate_accessible_tiles()
+                    self.game.activate_accessible_tiles(character.stats.remaining_moves)
 
                 elif character.name == "Crusher Jane":
                     character.token.show_effect_token(

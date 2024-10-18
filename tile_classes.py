@@ -35,14 +35,19 @@ class Tile(Button):
                 token.pos = tile_pos
                 token.size = tile.size
 
-    def set_token(self, token: Token) -> None:
+    def set_token(self, token:Token) -> None:
         self.tokens[token.kind] = token
 
     def get_token(self, token_kind) -> Token:
         return self.tokens[token_kind]
 
-    def remove_token(self, token_kind) -> None:
-        self.tokens[token_kind] = None
+    def remove_token(self, token:Token) -> None:
+        self.tokens[token.kind] = None
+
+    def delete_all_tokens(self):
+        for token in self.tokens.values():
+            if token is not None:
+                token.delete_token(self)
 
     def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
 
@@ -113,9 +118,8 @@ class Tile(Button):
         if active_player.using_dynamite:
             return self.dungeon.check_if_connexion(active_player.token.position,
                                                    self.position,
-                                                   active_player.blocked_by,
+                                                   tuple(item for item in active_player.blocked_by if item != "monster"),
                                                    active_player.stats.shooting_range)
-            # tuple(item for item in player.blocked_by if item != "monster")
 
         elif self.is_nearby(active_player.token.position):
             return active_player.can_fight(self.get_token("monster").species)
@@ -156,7 +160,7 @@ class Tile(Button):
             player.throw_dynamite()
             game.update_switch("ability_button")
             if self.has_token("monster"):
-                self.get_token("monster").character.try_to_dodge()
+                self.get_token("monster").token_dodge()
             else:
                 self.dynamite_fall()
 
@@ -175,15 +179,15 @@ class Tile(Button):
             start_tile = self.dungeon.get_tile(player.token.position)
 
             if start_tile.tokens["player"].character == player:
-                start_tile.tokens["player"].move_token(player.token.position, self.position)
+                start_tile.tokens["player"].token_move(player.token.position, self.position)
 
     def dynamite_fall(self, *args):
 
         if self.has_token("monster"):
             self.get_token("monster").character.kill_character(self)
-        self.delete_token()  # remove all other tokens, pickables, etc. if any
+        self.delete_all_tokens()
         self.place_item("wall", "rock", None)
-        self.show_explosion()
+        #self.show_explosion()
 
         self.dungeon.game.update_switch("character_done")
 

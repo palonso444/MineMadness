@@ -143,6 +143,7 @@ class MonsterStats(CharacterStats, ABC):
     """
 
     dodging_ability: int = 0
+    dodging_moves: int = 1
 
 
 @dataclass
@@ -245,7 +246,7 @@ class DarkGnomeStats(MonsterStats):
     strength: tuple = (1, 3)
     moves: int = 5
     random_motility: int = 5
-    dodging_ability: int = 3
+    dodging_ability: int = 14
     experience_when_killed: int = 3
 
 

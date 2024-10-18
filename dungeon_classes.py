@@ -300,7 +300,7 @@ class DungeonLayout(GridLayout):
             else:
                 return tile
 
-    def get_nearby_positions(self, position: tuple[int:int]) -> set[tuple[int:int]]:
+    def get_nearby_positions(self, position: tuple[int:int]) -> set[tuple[int,int]]:
         """
         Returns the nearby positions of the specified position
         :param position: coordinates of the position
@@ -314,7 +314,19 @@ class DungeonLayout(GridLayout):
             if self.check_within_limits((position[0] + dx, position[1] + dy))
         }
 
-    def check_within_limits(self, position: tuple[int: int]) -> bool:
+    def get_nearby_spaces(self, position: tuple[int,int], token_kinds:list[str]) -> set[tuple[int,int]]:
+        """
+        Returns a set with positions that do not have tokens of the specified Token.kinds
+        :param position: coordinates of the position from which we are interested to get nearby spaces
+        :param token_kinds: list of Token.kind to avoid
+        :return: set with nearby positions free of specified Token.kinds
+        """
+        return {position for position in self.get_nearby_positions(position)
+                if all(not self.get_tile(position).has_token(token_kind)
+                        for token_kind in token_kinds)}
+
+
+    def check_within_limits(self, position: tuple[int,int]) -> bool:
         """
         Checks if a position lies within the limits of the dungeon
         :param position: position

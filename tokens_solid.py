@@ -55,7 +55,7 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         :param tile: Tile in which the Token is located
         :return: None
         """
-        tile.tokens[self.kind] = None
+        tile.remove_token(self)
         self.dungeon.canvas.remove(self.shape)
 
 class SceneryToken(SolidToken):
@@ -104,6 +104,12 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         """
         pass
 
+    def update_token_on_tile(self, tile : Tile) -> None:
+        tile.set_token(self)
+        self.position = tile.position
+        self.pos: tuple[int, int] = self.shape.pos
+        self.path: list[tuple[int, int]] | None = None
+
     def on_slide_completed(self, animation_obj: Animation,
                            token_shape: Ellipse,
                            current_tile: Tile) -> None:
@@ -117,10 +123,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
 
         # on tile release check that avoid moving character if is not meant to move
         else:
-            current_tile.set_token(self)
-            self.position = current_tile.position
-            self.pos: tuple[int,int] = self.shape.pos
-            self.path: list[tuple[int,int]] | None = None
+            self.update_token_on_tile(current_tile)
 
             if current_tile.kind == "exit" and self.character.has_all_gems:
                 self.character.exit_level()
@@ -364,7 +367,7 @@ class PlayerToken(CharacterToken):
 
         return horizontal_range
 
-    def move_token(self, start_position: tuple [int,int], end_position: tuple[int,int]) -> None:
+    def token_move(self, start_position: tuple [int,int], end_position: tuple[int,int]) -> None:
         """
         Initializes the movement of the PlayerToken
         :param start_position: starting position
@@ -376,7 +379,7 @@ class PlayerToken(CharacterToken):
             self.dungeon.game.update_switch("character_done")
 
         else:
-            self.dungeon.get_tile(start_position).remove_token(self.kind)
+            self.dungeon.get_tile(start_position).remove_token(self)
             self.path = self.dungeon.find_shortest_path(
                 start_position, end_position, self.character.blocked_by
             )
@@ -402,7 +405,7 @@ class MonsterToken(CharacterToken):
                  character: Monster, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
-    def move_token(self) -> None:
+    def token_move(self) -> None:
         """
         Initializes the movement of the MonsterToken
         :return: None
@@ -415,12 +418,18 @@ class MonsterToken(CharacterToken):
         else:
             self.slide_one_step()
 
-    def dodge_one_step(self, end_position: tuple[int]):
+    def token_dodge(self) -> None:
+        self.path = self.character.generate_dodge_path()
+
+        if self.path is None:  # dodging failed
+            self.get_current_tile().dynamite_fall()
+        else:
+            self.dodge_one_step()
+
+    def dodge_one_step(self):
 
         animation = self._setup_dodge_animation()
         animation.start(self)
-        self.token.path = [end_position]
-        self.token._setup_movement_animation(self.token.path)
 
     def slide_one_step(self) -> None:
         """
@@ -433,17 +442,19 @@ class MonsterToken(CharacterToken):
 
     def _setup_dodge_animation(self):
         next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
+        previous_tile = self.get_current_tile()
         animation = Animation(pos=next_tile.pos, duration=0.2)
         animation.bind(on_complete=lambda animation_obj, token_shape: self.on_dodge_completed(animation,
-                                                                                          token_shape,
-                                                                                          next_tile)
+                                                                                              token_shape,
+                                                                                              previous_tile,
+                                                                                              next_tile))
         return animation
 
-    def on_dodge_completed(self, animation_obj: Animation,
-                           token_shape: Ellipse,
-                           current_tile: Tile) -> None:
-        if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
+    def on_dodge_completed(self, animation_obj: Animation, token_shape: Ellipse,
+                           previous_tile: Tile, current_tile: Tile) -> None:
+
+        if len(self.path) > 0:
             self.dodge_one_step()
-        # update monster position like in on_movement_complete
-        # call dynamite_fall on previous tile
-        pass
+        else:
+            self.update_token_on_tile(current_tile)
+            previous_tile.dynamite_fall()

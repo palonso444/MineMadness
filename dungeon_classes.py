@@ -57,7 +57,7 @@ class DungeonLayout(GridLayout):
             for dx, dy in directions
         )
 
-    def check_if_connexion(self, position_1: tuple [int, int], position_2: tuple[int,int],
+    def check_if_connexion(self, position_1: tuple [int,int], position_2: tuple[int,int],
                            obstacles_kinds: list[str], num_of_steps: int) -> bool:
         """
         Checks if two positions of the DungeonLayout are connected or there are obstacles on the way that makes

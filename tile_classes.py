@@ -7,13 +7,10 @@ from kivy.properties import BooleanProperty
 # from kivy.graphics import Ellipse, Color
 
 from monster_classes import Monster
-from tokens_fading import EffectToken
-from tokens_solid import CharacterToken, SceneryToken
+from tokens_solid import SceneryToken, PlayerToken, MonsterToken
 
 
 class Tile(Button):
-
-    dodging_finished = BooleanProperty(False)
 
     def __init__(self, row, col, kind, dungeon_instance, **kwargs):
         super().__init__(**kwargs)
@@ -47,6 +44,16 @@ class Tile(Button):
     def remove_token(self, token_kind) -> None:
         self.tokens[token_kind] = None
 
+    def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
+
+        if token_kind is None:
+            if token_species is not None:
+                raise ValueError("token_kind cannot be None and token_species not None")
+            return any(token is not None for token in self.tokens.values())
+
+        return (self.tokens[token_kind] is not None and
+                (token_species is None or self.tokens[token_kind].species == token_species))
+
     def is_nearby(self, position: tuple[int,int]) -> bool:
         """
         Checks if the given position is nearby to the tile
@@ -59,6 +66,36 @@ class Tile(Button):
             (self.position[0] + dx, self.position[1] + dy) == position
             for dx, dy in directions
         )
+
+    def place_item(self, token_kind: str, token_species: str, character: Character | None) -> None:
+        """
+        Places tokens on the Tile
+        :param token_kind: Token.kind of the token to be placed
+        :param token_species: Token.species of the token to be placed
+        :param character: character (if any) associated with the token
+        :return: None
+        """
+        token_args = {
+            'kind': token_kind,
+            'species': token_species,
+            'position': self.position,
+            'character': character,
+            'dungeon_instance': self.dungeon,
+            'pos': self.pos,
+            'size': self.size,
+        }
+
+        if token_kind == "player":
+            token = PlayerToken(**token_args)
+            character.token = token
+        elif token_kind == "monster":
+            token = MonsterToken(**token_args)
+            character.token = token
+        else:
+            token = SceneryToken(**token_args)
+
+        self.tokens[token_kind] = token
+        self.bind(pos=self.update_tokens_size_and_pos, size=self.update_tokens_size_and_pos)
 
     def check_if_enable(self, active_player: Player):
 
@@ -118,7 +155,10 @@ class Tile(Button):
         if player.using_dynamite:
             player.throw_dynamite()
             game.update_switch("ability_button")
-            self.fall_dynamite_on_tile()
+            if self.has_token("monster"):
+                self.get_token("monster").character.try_to_dodge()
+            else:
+                self.dynamite_fall()
 
         elif self.has_token("player") and self.get_token("player").character != player:
             game.switch_character(self.get_token("player"))
@@ -137,36 +177,15 @@ class Tile(Button):
             if start_tile.tokens["player"].character == player:
                 start_tile.tokens["player"].move_token(player.token.position, self.position)
 
-    def fall_dynamite_on_tile(self):
+    def dynamite_fall(self, *args):
 
         if self.has_token("monster"):
-            self.get_token("monster").character.try_to_dodge()
-        else:
-            self.dodging_finished = True
+            self.get_token("monster").character.kill_character(self)
+        self.delete_token()  # remove all other tokens, pickables, etc. if any
+        self.place_item("wall", "rock", None)
+        self.show_explosion()
 
-    def on_dodging_finished(self, *args):
-
-        if self.dodging_finished:
-            if self.has_token("monster"):
-                self.get_token("monster").character.kill_character(self)
-            self.delete_token()  # remove all other tokens, pickables, etc. if any
-            self.dungeon.place_item(self, "wall", "rock", None)
-            self.show_explosion()
-            self.dodging_finished = False
-
-            self.dungeon.game.update_switch("character_done")
-
-
-    def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
-
-        if token_kind is None:
-            if token_species is not None:
-                raise ValueError("token_kind cannot be None and token_species not None")
-            return any(token is not None for token in self.tokens.values())
-
-        return (self.tokens[token_kind] is not None and
-                (token_species is None or self.tokens[token_kind].species == token_species))
-
+        self.dungeon.game.update_switch("character_done")
 
 
     def show_explosion(self):

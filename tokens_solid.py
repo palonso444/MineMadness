@@ -97,24 +97,12 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.bind(pos=self.update_pos)
 
     @abstractmethod
-    def _slide_one_step(self) -> None:
+    def slide_one_step(self) -> None:
         """
         Abstractmethod for starting the slide animation
         :return: None
         """
         pass
-
-    def setup_animation(self) -> Animation:
-        """
-        Instantiates the Animation object to slide the Token 1 step along the route determined in CharacterToken.path
-        :return: Animation object ready to start
-        """
-        next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
-        animation = Animation(pos=next_tile.pos, duration=0.2)
-        animation.bind(on_complete=lambda animation_obj, token_shape: self.on_slide_completed(animation,
-                                                                                          token_shape,
-                                                                                          next_tile))
-        return animation
 
     def on_slide_completed(self, animation_obj: Animation,
                            token_shape: Ellipse,
@@ -125,7 +113,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
-            self._slide_one_step()
+            self.slide_one_step()
 
         # on tile release check that avoid moving character if is not meant to move
         else:
@@ -149,6 +137,17 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         with self.dungeon.canvas.after:
             DamageToken(pos=self.pos, size=self.size, dungeon=self)
 
+    def _setup_movement_animation(self) -> Animation:
+        """
+        Instantiates the Animation object to slide the Token 1 step along the route determined in CharacterToken.path
+        :return: Animation object ready to start
+        """
+        next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
+        animation = Animation(pos=next_tile.pos, duration=0.2)
+        animation.bind(on_complete=lambda animation_obj, token_shape: self.on_slide_completed(animation,
+                                                                                          token_shape,
+                                                                                          next_tile))
+        return animation
 
 class PlayerToken(CharacterToken):
     """
@@ -382,14 +381,14 @@ class PlayerToken(CharacterToken):
                 start_position, end_position, self.character.blocked_by
             )
             self.dungeon.disable_all_tiles()  # tiles disabled while moving
-            self._slide_one_step()
+            self.slide_one_step()
 
-    def _slide_one_step(self) -> None:
+    def slide_one_step(self) -> None:
         """
         Ends the setup of the slide animation and starts it
         :return: None
         """
-        animation = super().setup_animation()
+        animation = super()._setup_movement_animation()
         animation.bind(on_progress=self._move_selection_circle)
         animation.bind(on_progress=self._move_health_bar)
         self.character.stats.remaining_moves -= 1
@@ -414,13 +413,37 @@ class MonsterToken(CharacterToken):
             self.character.behave(self.get_current_tile())
             self.dungeon.game.update_switch("character_done")
         else:
-            self._slide_one_step()
+            self.slide_one_step()
 
-    def _slide_one_step(self) -> None:
+    def dodge_one_step(self, end_position: tuple[int]):
+
+        animation = self._setup_dodge_animation()
+        animation.start(self)
+        self.token.path = [end_position]
+        self.token._setup_movement_animation(self.token.path)
+
+    def slide_one_step(self) -> None:
         """
         Starts the slide animation
         :return: None
         """
-        animation = super().setup_animation()
+        animation = super()._setup_movement_animation()
         self.character.stats.remaining_moves -= 1
         animation.start(self)
+
+    def _setup_dodge_animation(self):
+        next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
+        animation = Animation(pos=next_tile.pos, duration=0.2)
+        animation.bind(on_complete=lambda animation_obj, token_shape: self.on_dodge_completed(animation,
+                                                                                          token_shape,
+                                                                                          next_tile)
+        return animation
+
+    def on_dodge_completed(self, animation_obj: Animation,
+                           token_shape: Ellipse,
+                           current_tile: Tile) -> None:
+        if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
+            self.dodge_one_step()
+        # update monster position like in on_movement_complete
+        # call dynamite_fall on previous tile
+        pass

@@ -300,15 +300,6 @@ class Monster(Character, ABC):
 
         return path if len(path) > 0 else None
 
-    def _dodge(self, end_position: tuple[int]):
-
-        start_tile = self.token.dungeon.get_tile(self.token.position)
-        end_tile = self.token.dungeon.get_tile(end_position)
-        self.token.start = start_tile
-        self.token.goal = end_tile
-        self.token.path = [end_position]
-        self.token.setup_animation(self.token.path)
-
     def _find_accesses(
         self, target_tile: tiles.Tile, smart: bool = True
     ) -> list[list] | None:

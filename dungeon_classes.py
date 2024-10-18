@@ -5,7 +5,6 @@ from random import choice
 
 import player_classes as players
 import monster_classes as monsters
-import tokens_solid as tokens
 import tile_classes as tiles
 from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
@@ -276,39 +275,7 @@ class DungeonLayout(GridLayout):
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
-                self.place_item(tile, token_kind, token_species, character)
-
-    def place_item(self, tile: Tile, token_kind: str,
-                   token_species: str, character: Character | None) -> None:
-        """
-        Places tokens on the tiles
-        :param tile: tile in which item must be placed
-        :param token_kind: Token.kind of the token to be placed
-        :param token_species: Token.species of the token to be placed
-        :param character: character (if any) associated with the token
-        :return: None
-        """
-        token_args = {
-            'kind': token_kind,
-            'species': token_species,
-            'position': tile.position,
-            'character': character,
-            'dungeon_instance': self,
-            'pos': tile.pos,
-            'size': tile.size,
-        }
-
-        if token_kind == "player":
-            token = tokens.PlayerToken(**token_args)
-            character.token = token
-        elif token_kind == "monster":
-            token = tokens.MonsterToken(**token_args)
-            character.token = token
-        else:
-            token = tokens.SceneryToken(**token_args)
-
-        tile.tokens[token_kind] = token
-        tile.bind(pos=tile.update_tokens_size_and_pos, size=tile.update_tokens_size_and_pos)
+                tile.place_item(token_kind, token_species, character)
 
     def get_tile(self, position: tuple [int:int]) -> Tile:
         """

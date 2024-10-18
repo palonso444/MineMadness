@@ -50,7 +50,6 @@ class Character(ABC):
         self.stats: CharacterStats | None = None
         self.blocked_by: tuple | None = None
         self.cannot_share_tile_with: tuple | None = None
-        self.free_actions: tuple | None = None
         self.ignores: tuple | None = None
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
         self.ability_display: str | None = None  # needed for AbilityButton.display_text()
@@ -78,6 +77,26 @@ class Character(ABC):
         Abstract method defining the behavior of a character when landing on a new tile
         :param tile: tile where character lands
         :return: None
+        """
+        pass
+
+    @abstractmethod
+    def can_fight(self, token_species: str) -> bool:
+        """
+        Abstract method defining if the character fulfills the requirements to fight with an opponent
+        represented by a Token of the specified Token.species
+        :param token_species: Token.species of the opponent
+        :return: True if the character can fight, False otherwise
+        """
+        pass
+
+    @abstractmethod
+    def can_dig(self, token_species: str) -> bool:
+        """
+        Abstract method defining if the character fulfills the requirements to dig a wall
+        represented by a Token of the specified Token.species
+        :param token_species: Token.species of the wall
+        :return: True if the character can dig, False otherwise
         """
         pass
 

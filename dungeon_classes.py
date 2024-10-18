@@ -350,14 +350,16 @@ class DungeonLayout(GridLayout):
         for tile in self.children:
             tile.disabled = True
 
-    def enable_tiles(self, tile_positions: set[tuple[int:int]]) -> None:
+    def enable_tiles(self, tile_positions: set[tuple[int:int]], active_character: Player) -> None:
         """
         Activates the Tiles within a range of positions
         :param tile_positions: coordinates of the tiles to activate if activable
+        :param active_character: current active Player in the game
         :return: None
         """
         for position in tile_positions:
-            self.get_tile(position).check_if_enable()
+            tile = self.get_tile(position)
+            tile.disabled = not tile.check_if_enable(active_character)
 
     def scan_tiles(self, token_kinds: list[str], exclude: bool=False) -> set[tuple[int:int]]:
         """

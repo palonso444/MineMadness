@@ -16,7 +16,6 @@ class Monster(Character, ABC):
         self.kind: str = "monster"
         self.blocked_by = ("wall", "player")
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
-        self.free_actions: tuple = ("fighting",)  # no need of weapons to fight
         self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
 
         # exclusive of Monster class
@@ -33,6 +32,22 @@ class Monster(Character, ABC):
         :return: False
         """
         return False
+
+    def can_dig(self, token_species: str) -> bool:
+        """
+        Placeholder, monsters are not able to dig so far
+        :param token_species: Token.species of the wall
+        :return: False
+        """
+        return False
+
+    def can_fight(self, token_species: str) -> bool:
+        """
+        Placeholder, monsters are always able to fight
+        :param token_species: Token.species of the opponent
+        :return: True
+        """
+        return True
 
     def behave(self, tile: Tile) -> bool:
         if check_if_multiple(self.token.dungeon.game.turn, 2):  # if players turn, monster was dodging

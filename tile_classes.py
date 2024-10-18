@@ -20,7 +20,7 @@ class Tile(Button):
 
         self.row: int = row
         self.col: int = col
-        self.position: tuple = (row, col)
+        self.position: tuple = row, col
         self.kind: str = kind
         self.tokens: dict [str:Token | None] = {
             "player": None,
@@ -40,6 +40,19 @@ class Tile(Button):
     def remove_token(self, token_kind) -> None:
         self.tokens[token_kind] = None
 
+    def is_nearby(self, position: tuple[int,int]) -> bool:
+        """
+        Checks if the given position is nearby to the tile
+        :param position: position to check
+        :return: True if is nearby, False otherwise
+        """
+        directions = (-1, 0), (1, 0), (0, -1), (0, 1)
+
+        return any(
+            (self.position[0] + dx, self.position[1] + dy) == position
+            for dx, dy in directions
+        )
+
     @staticmethod
     def update_tokens_size_and_pos(tile, tile_pos):
         for token in tile.tokens.values():
@@ -47,123 +60,57 @@ class Tile(Button):
                 token.pos = tile_pos
                 token.size = tile.size
 
-    def check_if_enable(self):
+    def check_if_enable(self, active_player: Player):
 
         if self.has_token("player"):
-            self._check_with_player_token()
-        elif self.has_token("monster"):
-            self._check_with_monster_token()
-        elif self.has_token("wall"):
-            self._check_with_wall_token()
-
-    def _check_with_monster_token(self):
-        pass
-
-
-    def _check_with_wall_token(self):
-
-        active_player = self.dungeon.game.active_character
-
-        if active_player.using_dynamite:
-            return not self.has_token("wall","rock")
-
-        elif self.dungeon.are_nearby(self.position, active_player.token.position):
-
-            if self.has_token("wall","rock"):
-                return (active_player.stats.remaining_moves >= active_player.stats.digging_moves and
-                        (active_player.stats.shovels > 0 or
-                         "digging" in active_player.free_actions))
-
-            elif self.has_token("wall","granite"):
-                return ("digging" in active_player.free_actions and
-                        active_player.stats.remaining_moves >= active_player.stats.digging_moves and
-                        active_player.stats.shovels > 0)
-
-        return False
-
-        '''        if (
-                self.has_token("wall", "rock")
-                and self.dungeon.are_nearby(self.position, player.token.position)
-                and player.stats.remaining_moves >= player.stats.digging_moves
-                and not player.using_dynamite
-        ):
-
-            if player.stats.shovels > 0 or "digging" in player.free_actions:
-                return True
-
-        if self.has_token("wall", "granite") and player.name == "Hawkins":
-            if (
-                    self.dungeon.are_nearby(self.position, player.token.position)
-                    and player.stats.remaining_moves >= player.stats.digging_moves
-                    and player.stats.shovels > 0
-            ):
-                return True
-
-        if (
-                self.has_token("wall", "granite") or self.has_token("wall", "quartz")
-        ) and player.using_dynamite():
-            return True'''
-
-    def _check_with_player_token(self):
-
-        active_player = self.dungeon.game.active_character
-
-        if active_player.using_dynamite:
-            return False
-        if self.get_token("player").has_moved and not Monster.all_dead():
-            return False
+            return self._check_with_player_token(active_player)
+        if self.has_token("monster"):
+            return self._check_with_monster_token(active_player)
+        if self.has_token("wall"):
+            return self._check_with_wall_token(active_player)
 
         return True
 
-        '''if self.has_token("player"):
-    
-            if player.using_dynamite:
-                return False
-            if self.tokens["player"].character == player:
-                return True
-            if (
-                    self.tokens["player"].character.has_moved
-                    and not Monster.all_dead()
-            ):
-                return False
-            return True'''
+    def _check_with_monster_token(self, active_player: Player):
 
+        if active_player.using_dynamite:
+            path = self.dungeon.find_shortest_path(
+                active_player.token.position,
+                self.position,
+                active_player.blocked_by)  #tuple(item for item in player.blocked_by if item != "monster")
+            return path is not None and len(path) <= active_player.stats.shooting_range
 
-
-
-    @property
-    def is_activable(self):
-
-        player = self.dungeon.game.active_character
-
-        path = self.dungeon.find_shortest_path(
-            self.dungeon.get_tile(player.token.position).position, self.position, player.blocked_by
-        )
-
-        dynamite_path = self.dungeon.find_shortest_path(
-            self.dungeon.get_tile(player.token.position).position,
-            self.position,
-            tuple(item for item in player.blocked_by if item != "monster"),
-        )
-
-        if (
-                self.has_token("monster")
-                and self.dungeon.are_nearby(self.position, player.token.position)
-                and (player.stats.weapons > 0 or "fighting" in player.free_actions)
-        ):
-            return True
-
-        if (
-                player.using_dynamite
-                and dynamite_path is not None
-                and len(dynamite_path) <= player.stats.shooting_range
-        ):
-            return True
-
-        if path is not None and len(path) <= player.stats.remaining_moves:
-            return True
+        elif self.is_nearby(active_player.token.position):
+            return active_player.can_fight(self.get_token("monster").species)
 
         return False
+
+    def _check_with_wall_token(self, active_player: Player):
+
+        if active_player.using_dynamite:
+            path = self.dungeon.find_shortest_path(
+                active_player.token.position,
+                self.position,
+                active_player.blocked_by)  # tuple(item for item in player.blocked_by if item != "monster")
+            return (path is not None and
+                    len(path) <= active_player.stats.shooting_range and
+                    not self.has_token("wall","rock"))
+
+        elif self.is_nearby(active_player.token.position):
+            return active_player.can_dig(self.get_token("wall").species)
+
+        return False
+
+    def _check_with_player_token(self, active_player: Player):
+
+        if active_player.using_dynamite:
+            return False
+        if self.get_token("player").character == active_player:
+            return True
+        if self.get_token("player").character.has_moved and not Monster.all_dead():
+            return False
+
+        return True
 
     def on_release(self):
 
@@ -171,17 +118,12 @@ class Tile(Button):
         game = self.dungeon.game
 
         if player.using_dynamite:
-            player.special_items["dynamite"] -= 1
-            player.stats.remaining_moves -= 1
-            player.ability_active = (
-                False if player.special_items["dynamite"] == 0 else True
-            )
+            player.throw_dynamite()
             game.update_switch("ability_button")
-
             self.fall_dynamite_on_tile()
 
-        elif self.has_token("player") and self.tokens["player"].character != player:
-            game.switch_character(self.tokens["player"].character)
+        elif self.has_token("player") and self.get_token("player").character != player:
+            game.switch_character(self.get_token("player"))
 
         elif self.has_token("wall"):
             player.dig(self)
@@ -200,7 +142,7 @@ class Tile(Button):
     def fall_dynamite_on_tile(self):
 
         if self.has_token("monster"):
-            self.tokens["monster"].character.try_to_dodge()
+            self.get_token("monster").character.try_to_dodge()
         else:
             self.dodging_finished = True
 
@@ -208,12 +150,11 @@ class Tile(Button):
 
         if self.dodging_finished:
             if self.has_token("monster"):
-                self.tokens["monster"].character.kill_character(self)
+                self.get_token("monster").character.kill_character(self)
             self.delete_token()  # remove all other tokens, pickables, etc. if any
             self.dungeon.place_item(self, "wall", "rock", None)
-            #self.dungeon.instantiate_character(self, "wall", "rock")
             self.show_explosion()
-            self.on_dodging_finished = False
+            self.dodging_finished = False
 
             self.dungeon.game.update_switch("character_done")
 

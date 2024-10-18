@@ -78,6 +78,31 @@ class Player(Character, ABC, EventDispatcher):
         """
         return len(cls.dead_data) == 0
 
+
+    def __init__(self):
+        super().__init__()
+        self.kind: str = "player"
+        self.blocked_by: tuple = ("wall", "monster")
+        self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
+        self.ignores: tuple = (None,)
+
+        # attributes exclusive of Player class
+        self.inventory: dict[str:int] = {
+            "jerky": 2,
+            "coffee": 0,
+            "tobacco": 0,
+            "whisky": 2,
+            "talisman": 0,
+        }
+        self.effects: dict[str:list] = {"moves": [], "toughness": [], "strength": []}
+        self.state: str | None = None
+        self.special_items: dict[str:int] | None = None
+        self.level_track: dict[int:dict] = dict()
+
+        self.bind(experience=self.on_experience)
+        self.bind(player_level=self.on_player_level)
+
+
     @abstractmethod
     def on_player_level(self, instance, value):
         pass
@@ -101,30 +126,26 @@ class Player(Character, ABC, EventDispatcher):
     def has_all_gems(self):
         return Player.gems == self.dungeon.game.total_gems
 
+    @abstractmethod
+    def can_fight(self, token_species: str) -> bool:
+        """
+        Abstract method defining if the Player fulfills the requirements to fight with an opponent
+        represented by a Token of the specified Token.species
+        :param token_species: Token.species of the opponent
+        :return: True if the Player can fight, False otherwise
+        """
+        pass
 
-    def __init__(self):
-        super().__init__()
-        self.kind: str = "player"
-        self.blocked_by: tuple = ("wall", "monster")
-        self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
-        self.free_actions: tuple = (None,)
-        self.ignores: tuple = (None,)
+    @abstractmethod
+    def can_dig(self, token_species: str) -> bool:
+        """
+        Abstract method defining if the Player fulfills the requirements to dig a wall
+        represented by a Token of the specified Token.species
+        :param token_species: Token.species of the wall
+        :return: True if the Player can dig, False otherwise
+        """
+        pass
 
-        # attributes exclusive of Player class
-        self.inventory: dict[str:int] = {
-            "jerky": 2,
-            "coffee": 0,
-            "tobacco": 0,
-            "whisky": 2,
-            "talisman": 0,
-        }
-        self.effects: dict[str:list] = {"moves": [], "toughness": [], "strength": []}
-        self.state: str | None = None
-        self.special_items: dict[str:int] | None = None
-        self.level_track: dict[int:dict] = dict()
-
-        self.bind(experience=self.on_experience)
-        self.bind(player_level=self.on_player_level)
 
     def on_experience(self, instance, value):
 
@@ -241,7 +262,7 @@ class Player(Character, ABC, EventDispatcher):
 
         if opponent.stats.health <= 0:
             self.experience += opponent.stats.experience_when_killed
-            self.dungeon.game.ids.experience_bar.value = self.experience
+            self.token.dungeon.game.ids.experience_bar.value = self.experience
             opponent.kill_character(opponent_tile)
 
 
@@ -359,15 +380,24 @@ class Sawyer(Player):
         self.ability_display: str = "Hide"
         self.ability_active: bool = False
 
+    def can_dig(self, token_species: str) -> bool:
+        if token_species == "rock":
+            return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
+        if token_species in ["granite", "quartz"]:
+            return False
+        raise ValueError(f"Invalid token_species {token_species}")
+
+    def can_fight(self, token_species: str) -> bool:
+        return self.stats.weapons > 0
 
     def on_player_level(self, instance, value):
-        """Sawyer is a young, unexperienced but dexteritous character. Is it not particularly strong
+        """Sawyer is a young, inexperienced but dexterous character. Is it not particularly strong
         but has a lot of cunning that allows her to survive compromised situations.
 
         Sawyer increases 1 movement every 2 levels,
         1 health per level,
         1 recovery_end_of_level per level,
-        1 advantatge_strength_increase per level
+        1 advantage_strength_increase per level
         1 max damage every 2 levels"""
 
         self._level_up_health(1)
@@ -416,7 +446,6 @@ class CrusherJane(Player):
         super().__init__()
         self.char: str = "&"
         self.name: str = "Crusher Jane"
-        self.free_actions: tuple = ("fighting",)
         self.ignores: tuple = ("gem", "powder", "dynamite")
 
         self.stats = stats.CrusherJaneStats()
@@ -425,6 +454,16 @@ class CrusherJane(Player):
         self.special_items: dict[str:int] = {"weapons": self.stats.weapons}
         self.ability_display: str = "Use Weapons"
         self.ability_active: bool = False
+
+    def can_dig(self, token_species: str) -> bool:
+        if token_species == "rock":
+            return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
+        if token_species in ["granite", "quartz"]:
+            return False
+        raise ValueError(f"Invalid token_species {token_species}")
+
+    def can_fight(self, token_species: str) -> bool:
+        return True
 
     def on_player_level(self, instance, value):
         """Crusher Jane is a big, strong and not particularly intelligent women. Relies on brute strength and on her
@@ -486,7 +525,6 @@ class Hawkins(Player):
         super().__init__()
         self.char: str = "?"
         self.name: str = "Hawkins"
-        self.free_actions: tuple = ("digging",)
         self.ignores: tuple = ("gem", "powder")
 
         self.stats = stats.HawkinsStats()
@@ -495,6 +533,18 @@ class Hawkins(Player):
         self.special_items: dict[str:int] | None = {"dynamite": 2}
         self.ability_display: str = "Use Dynamite"
         self.ability_active: bool = False
+
+    def can_dig(self, token_species: str) -> bool:
+        if token_species == "rock":
+            return True
+        if token_species == "granite":
+            return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
+        if token_species == "quartz":
+            return False
+        raise ValueError(f"Invalid token_species {token_species}")
+
+    def can_fight(self, token_species: str) -> bool:
+        return self.stats.weapons > 0
 
     def on_player_level(self, instance, value):
         """Hawkins is an old and wise man. It is trained by the most difficult situations of life and it is strong
@@ -525,6 +575,11 @@ class Hawkins(Player):
     @property
     def using_dynamite(self):
         return self.ability_active
+
+    def throw_dynamite(self):
+        self.special_items["dynamite"] -= 1
+        self.stats.remaining_moves -= 1
+        self.ability_active = False
 
     def enhance_damage(self, damage: int) -> int:
         return damage

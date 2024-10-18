@@ -57,6 +57,20 @@ class DungeonLayout(GridLayout):
             for dx, dy in directions
         )
 
+    def check_if_connexion(self, position_1: tuple [int, int], position_2: tuple[int,int],
+                           obstacles_kinds: list[str], num_of_steps: int) -> bool:
+        """
+        Checks if two positions of the DungeonLayout are connected or there are obstacles on the way that makes
+        one inaccessible from the other in the given number of steps
+        :param position_1: coordinates of the first position
+        :param position_2: coordinates of the second position
+        :param obstacles_kinds: Token.kinds of the obstacles to consider
+        :param num_of_steps: maximum number of steps
+        :return: True if there is a connexion, False otherwise
+        """
+        path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
+        return path is not None and len(path) <= num_of_steps
+
     @staticmethod
     def on_pos(dungeon: DungeonLayout, pos: list [int, int]) -> None:
         """

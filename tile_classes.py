@@ -31,6 +31,13 @@ class Tile(Button):
         }
         self.dungeon = dungeon_instance  # need to pass the instance of the dungeon to call dungeon.move_token from the class
 
+    @staticmethod
+    def update_tokens_size_and_pos(tile, tile_pos):
+        for token in tile.tokens.values():
+            if token is not None:
+                token.pos = tile_pos
+                token.size = tile.size
+
     def set_token(self, token: Token) -> None:
         self.tokens[token.kind] = token
 
@@ -53,13 +60,6 @@ class Tile(Button):
             for dx, dy in directions
         )
 
-    @staticmethod
-    def update_tokens_size_and_pos(tile, tile_pos):
-        for token in tile.tokens.values():
-            if token is not None:
-                token.pos = tile_pos
-                token.size = tile.size
-
     def check_if_enable(self, active_player: Player):
 
         if self.has_token("player"):
@@ -74,11 +74,11 @@ class Tile(Button):
     def _check_with_monster_token(self, active_player: Player):
 
         if active_player.using_dynamite:
-            path = self.dungeon.find_shortest_path(
-                active_player.token.position,
-                self.position,
-                active_player.blocked_by)  #tuple(item for item in player.blocked_by if item != "monster")
-            return path is not None and len(path) <= active_player.stats.shooting_range
+            return self.dungeon.check_if_connexion(active_player.token.position,
+                                                   self.position,
+                                                   active_player.blocked_by,
+                                                   active_player.stats.shooting_range)
+            # tuple(item for item in player.blocked_by if item != "monster")
 
         elif self.is_nearby(active_player.token.position):
             return active_player.can_fight(self.get_token("monster").species)
@@ -88,13 +88,11 @@ class Tile(Button):
     def _check_with_wall_token(self, active_player: Player):
 
         if active_player.using_dynamite:
-            path = self.dungeon.find_shortest_path(
-                active_player.token.position,
-                self.position,
-                active_player.blocked_by)  # tuple(item for item in player.blocked_by if item != "monster")
-            return (path is not None and
-                    len(path) <= active_player.stats.shooting_range and
-                    not self.has_token("wall","rock"))
+            return (self.dungeon.check_if_connexion(active_player.token.position,
+                                            self.position,
+                                            active_player.blocked_by,
+                                            active_player.stats.shooting_range) and
+            not self.has_token("wall","rock"))
 
         elif self.is_nearby(active_player.token.position):
             return active_player.can_dig(self.get_token("wall").species)

@@ -110,7 +110,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.pos: tuple[int, int] = self.shape.pos
         self.path: list[tuple[int, int]] | None = None
 
-    def move_token(self, path: list [tuple[int,int]]) -> None:
+    def move_token(self, path: list [tuple[int,int]], callback) -> None:
         """
         Initializes the movement of the PlayerToken
         :return: None
@@ -118,7 +118,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.get_current_tile().remove_token(self)
         self.path = path
         self.dungeon.disable_all_tiles()  # tiles disabled while moving
-        self.move_one_step(self.on_move_completed)
+        self.move_one_step(callback)
 
     def move_one_step(self, callback) -> None:
         """

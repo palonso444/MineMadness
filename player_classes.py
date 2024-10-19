@@ -204,9 +204,7 @@ class Player(Character, ABC, EventDispatcher):
             self.exit_level()
             self.token.dungeon.game.update_switch("player_exited")
         else:
-            if self.token.start_position == self.token.position:  # if character stays in place
-                self.stats.remaining_moves = 0
-            elif tile.has_token("pickable"):
+            if tile.has_token("pickable"):
                 self.pick_object(tile)
             elif tile.has_token("treasure"):
                 self.pick_treasure(tile)

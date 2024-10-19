@@ -230,7 +230,7 @@ class Tile(Button):
             if start_tile.get_token("player").character == player:
                 path = self.dungeon.find_shortest_path(
                     start_tile.get_token("player").position, self.position, start_tile.get_token("player").character.blocked_by)
-                start_tile.get_token("player").slide(path)
+                start_tile.get_token("player").slide(path, start_tile.get_token("player").on_move_completed)
 
     def dynamite_fall(self) -> None:
         """

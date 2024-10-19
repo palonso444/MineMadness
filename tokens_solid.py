@@ -113,7 +113,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.path: list[tuple[int, int]] | None = None
 
     def slide(self, path: list [tuple[int,int]],
-              callback: Callable[[Animation, Ellipse, Tile, Callable], None]) -> None:
+                    callback: Callable[[Animation, Ellipse, Tile, Callable], None]) -> None:
         """
         Initializes the movement of the PlayerToken
         :return: None
@@ -153,7 +153,11 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             self.character.stats.remaining_moves -= 1
             self._slide_one_step(callback)
 
-        # on tile release check that avoid moving character if is not meant to move
+        elif self.position == current_tile.position:  # if character stays in place
+            self.stats.remaining_moves = 0
+            self.path = None
+            self.game.dungeon.update_switch("character_done")
+
         else:
             self.update_token_on_tile(current_tile)
             self.character.behave(current_tile)

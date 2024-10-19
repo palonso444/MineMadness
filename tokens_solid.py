@@ -345,47 +345,6 @@ class PlayerToken(CharacterToken):
         if self.green_bar is not None and self.red_bar is not None:
             self._remove_health_bar()
 
-    def get_movement_range(self, steps: int) -> set[tuple[int,int]]:
-        """
-        Returns a set with all the potential positions of the Tiles where the Token can move
-        :param steps: remaining_moves of the Token.Character
-        :return: set with the positions of all Tiles within movement range
-        """
-        mov_range: set = self._get_horizontal_range(self.position[0], steps)  # row where token is
-
-        vertical_shift: int = 1
-        for lateral_steps in range(steps, 0, -1): # 0 is not inclusive but Token row is already added
-
-            y_position: int = self.position [0] - vertical_shift  # move upwards
-            if y_position >= 0:
-                mov_range = mov_range.union(self._get_horizontal_range(y_position, lateral_steps))
-
-            y_position = self.position[0] + vertical_shift  # move downwards
-            if y_position < self.dungeon.rows:
-                mov_range = mov_range.union(self._get_horizontal_range(y_position, lateral_steps))
-
-            vertical_shift += 1
-
-        return mov_range
-
-    def _get_horizontal_range(self, y_position: int, lateral_steps: int) -> set[tuple[int,int]]:
-        """
-        Returns the positions of all Tiles within a row and within the range given by lateral_steps
-        :param y_position: y_axis value of the row. x_axis is where the Token sits.
-        :param lateral_steps: number of steps to take to each side
-        :return: set with all the Tile positions within the row
-        """
-        horizontal_range: set = set()
-
-        for step in range(0, lateral_steps):
-            if self.position[1] - step >= 0:
-                horizontal_range.add((y_position, self.position[1] - step)) # add whole row left
-
-            if self.position[1] + step < self.dungeon.cols:
-                horizontal_range.add((y_position, self.position[1] + step))  # add whole row right
-
-        return horizontal_range
-
     def token_move(self, start_position: tuple [int,int], end_position: tuple[int,int]) -> None:
         """
         Initializes the movement of the PlayerToken

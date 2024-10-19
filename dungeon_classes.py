@@ -335,6 +335,50 @@ class DungeonLayout(GridLayout):
         return 0 <= position[0] < self.rows and 0 <= position[1] < self.cols
 
 
+    def get_range(self, position: tuple[int,int], steps: int) -> set[tuple[int,int]]:
+        """
+        Returns a set with all the positions within a range defined by a central position and a number of steps
+        :param position: coordinates of the central position of the range
+        :param steps: number of steps from the central position
+        :return: set with the coordinates of all positions within the range
+        """
+        mov_range: set = self._get_horizontal_range(position, steps)  # row where token is
+
+        vertical_shift: int = 1
+        for lateral_steps in range(steps, 0, -1): # 0 is not inclusive but Token row is already added
+
+            y_position: int = position[0] - vertical_shift  # move upwards
+            if y_position >= 0:
+                mov_range = mov_range.union(self._get_horizontal_range((y_position, self.position[1]), lateral_steps))
+
+            y_position = position[0] + vertical_shift  # move downwards
+            if y_position < self.rows:
+                mov_range = mov_range.union(self._get_horizontal_range((y_position, self.position[1]), lateral_steps))
+
+            vertical_shift += 1
+
+        return mov_range
+
+    def _get_horizontal_range(self, position: tuple[int,int], lateral_steps: int) -> set[tuple[int,int]]:
+        """
+        Returns the coordinates of the positions within a row defined by a central position and a range of steps
+        to each side
+        :param position: central position of the row
+        :param lateral_steps: number of steps to take to each side
+        :return: set with all the coordinates within the row
+        """
+        horizontal_range: set = set()
+
+        for step in range(0, lateral_steps):
+            if position[1] - step >= 0:
+                horizontal_range.add((position[0], position[1] - step)) # add whole row left
+
+            if position[1] + step < self.dungeon.cols:
+                horizontal_range.add((position[0], position[1] + step))  # add whole row right
+
+        return horizontal_range
+
+
     def disable_all_tiles(self):
         """
         Disables all Tiles of the DungeonLayout

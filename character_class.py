@@ -3,6 +3,7 @@ from random import randint
 from abc import ABC, abstractmethod
 
 
+
 class Character(ABC):
 
     data: list[Character] | None = None
@@ -62,6 +63,20 @@ class Character(ABC):
         """
         self.id = len(self.__class__.data)
         self.__class__.data.append(self)
+
+    def get_position(self) -> tuple[int,int]:
+        """
+        Returns the position of the Character.token
+        :return: coordinates of the position of the Character.token
+        """
+        return self.token.position
+
+    def get_dungeon(self) -> DungeonLayout:
+        """
+        Returns the dungeon where the Character.token is
+        :return: DungeonLayout of the dungeon
+        """
+        return self.token.dungeon
 
     @abstractmethod
     def has_all_gems(self) -> bool:

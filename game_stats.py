@@ -143,7 +143,7 @@ class MonsterStats(CharacterStats, ABC):
     """
 
     dodging_ability: int = 0
-    dodging_moves: int = 1
+    dodging_moves: int = 2
 
 
 @dataclass

@@ -1,6 +1,8 @@
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 from audioop import reverse
+from collections.abc import Callable
+from symtable import Function
 
 from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
 from kivy.animation import Animation
@@ -110,7 +112,8 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.pos: tuple[int, int] = self.shape.pos
         self.path: list[tuple[int, int]] | None = None
 
-    def move_token(self, path: list [tuple[int,int]], callback) -> None:
+    def slide(self, path: list [tuple[int,int]],
+              callback: Callable[[Animation, Ellipse, Tile, Callable], None]) -> None:
         """
         Initializes the movement of the PlayerToken
         :return: None
@@ -118,9 +121,9 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.get_current_tile().remove_token(self)
         self.path = path
         self.dungeon.disable_all_tiles()  # tiles disabled while moving
-        self.move_one_step(callback)
+        self._slide_one_step(callback)
 
-    def move_one_step(self, callback) -> None:
+    def _slide_one_step(self, callback: Callable) -> None:
         """
         Ends the setup of the slide animation and starts it
         :return: None
@@ -140,27 +143,20 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
     def on_move_completed(self, animation_obj: Animation,
                            token_shape: Ellipse,
                            current_tile: Tile,
-                          callback) -> None:
+                           callback: Callable) -> None:
         """
         Callback triggered when the slide is completed on Character turn. Handles behavior of Character depending
         on Tile.kind
         :return: None
         """
         if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
-            self.move_one_step(callback)
+            self.character.stats.remaining_moves -= 1
+            self._slide_one_step(callback)
 
         # on tile release check that avoid moving character if is not meant to move
         else:
             self.update_token_on_tile(current_tile)
             self.character.behave(current_tile)
-
-            # this goes to behave()
-            '''if current_tile.kind == "exit" and self.character.has_all_gems:
-                self.character.exit_level()
-                self.dungeon.game.update_switch("player_exited")
-            else:
-                self.character.behave(current_tile)
-                self.dungeon.game.update_switch("character_done")'''
 
     def show_damage(self) -> None:
         """
@@ -403,7 +399,7 @@ class PlayerToken(CharacterToken):
                 start_position, end_position, self.character.blocked_by
             )
             self.dungeon.disable_all_tiles()  # tiles disabled while moving
-            self.slide_one_step()
+            self._slide_one_step()
 
 class MonsterToken(CharacterToken):
     """
@@ -432,7 +428,7 @@ class MonsterToken(CharacterToken):
             self.dungeon.game.update_switch("character_done")
         else:
             self.get_current_tile().remove_token(self)
-            self.slide_one_step()
+            self._slide_one_step()
 
     def token_dodge(self) -> None:
         self.path = self.character.generate_dodge_path()

@@ -199,14 +199,19 @@ class Player(Character, ABC, EventDispatcher):
 
 
     def behave(self, tile:Tile) -> None:
-        if start_position == end_position:  # if character stays in place
-            self.character.stats.remaining_moves = 0
-            self.dungeon.game.update_switch("character_done")
 
-        if tile.has_token("pickable"):
-            self.pick_object(tile)
-        elif tile.has_token("treasure"):
-            self.pick_treasure(tile)
+        if self.token.get_current_tile().kind == "exit" and self.has_all_gems:
+            self.exit_level()
+            self.token.dungeon.game.update_switch("player_exited")
+        else:
+            if self.token.start_position == self.token.position:  # if character stays in place
+                self.stats.remaining_moves = 0
+            elif tile.has_token("pickable"):
+                self.pick_object(tile)
+            elif tile.has_token("treasure"):
+                self.pick_treasure(tile)
+
+            self.token.dungeon.game.update_switch("character_done")
 
     def exit_level(self) -> None:
         Player.exited.add(self)

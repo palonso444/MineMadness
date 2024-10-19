@@ -349,11 +349,11 @@ class DungeonLayout(GridLayout):
 
             y_position: int = position[0] - vertical_shift  # move upwards
             if y_position >= 0:
-                mov_range = mov_range.union(self._get_horizontal_range((y_position, self.position[1]), lateral_steps))
+                mov_range = mov_range.union(self._get_horizontal_range((y_position, position[1]), lateral_steps))
 
             y_position = position[0] + vertical_shift  # move downwards
             if y_position < self.rows:
-                mov_range = mov_range.union(self._get_horizontal_range((y_position, self.position[1]), lateral_steps))
+                mov_range = mov_range.union(self._get_horizontal_range((y_position, position[1]), lateral_steps))
 
             vertical_shift += 1
 

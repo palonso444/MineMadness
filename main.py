@@ -254,7 +254,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                 if not player.has_moved
             }
 
-        player_movement_range = self.active_character.token.get_movement_range(steps)
+        player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
         positions_in_range = players_not_yet_active.union(player_movement_range)
         self.dungeon.enable_tiles(positions_in_range, self.active_character)
 

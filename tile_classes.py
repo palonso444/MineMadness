@@ -213,6 +213,11 @@ class Tile(Button):
             else:
                 self.dynamite_fall()
 
+        elif self.has_token("player") and self.get_token("player").character == player:
+            self.get_token("player").character.stats.remaining_moves = 0
+            self.get_token("player").path = None
+            self.dungeon.game.update_switch("character_done")
+
         elif self.has_token("player") and self.get_token("player").character != player:
             game.switch_character(self.get_token("player").character)
 

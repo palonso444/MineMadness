@@ -112,6 +112,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.pos: tuple[int, int] = self.shape.pos
         self.path: list[tuple[int, int]] | None = None
 
+
     def slide(self, path: list [tuple[int,int]],
                     callback: Callable[[Animation, Ellipse, Tile, Callable], None]) -> None:
         """
@@ -128,7 +129,6 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         Ends the setup of the slide animation and starts it
         :return: None
         """
-        self.character.stats.remaining_moves -= 1
         next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
 
         animation = Animation(pos=next_tile.pos, duration=0.2)
@@ -149,15 +149,9 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         on Tile.kind
         :return: None
         """
+        self.character.stats.remaining_moves -= 1
         if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
-            self.character.stats.remaining_moves -= 1
             self._slide_one_step(callback)
-
-        elif self.position == current_tile.position:  # if character stays in place
-            self.stats.remaining_moves = 0
-            self.path = None
-            self.game.dungeon.update_switch("character_done")
-
         else:
             self.update_token_on_tile(current_tile)
             self.character.behave(current_tile)
@@ -373,10 +367,10 @@ class MonsterToken(CharacterToken):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
 
-    def _move_selection_circle(self):
+    def _move_selection_circle(self, *args):
         pass
 
-    def _move_health_bar(self):
+    def _move_health_bar(self, *args):
         pass
 
     def token_move(self) -> None:
@@ -386,12 +380,12 @@ class MonsterToken(CharacterToken):
         """
         self.path = self.character.move()
 
-        if self.path is None:  # if it cannot move, will try directly to attack players
+        if self.path is None:
             self.character.behave(self.get_current_tile())
             self.dungeon.game.update_switch("character_done")
         else:
             self.get_current_tile().remove_token(self)
-            self._slide_one_step()
+            self._slide_one_step(self.on_move_completed)
 
     def token_dodge(self) -> None:
         self.path = self.character.generate_dodge_path()

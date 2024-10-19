@@ -49,16 +49,14 @@ class Monster(Character, ABC):
         """
         return True
 
-    def can_dodge(self, center_position) -> tuple[int,int] | None:
-
-        nearby_spaces: set[tuple[int,int]] = self.token.dungeon.get_nearby_spaces(center_position,
-                                                                                  self.cannot_share_tile_with)
-        random_num = randint(1, 10)
-        trigger = random_num + (4 - len(nearby_spaces))
-        if trigger <= self.stats.dodging_ability and len(nearby_spaces) > 0:
-            return choice(list(nearby_spaces))
-        else:
-            return None
+    def can_dodge(self, nearby_spaces: set[tuple[int,int]]) -> bool:
+        """
+        Determines if the Monster can dodge depending on its dodging_ability and the number of
+        nearby spaces
+        :param nearby_spaces: tuple containing the coordinates of the nearby spaces
+        :return: True if the Monster is able to dodge, False otherwise
+        """
+        return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
     def behave(self, tile: Tile) -> bool:
         if check_if_multiple(self.token.dungeon.game.turn, 2):  # if players turn, monster was dodging
@@ -73,12 +71,13 @@ class Monster(Character, ABC):
         """
         path: list[tuple[int,int]] = list()
         center_position = self.token.position
-        for move in range(self.stats.dodging_moves):
-            next_position: tuple[int,int] = self.can_dodge(center_position)
-            if next_position is None:
-                break
-            path.append(next_position)
-            center_position = next_position
+        for _ in range(self.stats.dodging_moves):
+            nearby_spaces: set[tuple[int, int]] = self.token.dungeon.get_nearby_spaces(center_position,
+                                                                                       self.cannot_share_tile_with)
+            if len(nearby_spaces) > 0 and self.can_dodge(nearby_spaces):
+                next_position = choice(list(nearby_spaces))
+                path.append(next_position)
+                center_position = next_position
         return path if len(path) > 0 else None
 
     def attack_players(self):

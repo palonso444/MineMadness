@@ -118,7 +118,7 @@ class Player(Character, ABC, EventDispatcher):
     @abstractmethod
     def subtract_weapon(self) -> None:
         """
-        Substracts used weapons in combat (if applicable)
+        Subtracts used weapons in combat (if applicable)
         """
         pass
 

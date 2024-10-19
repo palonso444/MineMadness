@@ -105,7 +105,7 @@ class DungeonLayout(GridLayout):
 
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        blueprint.place_equal_items("#", 8)
+        #blueprint.place_equal_items("#", 8)
         #blueprint.place_equal_items("w", 3)
         #blueprint.place_equal_items("l", 3)
         blueprint.place_equal_items("O", 1)

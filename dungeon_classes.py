@@ -373,7 +373,7 @@ class DungeonLayout(GridLayout):
             if position[1] - step >= 0:
                 horizontal_range.add((position[0], position[1] - step)) # add whole row left
 
-            if position[1] + step < self.dungeon.cols:
+            if position[1] + step < self.cols:
                 horizontal_range.add((position[0], position[1] + step))  # add whole row right
 
         return horizontal_range

@@ -56,6 +56,7 @@ class Monster(Character, ABC):
         :param nearby_spaces: tuple containing the coordinates of the nearby spaces
         :return: True if the Monster is able to dodge, False otherwise
         """
+        print(randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability)
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
     def behave(self, tile: Tile) -> bool:

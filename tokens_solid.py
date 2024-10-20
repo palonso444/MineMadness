@@ -98,19 +98,19 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
 
         self.bind(pos=self.update_pos)
 
-    @abstractmethod
     def _move_selection_circle(self, *args) -> None:
         """
-        Abstract callback triggered during sliding animation. Moves the selection_circle along with the PlayerToken
+        Placeholder. Monsters do not have selection circle but this is necessary for the functioning of
+        CharacterToken._slide_one_step()
         :param args: This function receives variable number of arguments. They cannot be typehint
         :return: None
         """
         pass
 
-    @abstractmethod
     def _move_health_bar(self, *args) -> None:
         """
-        Abstract callback triggered during sliding animation. Moves the health_bar along with the PlayerToken
+        Placeholder. Monsters do not have health bar but this is necessary for the functioning of
+        CharacterToken._slide_one_step()
         :param args: This function receives variable number of arguments. They cannot be typehint
         :return: None
         """
@@ -126,7 +126,6 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.position = tile.position
         self.pos: tuple[int, int] = self.shape.pos
         self.path: list[tuple[int, int]] | None = None
-
 
     def slide(self, path: list [tuple[int,int]],
                     on_complete: Callable[[Animation, Ellipse, Tile, Callable], None]) -> None:
@@ -369,24 +368,6 @@ class MonsterToken(CharacterToken):
                  character: Monster, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
-
-    def _move_selection_circle(self, *args) -> None:
-        """
-        Placeholder. Monsters do not have selection circle but this is necessary for the functioning of
-        CharacterToken._slide_one_step()
-        :param args: This function receives variable number of arguments. They cannot be typehint
-        :return: None
-        """
-        pass
-
-    def _move_health_bar(self, *args) -> None:
-        """
-        Placeholder. Monsters do not have health bar but this is necessary for the functioning of
-        CharacterToken._slide_one_step()
-        :param args: This function receives variable number of arguments. They cannot be typehint
-        :return: None
-        """
-        pass
 
     def on_dodge_completed(self, animation_obj: Animation, token_shape: Ellipse,
                            current_tile: Tile, on_complete: Callable) -> None:

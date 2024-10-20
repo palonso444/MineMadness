@@ -49,7 +49,7 @@ class DamageToken(FadingToken):
     """
     Class defining the FadingTokens representing damage
     """
-    def __init__(self, pos: list[float], size: list[float], **kwargs):
+    def __init__(self, pos: tuple[float,float], size: tuple[float,float], **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 0.4
         self.duration = 0.2
@@ -65,7 +65,7 @@ class DiggingToken(FadingToken):
     """
     Class defining the FadingTokens representing digging
     """
-    def __init__(self, pos:list[float], size:list[float], **kwargs):
+    def __init__(self, pos:tuple[float,float], size:tuple[float,float], **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 0.7
         self.duration = 0.2
@@ -82,7 +82,7 @@ class ExplosionToken(FadingToken):
     Class defining the FadingTokens representing explosions
     """
 
-    def __init__(self, pos:list[float], size:list[float], **kwargs):
+    def __init__(self, pos: tuple[float,float], size: tuple[float,float], **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 0.7
         self.duration = 0.2
@@ -98,7 +98,7 @@ class EffectToken(FadingToken):
     """
     Class defining the FadingTokens representing effects on Character attributes (moves, strength, etc.)
     """
-    def __init__(self, pos:list[float], size:list[float], target_attr: str,
+    def __init__(self, pos: tuple[float,float], size: tuple[float,float], target_attr: str,
                  character_token: CharacterToken, effect_ends: bool, **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 1

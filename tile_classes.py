@@ -30,12 +30,12 @@ class Tile(Button):
         }
         self.dungeon: DungeonLayout = dungeon_instance
         self.source = f"./backgrounds/{self.kind}background.png"
-        self.color = (1, 1, 1, 0.8) if not self.disabled else (1,1,1,1)
+        #self.color = (1, 1, 1, 0.8) if not self.disabled else (1,1,1,1)
 
         with self.canvas:
+            self.color = Color(1, 1, 1, 1)
             self.floor = Rectangle(pos=self.pos, size=self.size, source = self.source)
-        with self.canvas.after:
-            Color(*self.color)
+
 
         self.bind(pos=self.arrange_floor)
 

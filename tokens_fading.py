@@ -49,14 +49,14 @@ class DamageToken(FadingToken):
     """
     Class defining the FadingTokens representing damage
     """
-    def __init__(self, **kwargs):
+    def __init__(self, pos: list[float], size: list[float], **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 0.4
         self.duration = 0.2
 
         with self.canvas:
             self.color = Color(1, 0, 0, 1)
-            self.shape = Ellipse(pos=self.pos, size=self.size)
+            self.shape = Ellipse(pos=pos, size=size)
 
         self.fade()
 
@@ -65,14 +65,14 @@ class DiggingToken(FadingToken):
     """
     Class defining the FadingTokens representing digging
     """
-    def __init__(self, **kwargs):
+    def __init__(self, pos:list[float], size:list[float], **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 0.7
         self.duration = 0.2
 
         with self.canvas:
             self.color = Color(0.58, 0.294, 0, 1)
-            self.shape = Rectangle(pos=self.pos, size=self.size)
+            self.shape = Rectangle(pos=pos, size=size)
 
         self.fade()
 
@@ -81,15 +81,15 @@ class ExplosionToken(FadingToken):
     """
     Class defining the FadingTokens representing explosions
     """
-    def __init__(self, **kwargs):
+
+    def __init__(self, pos:list[float], size:list[float], **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 0.7
         self.duration = 0.2
-        self.source = f"./fadingtokens/explosion_token.png"
+        self.source = "./fadingtokens/explosion_token.png"
 
         with self.canvas:
-            self.color = Color(0.58, 0.294, 0, 1)
-            self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
+            self.shape = Rectangle(pos=pos, size=size, source=self.source)
 
         self.fade()
 
@@ -98,8 +98,8 @@ class EffectToken(FadingToken):
     """
     Class defining the FadingTokens representing effects on Character attributes (moves, strength, etc.)
     """
-
-    def __init__(self, target_attr: str, character_token: CharacterToken, effect_ends: bool, **kwargs):
+    def __init__(self, pos:list[float], size:list[float], target_attr: str,
+                 character_token: CharacterToken, effect_ends: bool, **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 1
         self.duration = 0.6
@@ -113,6 +113,6 @@ class EffectToken(FadingToken):
             self.source = f"./fadingtokens/{self.target_attr}_effect_token.png"
 
         with self.canvas:
-            self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
+            self.shape = Rectangle(pos=pos, size=size, source=self.source)
 
         self.fade()

@@ -1,4 +1,8 @@
 from __future__ import annotations
+
+from abc import abstractmethod
+
+from kivy.graphics import Rectangle, Color
 from kivy.uix.button import Button  # type: ignore
 
 from monster_classes import Monster
@@ -24,7 +28,20 @@ class Tile(Button):
             "pickable": None,
             "treasure": None
         }
-        self.dungeon: DungeonLayout = dungeon_instance  # need to pass the instance of the dungeon to call dungeon.move_token from the class
+        self.dungeon: DungeonLayout = dungeon_instance
+        self.source = f"./backgrounds/{self.kind}background.png"
+        self.color = (1, 1, 1, 0.8) if not self.disabled else (1,1,1,1)
+
+        with self.canvas:
+            self.floor = Rectangle(pos=self.pos, size=self.size, source = self.source)
+        with self.canvas.after:
+            Color(*self.color)
+
+        self.bind(pos=self.arrange_floor)
+
+    @staticmethod
+    def arrange_floor(tile:Tile, pos:list[float]):
+        tile.floor.pos = pos
 
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:
@@ -199,6 +216,7 @@ class Tile(Button):
         Handles the logic when a Tile is clicked
         :return: None
         """
+        self.show_explosion()
         player = self.dungeon.game.active_character
         path = self.dungeon.find_shortest_path(
             player.token.position, self.position, player.blocked_by)
@@ -223,5 +241,5 @@ class Tile(Button):
         """
         Shows an explosion on the Tile
         """
-        with self.dungeon.canvas:
+        with self.canvas.after:
             ExplosionToken(pos=self.pos, size=self.size)

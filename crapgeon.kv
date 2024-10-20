@@ -29,14 +29,14 @@
     height: self.width
     kind: None
 
-    canvas:
-        Color:
-            rgba: (1,1,1,0.8) if not self.disabled else (1,1,1,1)
+    #canvas:
+        #Color:
+            #rgba: (1,1,1,0.8) if not self.disabled else (1,1,1,1)
 
-        Rectangle:  # draws the floor      
-            pos: self.pos
-            size: self.size
-            source: "./backgrounds/" + self.kind + 'background.png' if self.kind else None
+        #Rectangle:  # draws the floor
+            #pos: self.pos
+            #size: self.size
+            #source: "./backgrounds/" + self.kind + 'background.png' if self.kind else None
 
 <ProgressBar>:
     padding: '40dp'

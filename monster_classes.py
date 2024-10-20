@@ -59,11 +59,17 @@ class Monster(Character, ABC):
         print(randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability)
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
-    def behave(self, tile: Tile) -> bool:
-        if check_if_multiple(self.token.dungeon.game.turn, 2):  # if players turn, monster was dodging
-            self.token.dungeon.get_tile(self.token.start.position).dodging_finished = True
+    def move_token_or_behave(self, path) -> None:
+        if path is not None:
+            self.token.slide(path, self.token.on_move_completed)
         else:
-            self.attack_players()
+            self.behave(self.token.get_current_tile())
+
+
+    def behave(self, tile: Tile) -> None:
+        self.attack_players()
+        self.get_dungeon().game.update_switch("character_done")
+
 
     def generate_dodge_path(self):
         """
@@ -431,7 +437,7 @@ class Kobold(Monster):
         self.stats = stats.KoboldStats()
 
     def move(self):
-        return self.assess_path_random()
+        super().move_token_or_behave(self.assess_path_random())
 
 
 class BlindLizard(Monster):
@@ -447,7 +453,7 @@ class BlindLizard(Monster):
         self.stats = stats.BlindLizardStats()
 
     def move(self):
-        return self.assess_path_random()
+        super().move_token_or_behave(self.assess_path_random())
 
 
 class BlackDeath(Monster):
@@ -463,7 +469,7 @@ class BlackDeath(Monster):
         self.stats = stats.BlackDeathStats()
 
     def move(self):
-        return self.assess_path_random()
+        super().move_token_or_behave(self.assess_path_random())
 
 
 # DIRECT MOVEMENT MONSTERS
@@ -482,10 +488,10 @@ class CaveHound(Monster):
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_direct(target_tile)
+            super().move_token_or_behave(self.assess_path_direct(target_tile))
 
         else:
-            return self.assess_path_random()
+            super().move_token_or_behave(self.assess_path_random())
 
 
 class Growl(Monster):
@@ -505,10 +511,10 @@ class Growl(Monster):
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_direct(target_tile)
+            super().move_token_or_behave(self.assess_path_direct(target_tile))
 
         else:
-            return self.assess_path_random()
+            super().move_token_or_behave(self.assess_path_random())
 
 
 class RockGolem(Monster):
@@ -528,10 +534,10 @@ class RockGolem(Monster):
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_direct(target_tile)
+            super().move_token_or_behave(self.assess_path_direct(target_tile))
 
         else:
-            return None
+            super().move_token_or_behave(None)
 
 
 # SMART MOVEMENT MONSTERS
@@ -554,10 +560,10 @@ class DarkGnome(Monster):
         target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_smart(target_tile)
+            super().move_token_or_behave(self.assess_path_smart(target_tile))
 
         else:
-            return self.assess_path_random()
+            super().move_token_or_behave(self.assess_path_random())
 
 
 class NightMare(Monster):

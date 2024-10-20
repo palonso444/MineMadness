@@ -1,19 +1,15 @@
 from __future__ import annotations
 from kivy.uix.button import Button  # type: ignore
 
-# from kivy.animation import Animation
-# from kivy.properties import Clock
-# from kivy.graphics import Ellipse, Color
-
 from monster_classes import Monster
 from tokens_solid import SceneryToken, PlayerToken, MonsterToken
+from tokens_fading import EffectToken
 
 
 class Tile(Button):
     """
-    Class defining each one of the Tiles of the DungeonLayout grid.
+    Class defining each one of the Tiles of the DungeonLayout grid
     """
-
     def __init__(self, row: int, col:int, kind: str, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(**kwargs)
 
@@ -33,8 +29,8 @@ class Tile(Button):
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:
         """
-        This callback updates the position of the Tokens when the pos of the Tile changes.
-        :param tile: tile that changes the pos
+        This callback updates the position of the Tokens when the pos of the Tile changes
+        :param tile: Tile that changes the pos
         :param tile_pos: new pos value of the Tile
         :return: None
         """
@@ -44,7 +40,7 @@ class Tile(Button):
 
     def set_token(self, token:Token) -> None:
         """
-        Sets the specified Token as part of Tile.tokens
+        Sets the specified Token as part of Tile.tokens dictionary
         :param token: Token to set
         :return: None
         """
@@ -60,7 +56,7 @@ class Tile(Button):
 
     def remove_token(self, token:Token) -> None:
         """
-        Removes from Tile.tokens the specified Token.
+        Removes from Tile.tokens dictionary the specified Token
         :param token: Token to remove
         :return: None
         """
@@ -73,8 +69,6 @@ class Tile(Button):
         """
         for token in self.tokens.values():
             if token is not None:
-                print(self.position)
-                print(token)
                 token.delete_token(self)
 
     def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
@@ -94,7 +88,7 @@ class Tile(Button):
 
     def is_nearby(self, position: tuple[int,int]) -> bool:
         """
-        Checks if the given position is nearby to the tile
+        Checks if the given position is nearby to the Tile
         :param position: position to check
         :return: True if is nearby, False otherwise
         """
@@ -107,7 +101,7 @@ class Tile(Button):
 
     def place_item(self, token_kind: str, token_species: str, character: Character | None) -> None:
         """
-        Places tokens on the Tile
+        Places a Token on the Tile
         :param token_kind: Token.kind of the token to be placed
         :param token_species: Token.species of the token to be placed
         :param character: character (if any) associated with the token
@@ -152,7 +146,7 @@ class Tile(Button):
 
     def _check_with_monster_token(self, active_player: Player) -> bool:
         """
-        Checks if a Tile having a Token of Token.kind "monster" has to be activated
+        Checks if a Tile having a Token of Token.kind "monster" fulfills the requirements to be activated
         :param active_player: current active Player of the game
         :return: True if the Tile has to be activated, False otherwise
         """
@@ -169,7 +163,7 @@ class Tile(Button):
 
     def _check_with_wall_token(self, active_player: Player) -> bool:
         """
-        Checks if a Tile having a Token of Token.kind "wall" has to be activated
+        Checks if a Tile having a Token of Token.kind "wall" fulfills the requirements to be activated
         :param active_player: current active Player of the game
         :return: True if the Tile has to be activated, False otherwise
         """
@@ -187,7 +181,7 @@ class Tile(Button):
 
     def _check_with_player_token(self, active_player: Player) -> bool:
         """
-        Checks if a Tile having a Token of Token.kind "player" has to be activated
+        Checks if a Tile having a Token of Token.kind "player" fulfills the requirements to be activated
         :param active_player: active_player: current active Player of the game
         :return: True if the Tile has to be activated, False otherwise
         """
@@ -200,42 +194,22 @@ class Tile(Button):
 
         return True
 
-    def on_release(self):
-
+    def on_release(self) -> None:
+        """
+        Handles the logic when a Tile is clicked
+        :return: None
+        """
         player = self.dungeon.game.active_character
-        game = self.dungeon.game
+        path = self.dungeon.find_shortest_path(
+            player.token.position, self.position, player.blocked_by)
 
-        if player.using_dynamite:
-            player.throw_dynamite()
-            game.update_switch("ability_button")
-            if self.has_token("monster"):
-                self.get_token("monster").token_dodge()
-            else:
-                self.dynamite_fall()
+        self.show_explosion()
 
-        elif self.has_token("player") and self.get_token("player").character == player:
-            self.get_token("player").character.stats.remaining_moves = 0
-            self.get_token("player").path = None
-            self.dungeon.game.update_switch("character_done")
-
-        elif self.has_token("player") and self.get_token("player").character != player:
-            game.switch_character(self.get_token("player").character)
-
-        elif self.has_token("wall"):
-            player.dig(self)
-            game.update_switch("character_done")
-
-        elif self.has_token("monster"):
-            player.fight_on_tile(self)
-            game.update_switch("character_done")
-
+        if path is not None:
+            player.token.slide(path, player.token.on_move_completed)
         else:
-            start_tile = self.dungeon.get_tile(player.token.position)
+            player.behave(self)
 
-            if start_tile.get_token("player").character == player:
-                path = self.dungeon.find_shortest_path(
-                    start_tile.get_token("player").position, self.position, start_tile.get_token("player").character.blocked_by)
-                start_tile.get_token("player").slide(path, start_tile.get_token("player").on_move_completed)
 
     def dynamite_fall(self) -> None:
         """
@@ -249,10 +223,9 @@ class Tile(Button):
         #self.show_explosion()
 
 
-    def show_explosion(self):
+    def show_explosion(self) -> None:
         """
-        Shows an explosion
+        Shows an explosion on the Tile
         """
-        pass
-        #with self.dungeon.canvas:
-            #EffectToken("explosion", self.pos, self.size)
+        with self.dungeon.canvas:
+            EffectToken("explosion", self.pos, self.size)

@@ -200,6 +200,10 @@ class Player(Character, ABC, EventDispatcher):
 
     def behave(self, tile:Tile) -> None:
 
+        '''if start_position == end_position:  # if character stays in place
+            self.character.stats.remaining_moves = 0
+            self.dungeon.game.update_switch("character_done")
+
         if self.token.get_current_tile().kind == "exit" and self.has_all_gems:
             self.exit_level()
             self.token.dungeon.game.update_switch("player_exited")
@@ -210,6 +214,35 @@ class Player(Character, ABC, EventDispatcher):
                 self.pick_treasure(tile)
 
             self.token.dungeon.game.update_switch("character_done")
+
+        player = self.dungeon.game.active_character
+        game = self.dungeon.game
+
+        if player.using_dynamite:
+            player.throw_dynamite()
+            game.update_switch("ability_button")
+            if self.has_token("monster"):
+                self.get_token("monster").token_dodge()
+            else:
+                self.dynamite_fall()
+
+        elif self.has_token("player") and self.get_token("player").character == player:
+            self.get_token("player").character.stats.remaining_moves = 0
+            self.get_token("player").path = None
+            self.dungeon.game.update_switch("character_done")
+
+        elif self.has_token("player") and self.get_token("player").character != player:
+            game.switch_character(self.get_token("player").character)
+
+        elif self.has_token("wall"):
+            player.dig(self)
+            game.update_switch("character_done")
+
+        elif self.has_token("monster"):
+            player.fight_on_tile(self)
+            game.update_switch("character_done")'''
+
+        self.token.dungeon.game.update_switch("character_done")
 
     def exit_level(self) -> None:
         Player.exited.add(self)

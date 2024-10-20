@@ -16,11 +16,10 @@ class FadingToken(Widget, ABC, metaclass=WidgetABCMeta):
     """
     Base abstract class defining all Tokens that fade in and out without remaining on the board
     """
-    def __init__(self, character_token: CharacterToken, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.opacity = 0  # FadingTokens start invisible. None is not allowed
         self.final_opacity: int | None = None
-        self.character_token: CharacterToken = character_token
         self.duration: int | None = None
 
     def fade(self) -> None:
@@ -50,8 +49,8 @@ class DamageToken(FadingToken):
     """
     Class defining the FadingTokens representing damage
     """
-    def __init__(self, dungeon: DungeonLayout, **kwargs):
-        super().__init__(dungeon, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.final_opacity = 0.4
         self.duration = 0.2
 
@@ -66,8 +65,8 @@ class DiggingToken(FadingToken):
     """
     Class defining the FadingTokens representing digging
     """
-    def __init__(self, dungeon: DungeonLayout, **kwargs):
-        super().__init__(dungeon, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.final_opacity = 0.7
         self.duration = 0.2
 
@@ -78,16 +77,34 @@ class DiggingToken(FadingToken):
         self.fade()
 
 
+class ExplosionToken(FadingToken):
+    """
+    Class defining the FadingTokens representing explosions
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.final_opacity = 0.7
+        self.duration = 0.2
+        self.source = f"./fadingtokens/explosion_token.png"
+
+        with self.canvas:
+            self.color = Color(0.58, 0.294, 0, 1)
+            self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
+
+        self.fade()
+
+
 class EffectToken(FadingToken):
     """
     Class defining the FadingTokens representing effects on Character attributes (moves, strength, etc.)
     """
 
     def __init__(self, target_attr: str, character_token: CharacterToken, effect_ends: bool, **kwargs):
-        super().__init__(character_token, **kwargs)
+        super().__init__(**kwargs)
         self.final_opacity = 1
         self.duration = 0.6
         self.target_attr = target_attr
+        self.character_token: CharacterToken = character_token
         self.effect_ends: bool = effect_ends  # determines if effect start or ends
 
         if effect_ends:

@@ -3,7 +3,7 @@ from kivy.uix.button import Button  # type: ignore
 
 from monster_classes import Monster
 from tokens_solid import SceneryToken, PlayerToken, MonsterToken
-from tokens_fading import EffectToken
+from tokens_fading import ExplosionToken
 
 
 class Tile(Button):
@@ -203,13 +203,10 @@ class Tile(Button):
         path = self.dungeon.find_shortest_path(
             player.token.position, self.position, player.blocked_by)
 
-        self.show_explosion()
-
         if path is not None:
             player.token.slide(path, player.token.on_move_completed)
         else:
             player.behave(self)
-
 
     def dynamite_fall(self) -> None:
         """
@@ -220,12 +217,11 @@ class Tile(Button):
             self.get_token("monster").character.kill_character(self)
         self.delete_all_tokens()
         self.place_item("wall", "rock", None)
-        #self.show_explosion()
-
+        self.show_explosion()
 
     def show_explosion(self) -> None:
         """
         Shows an explosion on the Tile
         """
         with self.dungeon.canvas:
-            EffectToken("explosion", self.pos, self.size)
+            ExplosionToken(pos=self.pos, size=self.size)

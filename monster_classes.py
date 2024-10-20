@@ -105,7 +105,7 @@ class Monster(Character, ABC):
     def fight_on_tile(self, opponent_tile: Tile) -> None:
         opponent = opponent_tile.tokens["player"].character
         opponent = self.fight_opponent(opponent)
-        opponent.token.remaining_health = (
+        opponent.token.bar_length = (
                 opponent.stats.health / opponent.stats.natural_health
         )
 

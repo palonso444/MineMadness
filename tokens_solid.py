@@ -190,7 +190,7 @@ class PlayerToken(CharacterToken):
     """
     Class defining Tokens representing Players
     """
-    remaining_health = NumericProperty(None)
+    bar_length = NumericProperty(None)
     modified_attributes = ListProperty([])
 
     def __init__(self, kind: str, species: str, character: Player, position: tuple[int,int],
@@ -202,7 +202,7 @@ class PlayerToken(CharacterToken):
         self.green_bar: Rectangle | None = None
         self.red_bar: Rectangle | None = None
 
-        self.bind(remaining_health=self._display_health_bar)
+        self.bind(bar_length=self._display_health_bar)
         self.post_init()
 
     def post_init(self) -> None:
@@ -210,7 +210,7 @@ class PlayerToken(CharacterToken):
         Changes the value of remaining_health to initialize health bar
         :return: None
         """
-        self.remaining_health = (
+        self.bar_length = (
                 self.character.stats.health / self.character.stats.natural_health
         )
 

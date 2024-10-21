@@ -174,7 +174,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             self._slide_one_step(on_complete)  # this will be removed once path is a ListProperty
         else:
             self.update_token_on_tile(current_tile)
-            self.character.behave(current_tile)   # move this in Tile.on_release AFTER movement is complete (make callback)
+            self.character.act_on_tile(current_tile)   # move this in Tile.on_release AFTER movement is complete (make callback)
 
     def show_damage(self) -> None:
         """

@@ -87,7 +87,7 @@ class Character(ABC):
         pass
 
     @abstractmethod
-    def behave(self, tile: Tile) -> None:
+    def act_on_tile(self, tile: Tile) -> None:
         """
         Abstract method defining the behavior of a character when landing on a new tile
         :param tile: tile where character lands

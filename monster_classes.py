@@ -63,10 +63,10 @@ class Monster(Character, ABC):
         if path is not None:
             self.token.slide(path, self.token.on_move_completed)
         else:
-            self.behave(self.token.get_current_tile())
+            self.act_on_tile(self.token.get_current_tile())
 
 
-    def behave(self, tile: Tile) -> None:
+    def act_on_tile(self, tile: Tile) -> None:
         self.attack_players()
         self.get_dungeon().game.update_switch("character_done")
 

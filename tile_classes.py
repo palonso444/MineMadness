@@ -207,7 +207,7 @@ class Tile(Button):
         if path is not None:
             player.token.slide(path, player.token.on_move_completed)
         else:
-            player.behave(self)
+            player.act_on_tile(self)
 
     def dynamite_fall(self) -> None:
         """

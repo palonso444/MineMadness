@@ -201,14 +201,33 @@ class Tile(Button):
         :return: None
         """
         player = self.dungeon.game.active_character
-        path = self.dungeon.find_shortest_path(
-            player.token.position, self.position, player.blocked_by)
 
-        # TODO: after None this has to go in find_shortest_path
-        if path is not None and not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):
-            player.token.slide(path, player.token.on_move_completed)
+        if self.has_token("player"):
+            if self.get_token("player") == player.token:
+                player.stats.remaining_moves = 0
+            else:
+                self.dungeon.game.switch_character(self.get_token("player").character)
+            self.dungeon.game.update_switch("character_done")
+
         else:
-            player.act_on_tile(self)
+            path = self.dungeon.find_shortest_path(
+                player.token.position, self.position, player.blocked_by)
+            player.token.slide(path, player.token.on_move_completed)
+
+        #elif self.has_token()
+
+            #any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):
+
+
+        #if path is not None and not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):
+            #player.token.slide(path, player.token.on_move_completed)
+        #else:
+            #if player.has_moved:
+                ##player.stats.remaining_moves = 0
+                #self.dungeon.game.update_switch("character_done")
+            #else:
+
+            #player.act_on_tile(self)
 
     def dynamite_fall(self) -> None:
         """

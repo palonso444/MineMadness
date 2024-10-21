@@ -200,13 +200,8 @@ class Player(Character, ABC, EventDispatcher):
 
     def act_on_tile(self, tile:Tile) -> None:
 
-        if tile.has_token("player"):
-            if tile.get_token("player").character == self:
-                #this causes a bug
-                #tile.get_token("player").character.stats.remaining_moves = 0
-                tile.get_token("player").path = None
-            else:
-                self.token.dungeon.game.switch_character(tile.get_token("player").character)
+        #if tile.has_token("player"):
+            #self.token.dungeon.game.switch_character(tile.get_token("player").character)
 
         if tile.kind == "exit" and self.has_all_gems:
             self.exit_level()
@@ -219,10 +214,6 @@ class Player(Character, ABC, EventDispatcher):
                     tile.get_token("monster").token_dodge()
                 else:
                     tile.dynamite_fall()
-
-            elif tile.has_token("player") and tile.get_token("player").character == self:
-                tile.get_token("player").character.stats.remaining_moves = 0
-                tile.get_token("player").path = None
 
             elif tile.has_token("pickable"):
                 self.pick_object(tile)

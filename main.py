@@ -141,6 +141,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             if self.active_character.using_dynamite:
                 self.activate_accessible_tiles(self.active_character.stats.shooting_range)
             else:
+                print("activate_tiles")
                 self.activate_accessible_tiles(self.active_character.stats.remaining_moves)
 
         else:  # if self.active_character remaining moves == 0
@@ -255,6 +256,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                 if not player.has_moved
             }
 
+        self.dungeon.disable_all_tiles()
         player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
         positions_in_range = players_not_yet_active.union(player_movement_range)
         self.dungeon.enable_tiles(positions_in_range, self.active_character)

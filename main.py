@@ -126,6 +126,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         """
         # if no monsters in game, players can move indefinitely
         print("CHARACTER_DONE")
+        print(self.active_character.stats.remaining_moves)
         if (
             isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves == 0

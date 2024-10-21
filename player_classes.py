@@ -202,6 +202,7 @@ class Player(Character, ABC, EventDispatcher):
 
         if tile.has_token("player"):
             if tile.get_token("player").character == self:
+                #this causes a bug
                 #tile.get_token("player").character.stats.remaining_moves = 0
                 tile.get_token("player").path = None
             else:

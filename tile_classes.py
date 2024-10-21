@@ -204,7 +204,8 @@ class Tile(Button):
         path = self.dungeon.find_shortest_path(
             player.token.position, self.position, player.blocked_by)
 
-        if path is not None:
+        # TODO: after None this has to go in find_shortest_path
+        if path is not None and not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):
             player.token.slide(path, player.token.on_move_completed)
         else:
             player.act_on_tile(self)

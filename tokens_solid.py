@@ -116,6 +116,13 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         """
         pass
 
+    def remove_selection_circle(self) -> None:
+        """
+        Placeholder. Monsters do not have selection circle but this funciton is called in MineMadnessGame class
+        :return: None
+        """
+        pass
+
     def update_token_on_tile(self, tile : Tile) -> None:
         """
         Updates all necessary parameters when a CharacterToken lands on a new Tile
@@ -354,10 +361,8 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         super().delete_token(tile)
-        if self.circle is not None:  # to avoid interferences with MineMadnessGame.on_character_done()
-            self.remove_selection_circle()
-        if self.green_bar is not None and self.red_bar is not None:
-            self._remove_health_bar()
+        self.remove_selection_circle()
+        self._remove_health_bar()
 
 
 class MonsterToken(CharacterToken):

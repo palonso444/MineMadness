@@ -125,7 +125,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         :return: None
         """
         # if no monsters in game, players can move indefinitely
-        print("CHARACTER_DONE")
         if (
             isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves == 0
@@ -138,9 +137,9 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             and self.active_character.stats.remaining_moves > 0
         ):
             if self.active_character.using_dynamite:
-                self.activate_accessible_tiles("shooting")
+                self.activate_accessible_tiles(self.active_character.stats.shooting_range)
             else:
-                self.activate_accessible_tiles()  # checks if player can still move
+                self.activate_accessible_tiles(self.active_character.stats.remaining_moves)
 
         else:  # if self.active_character remaining moves == 0
             if isinstance(self.active_character, players.Player):
@@ -194,17 +193,17 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                     game.update_switch("weapons")
 
                     if game.active_character.using_dynamite:
-                        game.activate_accessible_tiles("shooting")
+                        game.activate_accessible_tiles(game.active_character.stats.shooting_range)
                     else:
-                        game.activate_accessible_tiles()
+                        game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
 
             else:  # if monsters turn and monsters in the game
 
-                game.dungeon.activate_which_tiles()  # tiles deactivated in monster turn
+                game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
                 game.active_character = monsters.Monster.data[game.active_character_id]
                 game.update_interface()
                 game.update_switch("health")
-                game.active_character.token.move_token()
+                game.active_character.move()
 
     def on_player_exited(self, *args):
         """
@@ -213,7 +212,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         the corresponding switch.
         :return: None
         """
-        print("PLAYER_EXITED")
         # in this case all out of game
         if players.Player.all_dead():
 
@@ -228,23 +226,23 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             self.update_switch("active_character_id")
 
     def next_character(self):
-
         if self.active_character.id < len(self.active_character.__class__.data) - 1:
             self.active_character_id += 1  # next character on list moves
 
         else:  # if end of characters list reached (all have moved)
             self.update_switch("turn")
 
-    def activate_accessible_tiles(self) -> None:
+    def activate_accessible_tiles(self, steps:int) -> None:
         """
         Gets the total range of activable tiles (player movement range and other player positions if player.
         did not move if monsters are present, otherwise all other players positions).
+        :param steps: number of steps within which accessible Tiles must be activated
         :return: None
         """
 
         if monsters.Monster.all_dead():
             players_not_yet_active = {
-                player.position for player in players.Player.data
+                player.token.position for player in players.Player.data
             }
         else:
             players_not_yet_active = {
@@ -253,11 +251,10 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                 if not player.has_moved
             }
 
-        player_movement_range = self.active_character.token.get_movement_range(
-            self.active_character.stats.remaining_moves
-        )
+        self.dungeon.disable_all_tiles()
+        player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
         positions_in_range = players_not_yet_active.union(player_movement_range)
-        self.dungeon.activate_which_tiles(positions_in_range)
+        self.dungeon.enable_tiles(positions_in_range, self.active_character)
 
     def switch_character(self, new_active_character):
         """

@@ -16,7 +16,6 @@ class Monster(Character, ABC):
         self.kind: str = "monster"
         self.blocked_by = ("wall", "player")
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
-        self.free_actions: tuple = ("fighting",)  # no need of weapons to fight
         self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
 
         # exclusive of Monster class
@@ -34,33 +33,66 @@ class Monster(Character, ABC):
         """
         return False
 
-    def behave(self, tile: Tile) -> bool:
-        if check_if_multiple(self.token.dungeon.game.turn, 2):  # if players turn, monster was dodging
-            self.token.dungeon.get_tile(self.token.start.position).dodging_finished = True
+    def can_dig(self, token_species: str) -> bool:
+        """
+        Placeholder, monsters are not able to dig so far
+        :param token_species: Token.species of the wall
+        :return: False
+        """
+        return False
+
+    def can_fight(self, token_species: str) -> bool:
+        """
+        Placeholder, monsters are always able to fight
+        :param token_species: Token.species of the opponent
+        :return: True
+        """
+        return True
+
+    def can_dodge(self, nearby_spaces: set[tuple[int,int]]) -> bool:
+        """
+        Determines if the Monster can dodge depending on its dodging_ability and the number of
+        nearby spaces
+        :param nearby_spaces: tuple containing the coordinates of the nearby spaces
+        :return: True if the Monster is able to dodge, False otherwise
+        """
+        print(randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability)
+        return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
+
+    def move_token_or_behave(self, path) -> None:
+        if path is not None:
+            self.token.slide(path, self.token.on_move_completed)
         else:
-            self.attack_players()
+            self.act_on_tile(self.token.get_current_tile())
 
-    def try_to_dodge(self):
 
-        random_num = randint(1, 10)
-        surrounding_spaces = {self.token.dungeon.get_tile(position).position
-                              for position in self.token.dungeon.get_nearby_positions(self.token.position)
-                              if not self.token.dungeon.get_tile(position).has_token()}
+    def act_on_tile(self, tile: Tile) -> None:
+        self.attack_players()
+        self.stats.remaining_moves = 0
+        self.get_dungeon().game.update_switch("character_done")
 
-        trigger = random_num + (4 - len(surrounding_spaces))
 
-        if trigger <= self.stats.dodging_ability and len(surrounding_spaces) > 0:
-            end_position = choice(list(surrounding_spaces))
-            self._dodge(end_position)
-        else:
-            self.token.dungeon.get_tile(self.token.position).dodging_finished = True
+    def generate_dodge_path(self):
+        """
+        Returns dodging path
+        :return:
+        """
+        path: list[tuple[int,int]] = list()
+        center_position = self.token.position
+        for _ in range(self.stats.dodging_moves):
+            nearby_spaces: set[tuple[int, int]] = self.token.dungeon.get_nearby_spaces(center_position,
+                                                                                       self.cannot_share_tile_with)
+            if len(nearby_spaces) > 0 and self.can_dodge(nearby_spaces):
+                next_position = choice(list(nearby_spaces))
+                path.append(next_position)
+                center_position = next_position
+        return path if len(path) > 0 else None
 
     def attack_players(self):
         """
         Manages attack of monsters to surrounding players
         :return:
         """
-        print ("ATTACK")
         surrounding_tiles = [self.token.dungeon.get_tile(position)
                              for position in self.token.dungeon.get_nearby_positions(self.token.position)]
 
@@ -73,7 +105,7 @@ class Monster(Character, ABC):
     def fight_on_tile(self, opponent_tile: Tile) -> None:
         opponent = opponent_tile.tokens["player"].character
         opponent = self.fight_opponent(opponent)
-        opponent.token.remaining_health = (
+        opponent.token.bar_length = (
                 opponent.stats.health / opponent.stats.natural_health
         )
 
@@ -197,7 +229,7 @@ class Monster(Character, ABC):
 
             access_tile = self.token.dungeon.get_tile(access[-1])
             possible_path: list[tuple] = self.token.dungeon.find_shortest_path(
-                self.token.start.position, access_tile.position, self.blocked_by
+                self.get_position(), access_tile.position, self.blocked_by
             )
 
             # if access unreachable or too far away, check another one
@@ -284,15 +316,6 @@ class Monster(Character, ABC):
             path = self._check_free_landing(path)
 
         return path if len(path) > 0 else None
-
-    def _dodge(self, end_position: tuple[int]):
-
-        start_tile = self.token.dungeon.get_tile(self.token.position)
-        end_tile = self.token.dungeon.get_tile(end_position)
-        self.token.start = start_tile
-        self.token.goal = end_tile
-        self.token.path = [end_position]
-        self.token.setup_animation(self.token.path)
 
     def _find_accesses(
         self, target_tile: tiles.Tile, smart: bool = True
@@ -414,7 +437,7 @@ class Kobold(Monster):
         self.stats = stats.KoboldStats()
 
     def move(self):
-        return self.assess_path_random()
+        super().move_token_or_behave(self.assess_path_random())
 
 
 class BlindLizard(Monster):
@@ -430,7 +453,7 @@ class BlindLizard(Monster):
         self.stats = stats.BlindLizardStats()
 
     def move(self):
-        return self.assess_path_random()
+        super().move_token_or_behave(self.assess_path_random())
 
 
 class BlackDeath(Monster):
@@ -446,7 +469,7 @@ class BlackDeath(Monster):
         self.stats = stats.BlackDeathStats()
 
     def move(self):
-        return self.assess_path_random()
+        super().move_token_or_behave(self.assess_path_random())
 
 
 # DIRECT MOVEMENT MONSTERS
@@ -465,10 +488,9 @@ class CaveHound(Monster):
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_direct(target_tile)
-
+            super().move_token_or_behave(self.assess_path_direct(target_tile))
         else:
-            return self.assess_path_random()
+            super().move_token_or_behave(self.assess_path_random())
 
 
 class Growl(Monster):
@@ -488,10 +510,9 @@ class Growl(Monster):
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_direct(target_tile)
-
+            super().move_token_or_behave(self.assess_path_direct(target_tile))
         else:
-            return self.assess_path_random()
+            super().move_token_or_behave(self.assess_path_random())
 
 
 class RockGolem(Monster):
@@ -511,10 +532,9 @@ class RockGolem(Monster):
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_direct(target_tile)
-
+            super().move_token_or_behave(self.assess_path_direct(target_tile))
         else:
-            return None
+            super().move_token_or_behave(None)
 
 
 # SMART MOVEMENT MONSTERS
@@ -537,10 +557,9 @@ class DarkGnome(Monster):
         target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_smart(target_tile)
-
+            super().move_token_or_behave(self.assess_path_smart(target_tile))
         else:
-            return self.assess_path_random()
+            super().move_token_or_behave(self.assess_path_random())
 
 
 class NightMare(Monster):
@@ -556,10 +575,9 @@ class NightMare(Monster):
         target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_smart(target_tile)
-
+            super().move_token_or_behave(self.assess_path_smart(target_tile))
         else:
-            return self.assess_path_random()
+            return super().move_token_or_behave(self.assess_path_random())
 
 
 class LindWorm(Monster):
@@ -575,10 +593,9 @@ class LindWorm(Monster):
         target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_smart(target_tile)
-
+            super().move_token_or_behave(self.assess_path_smart(target_tile))
         else:
-            return None
+            super().move_token_or_behave(None)
 
 
 # GHOSTS
@@ -603,8 +620,7 @@ class WanderingShadow(Monster):
 
 
     def move(self):
-
-        return self.assess_path_random()
+        super().move_token_or_behave(self.assess_path_random())
 
 
 class DepthsWisp(Monster):
@@ -630,10 +646,9 @@ class DepthsWisp(Monster):
         target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_direct(target_tile)
-
+            super().move_token_or_behave(self.assess_path_direct(target_tile))
         else:
-            return None
+            super().move_token_or_behave(None)
 
 
 class MountainDjinn(Monster):
@@ -659,10 +674,9 @@ class MountainDjinn(Monster):
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            return self.assess_path_direct(target_tile)
-
+            super().move_token_or_behave(self.assess_path_direct(target_tile))
         else:
-            return None
+            super().move_token_or_behave(None)
 
 
 # SPECIAL MONSTERS
@@ -694,7 +708,6 @@ class Pixie(Monster):
             #self.dungeon.get_tile(self.position).delete_token("pickable")
 
         if target_tile is not None:
-            return self.assess_path_smart(target_tile)
-
+            super().move_token_or_behave(self.assess_path_smart(target_tile))
         else:
-            return self.assess_path_random()
+            super().move_token_or_behave(self.assess_path_random())

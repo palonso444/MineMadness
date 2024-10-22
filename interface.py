@@ -30,12 +30,12 @@ class AbilityButton(ToggleButton):
                 character.token.show_effect_token(
                     "dynamite", character.token.shape.pos, character.token.shape.size
                 )
-                self.game.activate_accessible_tiles("shooting")
+                self.game.activate_accessible_tiles(character.stats.shooting_range)
 
             elif value == "down":
                 character.stats.remaining_moves -= 1
                 character.ability_active = True
-                self.game.activate_accessible_tiles()
+                self.game.activate_accessible_tiles(character.stats.remaining_movesf)
 
                 if character.name == "Sawyer":
                     character.special_items["powder"] -= 1
@@ -56,7 +56,7 @@ class AbilityButton(ToggleButton):
                     character.unhide()
 
                 elif character.name == "Hawkins":
-                    self.game.activate_accessible_tiles()
+                    self.game.activate_accessible_tiles(character.stats.remaining_moves)
 
                 elif character.name == "Crusher Jane":
                     character.token.show_effect_token(
@@ -81,7 +81,7 @@ class Interfacebutton(Button):
         self.game.inv_object = item  # this disables the button, if necessary
 
         character.stats.remaining_moves -= self.stats.use_time
-        self.game.activate_accessible_tiles()
+        self.game.activate_accessible_tiles(character.stats.remaining_moves)
 
         character.check_if_overdose(item)
 
@@ -126,7 +126,7 @@ class JerkyButton(Interfacebutton):
             "heal", character.token.shape.pos, character.token.shape.size
         )
         # this updates health bar
-        character.token.remaining_health = (
+        character.token.bar_length = (
             character.stats.health / character.stats.natural_health
         )
         self.apply_cost("jerky")
@@ -178,9 +178,6 @@ class TobaccoButton(Interfacebutton):
                 "end_turn": self.game.turn + self.stats.effect_duration,
             }
         )
-
-        print("TOBACCO END TURN")
-        print(self.game.turn + self.stats.effect_duration)
 
         character.token.show_effect_token(
             "toughness", character.token.shape.pos, character.token.shape.size

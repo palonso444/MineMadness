@@ -5,7 +5,6 @@ from random import choice
 
 import player_classes as players
 import monster_classes as monsters
-import tokens_solid as tokens
 import tile_classes as tiles
 from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
@@ -57,6 +56,20 @@ class DungeonLayout(GridLayout):
             for dx, dy in directions
         )
 
+    def check_if_connexion(self, position_1: tuple [int,int], position_2: tuple[int,int],
+                           obstacles_kinds: list[str], num_of_steps: int) -> bool:
+        """
+        Checks if two positions of the DungeonLayout are connected or there are obstacles on the way that makes
+        one inaccessible from the other in the given number of steps
+        :param position_1: coordinates of the first position
+        :param position_2: coordinates of the second position
+        :param obstacles_kinds: Token.kinds of the obstacles to consider
+        :param num_of_steps: maximum number of steps
+        :return: True if there is a connexion, False otherwise
+        """
+        path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
+        return path is not None and len(path) <= num_of_steps
+
     @staticmethod
     def on_pos(dungeon: DungeonLayout, pos: list [int, int]) -> None:
         """
@@ -92,10 +105,10 @@ class DungeonLayout(GridLayout):
 
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        blueprint.place_equal_items("#", 3)
-        blueprint.place_equal_items("w", 3)
-        blueprint.place_equal_items("l", 3)
-        blueprint.place_equal_items("O", 1)
+        #blueprint.place_equal_items("#", 8)
+        #blueprint.place_equal_items("w", 3)
+        #blueprint.place_equal_items("l", 3)
+        #blueprint.place_equal_items("W", 2)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -262,39 +275,7 @@ class DungeonLayout(GridLayout):
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
-                self.place_item(tile, token_kind, token_species, character)
-
-    def place_item(self, tile: Tile, token_kind: str,
-                   token_species: str, character: Character | None) -> None:
-        """
-        Places tokens on the tiles
-        :param tile: tile in which item must be placed
-        :param token_kind: Token.kind of the token to be placed
-        :param token_species: Token.species of the token to be placed
-        :param character: character (if any) associated with the token
-        :return: None
-        """
-        token_args = {
-            'kind': token_kind,
-            'species': token_species,
-            'position': tile.position,
-            'character': character,
-            'dungeon_instance': self,
-            'pos': tile.pos,
-            'size': tile.size,
-        }
-
-        if token_kind == "player":
-            token = tokens.PlayerToken(**token_args)
-            character.token = token
-        elif token_kind == "monster":
-            token = tokens.MonsterToken(**token_args)
-            character.token = token
-        else:
-            token = tokens.SceneryToken(**token_args)
-
-        tile.tokens[token_kind] = token
-        tile.bind(pos=tile.update_tokens, size=tile.update_tokens)
+                tile.place_item(token_kind, token_species, character)
 
     def get_tile(self, position: tuple [int:int]) -> Tile:
         """
@@ -319,7 +300,7 @@ class DungeonLayout(GridLayout):
             else:
                 return tile
 
-    def get_nearby_positions(self, position: tuple[int:int]) -> set[tuple[int:int]]:
+    def get_nearby_positions(self, position: tuple[int:int]) -> set[tuple[int,int]]:
         """
         Returns the nearby positions of the specified position
         :param position: coordinates of the position
@@ -333,7 +314,19 @@ class DungeonLayout(GridLayout):
             if self.check_within_limits((position[0] + dx, position[1] + dy))
         }
 
-    def check_within_limits(self, position: tuple[int: int]) -> bool:
+    def get_nearby_spaces(self, position: tuple[int,int], token_kinds:list[str]) -> set[tuple[int,int]]:
+        """
+        Returns a set with positions that do not have tokens of the specified Token.kinds
+        :param position: coordinates of the position from which we are interested to get nearby spaces
+        :param token_kinds: list of Token.kind to avoid
+        :return: set with nearby positions free of specified Token.kinds
+        """
+        return {position for position in self.get_nearby_positions(position)
+                if all(not self.get_tile(position).has_token(token_kind)
+                        for token_kind in token_kinds)}
+
+
+    def check_within_limits(self, position: tuple[int,int]) -> bool:
         """
         Checks if a position lies within the limits of the dungeon
         :param position: position
@@ -341,19 +334,70 @@ class DungeonLayout(GridLayout):
         """
         return 0 <= position[0] < self.rows and 0 <= position[1] < self.cols
 
-    def activate_which_tiles(self, tile_positions: list[tuple[int:int]] | None =None) -> None:
+
+    def get_range(self, position: tuple[int,int], steps: int) -> set[tuple[int,int]]:
         """
-        Activates the activable tiles within a range of positions
-        :param tile_positions: coordinates of the tiles to activate if activable
+        Returns a set with all the positions within a range defined by a central position and a number of steps
+        :param position: coordinates of the central position of the range
+        :param steps: number of steps from the central position
+        :return: set with the coordinates of all positions within the range
+        """
+        mov_range: set = self._get_horizontal_range(position, steps) # row where token is
+
+        vertical_shift: int = 1
+        for lateral_steps in range(steps, 0, -1): # 0 is not inclusive but Token row is already added
+
+            y_position: int = position[0] - vertical_shift  # move upwards
+            if y_position >= 0:
+                # lateral steps -1 because one character step is spent to go up or down
+                mov_range = mov_range.union(self._get_horizontal_range((y_position, position[1]), lateral_steps - 1))
+
+            y_position = position[0] + vertical_shift  # move downwards
+            if y_position < self.rows:
+                mov_range = mov_range.union(self._get_horizontal_range((y_position, position[1]), lateral_steps - 1))
+
+            vertical_shift += 1
+
+        return mov_range
+
+    def _get_horizontal_range(self, position: tuple[int,int], lateral_steps: int) -> set[tuple[int,int]]:
+        """
+        Returns the coordinates of the positions within a row defined by a central position and a range of steps
+        to each side
+        :param position: central position of the row
+        :param lateral_steps: number of steps to take to each side
+        :return: set with all the coordinates within the row
+        """
+        horizontal_range: set = set()
+
+        for step in range(0, lateral_steps + 1):
+            if position[1] - step >= 0:
+                horizontal_range.add((position[0], position[1] - step)) # add whole row left
+
+            if position[1] + step < self.cols:
+                horizontal_range.add((position[0], position[1] + step))  # add whole row right
+
+        return horizontal_range
+
+
+    def disable_all_tiles(self):
+        """
+        Disables all Tiles of the DungeonLayout
         :return: None
         """
         for tile in self.children:
-            # tile is not disabled if positions matches any in tile_positions and is tile.is_activable()
-            tile.disabled = not (
-                    tile_positions is not None and
-                    any(tile.row == pos[0] and tile.col == pos[1] for pos in tile_positions) and
-                    tile.is_activable
-            )
+            tile.disabled = True
+
+    def enable_tiles(self, tile_positions: set[tuple[int:int]], active_character: Player) -> None:
+        """
+        Activates the Tiles within a range of positions
+        :param tile_positions: coordinates of the tiles to activate if activable
+        :param active_character: current active Player in the game
+        :return: None
+        """
+        for position in tile_positions:
+            tile = self.get_tile(position)
+            tile.disabled = not tile.check_if_enable(active_character)
 
     def scan_tiles(self, token_kinds: list[str], exclude: bool=False) -> set[tuple[int:int]]:
         """

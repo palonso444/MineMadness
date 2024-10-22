@@ -3,6 +3,7 @@ from random import randint
 from abc import ABC, abstractmethod
 
 
+
 class Character(ABC):
 
     data: list[Character] | None = None
@@ -50,7 +51,6 @@ class Character(ABC):
         self.stats: CharacterStats | None = None
         self.blocked_by: tuple | None = None
         self.cannot_share_tile_with: tuple | None = None
-        self.free_actions: tuple | None = None
         self.ignores: tuple | None = None
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
         self.ability_display: str | None = None  # needed for AbilityButton.display_text()
@@ -64,6 +64,20 @@ class Character(ABC):
         self.id = len(self.__class__.data)
         self.__class__.data.append(self)
 
+    def get_position(self) -> tuple[int,int]:
+        """
+        Returns the position of the Character.token
+        :return: coordinates of the position of the Character.token
+        """
+        return self.token.position
+
+    def get_dungeon(self) -> DungeonLayout:
+        """
+        Returns the dungeon where the Character.token is
+        :return: DungeonLayout of the dungeon
+        """
+        return self.token.dungeon
+
     @abstractmethod
     def has_all_gems(self) -> bool:
         """
@@ -73,11 +87,31 @@ class Character(ABC):
         pass
 
     @abstractmethod
-    def behave(self, tile: Tile) -> None:
+    def act_on_tile(self, tile: Tile) -> None:
         """
         Abstract method defining the behavior of a character when landing on a new tile
         :param tile: tile where character lands
         :return: None
+        """
+        pass
+
+    @abstractmethod
+    def can_fight(self, token_species: str) -> bool:
+        """
+        Abstract method defining if the character fulfills the requirements to fight with an opponent
+        represented by a Token of the specified Token.species
+        :param token_species: Token.species of the opponent
+        :return: True if the character can fight, False otherwise
+        """
+        pass
+
+    @abstractmethod
+    def can_dig(self, token_species: str) -> bool:
+        """
+        Abstract method defining if the character fulfills the requirements to dig a wall
+        represented by a Token of the specified Token.species
+        :param token_species: Token.species of the wall
+        :return: True if the character can dig, False otherwise
         """
         pass
 
@@ -142,6 +176,7 @@ class Character(ABC):
             opponent.unhide()
 
         opponent.stats.health = opponent.stats.health - damage
+        print(opponent.token)
         opponent.token.show_damage()
 
         return opponent

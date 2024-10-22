@@ -64,7 +64,6 @@ class Player(Character, ABC, EventDispatcher):
         """
         Heals and disables the ability of exited players and transfers them to the next level.
         """
-
         for player in cls.exited:
             if player.name == name:
                 player.heal(player.stats.recovery_end_of_level)
@@ -217,8 +216,10 @@ class Player(Character, ABC, EventDispatcher):
 
     def exit_level(self) -> None:
         Player.exited.add(self)
+        Player.data.remove(self)
         self.rearrange_ids()
         self.token.delete_token(self.token.get_current_tile())
+        #self.token.dungeon.game.update_switch("character_done")
 
     def pick_object(self, tile: Tile) -> None:
 
@@ -596,7 +597,8 @@ class Hawkins(Player):
         self.ability_active = False
         self.token.dungeon.game.update_switch("ability_button")
         if tile.has_token("monster"):
-            tile.get_token("monster").token_dodge()
+            #path is missing here!
+            tile.get_token("monster").slide(on_complete=tile.get_token("monster").on_dodge_completed)
         else:
             tile.dynamite_fall()
 

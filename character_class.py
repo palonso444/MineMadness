@@ -181,7 +181,7 @@ class Character(ABC):
 
         return opponent
 
-    def kill_character(self, tile: Tile):
+    def kill_character(self, tile: Tile) -> None:
         """
         Removes the character from the game
         :param tile:: tile in which the character to kill is located

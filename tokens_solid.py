@@ -56,6 +56,8 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         """
         tile.remove_token(self)
         self.dungeon.canvas.remove(self.shape)
+        if self.character is not None:
+            self.character.token = None
 
 class SceneryToken(SolidToken):
     """
@@ -97,6 +99,13 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             self.shape = Ellipse(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update_pos)
+
+    def unselect_token(self) -> None:
+        """
+        Placeholder. MonsterToken do not have selection circle but this function is called in MineMadnessGame
+        :return: None
+        """
+        pass
 
     def _move_selection_circle(self, *args) -> None:
         """
@@ -257,8 +266,7 @@ class PlayerToken(CharacterToken):
         :param percent_natural_health: current percent_natural_health
         :return: None
         """
-        if token.green_bar is not None and token.red_bar is not None:
-            token._remove_health_bar()
+        token.restart_health_bar()
 
         bar_pos_x = token.pos[0] + (token.size[0] * 0.1)
         bar_pos_y = token.pos[1] + (token.size[1] * 0.1)
@@ -296,6 +304,15 @@ class PlayerToken(CharacterToken):
             self.pos[1] + (self.size[1] * 0.1),
         )
 
+    def restart_health_bar(self) -> None:
+        """
+        Removes the health bar, if present. Call this instead of Token._remove_health_bar() to avoid error if bar not
+        present
+        :return: None
+        """
+        if self.green_bar is not None and self.red_bar is not None:
+            self._remove_health_bar()
+
     def _remove_health_bar(self) -> None:
         """
         Removes the health bar
@@ -324,6 +341,15 @@ class PlayerToken(CharacterToken):
 
         self.bind(pos=self._move_selection_circle, size=self._move_selection_circle)
 
+    def unselect_token(self) -> None:
+        """
+        Removes the selection circle from the Token, if present. Call this instead of Token._remove_selection_circle()
+        to avoid error if circle not present
+        :return: None
+        """
+        if self.circle is not None:
+            self._remove_selection_circle()
+
     def _move_selection_circle(self, *args) -> None:
         """
         Callback triggered during sliding animation. Moves the selection_circle along with the PlayerToken
@@ -338,7 +364,7 @@ class PlayerToken(CharacterToken):
             self.width / 2,  # radius of circle = CharacterToken.width / 2
         )
 
-    def remove_selection_circle(self) -> None:
+    def _remove_selection_circle(self) -> None:
         """
         Removes the selection circle
         :return: None
@@ -354,10 +380,8 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         super().delete_token(tile)
-        if self.circle is not None:  # to avoid interferences with MineMadnessGame.on_character_done()
-            self.remove_selection_circle()
-        if self.green_bar is not None and self.red_bar is not None:
-            self._remove_health_bar()
+        self.unselect_token()
+        self._remove_health_bar()
 
 
 class MonsterToken(CharacterToken):

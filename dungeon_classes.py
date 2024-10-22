@@ -108,8 +108,8 @@ class DungeonLayout(GridLayout):
         #blueprint.place_equal_items("#", 8)
         #blueprint.place_equal_items("w", 3)
         #blueprint.place_equal_items("l", 3)
-        blueprint.place_equal_items("O", 1)
-        #blueprint.place_equal_items("o", self.stats.gem_number())
+        #blueprint.place_equal_items("W", 2)
+        blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
             #blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
@@ -342,18 +342,19 @@ class DungeonLayout(GridLayout):
         :param steps: number of steps from the central position
         :return: set with the coordinates of all positions within the range
         """
-        mov_range: set = self._get_horizontal_range(position, steps)  # row where token is
+        mov_range: set = self._get_horizontal_range(position, steps) # row where token is
 
         vertical_shift: int = 1
         for lateral_steps in range(steps, 0, -1): # 0 is not inclusive but Token row is already added
 
             y_position: int = position[0] - vertical_shift  # move upwards
             if y_position >= 0:
-                mov_range = mov_range.union(self._get_horizontal_range((y_position, position[1]), lateral_steps))
+                # lateral steps -1 because one character step is spent to go up or down
+                mov_range = mov_range.union(self._get_horizontal_range((y_position, position[1]), lateral_steps - 1))
 
             y_position = position[0] + vertical_shift  # move downwards
             if y_position < self.rows:
-                mov_range = mov_range.union(self._get_horizontal_range((y_position, position[1]), lateral_steps))
+                mov_range = mov_range.union(self._get_horizontal_range((y_position, position[1]), lateral_steps - 1))
 
             vertical_shift += 1
 
@@ -369,7 +370,7 @@ class DungeonLayout(GridLayout):
         """
         horizontal_range: set = set()
 
-        for step in range(0, lateral_steps):
+        for step in range(0, lateral_steps + 1):
             if position[1] - step >= 0:
                 horizontal_range.add((position[0], position[1] - step)) # add whole row left
 

@@ -125,8 +125,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         :return: None
         """
         # if no monsters in game, players can move indefinitely
-        print("CHARACTER_DONE")
-        print(self.active_character.stats.remaining_moves)
         if (
             isinstance(self.active_character, players.Player)
             and self.active_character.stats.remaining_moves == 0
@@ -141,7 +139,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             if self.active_character.using_dynamite:
                 self.activate_accessible_tiles(self.active_character.stats.shooting_range)
             else:
-                print("activate_tiles")
                 self.activate_accessible_tiles(self.active_character.stats.remaining_moves)
 
         else:  # if self.active_character remaining moves == 0
@@ -215,7 +212,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         the corresponding switch.
         :return: None
         """
-        print("PLAYER_EXITED")
         # in this case all out of game
         if players.Player.all_dead():
 
@@ -230,7 +226,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             self.update_switch("active_character_id")
 
     def next_character(self):
-
         if self.active_character.id < len(self.active_character.__class__.data) - 1:
             self.active_character_id += 1  # next character on list moves
 

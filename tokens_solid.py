@@ -76,7 +76,7 @@ class SceneryToken(SolidToken):
         :return: None
         """
         with self.dungeon.canvas.after:
-            DiggingToken(pos=self.pos, size=self.size, dungeon=self)
+            DiggingToken(pos=self.pos, size=self.size)
 
 
 class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
@@ -174,7 +174,6 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             self._slide_one_step(on_complete)  # this will be removed once path is a ListProperty
         else:
             self.update_token_on_tile(current_tile)
-            print(self.character.stats.remaining_moves)
             self.character.act_on_tile(current_tile)   # move this in Tile.on_release AFTER movement is complete (make callback)
 
     def show_damage(self) -> None:
@@ -183,7 +182,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         with self.dungeon.canvas.after:
-            DamageToken(pos=self.pos, size=self.size, dungeon=self)
+            DamageToken(pos=self.pos, size=self.size)
 
 
 class PlayerToken(CharacterToken):

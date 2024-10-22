@@ -35,7 +35,7 @@ class AbilityButton(ToggleButton):
             elif value == "down":
                 character.stats.remaining_moves -= 1
                 character.ability_active = True
-                self.game.activate_accessible_tiles()
+                self.game.activate_accessible_tiles(character.stats.remaining_movesf)
 
                 if character.name == "Sawyer":
                     character.special_items["powder"] -= 1
@@ -178,9 +178,6 @@ class TobaccoButton(Interfacebutton):
                 "end_turn": self.game.turn + self.stats.effect_duration,
             }
         )
-
-        print("TOBACCO END TURN")
-        print(self.game.turn + self.stats.effect_duration)
 
         character.token.show_effect_token(
             "toughness", character.token.shape.pos, character.token.shape.size

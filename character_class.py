@@ -176,6 +176,7 @@ class Character(ABC):
             opponent.unhide()
 
         opponent.stats.health = opponent.stats.health - damage
+        print(opponent.token)
         opponent.token.show_damage()
 
         return opponent

@@ -124,7 +124,7 @@ class Player(Character, ABC, EventDispatcher):
 
     @property
     def has_all_gems(self):
-        return Player.gems == self.dungeon.game.total_gems
+        return Player.gems == self.get_dungeon().game.total_gems
 
     @abstractmethod
     def can_fight(self, token_species: str) -> bool:
@@ -155,7 +155,7 @@ class Player(Character, ABC, EventDispatcher):
                 self.player_level * self.stats.base_exp_to_level_up
             )
             self.experience = 0
-            self.dungeon.show_effect_token(
+            self.get_dungeon().show_effect_token(
                 "talisman_level_up",
                 self.token.shape.pos,
                 self.token.shape.size,
@@ -200,29 +200,16 @@ class Player(Character, ABC, EventDispatcher):
 
     def act_on_tile(self, tile:Tile) -> None:
 
-        #if tile.has_token("player"):
-            #self.token.dungeon.game.switch_character(tile.get_token("player").character)
-
         if tile.kind == "exit" and self.has_all_gems:
             self.exit_level()
             self.token.dungeon.game.update_switch("player_exited")
         else:
-            if self.using_dynamite:
-                self.throw_dynamite()
-                self.token.dungeon.game.update_switch("ability_button")
-                if tile.has_token("monster"):
-                    tile.get_token("monster").token_dodge()
-                else:
-                    tile.dynamite_fall()
-
-            elif tile.has_token("pickable"):
+            if tile.has_token("pickable"):
                 self.pick_object(tile)
             elif tile.has_token("treasure"):
                 self.pick_treasure(tile)
-
             elif tile.has_token("wall"):
                 self.dig(tile)
-
             elif tile.has_token("monster"):
                 self.fight_on_tile(tile)
 
@@ -235,52 +222,53 @@ class Player(Character, ABC, EventDispatcher):
 
     def pick_object(self, tile: Tile) -> None:
 
-        game = self.dungeon.game
+        game = self.get_dungeon().game
         # if tile.token.species not in self.ignores:
         if "pickable" not in self.ignores:
-            if tile.tokens["pickable"].species in self.special_items:
+            if tile.get_token("pickable").species in self.special_items:
                 self.special_items[tile.token.species] += 1
                 game.update_switch("ability_button")
 
             elif tile.tokens["pickable"].species in self.inventory.keys():
-                self.inventory[tile.tokens["pickable"].species] += 1
-                game.inv_object = tile.tokens["pickable"].species
+                self.inventory[tile.get_token("pickable").species] += 1
+                game.inv_object = tile.get_token("pickable").species
 
             else:
-                character_attribute = getattr(self.stats, tile.token.species + "s")
+                character_attribute = getattr(self.stats, f"{tile.get_token("pickable").species}s")
                 character_attribute += 1
-                setattr(self.stats, tile.token.species + "s", character_attribute)
-                game.update_switch(tile.token.species + "s")
+                setattr(self.stats, f"{tile.get_token("pickable").species}s", character_attribute)
+                game.update_switch(f"{tile.get_token("pickable").species}s")
                 game.update_switch("ability_button")  # for Crusher Jane
 
-            tile.tokens["pickable"].delete_token(tile)
+            tile.get_token("pickable").delete_token(tile)
 
     def pick_treasure(self, tile:Tile)-> None:
-        game=self.dungeon.game
+        game=self.get_dungeon().game
         if "treasure" not in self.ignores:
             Player.gems += 1
             game.update_switch("gems")
-            tile.tokens["treasure"].delete_token(tile)
+            tile.get_token("treasure").delete_token(tile)
 
     def dig(self, wall_tile: Tile) -> None:
 
-        game = self.dungeon.game
+        game = self.get_dungeon().game
 
-        if self.stats.shovels > 0:
-            if "digging" not in self.free_actions or wall_tile.has_token("wall", "granite"):
+        if wall_tile.has_token("wall", "granite") and self.can_dig("granite"):
+            self.stats.shovels -= 1
+            game.update_switch("shovels")
+            self.stats.remaining_moves -= self.stats.digging_moves
+            wall_tile.get_token("wall").show_digging()
+            wall_tile.get_token("wall").delete_token(wall_tile)
+        if wall_tile.has_token("wall", "rock") and self.can_dig("rock"):
+            if not isinstance(self, Hawkins):
                 self.stats.shovels -= 1
                 game.update_switch("shovels")
-        self.stats.remaining_moves -= self.stats.digging_moves
-
-        wall_tile.tokens["wall"].show_digging()
-        wall_tile.tokens["wall"].delete_token(wall_tile)
-
-        # if digging a wall recently created by dynamite
-        if wall_tile.dodging_finished:
-            wall_tile.dodging_finished = False
+            self.stats.remaining_moves -= self.stats.digging_moves
+            wall_tile.get_token("wall").show_digging()
+            wall_tile.get_token("wall").delete_token(wall_tile)
 
     def fight_on_tile(self, opponent_tile) -> None:
-        opponent = opponent_tile.tokens["monster"].character
+        opponent = opponent_tile.get_token("monster").character
         opponent = self.fight_opponent(opponent)
         self.subtract_weapon()
 
@@ -322,9 +310,9 @@ class Player(Character, ABC, EventDispatcher):
             for value in self.special_items.values():
                 value = 0
 
-        location: tiles.Tile = self.dungeon.get_random_tile(free=True)
+        location: tiles.Tile = self.get_dungeon().get_random_tile(free=True)
 
-        self.dungeon.place_item(location, self.token.kind, self.token.species, self)
+        self.get_dungeon().place_item(location, self.token.kind, self.token.species, self)
 
         print(self.player_level)
         print(self.stats)
@@ -367,7 +355,7 @@ class Player(Character, ABC, EventDispatcher):
         self.stats.natural_moves += increase
         self.stats.moves += increase
         self.stats.remaining_moves += increase
-        self.dungeon.game.activate_accessible_tiles()
+        self.get_dungeon().game.activate_accessible_tiles()
 
     def _level_up_strength(self, increase: tuple[int]) -> None:
 
@@ -439,12 +427,13 @@ class Sawyer(Player):
 
     def hide(self):
         self.token.color.a = 0.6  # changes transparency
-        self.ignores += ("pickable",)
+        self.ignores += ("pickable","treasure")
 
     def unhide(self):
-        game=self.dungeon.game
+        game=self.get_dungeon().game
         self.token.color.a = 1  # changes transparency
         self.ignores = tuple_remove(self.ignores, "pickable")
+        self.ignores = tuple_remove(self.ignores, "treasure")
         self.ability_active = False
         game.update_switch("ability_button")
 
@@ -470,7 +459,7 @@ class CrusherJane(Player):
         super().__init__()
         self.char: str = "&"
         self.name: str = "Crusher Jane"
-        self.ignores: tuple = ("gem", "powder", "dynamite")
+        self.ignores: tuple = ("powder", "dynamite", "treasure")
 
         self.stats = stats.CrusherJaneStats()
         self._update_level_track(self.player_level)
@@ -529,7 +518,7 @@ class CrusherJane(Player):
     def subtract_weapon(self) -> None:
 
         if self.ability_active:
-            game = self.dungeon.game
+            game = self.get_dungeon().game
             self.stats.weapons -= 1
             game.update_switch("weapons")
             if self.stats.weapons == 0:
@@ -549,7 +538,7 @@ class Hawkins(Player):
         super().__init__()
         self.char: str = "?"
         self.name: str = "Hawkins"
-        self.ignores: tuple = ("gem", "powder")
+        self.ignores: tuple = ("gem", "powder", "treasure")
 
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)
@@ -600,10 +589,18 @@ class Hawkins(Player):
     def using_dynamite(self):
         return self.ability_active
 
-    def throw_dynamite(self):
+
+    def throw_dynamite(self, tile: Tile):
         self.special_items["dynamite"] -= 1
         self.stats.remaining_moves -= 1
         self.ability_active = False
+        self.token.dungeon.game.update_switch("ability_button")
+        if tile.has_token("monster"):
+            tile.get_token("monster").token_dodge()
+        else:
+            tile.dynamite_fall()
+
+        self.token.dungeon.game.update_switch("character_done")
 
     def enhance_damage(self, damage: int) -> int:
         return damage
@@ -612,6 +609,6 @@ class Hawkins(Player):
         pass
 
     def subtract_weapon(self) -> None:
-        game=self.dungeon.game
+        game=self.get_dungeon().game
         self.stats.weapons -= 1
         game.update_switch("weapons")

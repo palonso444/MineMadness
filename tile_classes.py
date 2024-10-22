@@ -197,7 +197,7 @@ class Tile(Button):
 
     def on_release(self) -> None:
         """
-        Handles the logic when a Tile is clicked
+        Handles the logic when a Player falls on the Tile.
         :return: None
         """
         player = self.dungeon.game.active_character
@@ -209,25 +209,17 @@ class Tile(Button):
                 self.dungeon.game.switch_character(self.get_token("player").character)
             self.dungeon.game.update_switch("character_done")
 
-        else:
+        elif player.using_dynamite:
+            player.throw_dynamite(self)
+
+        # TODO: make this more clear
+        elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):
             path = self.dungeon.find_shortest_path(
                 player.token.position, self.position, player.blocked_by)
             player.token.slide(path, player.token.on_move_completed)
 
-        #elif self.has_token()
-
-            #any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):
-
-
-        #if path is not None and not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):
-            #player.token.slide(path, player.token.on_move_completed)
-        #else:
-            #if player.has_moved:
-                ##player.stats.remaining_moves = 0
-                #self.dungeon.game.update_switch("character_done")
-            #else:
-
-            #player.act_on_tile(self)
+        else:
+            player.act_on_tile(self)
 
     def dynamite_fall(self) -> None:
         """
@@ -243,6 +235,7 @@ class Tile(Button):
     def show_explosion(self) -> None:
         """
         Shows an explosion on the Tile
+        :return: None
         """
-        with self.canvas.after:
+        with self.dungeon.canvas.after:
             ExplosionToken(pos=self.pos, size=self.size)

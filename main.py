@@ -12,6 +12,8 @@ import monster_classes as monsters
 from interface import Interfacebutton
 from crapgeon_utils import check_if_multiple
 from dungeon_classes import DungeonLayout
+from player_classes import Player
+
 
 # LabelBase.register(name = 'Vollkorn',
 # fn_regular= 'fonts/Vollkorn-Regular.ttf',
@@ -144,7 +146,10 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         else:  # if self.active_character remaining moves == 0
             if isinstance(self.active_character, players.Player):
                 self.active_character.remove_effects(self.turn)
-                self.active_character.token.remove_selection_circle()
+                self.active_character.token.unselect_token()
+                #if self.active_character.token.circle is not None: #not in Player.dead_data:
+                    #print(self.active_character)
+                    #self.active_character.token._remove_selection_circle()
             self.next_character()  # switch turns if character last of character.characters
 
     @staticmethod
@@ -266,7 +271,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         index_old_char = players.Player.data.index(self.active_character)
         players.Player.swap_characters(index_new_char,index_old_char)
 
-        self.active_character.token.remove_selection_circle()
+        self.active_character.token.unselect_token()
         self.active_character = new_active_character
         self.active_character_id = None
         self.active_character_id = players.Player.data.index(self.active_character)

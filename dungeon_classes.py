@@ -111,8 +111,8 @@ class DungeonLayout(GridLayout):
         #blueprint.place_equal_items("O", 2)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
-        #for key, value in self.stats.level_progression().items():
-            #blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
+        for key, value in self.stats.level_progression().items():
+            blueprint.place_items(item=key, frequency=value, protected=self.stats.mandatory_items)
 
         #blueprint.print_map()
         return blueprint
@@ -131,27 +131,27 @@ class DungeonLayout(GridLayout):
 
                 case "%":
                     if self.dungeon_level == 1:
-                        token_kind = "player"
-                        token_species = "sawyer"
                         character = players.Sawyer()
                     else:
                         character = players.Player.transfer_player("Sawyer")
+                    token_kind = "player"
+                    token_species = "sawyer"
 
                 case "?":
                     if self.dungeon_level == 1:
-                        token_kind = "player"
-                        token_species = "hawkins"
                         character = players.Hawkins()
                     else:
                         character = players.Player.transfer_player("Hawkins")
+                    token_kind = "player"
+                    token_species = "hawkins"
 
                 case "&":
                     if self.dungeon_level == 1:
-                        token_kind = "player"
-                        token_species = "crusherjane"
                         character = players.CrusherJane()
                     else:
                         character = players.Player.transfer_player("Crusher Jane")
+                    token_kind = "player"
+                    token_species = "crusherjane"
 
                 case "K":
                     token_kind="monster"

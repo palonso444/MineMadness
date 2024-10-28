@@ -190,7 +190,8 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                     game.next_character()
 
                 else:
-                    game.active_character.token.display_selection_circle()
+                    #game.active_character.token.display_selection_circle()
+                    game.active_character.token.select_character()
                     game.update_interface()
                     # health must be updated here after setting player as active character
                     game.update_switch("health")

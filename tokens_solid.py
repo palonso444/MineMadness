@@ -98,9 +98,9 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
 
         self.path: list[tuple[int,int]] | None = None
         self.color: tuple[int,int,int,int]| None = None
-        self.display_in_canvas()
+        self._display_in_canvas()
 
-    def display_in_canvas(self) -> None:
+    def _display_in_canvas(self) -> None:
         """
         Displays CharacterToken.shape on the canvas of the DungeonLayout
         :return: None
@@ -240,7 +240,7 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         self.dungeon.canvas.remove(self.shape)
-        self.display_in_canvas()
+        self._display_in_canvas()
         self._display_health_bar(self, self.bar_length)
         self._display_selection_circle()
 

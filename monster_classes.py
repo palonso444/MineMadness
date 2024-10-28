@@ -71,10 +71,10 @@ class Monster(Character, ABC):
         self.get_dungeon().game.update_switch("character_done")
 
 
-    def generate_dodge_path(self):
+    def generate_dodge_path(self) -> list [tuple[int,int]] | None:
         """
-        Returns dodging path
-        :return:
+        Returns dodging path if dodging successful
+        :return: path or None
         """
         path: list[tuple[int,int]] = list()
         center_position = self.token.position

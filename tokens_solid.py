@@ -100,8 +100,11 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.color: tuple[int,int,int,int]| None = None
         self.display_in_canvas()
 
-    def display_in_canvas(self):
-
+    def display_in_canvas(self) -> None:
+        """
+        Displays CharacterToken.shape on the canvas of the DungeonLayout
+        :return: None
+        """
         with self.dungeon.canvas:
             self.color = Color(1, 1, 1, 1)
             self.shape = Ellipse(pos=self.pos, size=self.size, source=self.source)

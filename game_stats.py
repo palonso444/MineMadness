@@ -181,7 +181,7 @@ class KoboldStats(MonsterStats):
     strength: tuple = (1, 2)
     moves: int = 5
     random_motility: int = 7
-    dodging_ability: int = 10
+    dodging_ability: int = 0
     experience_when_killed: int = 5
 
 

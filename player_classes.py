@@ -597,11 +597,10 @@ class Hawkins(Player):
         self.ability_active = False
         self.token.dungeon.game.update_switch("ability_button")
         if tile.has_token("monster"):
-            #path is missing here!
-            tile.get_token("monster").slide(on_complete=tile.get_token("monster").on_dodge_completed)
-        else:
-            tile.dynamite_fall()
-
+            path = tile.get_token("monster").character.generate_dodge_path()
+            if path is not None:
+                tile.get_token("monster").slide(path, on_complete=tile.get_token("monster").on_dodge_completed)
+        tile.dynamite_fall()
         self.token.dungeon.game.update_switch("character_done")
 
     def enhance_damage(self, damage: int) -> int:

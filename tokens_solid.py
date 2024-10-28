@@ -405,6 +405,6 @@ class MonsterToken(CharacterToken):
         :return: None
         """
         if len(self.path) > 0:
-            self.dodge_one_step(on_complete)
+            self._slide_one_step(on_complete)
         else:
             self.update_token_on_tile(current_tile)

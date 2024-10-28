@@ -111,6 +111,14 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
 
         self.bind(pos=self.update_pos)
 
+    def select_character(self) -> None:
+        """
+        Resets the display of CharacterToken.shape it ends up in the upper layer of the canvas
+        :return: None
+        """
+        self.dungeon.canvas.remove(self.shape)
+        self._display_in_canvas()
+
     def unselect_token(self) -> None:
         """
         Placeholder. MonsterToken do not have selection circle but this function is called in MineMadnessGame
@@ -236,11 +244,10 @@ class PlayerToken(CharacterToken):
     def select_character(self) -> None:
         """
         Resets the display of CharacterToken.shape and associated circle and health bar so they end up in the upper
-        layer of the canvas.
+        layer of the canvas
         :return: None
         """
-        self.dungeon.canvas.remove(self.shape)
-        self._display_in_canvas()
+        super().select_character()
         self._display_health_bar(self, self.bar_length)
         self._display_selection_circle()
 

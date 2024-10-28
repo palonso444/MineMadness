@@ -89,6 +89,7 @@ class ExplosionToken(FadingToken):
         self.source = "./fadingtokens/explosion_token.png"
 
         with self.canvas:
+            self.color = Color(1, 1, 1, 1)
             self.shape = Rectangle(pos=pos, size=size, source=self.source)
 
         self.fade()
@@ -113,6 +114,7 @@ class EffectToken(FadingToken):
             self.source = f"./fadingtokens/{self.target_attr}_effect_token.png"
 
         with self.canvas:
+            self.color = Color(1, 1, 1, 1)
             self.shape = Rectangle(pos=pos, size=size, source=self.source)
 
         self.fade()

@@ -68,6 +68,7 @@ class SceneryToken(SolidToken):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
         with self.dungeon.canvas:
+            self.color = Color(1, 1, 1, 1)
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update_pos)

@@ -55,7 +55,10 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         tile.remove_token(self)
-        self.dungeon.canvas.remove(self.shape)
+        if self.shape in self.dungeon.canvas.children:
+            self.dungeon.canvas.remove(self.shape)
+        elif self.shape in self.dungeon.canvas.after.children:  # walls are in canvas after
+            self.dungeon.canvas.after.remove(self.shape)
         if self.character is not None:
             self.character.token = None
 
@@ -67,7 +70,7 @@ class SceneryToken(SolidToken):
                  character: None, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
-        with self.dungeon.canvas:
+        with self.dungeon.canvas.after:
             self.color = Color(1, 1, 1, 1)
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 
@@ -78,7 +81,7 @@ class SceneryToken(SolidToken):
         Shows the on the Token the FadingToken corresponding to the digging action of a Player
         :return: None
         """
-        with self.dungeon.canvas.after:
+        with self.dungeon.canvas:
             DiggingToken(pos=self.pos, size=self.size)
 
 
@@ -93,7 +96,11 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
                  dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
-        self.path: list[tuple[int,int]] | None = None   # make this a ListProperty
+        self.path: list[tuple[int,int]] | None = None
+        self.color: tuple[int,int,int,int]| None = None
+        self.display_in_canvas()
+
+    def display_in_canvas(self):
 
         with self.dungeon.canvas:
             self.color = Color(1, 1, 1, 1)
@@ -191,7 +198,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         Shows the on the Token the FadingToken corresponding to damage
         :return: None
         """
-        with self.dungeon.canvas.after:
+        with self.dungeon.canvas:
             DamageToken(pos=self.pos, size=self.size)
 
 
@@ -222,6 +229,17 @@ class PlayerToken(CharacterToken):
         self.bar_length = (
                 self.character.stats.health / self.character.stats.natural_health
         )
+
+    def select_character(self) -> None:
+        """
+        Resets the display of CharacterToken.shape and associated circle and health bar so they end up in the upper
+        layer of the canvas.
+        :return: None
+        """
+        self.dungeon.canvas.remove(self.shape)
+        self.display_in_canvas()
+        self._display_health_bar(self, self.bar_length)
+        self._display_selection_circle()
 
     @staticmethod
     def on_modified_attributes(character_token: CharacterToken, modified_attributes: list[str]) -> None:
@@ -267,14 +285,14 @@ class PlayerToken(CharacterToken):
         :param percent_natural_health: current percent_natural_health
         :return: None
         """
-        token.restart_health_bar()
+        token._restart_health_bar()
 
         bar_pos_x = token.pos[0] + (token.size[0] * 0.1)
         bar_pos_y = token.pos[1] + (token.size[1] * 0.1)
         bar_length = token.size[0] * 0.8  # total horizontal length of the bar
         bar_thickness = token.size[1] * 0.1
 
-        with token.dungeon.canvas.after:
+        with token.dungeon.canvas:
             token.bar_color = Color(0, 1, 0, 1)  # green
             token.green_bar = Rectangle(
                 pos=(bar_pos_x, bar_pos_y),
@@ -305,7 +323,7 @@ class PlayerToken(CharacterToken):
             self.pos[1] + (self.size[1] * 0.1),
         )
 
-    def restart_health_bar(self) -> None:
+    def _restart_health_bar(self) -> None:
         """
         Removes the health bar, if present. Call this instead of Token._remove_health_bar() to avoid error if bar not
         present
@@ -319,12 +337,12 @@ class PlayerToken(CharacterToken):
         Removes the health bar
         :return: None
         """
-        self.dungeon.canvas.after.remove(self.green_bar)
-        self.dungeon.canvas.after.remove(self.red_bar)
+        self.dungeon.canvas.remove(self.green_bar)
+        self.dungeon.canvas.remove(self.red_bar)
         self.green_bar = None
         self.red_bar = None
 
-    def display_selection_circle(self) -> None:
+    def _display_selection_circle(self) -> None:
         """
         Displays the selection circle around the selected CharacterToken
         :return: None

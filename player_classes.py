@@ -91,7 +91,7 @@ class Player(Character, ABC, EventDispatcher):
             "coffee": 0,
             "tobacco": 0,
             "whisky": 2,
-            "talisman": 0,
+            "talisman": 1,
         }
         self.effects: dict[str:list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
@@ -154,8 +154,8 @@ class Player(Character, ABC, EventDispatcher):
                 self.player_level * self.stats.base_exp_to_level_up
             )
             self.experience = 0
-            self.get_dungeon().show_effect_token(
-                "talisman_level_up",
+            self.token.show_effect_token(
+                "level_up",
                 self.token.shape.pos,
                 self.token.shape.size,
             )
@@ -290,7 +290,7 @@ class Player(Character, ABC, EventDispatcher):
         super().kill_character(tile)
         self.dead_data.append(self)
 
-    def resurrect(self):
+    def resurrect(self, dungeon: DungeonLayout):
 
         self.player_level = self.player_level - 3 if self.player_level > 3 else 1
 
@@ -305,15 +305,15 @@ class Player(Character, ABC, EventDispatcher):
             self.player_level * self.stats.base_exp_to_level_up
         )
 
-        for value in self.inventory.values():
-            value = 0
+        for key in self.inventory.keys():
+            self.inventory[key] = 0
         if self.special_items is not None:
-            for value in self.special_items.values():
-                value = 0
+            for key in self.special_items.keys():
+                self.special_items[key] = 0
 
-        location: tiles.Tile = self.get_dungeon().get_random_tile(free=True)
-
-        self.get_dungeon().place_item(location, self.token.kind, self.token.species, self)
+        location: Tile = dungeon.get_random_tile(free=True)
+        location.place_item(self.kind, self.species, character=self)
+        self.setup_character()
 
         print(self.player_level)
         print(self.stats)
@@ -384,6 +384,7 @@ class Sawyer(Player):
         super().__init__()
         self.char: str = "%"
         self.name: str = "Sawyer"
+        self.species: str = "sawyer"
         self.ignores = ("dynamite",)
 
         self.stats = stats.SawyerStats()
@@ -460,6 +461,7 @@ class CrusherJane(Player):
         super().__init__()
         self.char: str = "&"
         self.name: str = "Crusher Jane"
+        self.species: str = "crusherjane"
         self.ignores: tuple = ("powder", "dynamite", "treasure")
 
         self.stats = stats.CrusherJaneStats()
@@ -539,6 +541,7 @@ class Hawkins(Player):
         super().__init__()
         self.char: str = "?"
         self.name: str = "Hawkins"
+        self.species: str = "hawkins"
         self.ignores: tuple = ("gem", "powder", "treasure")
 
         self.stats = stats.HawkinsStats()

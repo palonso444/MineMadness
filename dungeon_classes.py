@@ -108,7 +108,7 @@ class DungeonLayout(GridLayout):
         #blueprint.place_equal_items("#", 15)
         #blueprint.place_equal_items("w", 3)
         #blueprint.place_equal_items("l", 3)
-        blueprint.place_equal_items("W", 5)
+        blueprint.place_equal_items("N", 3)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -291,12 +291,12 @@ class DungeonLayout(GridLayout):
         :param free: bool specifying if the returned tile must be free (with no tokens)
         :return: random tile
         """
-        tile_positions: list = self.tiles_dict.keys()
+        tile_positions: list = list(self.tiles_dict.keys())
 
         while tile_positions:
             tile = self.get_tile(choice(tile_positions))
             if free and tile.has_token():
-                tile.positions.remove(tile.position)
+                tile_positions.remove(tile.position)
             else:
                 return tile
 

@@ -248,7 +248,7 @@ class TalismanButton(Interfacebutton):
             Player.dead_data.remove(player)
             player.unbind(experience=player.on_experience)
             player.unbind(player_level=player.on_player_level)
-            player.resurrect()
+            player.resurrect(character.get_dungeon())
             character.token.show_effect_token(
                 "resurrect",
                 player.token.shape.pos,

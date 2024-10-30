@@ -47,6 +47,7 @@ class Character(ABC):
         self.name: str | None = None
         self.id: int | None = None   # initialized in DungeonLayot.place_item()
         self.kind: str | None = None
+        self.species: str | None = None
         self.token: Token | None = None  # initialized in DungeonLayot.place_item()
         self.stats: CharacterStats | None = None
         self.blocked_by: tuple | None = None

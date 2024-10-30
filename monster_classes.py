@@ -433,6 +433,7 @@ class Kobold(Monster):
         super().__init__()
         self.char: str = "K"
         self.name: str = "Kobold"
+        self.species: str = "kobold"
         self.stats = stats.KoboldStats()
 
     def move(self):
@@ -449,6 +450,7 @@ class BlindLizard(Monster):
         super().__init__()
         self.char: str = "L"
         self.name: str = "Blind Lizard"
+        self.species: str = "lizard"
         self.stats = stats.BlindLizardStats()
 
     def move(self):
@@ -465,6 +467,7 @@ class BlackDeath(Monster):
         super().__init__()
         self.char: str = "B"
         self.name: str = "Black Death"
+        self.species: str = "blackdeath"
         self.stats = stats.BlackDeathStats()
 
     def move(self):
@@ -480,6 +483,7 @@ class CaveHound(Monster):
         super().__init__()
         self.char: str = "H"
         self.name: str = "Cave Hound"
+        self.species: str = "hound"
         self.stats = stats.CaveHoundStats()
 
     def move(self):
@@ -502,6 +506,7 @@ class Growl(Monster):
         super().__init__()
         self.char: str = "G"
         self.name: str = "Growl"
+        self.species: str = "growl"
         self.stats = stats.GrowlStats()
 
     def move(self):
@@ -524,6 +529,7 @@ class RockGolem(Monster):
         super().__init__()
         self.char: str = "R"
         self.name: str = "Rock Golem"
+        self.species: str = "golem"
         self.stats = stats.RockGolemStats()
 
     def move(self):
@@ -549,6 +555,7 @@ class DarkGnome(Monster):
         super().__init__()
         self.char: str = "O"
         self.name: str = "Dark Gnome"
+        self.species: str = "gnome"
         self.stats = stats.DarkGnomeStats()
 
     def move(self):
@@ -567,6 +574,7 @@ class NightMare(Monster):
         super().__init__()
         self.char: str = "N"
         self.name: str = "Nightmare"
+        self.species: str = "nightmare"
         self.stats = stats.NightmareStats()
 
     def move(self):
@@ -585,6 +593,7 @@ class LindWorm(Monster):
         super().__init__()
         self.char: str = "Y"
         self.name: str = "Lindworm"
+        self.species: str = "lindworm"
         self.stats = stats.LindWormStats()
 
     def move(self):
@@ -610,6 +619,7 @@ class WanderingShadow(Monster):
         super().__init__()
         self.char: str = "S"
         self.name: str = "Wandering Shadow"
+        self.species: str = "shadow"
         self.stats = stats.WanderingShadowStats()
 
         self.blocked_by: tuple = ()
@@ -632,6 +642,7 @@ class DepthsWisp(Monster):
         super().__init__()
         self.char: str = "W"
         self.name: str = "Depths Wisp"
+        self.species: str = "wisp"
         self.stats = stats.DepthsWispStats()
 
         self.blocked_by: tuple = ()
@@ -660,6 +671,7 @@ class MountainDjinn(Monster):
         super().__init__()
         self.char: str = "D"
         self.name: str = "Mountain Djinn"
+        self.species: str = "djinn"
         self.stats = stats.MountainDjinnStats()
 
         self.blocked_by: tuple = ()
@@ -693,6 +705,7 @@ class Pixie(Monster):
         super().__init__()
         self.char: str = "P"
         self.name: str = "Pixie"
+        self.species: str = "pixie"
         self.stats = stats.PixieStats()
 
         self.ignores: tuple = self.ignores + ("gem",)

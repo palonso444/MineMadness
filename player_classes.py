@@ -214,7 +214,7 @@ class Player(Character, ABC, EventDispatcher):
 
         if tile.kind == "exit" and self.has_all_gems:
             self.exit_level()
-            self.token.dungeon.game.update_switch("player_exited")
+            tile.dungeon.game.update_switch("player_exited")
         else:
             if tile.has_token("monster"):
                 self.fight_on_tile(tile)
@@ -232,7 +232,6 @@ class Player(Character, ABC, EventDispatcher):
         Player.data.remove(self)
         self.rearrange_ids()
         self.token.delete_token(self.token.get_current_tile())
-        #self.token.dungeon.game.update_switch("character_done")
 
     def pick_object(self, tile: Tile) -> None:
 

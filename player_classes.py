@@ -84,6 +84,8 @@ class Player(Character, ABC, EventDispatcher):
         self.blocked_by: tuple = ("wall", "monster")
         self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
         self.ignores: tuple = (None,)
+        self.step_transition: str = "in_out_quad" # walking
+        self.step_duration: float = 0.35
 
         # attributes exclusive of Player class
         self.inventory: dict[str:int] = {

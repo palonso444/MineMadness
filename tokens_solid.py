@@ -176,7 +176,9 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         """
         next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
 
-        animation = Animation(pos=next_tile.pos, duration=0.2)
+        animation = Animation(pos=next_tile.pos, duration=self.character.step_duration,
+                              transition=self.character.step_transition)
+
         animation.bind(on_complete=lambda animation_obj, token_shape: on_complete(animation_obj,
                                                                                token_shape,
                                                                                next_tile,

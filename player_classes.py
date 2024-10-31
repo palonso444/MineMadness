@@ -145,6 +145,17 @@ class Player(Character, ABC, EventDispatcher):
         """
         pass
 
+    def reset_objects(self) -> None:
+        """
+        Sets all inventory objects and special items to 0
+        :return: None
+        """
+        for key in self.inventory.keys():
+            self.inventory[key] = 0
+        if self.special_items is not None:
+            for key in self.special_items.keys():
+                self.special_items[key] = 0
+
 
     def on_experience(self, instance, value):
 
@@ -203,14 +214,14 @@ class Player(Character, ABC, EventDispatcher):
             self.exit_level()
             self.token.dungeon.game.update_switch("player_exited")
         else:
-            if tile.has_token("pickable"):
+            if tile.has_token("monster"):
+                self.fight_on_tile(tile)
+            elif tile.has_token("wall"):
+                self.dig(tile)
+            elif tile.has_token("pickable"):
                 self.pick_object(tile)
             elif tile.has_token("treasure"):
                 self.pick_treasure(tile)
-            elif tile.has_token("wall"):
-                self.dig(tile)
-            elif tile.has_token("monster"):
-                self.fight_on_tile(tile)
 
             self.token.dungeon.game.update_switch("character_done")
 
@@ -290,30 +301,32 @@ class Player(Character, ABC, EventDispatcher):
         super().kill_character(tile)
         self.dead_data.append(self)
 
-    def resurrect(self, dungeon: DungeonLayout):
+    def resurrect(self, dungeon: DungeonLayout) -> None:
+        """
+        Brings a dead Player back to the game
+        :param dungeon: DungeonLayout were the Player should be resurrected
+        :return: None
+        """
+        self.unbind(experience=self.on_experience)
+        self.unbind(player_level=self.on_player_level)
 
+        Player.dead_data.remove(self)
         self.player_level = self.player_level - 3 if self.player_level > 3 else 1
-
         for key, value in self.level_track[self.player_level].items():
             self.stats.__setattr__(key, value)
 
         # equals attributes to natural_attributes
         self.stats.__post_init__()
-
         self.experience = 0
-        self.stats.exp_to_next_level = (
-            self.player_level * self.stats.base_exp_to_level_up
-        )
-
-        for key in self.inventory.keys():
-            self.inventory[key] = 0
-        if self.special_items is not None:
-            for key in self.special_items.keys():
-                self.special_items[key] = 0
+        self.stats.exp_to_next_level = self.player_level * self.stats.base_exp_to_level_up
+        self.reset_objects()
 
         location: Tile = dungeon.get_random_tile(free=True)
         location.place_item(self.kind, self.species, character=self)
         self.setup_character()
+
+        self.bind(experience=self.on_experience)
+        self.bind(player_level=self.on_player_level)
 
         print(self.player_level)
         print(self.stats)

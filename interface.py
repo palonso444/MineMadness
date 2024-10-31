@@ -245,17 +245,11 @@ class TalismanButton(Interfacebutton):
 
         else:
             player = choice(Player.dead_data)
-            Player.dead_data.remove(player)
-            player.unbind(experience=player.on_experience)
-            player.unbind(player_level=player.on_player_level)
             player.resurrect(character.get_dungeon())
             character.token.show_effect_token(
                 "resurrect",
                 player.token.shape.pos,
                 player.token.shape.size,
             )
-
-            player.bind(experience=player.on_experience)
-            player.bind(player_level=player.on_player_level)
 
         self.apply_cost("talisman")

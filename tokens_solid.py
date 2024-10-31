@@ -201,10 +201,10 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         """
         self.character.stats.remaining_moves -= 1
         if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
-            self._slide_one_step(on_complete)  # this will be removed once path is a ListProperty
+            self._slide_one_step(on_complete)
         else:
             self.update_token_on_tile(current_tile)
-            self.character.act_on_tile(current_tile)   # move this in Tile.on_release AFTER movement is complete (make callback)
+            self.character.act_on_tile(current_tile)
 
     def show_damage(self) -> None:
         """

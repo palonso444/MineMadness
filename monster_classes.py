@@ -67,7 +67,7 @@ class Monster(Character, ABC):
 
     def act_on_tile(self, tile: Tile) -> None:
         self.attack_players()
-        self.stats.remaining_moves = 0
+        #self.stats.remaining_moves = 0
         self.get_dungeon().game.update_switch("character_done")
 
 
@@ -151,7 +151,8 @@ class Monster(Character, ABC):
         """
 
         # if target is nearby and cannot share tile with it, don't move
-        if self.token.dungeon.are_nearby(self.token.position, target_tile.position):
+        if (self.token.dungeon.are_nearby(self.token.position, target_tile.position)
+                and self.chases in self.cannot_share_tile_with):
             return None
 
         accesses: list[list] | None = self._find_accesses(target_tile, smart=True)
@@ -734,18 +735,25 @@ class Pixie(Monster):
         self.step_duration: float = 0.35
         self.stats = stats.PixieStats()
 
-        self.ignores: tuple = self.ignores + ("gem",)
         self.chases: str = "pickable"
 
+
+    def act_on_tile(self, tile: Tile) -> None:
+        """
+        Consumes pickables before calling the parent method
+        :param tile: Tile on which to act
+        :return: None
+        """
+        if tile.has_token("pickable"):
+            tile.get_token("pickable").delete_token(tile)
+        super().act_on_tile(tile)
 
     def move(self):
 
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
-        #if self.dungeon.get_tile(self.position).has_token(self.chases): FIX
-            #self.dungeon.get_tile(self.position).delete_token("pickable")
-
         if target_tile is not None:
+            print(self.assess_path_smart(target_tile))
             super().move_token_or_behave(self.assess_path_smart(target_tile))
         else:
             super().move_token_or_behave(self.assess_path_random())

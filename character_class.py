@@ -53,6 +53,8 @@ class Character(ABC):
         self.blocked_by: tuple | None = None
         self.cannot_share_tile_with: tuple | None = None
         self.ignores: tuple | None = None
+        self.step_transition: str | None = None  # defines kind of movement (walk, stomp, glide...)
+        self.step_duration: float | None = None  # defines speed of movement
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
         self.ability_display: str | None = None  # needed for AbilityButton.display_text()
 

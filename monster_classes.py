@@ -434,6 +434,8 @@ class Kobold(Monster):
         self.char: str = "K"
         self.name: str = "Kobold"
         self.species: str = "kobold"
+        self.step_transition: str = "in_out_quad"  # walking
+        self.step_duration: float = 0.35
         self.stats = stats.KoboldStats()
 
     def move(self):
@@ -451,6 +453,8 @@ class BlindLizard(Monster):
         self.char: str = "L"
         self.name: str = "Blind Lizard"
         self.species: str = "lizard"
+        self.step_transition: str = "in_out_quad"  # walking
+        self.step_duration: float = 0.35
         self.stats = stats.BlindLizardStats()
 
     def move(self):
@@ -468,6 +472,8 @@ class BlackDeath(Monster):
         self.char: str = "B"
         self.name: str = "Black Death"
         self.species: str = "blackdeath"
+        self.step_transition: str = "in_out_quad"  # walking
+        self.step_duration: float = 0.35
         self.stats = stats.BlackDeathStats()
 
     def move(self):
@@ -484,6 +490,8 @@ class CaveHound(Monster):
         self.char: str = "H"
         self.name: str = "Cave Hound"
         self.species: str = "hound"
+        self.step_transition: str = "in_quart"  # gallop
+        self.step_duration: float = 0.3
         self.stats = stats.CaveHoundStats()
 
     def move(self):
@@ -507,6 +515,8 @@ class Growl(Monster):
         self.char: str = "G"
         self.name: str = "Growl"
         self.species: str = "growl"
+        self.step_transition: str = "in_out_elastic"  # stomping
+        self.step_duration: float = 0.7
         self.stats = stats.GrowlStats()
 
     def move(self):
@@ -530,6 +540,8 @@ class RockGolem(Monster):
         self.char: str = "R"
         self.name: str = "Rock Golem"
         self.species: str = "golem"
+        self.step_transition: str = "in_out_elastic"  # stomping
+        self.step_duration: float = 0.7
         self.stats = stats.RockGolemStats()
 
     def move(self):
@@ -556,6 +568,8 @@ class DarkGnome(Monster):
         self.char: str = "O"
         self.name: str = "Dark Gnome"
         self.species: str = "gnome"
+        self.step_transition: str = "in_out_quad"  # walking
+        self.step_duration: float = 0.35
         self.stats = stats.DarkGnomeStats()
 
     def move(self):
@@ -575,6 +589,8 @@ class NightMare(Monster):
         self.char: str = "N"
         self.name: str = "Nightmare"
         self.species: str = "nightmare"
+        self.step_transition: str = "in_quart"  # gallop
+        self.step_duration: float = 0.3
         self.stats = stats.NightmareStats()
 
     def move(self):
@@ -594,6 +610,8 @@ class LindWorm(Monster):
         self.char: str = "Y"
         self.name: str = "Lindworm"
         self.species: str = "lindworm"
+        self.step_transition: str = "in_out_elastic"  # stomping
+        self.step_duration: float = 0.7
         self.stats = stats.LindWormStats()
 
     def move(self):
@@ -620,6 +638,8 @@ class WanderingShadow(Monster):
         self.char: str = "S"
         self.name: str = "Wandering Shadow"
         self.species: str = "shadow"
+        self.step_transition: str = "linear"  # gliding
+        self.step_duration: float = 0.3
         self.stats = stats.WanderingShadowStats()
 
         self.blocked_by: tuple = ()
@@ -643,6 +663,8 @@ class DepthsWisp(Monster):
         self.char: str = "W"
         self.name: str = "Depths Wisp"
         self.species: str = "wisp"
+        self.step_transition: str = "linear"  # gliding
+        self.step_duration: float = 0.3
         self.stats = stats.DepthsWispStats()
 
         self.blocked_by: tuple = ()
@@ -672,6 +694,8 @@ class MountainDjinn(Monster):
         self.char: str = "D"
         self.name: str = "Mountain Djinn"
         self.species: str = "djinn"
+        self.step_transition: str = "linear"  # gliding
+        self.step_duration: float = 0.3
         self.stats = stats.MountainDjinnStats()
 
         self.blocked_by: tuple = ()
@@ -706,6 +730,8 @@ class Pixie(Monster):
         self.char: str = "P"
         self.name: str = "Pixie"
         self.species: str = "pixie"
+        self.step_transition: str = "in_out_quad"  # walking
+        self.step_duration: float = 0.35
         self.stats = stats.PixieStats()
 
         self.ignores: tuple = self.ignores + ("gem",)

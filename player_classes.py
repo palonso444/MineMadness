@@ -216,10 +216,10 @@ class Player(Character, ABC, EventDispatcher):
             self.exit_level()
             tile.dungeon.game.update_switch("player_exited")
         else:
-            if tile.has_token("monster"):
-                self.fight_on_tile(tile)
-            elif tile.has_token("wall"):
+            if tile.has_token("wall"):
                 self.dig(tile)
+            elif tile.has_token("monster"):
+                self.fight_on_tile(tile)
             elif tile.has_token("pickable"):
                 self.pick_object(tile)
             elif tile.has_token("treasure"):
@@ -438,6 +438,7 @@ class Sawyer(Player):
 
         self._update_level_track(value)
 
+        print(value)
         print(self.level_track)
         print(self.stats)
 

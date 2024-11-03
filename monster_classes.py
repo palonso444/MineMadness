@@ -412,7 +412,8 @@ class Monster(Character, ABC):
                     (path[-1][0] + direction[0], path[-1][1] + direction[1])
                 )
 
-            if end_tile is not None and end_tile.has_token(self.chases):
+            if end_tile is not None and end_tile.has_token(self.chases) and not any(end_tile.has_token(token_kind) for
+                                                                                    token_kind in self.cannot_share_tile_with):
                 if self.token.dungeon.are_nearby(self.token.position, end_tile.position):
                     path = [end_tile.position]
                 else:

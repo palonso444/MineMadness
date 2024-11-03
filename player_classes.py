@@ -173,10 +173,6 @@ class Player(Character, ABC, EventDispatcher):
                 self.token.shape.size,
             )
             # experience bar updated by Cragpeongame.update_interface()
-            print("UPDATEEE")
-
-            print("TO NEXT LEVEL")
-            print(self.stats.exp_to_next_level)
 
     def remove_effects(self, turn: int) -> None:
         """
@@ -216,10 +212,10 @@ class Player(Character, ABC, EventDispatcher):
             self.exit_level()
             tile.dungeon.game.update_switch("player_exited")
         else:
-            if tile.has_token("monster"):
-                self.fight_on_tile(tile)
-            elif tile.has_token("wall"):
+            if tile.has_token("wall"):
                 self.dig(tile)
+            elif tile.has_token("monster"):
+                self.fight_on_tile(tile)
             elif tile.has_token("pickable"):
                 self.pick_object(tile)
             elif tile.has_token("treasure"):
@@ -329,6 +325,7 @@ class Player(Character, ABC, EventDispatcher):
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
 
+        print("RESURRECTED")
         print(self.player_level)
         print(self.stats)
 
@@ -370,7 +367,7 @@ class Player(Character, ABC, EventDispatcher):
         self.stats.natural_moves += increase
         self.stats.moves += increase
         self.stats.remaining_moves += increase
-        self.get_dungeon().game.activate_accessible_tiles()
+        self.get_dungeon().game.activate_accessible_tiles(self.stats.remaining_moves)
 
     def _level_up_strength(self, increase: tuple[int]) -> None:
 
@@ -438,6 +435,8 @@ class Sawyer(Player):
 
         self._update_level_track(value)
 
+        print("SAWYER NEW LEVEL")
+        print(value)
         print(self.level_track)
         print(self.stats)
 
@@ -504,10 +503,6 @@ class CrusherJane(Player):
         1 recovery_end_of_level per level
         1 adv. strength every 2 levels.
         """
-
-        print("CRUSHER JANE LEVEL UP!")
-        print(value)
-
         self._level_up_health(2)
         self._level_up_strength((1, 2))
 
@@ -520,8 +515,9 @@ class CrusherJane(Player):
 
         self._update_level_track(value)
 
+        print("CRUSHER JANE NEW LEVEL")
+        print(value)
         print(self.level_track)
-
         print(self.stats)
 
     def enhance_damage(self, damage: int) -> int:
@@ -583,11 +579,8 @@ class Hawkins(Player):
         Hawkins increases 1 movement every 3 levels
         1 health point every level
         1 recovery_end_of_level every 3 levels
-        1 max damage every level and 1 min damage every 2 levels"""
-
-        print("HAWKINS LEVEL UP!")
-        print(value)
-
+        1 max damage every level and 1 min damage every 2 levels
+        """
         self._level_up_health(1)
         self._level_up_strength((0, 1))
 
@@ -600,6 +593,8 @@ class Hawkins(Player):
 
         self._update_level_track(value)
 
+        print("HAWKINS NEW LEVEL")
+        print(value)
         print(self.level_track)
         print(self.stats)
 

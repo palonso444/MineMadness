@@ -12,6 +12,7 @@ import monster_classes as monsters
 from interface import Interfacebutton
 from crapgeon_utils import check_if_multiple
 from dungeon_classes import DungeonLayout
+from monster_classes import Monster
 from player_classes import Player
 
 
@@ -121,18 +122,21 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
     def on_character_done(self, *args):
         """
-        Checks what to do when a character finishes a movement, but it may still have movements left.
-        :param args: needed for the functioning the the callback. Args are: game instance and a boolean value of
-        the corresponding switch.
+        Checks what to do when a character finishes a movement, but it may still have movements left
+        :param args: needed for the functioning of the callback. Args are: game instance and a boolean value of
+        the corresponding switch
         :return: None
         """
         # if no monsters in game, players can move indefinitely
-        if (
-            isinstance(self.active_character, players.Player)
-            and self.active_character.stats.remaining_moves == 0
-            and monsters.Monster.all_dead()
-        ):
-            self.active_character.stats.remaining_moves = self.active_character.stats.moves
+        print("TURN")
+        print(self.turn)
+        #if (
+            #isinstance(self.active_character, players.Player)
+            #and self.active_character.stats.remaining_moves == 0
+            #and monsters.Monster.all_dead()
+        #):
+            #self.turn += 1
+            #self.active_character.stats.remaining_moves = self.active_character.stats.moves
 
         if (
             isinstance(self.active_character, players.Player)
@@ -147,9 +151,9 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
             if isinstance(self.active_character, players.Player):
                 self.active_character.remove_effects(self.turn)
                 self.active_character.token.unselect_token()
-                #if self.active_character.token.circle is not None: #not in Player.dead_data:
-                    #print(self.active_character)
-                    #self.active_character.token._remove_selection_circle()
+            #if monsters.Monster.all_dead():
+                #self.turn += 1
+            #else:
             self.next_character()  # switch turns if character last of character.characters
 
     @staticmethod

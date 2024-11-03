@@ -35,7 +35,7 @@ class AbilityButton(ToggleButton):
             elif value == "down":
                 character.stats.remaining_moves -= 1
                 character.ability_active = True
-                self.game.activate_accessible_tiles(character.stats.remaining_movesf)
+                self.game.activate_accessible_tiles(character.stats.remaining_moves)
 
                 if character.name == "Sawyer":
                     character.special_items["powder"] -= 1

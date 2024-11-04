@@ -130,18 +130,15 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         # if no monsters in game, players can move indefinitely
         print("TURN")
         print(self.turn)
-        #if (
-            #isinstance(self.active_character, players.Player)
-            #and self.active_character.stats.remaining_moves == 0
-            #and monsters.Monster.all_dead()
-        #):
-            #self.turn += 1
-            #self.active_character.stats.remaining_moves = self.active_character.stats.moves
 
-        if (
-            isinstance(self.active_character, players.Player)
-            and self.active_character.stats.remaining_moves > 0
-        ):
+        if monsters.Monster.all_dead() and self.active_character.stats.remaining_moves == 0:
+            print("DHD")
+            self.active_character.stats.remaining_moves = self.active_character.stats.moves
+            self.active_character.remove_effects_if_over(self.turn)
+            self.active_character.token.unselect_token()
+            self.update_switch("turn")
+
+        if isinstance(self.active_character, players.Player) and self.active_character.stats.remaining_moves > 0:
             if self.active_character.using_dynamite:
                 self.activate_accessible_tiles(self.active_character.stats.shooting_range)
             else:
@@ -149,11 +146,8 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
         else:  # if self.active_character remaining moves == 0
             if isinstance(self.active_character, players.Player):
-                self.active_character.remove_effects(self.turn)
+                self.active_character.remove_effects_if_over(self.turn)
                 self.active_character.token.unselect_token()
-            #if monsters.Monster.all_dead():
-                #self.turn += 1
-            #else:
             self.next_character()  # switch turns if character last of character.characters
 
     @staticmethod

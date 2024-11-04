@@ -285,7 +285,7 @@ class PlayerToken(CharacterToken):
         :param effect_ends: specifies if the effect ends (red FadingToken) of begins (green FadingToken)
         :return: None
         """
-        with self.dungeon.canvas:
+        with self.dungeon.canvas.after:
             EffectToken(target_attr=attribute, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
     @staticmethod

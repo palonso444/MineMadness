@@ -174,7 +174,16 @@ class Player(Character, ABC, EventDispatcher):
             )
             # experience bar updated by Cragpeongame.update_interface()
 
-    def remove_effects(self, turn: int) -> None:
+    def remove_all_effects(self, turn: int = 0) -> None:
+        """
+        Removes all effects from the Player, regardless if they are over or not
+        :return:
+        """
+        for effect in self.effects.keys():
+            self.effects[effect]["end_turn"] = 0
+        self.remove_effects_if_over(turn)
+
+    def remove_effects_if_over(self, turn: int) -> None:
         """
         Removes all effects for which the effect is over
         """

@@ -177,10 +177,12 @@ class Player(Character, ABC, EventDispatcher):
     def remove_all_effects(self, turn: int = 0) -> None:
         """
         Removes all effects from the Player, regardless if they are over or not
-        :return:
+        :return: None
         """
-        for effect in self.effects.keys():
-            self.effects[effect]["end_turn"] = 0
+        for attribute in self.effects.keys():
+            if len(self.effects[attribute]) > 0:
+                for effect in self.effects[attribute]:
+                    effect["end_turn"] = turn
         self.remove_effects_if_over(turn)
 
     def remove_effects_if_over(self, turn: int) -> None:
@@ -202,10 +204,7 @@ class Player(Character, ABC, EventDispatcher):
                     if isinstance(player_stat, int):
                         new_value = player_stat - effects[i]["size"]
                     elif isinstance(player_stat, tuple):
-                        new_value = (
-                            player_stat[0],
-                            player_stat[1] - effects[i]["size"],
-                        )
+                        new_value = (player_stat[0], player_stat[1] - effects[i]["size"])
 
                     effects.remove(effects[i])
                     attribute_names.append(attribute)

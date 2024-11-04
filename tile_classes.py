@@ -38,6 +38,7 @@ class Tile(Button):
         for token in tile.tokens.values():
             if token is not None:
                 token.pos = tile_pos
+                print(token.pos)
 
     def set_token(self, token:Token) -> None:
         """

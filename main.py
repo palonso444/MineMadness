@@ -58,6 +58,8 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         dungeon.match_blueprint()
         # characters.Player.set_starting_player_order()
         game.initialize_switches()
+        for player in players.Player.data:
+            player.remove_all_effects(game.turn)
         players.Player.exited.clear()
 
     def initialize_switches(self):
@@ -198,10 +200,10 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                     if game.active_character.using_dynamite:
                         game.activate_accessible_tiles(game.active_character.stats.shooting_range)
                     else:
+                        print("DHSFGDJDJD")
                         game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
 
             else:  # if monsters turn and monsters in the game
-
                 game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
                 game.active_character = monsters.Monster.data[game.active_character_id]
                 game.update_interface()

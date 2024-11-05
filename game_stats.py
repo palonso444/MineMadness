@@ -11,7 +11,6 @@ class DungeonStats:
         self.stats_level = dungeon_level
 
     def size(self):
-
         return 6 + int(self.stats_level * 0.2)
 
     def gem_number(self):
@@ -79,19 +78,19 @@ class JerkyStats(ItemStats):
 @dataclass
 class CoffeeStats(ItemStats):
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 4
+    effect_duration: int = 3
 
 
 @dataclass
 class TobaccoStats(ItemStats):
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 4
+    effect_duration: int = 3
 
 
 @dataclass
 class WhiskyStats(ItemStats):
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 4
+    effect_duration: int = 3
 
 
 @dataclass

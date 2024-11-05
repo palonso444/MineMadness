@@ -174,7 +174,18 @@ class Player(Character, ABC, EventDispatcher):
             )
             # experience bar updated by Cragpeongame.update_interface()
 
-    def remove_effects(self, turn: int) -> None:
+    def remove_all_effects(self, turn: int = 0) -> None:
+        """
+        Removes all effects from the Player, regardless if they are over or not
+        :return: None
+        """
+        for attribute in self.effects.keys():
+            if len(self.effects[attribute]) > 0:
+                for effect in self.effects[attribute]:
+                    effect["end_turn"] = turn
+        self.remove_effects_if_over(turn)
+
+    def remove_effects_if_over(self, turn: int) -> None:
         """
         Removes all effects for which the effect is over
         """
@@ -192,10 +203,7 @@ class Player(Character, ABC, EventDispatcher):
                     if isinstance(player_stat, int):
                         new_value = player_stat - effects[i]["size"]
                     elif isinstance(player_stat, tuple):
-                        new_value = (
-                            player_stat[0],
-                            player_stat[1] - effects[i]["size"],
-                        )
+                        new_value = (player_stat[0], player_stat[1] - effects[i]["size"])
 
                     effects.remove(effects[i])
                     attribute_names.append(attribute)
@@ -204,7 +212,6 @@ class Player(Character, ABC, EventDispatcher):
                 i += 1
 
         self.token.modified_attributes = attribute_names
-
 
     def act_on_tile(self, tile:Tile) -> None:
 

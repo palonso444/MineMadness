@@ -12,6 +12,7 @@ import monster_classes as monsters
 from interface import Interfacebutton
 from crapgeon_utils import check_if_multiple
 from dungeon_classes import DungeonLayout
+from monster_classes import Monster
 from player_classes import Player
 
 
@@ -32,7 +33,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
     # ABILITY PROPERTIES
     ability_button = BooleanProperty(False)
-    # ability_button_active initialized by initialize_switches
 
     # INVENTORY PROPERTIES
     inv_object = StringProperty(None, allownone=True)
@@ -54,9 +54,10 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
         game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
-        dungeon.match_blueprint()
-        # characters.Player.set_starting_player_order()
+        players.Player.set_starting_player_order()
         game.initialize_switches()
+        for player in players.Player.data:
+            player.remove_all_effects(game.turn)
         players.Player.exited.clear()
 
     def initialize_switches(self):
@@ -121,23 +122,23 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
     def on_character_done(self, *args):
         """
-        Checks what to do when a character finishes a movement, but it may still have movements left.
-        :param args: needed for the functioning the the callback. Args are: game instance and a boolean value of
-        the corresponding switch.
+        Checks what to do when a character finishes a movement, but it may still have movements left
+        :param args: needed for the functioning of the callback. Args are: game instance and a boolean value of
+        the corresponding switch
         :return: None
         """
         # if no monsters in game, players can move indefinitely
-        if (
-            isinstance(self.active_character, players.Player)
-            and self.active_character.stats.remaining_moves == 0
-            and monsters.Monster.all_dead()
-        ):
-            self.active_character.stats.remaining_moves = self.active_character.stats.moves
+        print("TURN")
+        print(self.turn)
 
-        if (
-            isinstance(self.active_character, players.Player)
-            and self.active_character.stats.remaining_moves > 0
-        ):
+        if monsters.Monster.all_dead() and self.active_character.stats.remaining_moves == 0:
+            print("DHD")
+            self.active_character.stats.remaining_moves = self.active_character.stats.moves
+            self.active_character.remove_effects_if_over(self.turn)
+            self.active_character.token.unselect_token()
+            self.update_switch("turn")
+
+        if isinstance(self.active_character, players.Player) and self.active_character.stats.remaining_moves > 0:
             if self.active_character.using_dynamite:
                 self.activate_accessible_tiles(self.active_character.stats.shooting_range)
             else:
@@ -145,11 +146,8 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
         else:  # if self.active_character remaining moves == 0
             if isinstance(self.active_character, players.Player):
-                self.active_character.remove_effects(self.turn)
+                self.active_character.remove_effects_if_over(self.turn)
                 self.active_character.token.unselect_token()
-                #if self.active_character.token.circle is not None: #not in Player.dead_data:
-                    #print(self.active_character)
-                    #self.active_character.token._remove_selection_circle()
             self.next_character()  # switch turns if character last of character.characters
 
     @staticmethod
@@ -203,7 +201,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                         game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
 
             else:  # if monsters turn and monsters in the game
-
                 game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
                 game.active_character = monsters.Monster.data[game.active_character_id]
                 game.update_interface()

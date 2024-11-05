@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from kivy import level
+from kivy.properties import ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 from collections import deque
 from random import choice
@@ -16,6 +19,8 @@ class DungeonLayout(GridLayout):
     features are determined by DungeonLayout.DungeonStats
     """
 
+    level_start = ListProperty([])
+
     def __init__(self, game: MineMadnessGame | None = None, **kwargs):
         super().__init__(**kwargs)
 
@@ -30,6 +35,17 @@ class DungeonLayout(GridLayout):
 
         self.tiles_dict: dict[tuple: Tile] | None = None
         
+    @staticmethod
+    def on_level_start(dungeon: DungeonLayout, level_start: list) -> None:
+        """
+        This function assigns DungeonLayout to the dungeon attribute of MineMadnessGame and starts the level.
+        This happens when all Tokens are positioned in their correct pos.
+        :param dungeon: dungeon
+        :param level_start: list of token positions that need to be positioned. When empty, lever starts.
+        :return: None
+        """
+        if len(level_start) == 0:
+            dungeon.game.dungeon = dungeon
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
@@ -92,7 +108,7 @@ class DungeonLayout(GridLayout):
                 dungeon.tiles_dict[tile.position] = tile
                 dungeon.add_widget(tile)
 
-        dungeon.game.dungeon = dungeon  # links dungeon with main (MineMadnessGame)
+        dungeon.match_blueprint()
 
     def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """
@@ -108,7 +124,7 @@ class DungeonLayout(GridLayout):
         #blueprint.place_equal_items("#", 20)
         #blueprint.place_equal_items("w", 3)
         blueprint.place_equal_items("l", 6)
-        #blueprint.place_equal_items("K", 1)
+        blueprint.place_equal_items("K", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -275,6 +291,9 @@ class DungeonLayout(GridLayout):
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
+
+                if tile_position != (self.rows - 1 , 0): # position lower left corner does not need to be repositioned
+                    self.level_start.append(tile.position) # Works with Tile.update_tokens_pos()
                 tile.place_item(token_kind, token_species, character)
 
     def get_tile(self, position: tuple [int:int]) -> Tile:

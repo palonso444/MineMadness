@@ -30,7 +30,8 @@ class Tile(Button):
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:
         """
-        This callback updates the position of the Tokens when the pos of the Tile changes
+        This callback updates the position of the Tokens when the pos of the Tile changes. Removed its position from
+        DungeonLayout.level_start list. When len(level_start) == 0, level starts
         :param tile: Tile that changes the pos
         :param tile_pos: new pos value of the Tile
         :return: None
@@ -38,7 +39,7 @@ class Tile(Button):
         for token in tile.tokens.values():
             if token is not None:
                 token.pos = tile_pos
-                print(token.pos)
+                tile.dungeon.level_start.remove(token.position)
 
     def set_token(self, token:Token) -> None:
         """

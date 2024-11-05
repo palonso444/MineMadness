@@ -189,7 +189,6 @@ class Player(Character, ABC, EventDispatcher):
         """
         Removes all effects for which the effect is over
         """
-        print("CALLED REMOVE EFFECTS")
         attribute_names = list()
 
         # attributes are: "moves", "toughness", "strength"
@@ -212,9 +211,7 @@ class Player(Character, ABC, EventDispatcher):
                     continue
                 i += 1
 
-        print(attribute_names)
         self.token.modified_attributes = attribute_names
-
 
     def act_on_tile(self, tile:Tile) -> None:
 

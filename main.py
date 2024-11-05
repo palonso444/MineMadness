@@ -55,8 +55,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
         game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
-        dungeon.match_blueprint()
-        # characters.Player.set_starting_player_order()
+        players.Player.set_starting_player_order()
         game.initialize_switches()
         for player in players.Player.data:
             player.remove_all_effects(game.turn)
@@ -200,7 +199,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
                     if game.active_character.using_dynamite:
                         game.activate_accessible_tiles(game.active_character.stats.shooting_range)
                     else:
-                        print("DHSFGDJDJD")
                         game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
 
             else:  # if monsters turn and monsters in the game

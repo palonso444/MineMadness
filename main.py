@@ -33,7 +33,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
     # ABILITY PROPERTIES
     ability_button = BooleanProperty(False)
-    # ability_button_active initialized by initialize_switches
 
     # INVENTORY PROPERTIES
     inv_object = StringProperty(None, allownone=True)

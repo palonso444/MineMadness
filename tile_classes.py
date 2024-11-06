@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from kivy.uix.button import Button  # type: ignore
+from kivy.clock import Clock
 
 from monster_classes import Monster
 from tokens_solid import SceneryToken, PlayerToken, MonsterToken
@@ -26,6 +27,9 @@ class Tile(Button):
             "treasure": None
         }
         self.dungeon: DungeonLayout = dungeon_instance
+
+        self.first_click_time: float | None = None
+        self.double_click_interval: float = 0.5
 
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:
@@ -181,7 +185,7 @@ class Tile(Button):
                                             active_player.stats.shooting_range) and
             not self.has_token("wall","rock"))
 
-        elif self.is_nearby(active_player.token.position):
+        elif self.is_nearby(active_player.token.position) and not active_player.is_hidden:
             return active_player.can_dig(self.get_token("wall").species)
 
         return False
@@ -210,7 +214,13 @@ class Tile(Button):
 
         if self.has_token("player"):
             if self.get_token("player") == player.token:
-                player.stats.remaining_moves = 0
+                current_time = Clock.get_time()
+                if self.first_click_time and current_time - self.first_click_time < self.double_click_interval:
+                    self.first_click_time = None
+                    player.stats.remaining_moves = 0
+                else:
+                    self.first_click_time = Clock.get_time()
+                    return
             else:
                 self.dungeon.game.switch_character(self.get_token("player").character)
             self.dungeon.game.update_switch("character_done")

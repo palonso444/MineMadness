@@ -10,10 +10,7 @@ from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, St
 import player_classes as players
 import monster_classes as monsters
 from interface import Interfacebutton
-from crapgeon_utils import check_if_multiple
 from dungeon_classes import DungeonLayout
-from monster_classes import Monster
-from player_classes import Player
 
 
 # LabelBase.register(name = 'Vollkorn',
@@ -156,7 +153,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         """
         if turn is not None:
 
-            if check_if_multiple(turn, 2) or monsters.Monster.all_dead():
+            if turn % 2 == 0 or monsters.Monster.all_dead():
                 players.Player.reset_moves()
             else:
                 monsters.Monster.reset_moves()
@@ -176,7 +173,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         """
         if character_id is not None:
             # if player turn or no monsters
-            if check_if_multiple(game.turn, 2) or monsters.Monster.all_dead():
+            if game.turn % 2 == 0 or monsters.Monster.all_dead():
                 game.active_character = players.Player.data[character_id]
 
                 if game.active_character.has_moved and not monsters.Monster.all_dead():

@@ -4,7 +4,7 @@ from kivy.properties import NumericProperty
 from kivy.event import EventDispatcher
 
 from character_class import Character
-from crapgeon_utils import check_if_multiple, tuple_remove
+from crapgeon_utils import tuple_remove
 import game_stats as stats
 
 
@@ -436,7 +436,7 @@ class Sawyer(Player):
         self.stats.advantage_strength_incr += 1
         self.stats.recovery_end_of_level += 1
 
-        if not check_if_multiple(value, 2):
+        if not value % 2 == 0:
             self._level_up_moves(1)
             self._level_up_strength((0, 1))
 
@@ -514,11 +514,11 @@ class CrusherJane(Player):
         self._level_up_health(2)
         self._level_up_strength((1, 2))
 
-        if not check_if_multiple(value, 2):
+        if not value % 2 == 0:
             self.stats.recovery_end_of_level += 1
             self.stats.advantage_strength_incr += 1
 
-        if check_if_multiple(value, 4):
+        if value % 4 == 0:
             self._level_up_moves(1)
 
         self._update_level_track(value)
@@ -592,10 +592,10 @@ class Hawkins(Player):
         self._level_up_health(1)
         self._level_up_strength((0, 1))
 
-        if not check_if_multiple(value, 2):
+        if not value % 2 == 0:
             self._level_up_strength((1, 0))
 
-        if check_if_multiple(value, 3):
+        if value % 3 == 0:
             self._level_up_moves(1)
             self.stats.recovery_end_of_level += 1
 

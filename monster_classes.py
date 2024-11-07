@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 
 import game_stats as stats
 from character_class import Character
-from crapgeon_utils import check_if_multiple
 
 
 class Monster(Character, ABC):

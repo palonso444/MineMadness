@@ -103,7 +103,7 @@ class CharacterStats(ABC):
 
     toughness: int = 0
     health: int | None = None
-    strength: tuple | None = None
+    strength: list | None = None
     moves: int | None = None
     remaining_moves: int | None = None
 

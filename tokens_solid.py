@@ -106,7 +106,10 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         with self.dungeon.canvas:
-            self.color = Color(1, 1, 1, 1)
+            if self.character.is_hidden:
+                self.color = Color(1, 1, 1, self.color.a)
+            else:
+                self.color = Color(1, 1, 1, 1)
             self.shape = Ellipse(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update_pos)

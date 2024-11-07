@@ -127,12 +127,7 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         the corresponding switch
         :return: None
         """
-        # if no monsters in game, players can move indefinitely
-        print("TURN")
-        print(self.turn)
-
         if monsters.Monster.all_dead() and self.active_character.stats.remaining_moves == 0:
-            print("DHD")
             self.active_character.stats.remaining_moves = self.active_character.stats.moves
             self.active_character.remove_effects_if_over(self.turn)
             self.active_character.token.unselect_token()
@@ -217,7 +212,6 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
         """
         # in this case all out of game
         if players.Player.all_dead():
-
             monsters.Monster.data.clear()
             self.level += 1
             self.generate_next_level(self.level)

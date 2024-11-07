@@ -151,7 +151,7 @@ class SawyerStats(PlayerStats):
     strength: list = (1, 2)
     advantage_strength_incr: int = 2
     moves: int = 4
-    digging_moves: int = 3
+    digging_moves: int = 1
 
 
 @dataclass

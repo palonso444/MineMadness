@@ -70,7 +70,12 @@ class SceneryToken(SolidToken):
                  character: None, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
-        with self.dungeon.canvas.after:
+        if self.kind == "wall":
+            canvas_context = self.dungeon.canvas.after
+        else:
+            canvas_context = self.dungeon.canvas
+
+        with canvas_context:
             self.color = Color(1, 1, 1, 1)
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 

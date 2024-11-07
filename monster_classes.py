@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 
 import game_stats as stats
 from character_class import Character
-from crapgeon_utils import check_if_multiple
 
 
 class Monster(Character, ABC):
@@ -14,9 +13,9 @@ class Monster(Character, ABC):
     def __init__(self):
         super().__init__()
         self.kind: str = "monster"
-        self.blocked_by = ("wall", "player")
-        self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
-        self.ignores: tuple = ("pickable",)  # token_kind or token_species, not both
+        self.blocked_by: list[str] = ["wall", "player"]
+        self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
+        self.ignores: list[str] = ["pickable"]  # token_kind or token_species, not both
 
         # exclusive of Monster class
         self.chases: str = "player"
@@ -644,9 +643,9 @@ class WanderingShadow(Monster):
         self.step_duration: float = 0.3
         self.stats = stats.WanderingShadowStats()
 
-        self.blocked_by: tuple = ()
-        self.cannot_share_tile_with: tuple = ("monster", "player")
-        self.ignores: tuple = self.ignores + ("rock",)
+        self.blocked_by: list = []
+        self.cannot_share_tile_with: list[str] = ["monster", "player"]
+        self.ignores: list[str] = self.ignores + ["rock"]
 
 
 
@@ -669,9 +668,9 @@ class DepthsWisp(Monster):
         self.step_duration: float = 0.3
         self.stats = stats.DepthsWispStats()
 
-        self.blocked_by: tuple = ()
-        self.cannot_share_tile_with: tuple = ("monster", "player")
-        self.ignores: tuple = self.ignores + ("rock",)
+        self.blocked_by: list = []
+        self.cannot_share_tile_with: list[str] = ["monster", "player"]
+        self.ignores: list[str] = self.ignores + ["rock"]
 
 
 
@@ -700,9 +699,9 @@ class MountainDjinn(Monster):
         self.step_duration: float = 0.3
         self.stats = stats.MountainDjinnStats()
 
-        self.blocked_by: tuple = ()
-        self.cannot_share_tile_with: tuple = ("monster", "player")
-        self.ignores: tuple = self.ignores + ("rock",)
+        self.blocked_by: list = []
+        self.cannot_share_tile_with: list[str] = ["monster", "player"]
+        self.ignores: list[str] = self.ignores + ["rock"]
 
 
 

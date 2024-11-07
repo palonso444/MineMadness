@@ -1,11 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from abc import ABC
 from random import randint
 
 
 class DungeonStats:
 
-    mandatory_items: tuple[str] = ("%", "?", "&", " ", "o")
+    mandatory_items: tuple[str,str,str,str,str] = ("%", "?", "&", " ", "o")
 
     def __init__(self, dungeon_level: int):
         self.stats_level = dungeon_level
@@ -103,7 +103,7 @@ class CharacterStats(ABC):
 
     toughness: int = 0
     health: int | None = None
-    strength: tuple | None = None
+    strength: list[int] | None = None
     moves: int | None = None
     remaining_moves: int | None = None
 
@@ -119,13 +119,13 @@ class PlayerStats(CharacterStats, ABC):
     weapons: int = 2
     advantage_strength_incr: int | None = None
     shooting_range: int | None = None
-    recovery_end_of_level: int = 0  # healthpoints players heal at end of level
+    recovery_end_of_level: int = 0  # health points players heal at end of level
     base_exp_to_level_up: int = 10
 
     def __post_init__(self):
         self.natural_health: int = self.health  # only modified by leveling up
         self.natural_moves: int = self.moves  # only modified by leveling up
-        self.natural_strength: tuple = self.strength  # only modified by leveling up
+        self.natural_strength: list[int] = self.strength  # only modified by leveling up
         self.exp_to_next_level: int = self.base_exp_to_level_up
 
 
@@ -148,7 +148,7 @@ class MonsterStats(CharacterStats, ABC):
 @dataclass
 class SawyerStats(PlayerStats):
     health: int = 6
-    strength: list = (1, 2)
+    strength: list[int] = field(default_factory=lambda: [1,2])
     advantage_strength_incr: int = 2
     moves: int = 4
     digging_moves: int = 3
@@ -157,7 +157,7 @@ class SawyerStats(PlayerStats):
 @dataclass
 class HawkinsStats(PlayerStats):
     health: int = 8
-    strength: list = (1, 3)
+    strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 3
     shooting_range: int = 2
 
@@ -166,7 +166,7 @@ class HawkinsStats(PlayerStats):
 class CrusherJaneStats(PlayerStats):
     weapons: int = 4
     health: int = 12
-    strength: tuple = (2, 4)
+    strength: list[int] = field(default_factory=lambda: [2,4])
     advantage_strength_incr: int = 1
     moves: int = 3
 
@@ -177,7 +177,7 @@ class CrusherJaneStats(PlayerStats):
 @dataclass
 class KoboldStats(MonsterStats):
     health: int = 3
-    strength: tuple = (1, 2)
+    strength: list[int] = field(default_factory=lambda: [1,2])
     moves: int = 5
     random_motility: int = 7
     dodging_ability: int = 0
@@ -187,7 +187,7 @@ class KoboldStats(MonsterStats):
 @dataclass
 class BlindLizardStats(MonsterStats):
     health: int = 5
-    strength: tuple = (2, 4)
+    strength: list[int] = field(default_factory=lambda: [2,4])
     moves: int = 5
     random_motility: int = 4
     dodging_ability: int = 3
@@ -197,7 +197,7 @@ class BlindLizardStats(MonsterStats):
 @dataclass
 class BlackDeathStats(MonsterStats):
     health: int = 1
-    strength: tuple = (10, 15)
+    strength: list[int] = field(default_factory=lambda: [10,20])
     moves: int = 7
     random_motility: int = 10
     dodging_ability: int = 11
@@ -210,7 +210,7 @@ class BlackDeathStats(MonsterStats):
 @dataclass
 class CaveHoundStats(MonsterStats):
     health: int = 4
-    strength: tuple = (1, 3)
+    strength: list[int] = field(default_factory=lambda: [1,4])
     moves: int = 7
     random_motility: int = 8
     dodging_ability: int = 6
@@ -220,7 +220,7 @@ class CaveHoundStats(MonsterStats):
 @dataclass
 class GrowlStats(MonsterStats):
     health: int = 10
-    strength: tuple = (3, 8)
+    strength: list[int] = field(default_factory=lambda: [5,15])
     moves: int = 5
     random_motility: int = 5
     dodging_ability: int = 3
@@ -229,8 +229,8 @@ class GrowlStats(MonsterStats):
 
 @dataclass
 class RockGolemStats(MonsterStats):
-    health: int = 40
-    strength: tuple = (5, 10)
+    health: int = 50
+    strength: list[int] = field(default_factory=lambda: [5,20])
     moves: int = 3
     dodging_ability: int = 0
     experience_when_killed: int = 45
@@ -242,7 +242,7 @@ class RockGolemStats(MonsterStats):
 @dataclass
 class DarkGnomeStats(MonsterStats):
     health: int = 2
-    strength: tuple = (1, 3)
+    strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 5
     random_motility: int = 5
     dodging_ability: int = 14
@@ -252,7 +252,7 @@ class DarkGnomeStats(MonsterStats):
 @dataclass
 class NightmareStats(MonsterStats):
     health: int = 6
-    strength: tuple = (2, 6)
+    strength: list[int] = field(default_factory=lambda: [2,6])
     random_motility: int = 2
     moves: int = 6
     dodging_ability: int = 6
@@ -262,7 +262,7 @@ class NightmareStats(MonsterStats):
 @dataclass
 class LindWormStats(MonsterStats):
     health: int = 30
-    strength: tuple = (12, 18)
+    strength: list[int] = field(default_factory=lambda: [20,35])
     moves: int = 5
     dodging_ability: int = 4
     experience_when_killed: int = 50
@@ -274,7 +274,7 @@ class LindWormStats(MonsterStats):
 @dataclass
 class WanderingShadowStats(MonsterStats):
     health: int = 2
-    strength: tuple = (1, 5)
+    strength: list[int] = field(default_factory=lambda: [1,5])
     moves: int = 8
     random_motility: int = 9
     dodging_ability: int = 14
@@ -284,7 +284,7 @@ class WanderingShadowStats(MonsterStats):
 @dataclass
 class DepthsWispStats(MonsterStats):
     health: int = 1
-    strength: tuple = (1, 2)
+    strength: list[int] = field(default_factory=lambda: [1,2])
     moves: int = 4
     dodging_ability: int = 10
     experience_when_killed: int = 3
@@ -293,7 +293,7 @@ class DepthsWispStats(MonsterStats):
 @dataclass
 class MountainDjinnStats(MonsterStats):
     health: int = 18
-    strength: tuple = (5, 10)
+    strength: list[int] = field(default_factory=lambda: [10,18])
     moves: int = 5
     dodging_ability: int = 5
     experience_when_killed: int = 30
@@ -305,7 +305,7 @@ class MountainDjinnStats(MonsterStats):
 @dataclass
 class PixieStats(MonsterStats):
     health: int = 2
-    strength: tuple = (1, 1)
+    strength: list[int] = field(default_factory=lambda: [1,1])
     moves: int = 5
     random_motility: int = 10
     dodging_ability: int = 7

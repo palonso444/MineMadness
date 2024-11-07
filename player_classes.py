@@ -4,7 +4,6 @@ from kivy.properties import NumericProperty
 from kivy.event import EventDispatcher
 
 from character_class import Character
-from crapgeon_utils import check_if_multiple, tuple_remove
 import game_stats as stats
 
 
@@ -14,7 +13,7 @@ class Player(Character, ABC, EventDispatcher):
     player_level = NumericProperty(1)
 
     # this is the starting order as defined by Player.set_starting_player_order()
-    player_chars: tuple = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
+    player_chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
     data: list = list()
     dead_data: list = list()
     exited: set = set()
@@ -81,9 +80,8 @@ class Player(Character, ABC, EventDispatcher):
     def __init__(self):
         super().__init__()
         self.kind: str = "player"
-        self.blocked_by: tuple = ("wall", "monster")
-        self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
-        self.ignores: tuple = (None,)
+        self.blocked_by: list[str] = ["wall", "monster"]
+        self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
         self.step_transition: str = "in_out_quad" # walking
         self.step_duration: float = 0.35
 
@@ -194,22 +192,18 @@ class Player(Character, ABC, EventDispatcher):
         # attributes are: "moves", "toughness", "strength"
         for attribute, effects in self.effects.items():
 
-            i = 0
-            while i < len(effects):
+            for effect in effects:
 
-                if effects[i]["end_turn"] <= turn:
+                if effect["end_turn"] <= turn:
                     player_stat = getattr(self.stats, attribute)
-
                     if isinstance(player_stat, int):
-                        new_value = player_stat - effects[i]["size"]
-                    elif isinstance(player_stat, tuple):
-                        new_value = (player_stat[0], player_stat[1] - effects[i]["size"])
-
-                    effects.remove(effects[i])
+                        player_stat -= effect["size"]
+                    elif isinstance(player_stat, list):
+                        player_stat[1] -= effect["size"]
+                    effects.remove(effect)
                     attribute_names.append(attribute)
-                    setattr(self.stats, attribute, new_value)
+                    setattr(self.stats, attribute, player_stat)
                     continue
-                i += 1
 
         self.token.modified_attributes = attribute_names
 
@@ -245,7 +239,7 @@ class Player(Character, ABC, EventDispatcher):
                 self.special_items[tile.token.species] += 1
                 game.update_switch("ability_button")
 
-            elif tile.tokens["pickable"].species in self.inventory.keys():
+            elif tile.get_token("pickable").species in self.inventory.keys():
                 self.inventory[tile.get_token("pickable").species] += 1
                 game.inv_object = tile.get_token("pickable").species
 
@@ -338,16 +332,15 @@ class Player(Character, ABC, EventDispatcher):
 
     def apply_toughness(self, damage):
 
-        i = 0
-        while i < len(self.effects["toughness"]):
-            self.effects["toughness"][i]["size"] -= damage
+        for effect in self.effects["toughness"]:
+            effect["size"] -= damage
 
-            if self.effects["toughness"][i]["size"] <= 0:
-                damage = abs(self.effects["toughness"][i]["size"])
-                self.effects["toughness"].remove(self.effects["toughness"][i])
+            if effect["size"] <= 0:
+                damage = abs(effect["size"])
+                self.effects["toughness"].remove(effect)
                 continue
 
-            elif self.effects["toughness"][i]["size"] > 0:
+            elif effect["size"] > 0:
                 damage = 0
                 break
 
@@ -376,16 +369,12 @@ class Player(Character, ABC, EventDispatcher):
         self.stats.remaining_moves += increase
         self.get_dungeon().game.activate_accessible_tiles(self.stats.remaining_moves)
 
-    def _level_up_strength(self, increase: tuple[int]) -> None:
+    def _level_up_strength(self, increase: tuple[int, int]) -> None:
 
-        self.stats.natural_strength = (
-            self.stats.natural_strength[0] + increase[0],
-            self.stats.natural_strength[1] + increase[1],
-        )
-        self.stats.strength = (
-            self.stats.strength[0] + increase[0],
-            self.stats.strength[1] + increase[1],
-        )
+        self.stats.natural_strength[0] += increase[0]
+        self.stats.natural_strength[1] += increase[1]
+        self.stats.strength[0] += increase[0]
+        self.stats.strength[1] += increase[1]
 
 class Sawyer(Player):
     """Slow digger (takes half of initial moves each dig)
@@ -403,7 +392,7 @@ class Sawyer(Player):
         self.char: str = "%"
         self.name: str = "Sawyer"
         self.species: str = "sawyer"
-        self.ignores = ("dynamite",)
+        self.ignores: list[str] = ["dynamite"]
 
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
@@ -436,7 +425,7 @@ class Sawyer(Player):
         self.stats.advantage_strength_incr += 1
         self.stats.recovery_end_of_level += 1
 
-        if not check_if_multiple(value, 2):
+        if not value % 2 == 0:
             self._level_up_moves(1)
             self._level_up_strength((0, 1))
 
@@ -449,13 +438,13 @@ class Sawyer(Player):
 
     def hide(self):
         self.token.color.a = 0.6  # changes transparency
-        self.ignores += ("pickable","treasure")
+        self.ignores += ["pickable","treasure"]
 
     def unhide(self):
         game=self.get_dungeon().game
         self.token.color.a = 1  # changes transparency
-        self.ignores = tuple_remove(self.ignores, "pickable")
-        self.ignores = tuple_remove(self.ignores, "treasure")
+        self.ignores.remove("pickable")
+        self.ignores.remove("treasure")
         self.ability_active = False
         game.update_switch("ability_button")
         game.update_switch("character_done")
@@ -483,7 +472,7 @@ class CrusherJane(Player):
         self.char: str = "&"
         self.name: str = "Crusher Jane"
         self.species: str = "crusherjane"
-        self.ignores: tuple = ("powder", "dynamite", "treasure")
+        self.ignores: list[str] = ["powder", "dynamite", "treasure"]
 
         self.stats = stats.CrusherJaneStats()
         self._update_level_track(self.player_level)
@@ -514,11 +503,11 @@ class CrusherJane(Player):
         self._level_up_health(2)
         self._level_up_strength((1, 2))
 
-        if not check_if_multiple(value, 2):
+        if not value % 2 == 0:
             self.stats.recovery_end_of_level += 1
             self.stats.advantage_strength_incr += 1
 
-        if check_if_multiple(value, 4):
+        if value % 4 == 0:
             self._level_up_moves(1)
 
         self._update_level_track(value)
@@ -560,7 +549,7 @@ class Hawkins(Player):
         self.char: str = "?"
         self.name: str = "Hawkins"
         self.species: str = "hawkins"
-        self.ignores: tuple = ("gem", "powder", "treasure")
+        self.ignores: list[str] = ["gem", "powder", "treasure"]
 
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)
@@ -592,10 +581,10 @@ class Hawkins(Player):
         self._level_up_health(1)
         self._level_up_strength((0, 1))
 
-        if not check_if_multiple(value, 2):
+        if not value % 2 == 0:
             self._level_up_strength((1, 0))
 
-        if check_if_multiple(value, 3):
+        if value % 3 == 0:
             self._level_up_moves(1)
             self.stats.recovery_end_of_level += 1
 

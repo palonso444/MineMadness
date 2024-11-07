@@ -50,9 +50,9 @@ class Character(ABC):
         self.species: str | None = None
         self.token: Token | None = None  # initialized in DungeonLayot.place_item()
         self.stats: CharacterStats | None = None
-        self.blocked_by: tuple | None = None
-        self.cannot_share_tile_with: tuple | None = None
-        self.ignores: tuple | None = None
+        self.blocked_by: list | None = None
+        self.cannot_share_tile_with: list | None = None
+        self.ignores: list | None = None
         self.step_transition: str | None = None  # defines kind of movement (walk, stomp, glide...)
         self.step_duration: float | None = None  # defines speed of movement, from 0 to 1
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()

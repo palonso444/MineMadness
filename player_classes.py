@@ -14,7 +14,7 @@ class Player(Character, ABC, EventDispatcher):
     player_level = NumericProperty(1)
 
     # this is the starting order as defined by Player.set_starting_player_order()
-    player_chars: tuple = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
+    player_chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
     data: list = list()
     dead_data: list = list()
     exited: set = set()
@@ -81,9 +81,8 @@ class Player(Character, ABC, EventDispatcher):
     def __init__(self):
         super().__init__()
         self.kind: str = "player"
-        self.blocked_by: tuple = ("wall", "monster")
-        self.cannot_share_tile_with: tuple = ("wall", "monster", "player")
-        self.ignores: tuple = (None,)
+        self.blocked_by: list[str] = ["wall", "monster"]
+        self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
         self.step_transition: str = "in_out_quad" # walking
         self.step_duration: float = 0.35
 
@@ -403,7 +402,7 @@ class Sawyer(Player):
         self.char: str = "%"
         self.name: str = "Sawyer"
         self.species: str = "sawyer"
-        self.ignores = ("dynamite",)
+        self.ignores: list[str] = ["dynamite"]
 
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
@@ -483,7 +482,7 @@ class CrusherJane(Player):
         self.char: str = "&"
         self.name: str = "Crusher Jane"
         self.species: str = "crusherjane"
-        self.ignores: tuple = ("powder", "dynamite", "treasure")
+        self.ignores: list[str] = ["powder", "dynamite", "treasure"]
 
         self.stats = stats.CrusherJaneStats()
         self._update_level_track(self.player_level)
@@ -560,7 +559,7 @@ class Hawkins(Player):
         self.char: str = "?"
         self.name: str = "Hawkins"
         self.species: str = "hawkins"
-        self.ignores: tuple = ("gem", "powder", "treasure")
+        self.ignores: list[str] = ["gem", "powder", "treasure"]
 
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)

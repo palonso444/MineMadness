@@ -408,7 +408,7 @@ class Sawyer(Player):
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
 
-        self.special_items: dict[str:int] | None = {"powder": 2}
+        self.special_items: dict[str:int] | None = {"powder": 5}
         self.ability_display: str = "Hide"
         self.ability_active: bool = False
 
@@ -458,6 +458,7 @@ class Sawyer(Player):
         self.ignores = tuple_remove(self.ignores, "treasure")
         self.ability_active = False
         game.update_switch("ability_button")
+        game.update_switch("character_done")
 
     def enhance_damage(self, damage) -> int:
         if self.ability_active:

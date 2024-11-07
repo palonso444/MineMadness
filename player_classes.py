@@ -4,7 +4,6 @@ from kivy.properties import NumericProperty
 from kivy.event import EventDispatcher
 
 from character_class import Character
-from crapgeon_utils import tuple_remove
 import game_stats as stats
 
 
@@ -193,22 +192,18 @@ class Player(Character, ABC, EventDispatcher):
         # attributes are: "moves", "toughness", "strength"
         for attribute, effects in self.effects.items():
 
-            i = 0
-            while i < len(effects):
+            for effect in effects:
 
-                if effects[i]["end_turn"] <= turn:
+                if effect["end_turn"] <= turn:
                     player_stat = getattr(self.stats, attribute)
-
                     if isinstance(player_stat, int):
-                        new_value = player_stat - effects[i]["size"]
-                    elif isinstance(player_stat, tuple):
-                        new_value = (player_stat[0], player_stat[1] - effects[i]["size"])
-
-                    effects.remove(effects[i])
+                        player_stat -= effect["size"]
+                    elif isinstance(player_stat, list):
+                        player_stat[1] -= effect["size"]
+                    effects.remove(effect)
                     attribute_names.append(attribute)
-                    setattr(self.stats, attribute, new_value)
+                    setattr(self.stats, attribute, player_stat)
                     continue
-                i += 1
 
         self.token.modified_attributes = attribute_names
 
@@ -244,7 +239,7 @@ class Player(Character, ABC, EventDispatcher):
                 self.special_items[tile.token.species] += 1
                 game.update_switch("ability_button")
 
-            elif tile.tokens["pickable"].species in self.inventory.keys():
+            elif tile.get_token("pickable").species in self.inventory.keys():
                 self.inventory[tile.get_token("pickable").species] += 1
                 game.inv_object = tile.get_token("pickable").species
 
@@ -337,16 +332,15 @@ class Player(Character, ABC, EventDispatcher):
 
     def apply_toughness(self, damage):
 
-        i = 0
-        while i < len(self.effects["toughness"]):
-            self.effects["toughness"][i]["size"] -= damage
+        for effect in self.effects["toughness"]:
+            effect["size"] -= damage
 
-            if self.effects["toughness"][i]["size"] <= 0:
-                damage = abs(self.effects["toughness"][i]["size"])
-                self.effects["toughness"].remove(self.effects["toughness"][i])
+            if effect["size"] <= 0:
+                damage = abs(effect["size"])
+                self.effects["toughness"].remove(effect)
                 continue
 
-            elif self.effects["toughness"][i]["size"] > 0:
+            elif effect["size"] > 0:
                 damage = 0
                 break
 
@@ -375,16 +369,12 @@ class Player(Character, ABC, EventDispatcher):
         self.stats.remaining_moves += increase
         self.get_dungeon().game.activate_accessible_tiles(self.stats.remaining_moves)
 
-    def _level_up_strength(self, increase: tuple[int]) -> None:
+    def _level_up_strength(self, increase: tuple[int, int]) -> None:
 
-        self.stats.natural_strength = (
-            self.stats.natural_strength[0] + increase[0],
-            self.stats.natural_strength[1] + increase[1],
-        )
-        self.stats.strength = (
-            self.stats.strength[0] + increase[0],
-            self.stats.strength[1] + increase[1],
-        )
+        self.stats.natural_strength[0] += increase[0]
+        self.stats.natural_strength[1] += increase[1]
+        self.stats.strength[0] += increase[0]
+        self.stats.strength[1] += increase[1]
 
 class Sawyer(Player):
     """Slow digger (takes half of initial moves each dig)
@@ -448,13 +438,13 @@ class Sawyer(Player):
 
     def hide(self):
         self.token.color.a = 0.6  # changes transparency
-        self.ignores += ("pickable","treasure")
+        self.ignores += ["pickable","treasure"]
 
     def unhide(self):
         game=self.get_dungeon().game
         self.token.color.a = 1  # changes transparency
-        self.ignores = tuple_remove(self.ignores, "pickable")
-        self.ignores = tuple_remove(self.ignores, "treasure")
+        self.ignores.remove("pickable")
+        self.ignores.remove("treasure")
         self.ability_active = False
         game.update_switch("ability_button")
         game.update_switch("character_done")

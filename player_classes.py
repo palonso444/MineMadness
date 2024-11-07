@@ -412,8 +412,8 @@ class Sawyer(Player):
         return self.stats.weapons > 0
 
     def on_player_level(self, instance, value):
-        """Sawyer is a young, inexperienced but dexterous character. Is it not particularly strong
-        but has a lot of cunning that allows her to survive compromised situations.
+        """Sawyer is a young, inexperienced but cunning character. Is it not particularly strong
+        but her dexterity allows her to survive the most compromised situations.
 
         Sawyer increases 1 movement every 2 levels,
         1 health per level,
@@ -492,7 +492,7 @@ class CrusherJane(Player):
         return True
 
     def on_player_level(self, instance, value):
-        """Crusher Jane is a big, strong and not particularly intelligent women. Relies on brute strength and on her
+        """Crusher Jane is a big, strong and not particularly intelligent woman. Relies on brute strength and on her
         physical endurance to resist the most brutal hits.
         Crusher Jane increases 1 movement every 4 levels,
         2 health every level,
@@ -571,7 +571,7 @@ class Hawkins(Player):
         return self.stats.weapons > 0
 
     def on_player_level(self, instance, value):
-        """Hawkins is an old and wise man. It is trained by the most difficult situations of life and it is strong
+        """Hawkins is an old and wise man. It is trained by the most difficult situations of life, and it is strong
         for his age. But his most valuable asset is his wits.
         Hawkins increases 1 movement every 3 levels
         1 health point every level

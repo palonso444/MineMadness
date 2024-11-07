@@ -753,7 +753,6 @@ class Pixie(Monster):
         target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
 
         if target_tile is not None:
-            print(self.assess_path_smart(target_tile))
             super().move_token_or_behave(self.assess_path_smart(target_tile))
         else:
             super().move_token_or_behave(self.assess_path_random())

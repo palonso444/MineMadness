@@ -326,9 +326,9 @@ class Player(Character, ABC, EventDispatcher):
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
 
-        print("RESURRECTED")
-        print(self.player_level)
-        print(self.stats)
+        #print("RESURRECTED")
+        #print(self.player_level)
+        #print(self.stats)
 
     def apply_toughness(self, damage):
 
@@ -431,10 +431,10 @@ class Sawyer(Player):
 
         self._update_level_track(value)
 
-        print("SAWYER NEW LEVEL")
-        print(value)
-        print(self.level_track)
-        print(self.stats)
+        #print("SAWYER NEW LEVEL")
+        #print(value)
+        #print(self.level_track)
+        #print(self.stats)
 
     def hide(self):
         self.token.color.a = 0.6  # changes transparency
@@ -512,10 +512,10 @@ class CrusherJane(Player):
 
         self._update_level_track(value)
 
-        print("CRUSHER JANE NEW LEVEL")
-        print(value)
-        print(self.level_track)
-        print(self.stats)
+        #print("CRUSHER JANE NEW LEVEL")
+        #print(value)
+        #print(self.level_track)
+        #print(self.stats)
 
     def enhance_damage(self, damage: int) -> int:
         if self.ability_active:
@@ -590,10 +590,10 @@ class Hawkins(Player):
 
         self._update_level_track(value)
 
-        print("HAWKINS NEW LEVEL")
-        print(value)
-        print(self.level_track)
-        print(self.stats)
+        #print("HAWKINS NEW LEVEL")
+        #print(value)
+        #print(self.level_track)
+        #print(self.stats)
 
     @property
     def using_dynamite(self):

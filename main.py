@@ -20,6 +20,10 @@ from dungeon_classes import DungeonLayout
 class MainMenu(Screen):
     pass
 
+class HowToPlay(Screen):
+    pass
+
+
 class MineMadnessGame(Screen):  # initialized in kv file
 
     # GENERAL PROPERTIES
@@ -289,12 +293,13 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def generate_next_level(self, new_dungeon_level: int) -> None:
         """
-        Removed current level board and generates instantiates a new one.
-        :param new_dungeon_level: number of the next level.
+        Removed current level board and generates instantiates a new one
+        :param new_dungeon_level: number of the next level
         :return: None
         """
-        self.children[0].remove_widget(self.dungeon)  # self.children[0] is Scrollview
-        self.children[0].add_widget(DungeonLayout(game=self))
+        scrollview = self.children[0].children[0]
+        scrollview.remove_widget(self.dungeon)
+        scrollview.add_widget(DungeonLayout(game=self))
         self.turn = None
 
 
@@ -302,9 +307,9 @@ class CrapgeonApp(App):
 
     def build(self):
         sm = ScreenManager(transition=FadeTransition(duration=0.3))
-        sm.add_widget(MainMenu(name='menu'))
-        sm.add_widget(MineMadnessGame(name='game'))
-
+        sm.add_widget(MainMenu(name='main_menu'))
+        sm.add_widget(MineMadnessGame(name='game_screen'))
+        sm.add_widget(HowToPlay(name="how_to_play"))
         return sm
 
 

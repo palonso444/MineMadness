@@ -18,8 +18,17 @@
     #padding: '20dp', '10dp', '20dp', '10dp'
 
 <Button>:
+    # disabled: True
     halign: 'center'
-    disabled: True
+
+<MainMenuButton@Button>
+    text: "Back to Main Menu"
+    on_release: app.root.current = "main_menu"
+
+<MenuLayout@BoxLayout>
+    orientation: "vertical"
+    spacing: 10
+    padding: '5dp', '0dp','5dp','5dp'
 
 <Tile>:
     background_normal: ''   # sets the background default to white instead of predefined grey
@@ -28,6 +37,7 @@
     width: '55dp'
     height: self.width
     kind: None
+    disabled: True
 
     canvas:
         Color:
@@ -43,7 +53,6 @@
 
 <ScrollView>:
     effect_cls: 'ScrollEffect'  # avoids bouncing when reaching end of scroll
-
 
 <MineMadnessGame>:
     on_active_character_id:
@@ -147,31 +156,39 @@
                 cols: self.stats.size()
                 blueprint: self.generate_blueprint(self.rows, self.cols)
 
-<MainMenu>
-    BoxLayout:
-        orientation: "vertical"
-        spacing: 10
-        padding: '5dp', '0dp','5dp','5dp'
+<HowToPlay>
+    MenuLayout:
+        Label:
+            text: "How To Play"
+            font_size: '40sp'
+            text_size: self.size    # needed to make halign work
+            halign: 'center'
+        MainMenuButton:
 
+<MainMenu>
+    MenuLayout:
         Label:
             text: "Mine Madness"
             font_size: '40sp'
             text_size: self.size    # needed to make halign work
             halign: 'center'
-
         Button:
             text: "Start game"
-            disabled: False
-            on_release: app.root.current = "game"
+            on_release: app.root.current = "game_screen"
         Button:
             text: "Continue"
+            disabled: True
             on_release: pass
         Button:
             text: "How to play"
-            on_release: pass
+            on_release: app.root.current = "how_to_play"
         Button:
             text: "Music ON/OFF"
-            on_release: pass
+            on_release: main_menu_info.text = str(app.root.children)
         Button:
-            text: "Difficulty: Normal"
-            on_release: pass
+            text: "Mode: normal"
+            on_release:
+                app.root.get_screen("game_screen").game_mode_hard = True
+                main_menu_info.text='Mode explanation here'
+        Label:
+            id: main_menu_info

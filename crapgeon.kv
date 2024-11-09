@@ -46,7 +46,6 @@
 
 
 <MineMadnessGame>:
-
     on_active_character_id:
         name_label.text = str(root.active_character.name)
         ability_button.text = ability_button.display_text()
@@ -161,7 +160,7 @@
             halign: 'center'
 
         Button:
-            text: "Play"
+            text: "Start game"
             disabled: False
             on_release: app.root.current = "game"
         Button:

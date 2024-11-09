@@ -1,11 +1,11 @@
-from abc import abstractmethod
-
+from docutils.nodes import transition
 from kivy.app import App  # type: ignore
 from kivy.uix.boxlayout import BoxLayout  # type: ignore
 
 # from kivy.core.text import LabelBase    # type: ignore
 # from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
+from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 
 import player_classes as players
 import monster_classes as monsters
@@ -17,8 +17,10 @@ from dungeon_classes import DungeonLayout
 # fn_regular= 'fonts/Vollkorn-Regular.ttf',
 # fn_italic='fonts/Vollkorn-Italic.ttf'
 
+class MainMenu(Screen):
+    pass
 
-class MineMadnessGame(BoxLayout):  # initialized in kv file
+class MineMadnessGame(Screen):  # initialized in kv file
 
     # GENERAL PROPERTIES
     level = NumericProperty(None)
@@ -299,7 +301,11 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 class CrapgeonApp(App):
 
     def build(self):
-        return MineMadnessGame()
+        sm = ScreenManager(transition=FadeTransition(duration=0.3))
+        sm.add_widget(MainMenu(name='menu'))
+        sm.add_widget(MineMadnessGame(name='game'))
+
+        return sm
 
 
 ######################################################### START APP ###################################################

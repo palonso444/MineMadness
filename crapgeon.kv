@@ -46,10 +46,8 @@
 
 
 <MineMadnessGame>:
-    orientation: 'vertical'
-    padding: '5dp'
 
-    on_active_character_id: 
+    on_active_character_id:
         name_label.text = str(root.active_character.name)
         ability_button.text = ability_button.display_text()
 
@@ -57,91 +55,124 @@
     on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.stats.shovels)
     on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.stats.weapons)
     on_gems: gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
-    
-    # HEADER LABELS: CHARACTER NAME AND FLOOR NUMBER
-    BoxLayout:
-        padding: '5dp'
-        orientation: 'horizontal'
-        size_hint: 1, 0.1
-        
-        Label:
-            id: name_label
-            size_hint: 0.6, 1
-            font_size: '23sp'
 
-        AbilityButton:
-            size_hint: 0.4, 1
-            id: ability_button
-            game: root
-            
-    # GUI: CHARACTER STATS AND INVENTORY
     BoxLayout:
-        orientation: 'horizontal'
-        size_hint: 1, 0.3
+        orientation: 'vertical'
         padding: '5dp'
 
-        #CHARACTER STATS
+        # HEADER LABELS: CHARACTER NAME AND FLOOR NUMBER
         BoxLayout:
-            orientation: 'vertical'
-            size_hint: 0.5,1
-            spacing: '5dp'
+            padding: '5dp'
+            orientation: 'horizontal'
+            size_hint: 1, 0.1
 
             Label:
-                id: level_label
-            Label:
-                id: weapons_label
-            Label:  
-                id: shovels_label
-            Label:
-                id: gems_label
+                id: name_label
+                size_hint: 0.6, 1
+                font_size: '23sp'
 
-        #INVENTORY
+            AbilityButton:
+                size_hint: 0.4, 1
+                id: ability_button
+                game: root
+
+        # GUI: CHARACTER STATS AND INVENTORY
         BoxLayout:
-            orientation: 'vertical'
-            size_hint: 0.5,1
-            spacing: '5dp'
+            orientation: 'horizontal'
+            size_hint: 1, 0.3
+            padding: '5dp'
 
-            JerkyButton:
-                text: "Jerky"
-                id: jerky_button
-                stats: JerkyStats()
-                game: root
-            CoffeeButton:
-                text: "Coffee"
-                id: coffee_button
-                stats: CoffeeStats()
-                game: root
-            TobaccoButton:
-                text: "Tobacco"
-                id: tobacco_button
-                stats: TobaccoStats()
-                game: root
-            WhiskyButton:
-                text: "Whisky"
-                id: whisky_button
-                stats: WhiskyStats()
-                game: root
-            TalismanButton:
-                text: "Talisman"
-                id: talisman_button
-                stats: TalismanStats()
-                game: root
+            #CHARACTER STATS
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: 0.5,1
+                spacing: '5dp'
 
+                Label:
+                    id: level_label
+                Label:
+                    id: weapons_label
+                Label:
+                    id: shovels_label
+                Label:
+                    id: gems_label
+
+            #INVENTORY
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: 0.5,1
+                spacing: '5dp'
+
+                JerkyButton:
+                    text: "Jerky"
+                    id: jerky_button
+                    stats: JerkyStats()
+                    game: root
+                CoffeeButton:
+                    text: "Coffee"
+                    id: coffee_button
+                    stats: CoffeeStats()
+                    game: root
+                TobaccoButton:
+                    text: "Tobacco"
+                    id: tobacco_button
+                    stats: TobaccoStats()
+                    game: root
+                WhiskyButton:
+                    text: "Whisky"
+                    id: whisky_button
+                    stats: WhiskyStats()
+                    game: root
+                TalismanButton:
+                    text: "Talisman"
+                    id: talisman_button
+                    stats: TalismanStats()
+                    game: root
+
+        BoxLayout:
+            size_hint: 1, 0.025
+            padding: '5dp', '0dp','5dp','5dp'
+            ProgressBar:
+                max: 20
+                value: 0
+                id: experience_bar
+
+        ScrollView:
+            size_hint: 1, 0.575
+
+            DungeonLayout:
+                game: root
+                dungeon_level: 1
+                stats: DungeonStats(self.dungeon_level)
+                rows: self.stats.size()
+                cols: self.stats.size()
+                blueprint: self.generate_blueprint(self.rows, self.cols)
+
+<MainMenu>
     BoxLayout:
-        size_hint: 1, 0.025
+        orientation: "vertical"
+        spacing: 10
         padding: '5dp', '0dp','5dp','5dp'
-        ProgressBar:
-            max: 20
-            value: 0
-            id: experience_bar
 
-    ScrollView:
-        size_hint: 1, 0.575
-    
-        DungeonLayout:
-            game: root
-            dungeon_level: 1
-            stats: DungeonStats(self.dungeon_level)
-            rows: self.stats.size()
-            cols: self.stats.size()
-            blueprint: self.generate_blueprint(self.rows, self.cols)
+        Label:
+            text: "Mine Madness"
+            font_size: '40sp'
+            text_size: self.size    # needed to make halign work
+            halign: 'center'
+
+        Button:
+            text: "Play"
+            disabled: False
+            on_release: app.root.current = "game"
+        Button:
+            text: "Continue"
+            on_release: pass
+        Button:
+            text: "How to play"
+            on_release: pass
+        Button:
+            text: "Music ON/OFF"
+            on_release: pass
+        Button:
+            text: "Difficulty: Normal"
+            on_release: pass

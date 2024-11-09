@@ -140,7 +140,8 @@ class Character(ABC):
         Checks if the character has moved this turn
         :return: True if character has moved, False otherwise
         """
-        return self.stats.remaining_moves < self.stats.moves
+        if self.stats.remaining_moves is not None:
+            return self.stats.remaining_moves < self.stats.moves
 
     def unhide(self) -> None:
         """

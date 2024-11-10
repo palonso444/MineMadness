@@ -6,6 +6,7 @@ from kivy.uix.boxlayout import BoxLayout  # type: ignore
 # from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
+from kivy.core.audio import SoundLoader
 
 import player_classes as players
 import monster_classes as monsters
@@ -307,8 +308,17 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
 
 class CrapgeonApp(App):
-    music_on = BooleanProperty(True)
-    game_mode_normal = BooleanProperty(True)
+
+    music_on = BooleanProperty(None)
+    game_mode_normal = BooleanProperty(None)
+
+    def __init__(self):
+        super().__init__()
+        self.music = SoundLoader.load("./music/stocktune_eternal_nights_embrace.ogg")
+        self.music.loop = True
+        self.music_on = False
+        self.game_mode_normal = True
+
     def build(self):
         app = ScreenManager(transition=FadeTransition(duration=0.3))
         app.add_widget(MainMenu(name='main_menu'))
@@ -316,6 +326,15 @@ class CrapgeonApp(App):
         app.add_widget(HowToPlay(name="how_to_play"))
         app.add_widget(GameOver(name="game_over"))
         return app
+
+    @staticmethod
+    def on_music_on(app, music_on):
+
+        if music_on:
+            app.music.volume = 1
+            app.music.play()
+        else:
+            app.music.stop()
 
 
 ######################################################### START APP ###################################################

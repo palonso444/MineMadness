@@ -22,8 +22,13 @@
     halign: 'center'
 
 <MainMenuButton@Button>
-    text: "Back to Main Menu"
+    text: "Main Menu"
     on_release: app.root.current = "main_menu"
+
+<MusicButton@Button>
+    text: "Music OFF" if app.music_on else "Music ON"
+    on_release:
+        app.music_on = not app.music_on
 
 <MenuLayout@BoxLayout>
     orientation: "vertical"
@@ -67,12 +72,13 @@
     BoxLayout:
         orientation: 'vertical'
         padding: '5dp'
+        size_hint: 1,1
 
-        # HEADER LABELS: CHARACTER NAME AND FLOOR NUMBER
+        # HEADER LABELS: CHARACTER NAME AND ABILITY BUTTON
         BoxLayout:
             padding: '5dp'
             orientation: 'horizontal'
-            size_hint: 1, 0.1
+            size_hint: 1, 0.075
 
             Label:
                 id: name_label
@@ -87,7 +93,7 @@
         # GUI: CHARACTER STATS AND INVENTORY
         BoxLayout:
             orientation: 'horizontal'
-            size_hint: 1, 0.3
+            size_hint: 1, 0.2
             padding: '5dp'
 
             #CHARACTER STATS
@@ -146,7 +152,8 @@
                 id: experience_bar
 
         ScrollView:
-            size_hint: 1, 0.575
+            size_hint: 1, None
+            height: min(self.parent.height * 0.575, 335 * dp(1))
 
             DungeonLayout:
                 game: root
@@ -155,6 +162,14 @@
                 rows: self.stats.size()
                 cols: self.stats.size()
                 blueprint: self.generate_blueprint(self.rows, self.cols)
+
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint: 1, 0.05
+            padding: '0dp', '10dp','0dp','5dp'
+            spacing: '5dp'
+            MusicButton:
+            MainMenuButton:
 
 <HowToPlay>
     MenuLayout:
@@ -195,10 +210,8 @@
             on_release:
                 app.root.current = "how_to_play"
                 main_menu_info.text = ""
-        Button:
-            text: "Music ON" if app.music_on else "Music OFF"
+        MusicButton:
             on_release:
-                app.music_on = not app.music_on
                 main_menu_info.text = ""
         Button:
             text: "Mode: NORMAL" if app.game_mode_normal else "Mode: HARDCORE"
@@ -206,5 +219,9 @@
                 app.game_mode_normal = not app.game_mode_normal
                 main_menu_info.text ="Mode NORMAL: saved game are preserved if characters are killed" \
                 if app.game_mode_normal else "Mode HARDCORE: saved games are erased if characters are killed"
+        Button:
+            text: "Quit"
+            on_release:
+                app.stop()
         Label:
             id: main_menu_info

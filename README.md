@@ -1,8 +1,4 @@
-Description of current code
+Description of the branch
 ---------------------------
 
-This is a complete beta-version mechanic-wise but it is not properly balanced, tested and debugged.
-There is no guarantee that mechanics function well!!
-More monsters must be created (special ones).
-Only rock walls are in this version. Granite or Quarz walls are implemented but need to be included in the
-game_progression() function of game.stats.py
+This branch contains the game itself with all the interface. Do no modify game in this branch, this branch is only for working on the menus

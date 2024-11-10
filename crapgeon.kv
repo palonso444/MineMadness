@@ -165,6 +165,14 @@
             halign: 'center'
         MainMenuButton:
 
+<GameOver>:
+    Label:
+        text: "GAME OVER"
+        font_size: '80sp'
+        text_size: self.size    # needed to make halign work
+        halign: 'center'
+    MainMenuButton:
+
 <MainMenu>
     MenuLayout:
         Label:
@@ -174,21 +182,29 @@
             halign: 'center'
         Button:
             text: "Start game"
-            on_release: app.root.current = "game_screen"
+            on_release:
+                app.root.current = "game_screen"
+                main_menu_info.text = ""
         Button:
             text: "Continue"
             disabled: True
-            on_release: pass
+            on_release:
+                main_menu_info.text = ""
         Button:
             text: "How to play"
-            on_release: app.root.current = "how_to_play"
-        Button:
-            text: "Music ON/OFF"
-            on_release: main_menu_info.text = str(app.root.children)
-        Button:
-            text: "Mode: normal"
             on_release:
-                app.root.get_screen("game_screen").game_mode_hard = True
-                main_menu_info.text='Mode explanation here'
+                app.root.current = "how_to_play"
+                main_menu_info.text = ""
+        Button:
+            text: "Music ON" if app.music_on else "Music OFF"
+            on_release:
+                app.music_on = not app.music_on
+                main_menu_info.text = ""
+        Button:
+            text: "Mode: NORMAL" if app.game_mode_normal else "Mode: HARDCORE"
+            on_release:
+                app.game_mode_normal = not app.game_mode_normal
+                main_menu_info.text ="Mode NORMAL: saved game are preserved if characters are killed" \
+                if app.game_mode_normal else "Mode HARDCORE: saved games are erased if characters are killed"
         Label:
             id: main_menu_info

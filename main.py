@@ -23,6 +23,9 @@ class MainMenu(Screen):
 class HowToPlay(Screen):
     pass
 
+class GameOver(Screen):
+    pass
+
 
 class MineMadnessGame(Screen):  # initialized in kv file
 
@@ -304,13 +307,15 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
 
 class CrapgeonApp(App):
-
+    music_on = BooleanProperty(True)
+    game_mode_normal = BooleanProperty(True)
     def build(self):
-        sm = ScreenManager(transition=FadeTransition(duration=0.3))
-        sm.add_widget(MainMenu(name='main_menu'))
-        sm.add_widget(MineMadnessGame(name='game_screen'))
-        sm.add_widget(HowToPlay(name="how_to_play"))
-        return sm
+        app = ScreenManager(transition=FadeTransition(duration=0.3))
+        app.add_widget(MainMenu(name='main_menu'))
+        app.add_widget(MineMadnessGame(name='game_screen'))
+        app.add_widget(HowToPlay(name="how_to_play"))
+        app.add_widget(GameOver(name="game_over"))
+        return app
 
 
 ######################################################### START APP ###################################################

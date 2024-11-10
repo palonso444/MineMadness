@@ -78,7 +78,7 @@
         BoxLayout:
             padding: '5dp'
             orientation: 'horizontal'
-            size_hint: 1, 0.05
+            size_hint: 1, 0.075
 
             Label:
                 id: name_label
@@ -152,7 +152,8 @@
                 id: experience_bar
 
         ScrollView:
-            size_hint: 1, 0.575
+            size_hint: 1, None
+            height: min(self.parent.height * 0.575, 335 * dp(1))
 
             DungeonLayout:
                 game: root
@@ -165,7 +166,7 @@
         BoxLayout:
             orientation: "horizontal"
             size_hint: 1, 0.05
-            padding: '0dp', '5dp','0dp','5dp'
+            padding: '0dp', '10dp','0dp','5dp'
             spacing: '5dp'
             MusicButton:
             MainMenuButton:

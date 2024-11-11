@@ -1,0 +1,45 @@
+<HowToPlayLayout@BoxLayout>
+    orientation: "horizontal"
+    padding: "10dp"
+    spacing: "10dp"
+
+<HowToPlayLabel@Label>
+    height: self.texture_size[1]
+    text_size: self.width, None
+
+<TextLabel@HowToPlayLayout>
+    HowToPlayLabel:
+        size_hint: 1,1
+        text: root.text
+
+<ImageLabel@HowToPlayLayout>
+    Image:
+        size_hint: 0.3,1
+        source: root.source
+    HowToPlayLabel:
+        size_hint: 0.7, 1
+        text: root.text
+        font_size: '250sp'
+        size_hint: 1, None
+        height: self.texture_size[1]
+        text_size: self.width, None
+
+<HowToPlay>
+    MenuLayout:
+        orientation: 'vertical'
+        size_hint: 1, 1
+        height: self.minimum_height
+
+        ScrollView:
+            size_hint: 1, 0.8
+            Label:  # replace by ImageLabels and TextLabels here
+                text: "How To Play"
+                font_size: '250sp'
+                size_hint: 1, None
+                height: self.texture_size[1]
+                text_size: self.width, None
+
+        MainMenuButton:
+            size_hint: 1, 0.1
+
+

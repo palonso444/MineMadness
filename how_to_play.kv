@@ -1,0 +1,44 @@
+#:set picture_width_hint 0.2
+
+<HowToPlayLayout@BoxLayout>
+    orientation: "horizontal"
+    padding: "10dp"
+    spacing: "10dp"
+    size_hint: 1, None  # x_axis, y_axis
+    height: self.minimum_height
+
+<HowToPlayLabel@Label>
+    font_size: '50sp'
+    # size of Label is dynamic depending on number of pictures in the parent Layout
+    size_hint: 1 - (len(self.parent.children) - 1) * picture_width_hint, None
+    height: self.texture_size[1]
+    text_size: self.width, None
+
+<HowToPlayPicture@Image>
+    size_hint: picture_width_hint, 1
+    pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+<HowToPlay>
+    MenuLayout:
+        orientation: 'vertical'
+        size_hint: 1, 1
+        height: self.minimum_height
+
+        ScrollView:
+            size_hint: 1, 0.9
+
+            MenuLayout:
+                orientation: "vertical"
+                size_hint: 1, None
+                height: self.minimum_height
+                HowToPlayLayout:
+                    HowToPlayLabel:
+                        text: "How To Play"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/pixietoken.png"
+                    HowToPlayLabel:
+                        text: "This is a sample"
+
+        MainMenuButton:
+            size_hint: 1, 0.1

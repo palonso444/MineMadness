@@ -1,6 +1,6 @@
-from docutils.nodes import transition
 from kivy.app import App  # type: ignore
 from kivy.uix.boxlayout import BoxLayout  # type: ignore
+from kivy.lang import Builder
 
 # from kivy.core.text import LabelBase    # type: ignore
 # from kivy.uix.image import Image    # type: ignore
@@ -307,7 +307,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.turn = None
 
 
-class CrapgeonApp(App):
+class MineMadnessApp(App):
 
     music_on = BooleanProperty(None)
     game_mode_normal = BooleanProperty(None)
@@ -320,6 +320,7 @@ class CrapgeonApp(App):
         self.game_mode_normal = True
 
     def build(self):
+        Builder.load_file("how_to_play.kv")
         app = ScreenManager(transition=FadeTransition(duration=0.3))
         app.add_widget(MainMenu(name='main_menu'))
         app.add_widget(MineMadnessGame(name='game_screen'))
@@ -341,4 +342,4 @@ class CrapgeonApp(App):
 
 
 if __name__ == "__main__":
-    CrapgeonApp().run()
+    MineMadnessApp().run()

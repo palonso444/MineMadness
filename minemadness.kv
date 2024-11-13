@@ -12,14 +12,14 @@
 
 <Label>:
     text_size: self.size    # needed to make halign work  
-    halign: 'left'
-    valign: 'center'
-    font_size: '20sp'
+    halign: "left"
+    valign: "middle"
+    font_size: "20sp"
     #padding: '20dp', '10dp', '20dp', '10dp'
 
 <Button>:
     # disabled: True
-    halign: 'center'
+    halign: "center"
 
 <MainMenuButton@Button>
     text: "Main Menu"
@@ -33,13 +33,13 @@
 <MenuLayout@BoxLayout>
     orientation: "vertical"
     spacing: 10
-    padding: '5dp', '0dp','5dp','5dp'
+    padding: "5dp", "0dp","5dp","5dp"
 
 <Tile>:
     background_normal: ''   # sets the background default to white instead of predefined grey
     background_color: 0.4, 0.8, 1, 1
     size_hint: None,None
-    width: '55dp'
+    width: "55dp"
     height: self.width
     kind: None
     disabled: True
@@ -51,13 +51,13 @@
         Rectangle:  # draws the floor
             pos: self.pos
             size: self.size
-            source: "./backgrounds/" + self.kind + 'background.png' if self.kind else None
+            source: "./backgrounds/" + self.kind + "background.png" if self.kind else None
 
 <ProgressBar>:
-    padding: '40dp'
+    padding: "40dp"
 
 <ScrollView>:
-    effect_cls: 'ScrollEffect'  # avoids bouncing when reaching end of scroll
+    effect_cls: "ScrollEffect"  # avoids bouncing when reaching end of scroll
 
 <MineMadnessGame>:
     on_active_character_id:
@@ -70,20 +70,20 @@
     on_gems: gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
 
     BoxLayout:
-        orientation: 'vertical'
-        padding: '5dp'
+        orientation: "vertical"
+        padding: "5dp"
         size_hint: 1,1
 
         # HEADER LABELS: CHARACTER NAME AND ABILITY BUTTON
         BoxLayout:
-            padding: '5dp'
-            orientation: 'horizontal'
+            padding: "5dp"
+            orientation: "horizontal"
             size_hint: 1, 0.075
 
             Label:
                 id: name_label
                 size_hint: 0.6, 1
-                font_size: '23sp'
+                font_size: "23sp"
 
             AbilityButton:
                 size_hint: 0.4, 1
@@ -92,15 +92,15 @@
 
         # GUI: CHARACTER STATS AND INVENTORY
         BoxLayout:
-            orientation: 'horizontal'
+            orientation: "horizontal"
             size_hint: 1, 0.2
-            padding: '5dp'
+            padding: "5dp"
 
             #CHARACTER STATS
             BoxLayout:
-                orientation: 'vertical'
+                orientation: "vertical"
                 size_hint: 0.5,1
-                spacing: '5dp'
+                spacing: "5dp"
 
                 Label:
                     id: level_label
@@ -113,9 +113,9 @@
 
             #INVENTORY
             BoxLayout:
-                orientation: 'vertical'
+                orientation: "vertical"
                 size_hint: 0.5,1
-                spacing: '5dp'
+                spacing: "5dp"
 
                 JerkyButton:
                     text: "Jerky"
@@ -145,7 +145,7 @@
 
         BoxLayout:
             size_hint: 1, 0.025
-            padding: '5dp', '0dp','5dp','5dp'
+            padding: "5dp", "0dp","5dp","5dp"
             ProgressBar:
                 max: 20
                 value: 0
@@ -166,25 +166,27 @@
         BoxLayout:
             orientation: "horizontal"
             size_hint: 1, 0.05
-            padding: '0dp', '10dp','0dp','5dp'
-            spacing: '5dp'
+            padding: "0dp", "10dp","0dp","5dp"
+            spacing: "5dp"
             MusicButton:
             MainMenuButton:
 
 <GameOver>:
-    Label:
-        text: "GAME OVER"
-        font_size: '80sp'
-        text_size: self.size    # needed to make halign work
-        halign: 'center'
-    MainMenuButton:
+    MenuLayout:
+        Label:
+            text: "GAME OVER"
+            halign: "center"
+            font_size: "80sp"
+            size_hint: 1, 0.9
+        MainMenuButton:
+            size_hint: 1, 0.1
+
 
 <MainMenu>
     MenuLayout:
         Label:
             text: "Mine Madness"
-            font_size: '40sp'
-            text_size: self.size    # needed to make halign work
+            font_size: "40sp"
             halign: 'center'
         Button:
             text: "New game"

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from kivy.app import App  # type: ignore
 from kivy.uix.boxlayout import BoxLayout  # type: ignore
 from kivy.lang import Builder
@@ -12,6 +13,7 @@ import player_classes as players
 import monster_classes as monsters
 from interface import Interfacebutton
 from dungeon_classes import DungeonLayout
+from player_classes import Player
 
 
 # LabelBase.register(name = 'Vollkorn',
@@ -57,7 +59,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.total_gems: int | None = None  # defined by MineMadnessGame.DungeonLayout.on_pos()
 
     @staticmethod
-    def on_dungeon(game, dungeon):
+    def on_dungeon(game, dungeon) -> None:
 
         game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
@@ -67,7 +69,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             player.remove_all_effects(game.turn)
         players.Player.exited.clear()
 
-    def initialize_switches(self):
+    def initialize_switches(self) -> None:
         self.turn = 0  # even for players, odd for monsters. Player starts
 
         self.health = False
@@ -77,14 +79,14 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         self.ability_button_active = True  # TODO: when button unbinding in self.on_ability_button() works this has to go
 
-    def update_interface(self):
+    def update_interface(self) -> None:
 
         for button_type in Interfacebutton.types:
             self.inv_object = button_type
         self.update_switch("ability_button")
         self.update_experience_bar()
 
-    def update_switch(self, switch_name):
+    def update_switch(self, switch_name) -> None:
 
         switch_value = getattr(self, switch_name)
         if isinstance(switch_value, bool):
@@ -181,7 +183,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param character_id: id of the new active character.
         :return: None
         """
-        if character_id is not None:
+        if character_id is not None and not Player.all_dead():
             # if player turn or no monsters
             if game.turn % 2 == 0 or monsters.Monster.all_dead():
                 game.active_character = players.Player.data[character_id]
@@ -311,6 +313,7 @@ class MineMadnessApp(App):
 
     music_on = BooleanProperty(None)
     game_mode_normal = BooleanProperty(None)
+    game_over = BooleanProperty(False)
 
     def __init__(self):
         super().__init__()
@@ -318,15 +321,16 @@ class MineMadnessApp(App):
         self.music.loop = True
         self.music_on = False
         self.game_mode_normal = True
+        self.sm = None
 
     def build(self):
         Builder.load_file("how_to_play.kv")
-        app = ScreenManager(transition=FadeTransition(duration=0.3))
-        app.add_widget(MainMenu(name='main_menu'))
-        app.add_widget(MineMadnessGame(name='game_screen'))
-        app.add_widget(HowToPlay(name="how_to_play"))
-        app.add_widget(GameOver(name="game_over"))
-        return app
+        self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
+        self.sm.add_widget(MainMenu(name='main_menu'))
+        self.sm.add_widget(MineMadnessGame(name='game_screen'))
+        self.sm.add_widget(HowToPlay(name="how_to_play"))
+        self.sm.add_widget(GameOver(name="game_over"))
+        return self.sm
 
     @staticmethod
     def on_music_on(app, music_on):
@@ -337,6 +341,13 @@ class MineMadnessApp(App):
         else:
             app.music.stop()
 
+    @staticmethod
+    def on_game_over(app: MineMadnessApp, game_over: bool) -> None:
+        if game_over:
+            app.sm.transition.duration = 1.5
+            app.sm.current = "game_over"
+            app.game_over = False
+            app.sm.transition.duration = 0.3
 
 ######################################################### START APP ###################################################
 

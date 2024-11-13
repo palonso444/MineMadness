@@ -1,11 +1,12 @@
-from abc import abstractmethod
-
 from kivy.app import App  # type: ignore
 from kivy.uix.boxlayout import BoxLayout  # type: ignore
+from kivy.lang import Builder
 
 # from kivy.core.text import LabelBase    # type: ignore
 # from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
+from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
+from kivy.core.audio import SoundLoader
 
 import player_classes as players
 import monster_classes as monsters
@@ -17,8 +18,17 @@ from dungeon_classes import DungeonLayout
 # fn_regular= 'fonts/Vollkorn-Regular.ttf',
 # fn_italic='fonts/Vollkorn-Italic.ttf'
 
+class MainMenu(Screen):
+    pass
 
-class MineMadnessGame(BoxLayout):  # initialized in kv file
+class HowToPlay(Screen):
+    pass
+
+class GameOver(Screen):
+    pass
+
+
+class MineMadnessGame(Screen):  # initialized in kv file
 
     # GENERAL PROPERTIES
     level = NumericProperty(None)
@@ -287,23 +297,49 @@ class MineMadnessGame(BoxLayout):  # initialized in kv file
 
     def generate_next_level(self, new_dungeon_level: int) -> None:
         """
-        Removed current level board and generates instantiates a new one.
-        :param new_dungeon_level: number of the next level.
+        Removed current level board and generates instantiates a new one
+        :param new_dungeon_level: number of the next level
         :return: None
         """
-        self.children[0].remove_widget(self.dungeon)  # self.children[0] is Scrollview
-        self.children[0].add_widget(DungeonLayout(game=self))
+        scrollview = self.children[0].children[0]
+        scrollview.remove_widget(self.dungeon)
+        scrollview.add_widget(DungeonLayout(game=self))
         self.turn = None
 
 
-class CrapgeonApp(App):
+class MineMadnessApp(App):
+
+    music_on = BooleanProperty(None)
+    game_mode_normal = BooleanProperty(None)
+
+    def __init__(self):
+        super().__init__()
+        self.music = SoundLoader.load("./music/stocktune_eternal_nights_embrace.ogg")
+        self.music.loop = True
+        self.music_on = False
+        self.game_mode_normal = True
 
     def build(self):
-        return MineMadnessGame()
+        Builder.load_file("how_to_play.kv")
+        app = ScreenManager(transition=FadeTransition(duration=0.3))
+        app.add_widget(MainMenu(name='main_menu'))
+        app.add_widget(MineMadnessGame(name='game_screen'))
+        app.add_widget(HowToPlay(name="how_to_play"))
+        app.add_widget(GameOver(name="game_over"))
+        return app
+
+    @staticmethod
+    def on_music_on(app, music_on):
+
+        if music_on:
+            app.music.volume = 1
+            app.music.play()
+        else:
+            app.music.stop()
 
 
 ######################################################### START APP ###################################################
 
 
 if __name__ == "__main__":
-    CrapgeonApp().run()
+    MineMadnessApp().run()

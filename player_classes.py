@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from kivy.properties import NumericProperty
 from kivy.event import EventDispatcher
+from kivy.app import App
 
 from character_class import Character
 import game_stats as stats
@@ -298,6 +299,9 @@ class Player(Character, ABC, EventDispatcher):
     def kill_character(self, tile):
         super().kill_character(tile)
         self.dead_data.append(self)
+
+        if len(self.dead_data) == len(Player.player_chars):
+            App.get_running_app().game_over = True
 
     def resurrect(self, dungeon: DungeonLayout) -> None:
         """

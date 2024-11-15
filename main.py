@@ -339,16 +339,13 @@ class MineMadnessApp(App):
         self.sm.add_widget(MineMadnessGame(name="game_screen"))
         self.sm.current = "game_screen"
 
-    def save_game(self) -> None:
+    @staticmethod
+    def save_game(game_state: list[dict]) -> None:
         with open("saved_game.json", "w") as f:
-            json.dump(self.get_game_state(), f)
-
-    def get_game_state(self):
-        pass
+            json.dump(game_state, f)
 
     @staticmethod
     def on_music_on(app, music_on):
-
         if music_on:
             app.music.volume = 1
             app.music.play()

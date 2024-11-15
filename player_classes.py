@@ -15,10 +15,21 @@ class Player(Character, ABC, EventDispatcher):
 
     # this is the starting order as defined by Player.set_starting_player_order()
     player_chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
-    data: list = list()
-    dead_data: list = list()
-    exited: set = set()
+    data: list[Character] = list()
+    dead_data: list[Character] = list()
+    exited: set[Character] = set()
     gems: int = 0
+
+    @classmethod
+    def clear_character_data(cls) -> None:
+        """
+        Removes all characters from the Player.data, Player.dead_data and Player.exited list and resets class attributes
+        :return: None
+        """
+        super().clear_character_data()
+        cls.dead_data.clear()
+        cls.exited.clear()
+        cls.gems = 0
 
     @classmethod
     def set_starting_player_order(cls) -> None:

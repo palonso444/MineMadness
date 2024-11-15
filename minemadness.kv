@@ -191,8 +191,8 @@
         Button:
             text: "New game"
             on_release:
-                app.root.current = "game_screen"
                 main_menu_info.text = ""
+                app.start_new_game()
         Button:
             text: "Continue"
             disabled: True

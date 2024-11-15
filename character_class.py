@@ -1,12 +1,21 @@
 from __future__ import annotations
 from random import randint
 from abc import ABC, abstractmethod
+from inspect import getmro
 
 
 
 class Character(ABC):
 
     data: list[Character] | None = None
+
+    @classmethod
+    def clear_character_data(cls) -> None:
+        """
+        Removes all characters from the Character.data list
+        :return: None
+        """
+        cls.data.clear()
 
     @classmethod
     def rearrange_ids(cls) -> None:
@@ -58,6 +67,17 @@ class Character(ABC):
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
         self.ability_display: str | None = None  # needed for AbilityButton.display_text()
 
+    def to_dict(self):
+        """
+        Converts the instance of the class to a dictionary
+        :return: dictionary containing the names of the attributes as keys and the values as values
+        """
+        attributes: dict = dict()
+        for cls in getmro(self.__class__):  # Get the Method Resolution Order (MRO)
+            if hasattr(cls, "__dict__"):
+                attributes.update({key: value for key, value in vars(self).items()})
+
+        return attributes
 
     def setup_character(self):
         """

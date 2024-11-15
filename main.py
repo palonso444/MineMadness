@@ -77,7 +77,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: dictionary with the state of the game (blueprint, alive players, dead players)
         """
         game_state = dict()
-        game_state["blueprint"] = self.dungeon.blueprint.map
+        game_state["blueprint"] = self.dungeon.blueprint.to_dict()
         game_state["players_alive"] = [player.to_dict() for player in Player.data]
         game_state["players_dead"] = [player.to_dict() for player in Player.dead_data]
         return game_state

@@ -34,6 +34,13 @@ class Blueprint:
         """
         return [["." for _ in range(x_axis)] for _ in range(y_axis)]
 
+    def to_dict(self) -> dict:
+        """
+        Converts the instance of the class to a dictionary
+        :return: dictionary containing all attributes of the instance and their values
+        """
+        return{key: value for key, value in vars(self).items()}
+
     def get_position(self, position:tuple[int,int]) -> str:
         """
         Returns the value of the specified position of the grid

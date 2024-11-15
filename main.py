@@ -60,7 +60,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     @staticmethod
     def on_dungeon(game, dungeon) -> None:
-
+        print(Player.data)
         game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
         players.Player.set_starting_player_order()
@@ -315,7 +315,7 @@ class MineMadnessApp(App):
     game_mode_normal = BooleanProperty(None)
     game_over = BooleanProperty(False)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.music = SoundLoader.load("./music/stocktune_eternal_nights_embrace.ogg")
         self.music.loop = True
@@ -323,14 +323,21 @@ class MineMadnessApp(App):
         self.game_mode_normal = True
         self.sm = None
 
-    def build(self):
+    def build(self) -> ScreenManager:
         Builder.load_file("how_to_play.kv")
         self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
         self.sm.add_widget(MainMenu(name='main_menu'))
-        self.sm.add_widget(MineMadnessGame(name='game_screen'))
         self.sm.add_widget(HowToPlay(name="how_to_play"))
         self.sm.add_widget(GameOver(name="game_over"))
         return self.sm
+
+    def start_new_game(self) -> None:
+        if "game_screen" in self.sm.screen_names:
+            players.Player.clear_character_data()
+            monsters.Monster.clear_character_data()
+            self.sm.remove_widget(self.sm.get_screen("game_screen"))
+        self.sm.add_widget(MineMadnessGame(name="game_screen"))
+        self.sm.current = "game_screen"
 
     @staticmethod
     def on_music_on(app, music_on):
@@ -348,6 +355,7 @@ class MineMadnessApp(App):
             app.sm.current = "game_over"
             app.game_over = False
             app.sm.transition.duration = 0.3
+
 
 ######################################################### START APP ###################################################
 

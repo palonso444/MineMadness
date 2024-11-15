@@ -8,7 +8,7 @@ from character_class import Character
 
 class Monster(Character, ABC):
 
-    data: list = list()
+    data: list[Character] = list()
 
     def __init__(self):
         super().__init__()

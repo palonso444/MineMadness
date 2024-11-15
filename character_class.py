@@ -69,15 +69,10 @@ class Character(ABC):
 
     def to_dict(self):
         """
-        Converts the instance of the class to a dictionary
+        Converts the instance of the class to a dictionary containing its attributes and their values
         :return: dictionary containing the names of the attributes as keys and the values as values
         """
-        attributes: dict = dict()
-        for cls in getmro(self.__class__):  # Get the Method Resolution Order (MRO)
-            if hasattr(cls, "__dict__"):
-                attributes.update({key: value for key, value in vars(self).items()})
-
-        return attributes
+        return {key: value for key, value in vars(self).items()}
 
     def setup_character(self):
         """

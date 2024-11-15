@@ -1,6 +1,5 @@
 from __future__ import annotations
 from kivy.app import App  # type: ignore
-from kivy.uix.boxlayout import BoxLayout  # type: ignore
 from kivy.lang import Builder
 # from kivy.core.text import LabelBase    # type: ignore
 # from kivy.uix.image import Image    # type: ignore
@@ -64,10 +63,24 @@ class MineMadnessGame(Screen):  # initialized in kv file
         game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
         players.Player.set_starting_player_order()
-        game.initialize_switches()
         for player in players.Player.data:
             player.remove_all_effects(game.turn)
         players.Player.exited.clear()
+
+        game.initialize_switches() # this starts the game
+
+    def get_game_state(self) -> dict:
+        """
+        Captures the state of the dungeon (blueprint) and the data of alive and dead players
+        and stores everything into a dictionary. ONLY WORKS IF USED AT THE VERY BEGINNING OF LEVEL,
+        NOT ONCE THE LEVEL STARTED
+        :return: dictionary with the state of the game (blueprint, alive players, dead players)
+        """
+        game_state = dict()
+        game_state["blueprint"] = self.dungeon.blueprint.map
+        game_state["players_alive"] = [player.to_dict() for player in Player.data]
+        game_state["players_dead"] = [player.to_dict() for player in Player.dead_data]
+        return game_state
 
     def initialize_switches(self) -> None:
         self.turn = 0  # even for players, odd for monsters. Player starts

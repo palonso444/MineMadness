@@ -287,7 +287,6 @@ class DungeonLayout(GridLayout):
                     token_species = "gem"
 
             if character is not None:
-                print(character.data)
                 character.setup_character()
 
             # empty spaces ("." or " ") are None

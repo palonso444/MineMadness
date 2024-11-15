@@ -2,12 +2,12 @@ from __future__ import annotations
 from kivy.app import App  # type: ignore
 from kivy.uix.boxlayout import BoxLayout  # type: ignore
 from kivy.lang import Builder
-
 # from kivy.core.text import LabelBase    # type: ignore
 # from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.core.audio import SoundLoader
+import json
 
 import player_classes as players
 import monster_classes as monsters
@@ -338,6 +338,13 @@ class MineMadnessApp(App):
             self.sm.remove_widget(self.sm.get_screen("game_screen"))
         self.sm.add_widget(MineMadnessGame(name="game_screen"))
         self.sm.current = "game_screen"
+
+    def save_game(self) -> None:
+        with open("saved_game.json", "w") as f:
+            json.dump(self.get_game_state(), f)
+
+    def get_game_state(self):
+        pass
 
     @staticmethod
     def on_music_on(app, music_on):

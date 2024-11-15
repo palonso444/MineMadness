@@ -60,7 +60,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     @staticmethod
     def on_dungeon(game, dungeon) -> None:
-        print(Player.data)
+
         game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
         players.Player.set_starting_player_order()
@@ -315,7 +315,7 @@ class MineMadnessApp(App):
     game_mode_normal = BooleanProperty(None)
     game_over = BooleanProperty(False)
 
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__()
         self.music = SoundLoader.load("./music/stocktune_eternal_nights_embrace.ogg")
         self.music.loop = True

@@ -21,7 +21,9 @@ class DungeonLayout(GridLayout):
 
     level_start = ListProperty([])
 
-    def __init__(self, game: MineMadnessGame | None = None, **kwargs):
+    def __init__(self, game: MineMadnessGame | None = None,
+                 blueprint: Blueprint | None = None,
+                 **kwargs):
         super().__init__(**kwargs)
 
         # game is passed as argument from level 2 onwards
@@ -31,7 +33,10 @@ class DungeonLayout(GridLayout):
             self.stats: DungeonStats = DungeonStats(self.dungeon_level)
             self.rows: int = self.stats.size()
             self.cols: int = self.stats.size()
-            self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
+            if self.blueprint is None:
+                self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
+            else:
+                self.blueprint = blueprint
 
         self.tiles_dict: dict[tuple: Tile] | None = None
         
@@ -124,7 +129,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items("#", 5)
         #blueprint.place_equal_items("w", 3)
         #blueprint.place_equal_items("l", 6)
-        blueprint.place_equal_items("N", 6)
+        #blueprint.place_equal_items("N", 6)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -287,6 +292,7 @@ class DungeonLayout(GridLayout):
                     token_species = "gem"
 
             if character is not None:
+                # if character.kind in dict, overwrite
                 character.setup_character()
 
             # empty spaces ("." or " ") are None

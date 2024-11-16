@@ -7,12 +7,23 @@ class Blueprint:
     Program-agnostic module to generate ASCII-based blueprints of dungeon rooms
     """
 
-    def __init__(self, y_axis: int, x_axis: int):
+    def __init__(self, y_axis: int | None = None, x_axis: int | None = None, layout:list[list] | None = None):
 
-        self.y_axis = y_axis
-        self.x_axis = x_axis
+        if layout is None and (y_axis is None or x_axis is None):
+            raise ValueError("No None allowed in y_axis and x_axis if layout is None.")
+
+        if x_axis is not None and y_axis is not None:
+            self.y_axis = y_axis
+            self.x_axis = x_axis
+        else:
+            y_axis = len(layout[0])
+            x_axis = len(layout[0][0])
         self.area = y_axis * x_axis
-        self.map = self.generate_empty_map(y_axis, x_axis)
+
+        if layout is None:
+            self.layout = self.generate_empty_layout(y_axis, x_axis)
+        else:
+            self.layout = layout
 
     @staticmethod
     def get_distance(position1: tuple[int, int], position2: tuple[int, int]) -> int:
@@ -25,7 +36,7 @@ class Blueprint:
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
     @staticmethod
-    def generate_empty_map(y_axis: int, x_axis: int) -> list[list[str]]:
+    def generate_empty_layout(y_axis: int, x_axis: int) -> list[list[str]]:
         """
         Creates an empty grid of points of the specified dimensions
         :param y_axis: length of the y-axis
@@ -47,7 +58,7 @@ class Blueprint:
         :param position: coordinates of the position whose value must be returned
         :return: value of the specified position
         """
-        return self.map[position[0]][position[1]]
+        return self.layout[position[0]][position[1]]
 
     def spot_is_free(self, position:tuple[int,int]) -> bool:
         """
@@ -76,7 +87,7 @@ class Blueprint:
         Prints the room grid in a pretty and legible way
         :return: None
         """
-        for row in self.map:
+        for row in self.layout:
             print(" ".join(row))
 
     def place_single_item(self, item:str, position: tuple[int,int]) -> tuple [int,int]:
@@ -86,7 +97,7 @@ class Blueprint:
         :param position: coordinates of the position where to place the item
         :return: None
         """
-        self.map[position[0]][position[1]] = item
+        self.layout[position[0]][position[1]] = item
 
     def place_items(self, item: str, frequency: float=0.1, protected:tuple | None =None) -> None:
         """
@@ -141,7 +152,6 @@ class Blueprint:
         self.place_single_item(items.popleft(), position=position)
         placed_positions = {position}
         tested_positions = {position}
-
         max_dist = max_dist if max_dist is not None and max_dist >= min_dist else min_dist
 
         while len(tested_positions) < self.area and len(items) > 0:

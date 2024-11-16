@@ -12,7 +12,7 @@ from kivy.core.audio import SoundLoader
 from json import dump, load
 from os.path import exists
 from os import remove
-
+from dungeon_blueprint import Blueprint
 import player_classes as players
 import monster_classes as monsters
 from interface import Interfacebutton
@@ -357,7 +357,6 @@ class MineMadnessApp(App):
         self.sm.add_widget(HowToPlay(name="how_to_play"))
         self.sm.add_widget(GameOver(name="game_over"))
         self.sm.current = "main_menu"
-        print("BUIRL")
         return self.sm
 
     def start_new_game(self) -> None:
@@ -388,6 +387,10 @@ class MineMadnessApp(App):
     def load_game(self) -> None:
         with open(self.saved_game_file, "r") as f:
             data = load(f)
+
+        game = MineMadnessGame(name="game_screen")
+        game.dungeon = DungeonLayout(game=game, layout = Blueprint(layout=data["blueprint"]))
+
 
         #self.game = MineMadnessGame(name="game_screen")
         #self.sm.add_widget(self.game)

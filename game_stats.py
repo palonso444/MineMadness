@@ -110,6 +110,9 @@ class CharacterStats(ABC):
     # needed for players in fight_on_tile()
     experience_when_killed: int | None = None
 
+    def to_dict(self):
+        return {key:value for key, value in vars(self).items()}
+
 
 @dataclass
 class PlayerStats(CharacterStats, ABC):

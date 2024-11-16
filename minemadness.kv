@@ -194,10 +194,10 @@
                 main_menu_info.text = ""
                 app.start_new_game()
         Button:
-            text: "Continue"
-            disabled: True
+            text: "Continue game" if app.ongoing_game else "Load game"
             on_release:
                 main_menu_info.text = ""
+                app.continue_game_or_load()
         Button:
             text: "How to play"
             on_release:
@@ -210,8 +210,8 @@
             text: "Mode: NORMAL" if app.game_mode_normal else "Mode: HARDCORE"
             on_release:
                 app.game_mode_normal = not app.game_mode_normal
-                main_menu_info.text ="Mode NORMAL: saved game are preserved if characters are killed" \
-                if app.game_mode_normal else "Mode HARDCORE: saved games are erased if characters are killed"
+                main_menu_info.text ="Mode NORMAL: saved game is preserved if characters are killed" \
+                if app.game_mode_normal else "Mode HARDCORE: saved game is erased if characters are killed"
         Button:
             text: "Quit"
             on_release:

@@ -72,7 +72,11 @@ class Character(ABC):
         Converts the instance of the class to a dictionary containing its attributes and their values
         :return: dictionary containing the names of the attributes as keys and the values as values
         """
-        return {key: value for key, value in vars(self).items()}
+        # Token objects are not JSON serializable
+        as_dict = {key: value for key,value in vars(self).items() if key != "token"}
+        as_dict["stats"] = self.stats.to_dict()
+        return as_dict
+
 
     def setup_character(self):
         """

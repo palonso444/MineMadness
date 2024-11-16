@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from os.path import exists
+
 from kivy.app import App  # type: ignore
 from kivy.lang import Builder
 # from kivy.core.text import LabelBase    # type: ignore
@@ -6,7 +9,9 @@ from kivy.lang import Builder
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.core.audio import SoundLoader
-import json
+from json import dump, load
+from os.path import exists
+from os import remove
 
 import player_classes as players
 import monster_classes as monsters
@@ -67,6 +72,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
             player.remove_all_effects(game.turn)
         players.Player.exited.clear()
 
+        App.get_running_app().save_game()
+
         game.initialize_switches() # this starts the game
 
     def get_game_state(self) -> dict:
@@ -78,8 +85,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         game_state = dict()
         game_state["blueprint"] = self.dungeon.blueprint.to_dict()
-        game_state["players_alive"] = [player.to_dict() for player in Player.data]
-        game_state["players_dead"] = [player.to_dict() for player in Player.dead_data]
+        game_state["players_alive"] = {player.species: player.to_dict() for player in Player.data}
+        game_state["players_dead"] = {player.species: player.to_dict() for player in Player.dead_data}
         return game_state
 
     def initialize_switches(self) -> None:
@@ -316,7 +323,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param new_dungeon_level: number of the next level
         :return: None
         """
-        scrollview = self.children[0].children[0]
+        scrollview = self.children[0].children[1]
         scrollview.remove_widget(self.dungeon)
         scrollview.add_widget(DungeonLayout(game=self))
         self.turn = None
@@ -326,22 +333,31 @@ class MineMadnessApp(App):
 
     music_on = BooleanProperty(None)
     game_mode_normal = BooleanProperty(None)
+    ongoing_game = BooleanProperty(False)
     game_over = BooleanProperty(False)
 
     def __init__(self):
         super().__init__()
+        self.game_mode_normal: bool = True
+        self.saved_game_file: str = "saved_game.json"
+        self.saved_game: bool = exists("saved_game.json")
+
         self.music = SoundLoader.load("./music/stocktune_eternal_nights_embrace.ogg")
         self.music.loop = True
-        self.music_on = False
-        self.game_mode_normal = True
-        self.sm = None
+        self.music_on: bool = False
+
+        self.game: MineMadnessGame | None = None
+        self.sm: ScreenManager | None = None
+
 
     def build(self) -> ScreenManager:
         Builder.load_file("how_to_play.kv")
         self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
-        self.sm.add_widget(MainMenu(name='main_menu'))
+        self.sm.add_widget(MainMenu(name="main_menu"))
         self.sm.add_widget(HowToPlay(name="how_to_play"))
         self.sm.add_widget(GameOver(name="game_over"))
+        self.sm.current = "main_menu"
+        print("BUIRL")
         return self.sm
 
     def start_new_game(self) -> None:
@@ -349,13 +365,35 @@ class MineMadnessApp(App):
             players.Player.clear_character_data()
             monsters.Monster.clear_character_data()
             self.sm.remove_widget(self.sm.get_screen("game_screen"))
-        self.sm.add_widget(MineMadnessGame(name="game_screen"))
+        if self.saved_game:
+            remove(self.saved_game_file)
+            self.saved_game = False
+        self.game = MineMadnessGame(name="game_screen")
+        self.sm.add_widget(self.game)
+
+        self.ongoing_game = True
         self.sm.current = "game_screen"
 
-    @staticmethod
-    def save_game(game_state: list[dict]) -> None:
-        with open("saved_game.json", "w") as f:
-            json.dump(game_state, f)
+    def save_game(self) -> None:
+        with open(self.saved_game_file, "w") as f:
+            dump(self.game.get_game_state(), f)
+        self.saved_game = True
+
+    def continue_game_or_load(self):
+        if self.ongoing_game:
+            self.sm.current = "game_screen"
+        else:
+            self.load_game()
+
+    def load_game(self) -> None:
+        with open(self.saved_game_file, "r") as f:
+            data = load(f)
+
+        #self.game = MineMadnessGame(name="game_screen")
+        #self.sm.add_widget(self.game)
+
+        #self.ongoing_game = True
+        #self.sm.current = "game_screen"
 
     @staticmethod
     def on_music_on(app, music_on):
@@ -368,6 +406,9 @@ class MineMadnessApp(App):
     @staticmethod
     def on_game_over(app: MineMadnessApp, game_over: bool) -> None:
         if game_over:
+            if not app.game_mode_normal:
+                remove(app.saved_game_file)
+                app.saved_game = False
             app.sm.transition.duration = 1.5
             app.sm.current = "game_over"
             app.game_over = False

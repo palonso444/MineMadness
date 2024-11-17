@@ -1,12 +1,21 @@
 from __future__ import annotations
 from random import randint
 from abc import ABC, abstractmethod
+from inspect import getmro
 
 
 
 class Character(ABC):
 
     data: list[Character] | None = None
+
+    @classmethod
+    def clear_character_data(cls) -> None:
+        """
+        Removes all characters from the Character.data list
+        :return: None
+        """
+        cls.data.clear()
 
     @classmethod
     def rearrange_ids(cls) -> None:
@@ -57,6 +66,30 @@ class Character(ABC):
         self.step_duration: float | None = None  # defines speed of movement, from 0 to 1
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
         self.ability_display: str | None = None  # needed for AbilityButton.display_text()
+
+    def to_dict(self):
+        """
+        Converts the instance of the class to a dictionary containing its attributes and their values
+        :return: dictionary containing the names of the attributes as keys and the values as values
+        """
+        # Token objects are not JSON serializable. They ara added within DungeonLayout.match_blueprint()
+        as_dict = {key: value for key,value in vars(self).items() if key != "token"}
+        as_dict["stats"] = self.stats.to_dict()
+        return as_dict
+
+    def overwrite_attributes(self, attributes_dict: dict) -> None:
+        """
+        Overwrites the default attributes of the Character with custom ones
+        :param attributes_dict: dictionary containing the names of the attributes as keys and the new values
+        as values
+        :return: None
+        """
+        print("OVERWRITTEN")
+        for attribute, value in attributes_dict.items():
+            if attribute == "stats":
+                self.stats.overwrite_attributes(attributes_dict["stats"])
+            else:
+                setattr(self, attribute, value)
 
 
     def setup_character(self):

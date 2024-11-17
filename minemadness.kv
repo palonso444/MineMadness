@@ -151,17 +151,9 @@
                 value: 0
                 id: experience_bar
 
-        ScrollView:
+        ScrollView: # contains the DungeonLayout (initialized by MineMadnessGame.generate_level())
             size_hint: 1, None
             height: min(self.parent.height * 0.575, 335 * dp(1))
-
-            DungeonLayout:
-                game: root
-                dungeon_level: 1
-                stats: DungeonStats(self.dungeon_level)
-                rows: self.stats.size()
-                cols: self.stats.size()
-                blueprint: self.generate_blueprint(self.rows, self.cols)
 
         BoxLayout:
             orientation: "horizontal"
@@ -191,13 +183,13 @@
         Button:
             text: "New game"
             on_release:
-                app.root.current = "game_screen"
                 main_menu_info.text = ""
+                app.start_new_game()
         Button:
-            text: "Continue"
-            disabled: True
+            text: "Continue game" if app.ongoing_game else "Load game"
             on_release:
                 main_menu_info.text = ""
+                app.continue_game_or_load()
         Button:
             text: "How to play"
             on_release:
@@ -208,10 +200,11 @@
                 main_menu_info.text = ""
         Button:
             text: "Mode: NORMAL" if app.game_mode_normal else "Mode: HARDCORE"
+            disabled: True if app.ongoing_game else False
             on_release:
                 app.game_mode_normal = not app.game_mode_normal
-                main_menu_info.text ="Mode NORMAL: saved game are preserved if characters are killed" \
-                if app.game_mode_normal else "Mode HARDCORE: saved games are erased if characters are killed"
+                main_menu_info.text ="Mode NORMAL: saved game is preserved if characters are killed" \
+                if app.game_mode_normal else "Mode HARDCORE: saved game is erased if characters are killed"
         Button:
             text: "Quit"
             on_release:

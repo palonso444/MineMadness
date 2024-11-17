@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from kivy import level
 from kivy.properties import ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 from collections import deque
@@ -21,17 +20,20 @@ class DungeonLayout(GridLayout):
 
     level_start = ListProperty([])
 
-    def __init__(self, game: MineMadnessGame | None = None, **kwargs):
+    def __init__(self, game: MineMadnessGame,
+                 blueprint: Blueprint | None = None,
+                 **kwargs):
         super().__init__(**kwargs)
 
-        # game is passed as argument from level 2 onwards
-        if game is not None:
-            self.game: MineMadnessGame = game
-            self.dungeon_level: int = game.level
-            self.stats: DungeonStats = DungeonStats(self.dungeon_level)
-            self.rows: int = self.stats.size()
-            self.cols: int = self.stats.size()
+        self.game: MineMadnessGame = game
+        self.dungeon_level: int = game.level
+        self.stats: DungeonStats = DungeonStats(self.dungeon_level)
+        self.rows: int = self.stats.size()
+        self.cols: int = self.stats.size()
+        if blueprint is None:
             self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
+        else:
+            self.blueprint = blueprint
 
         self.tiles_dict: dict[tuple: Tile] | None = None
         
@@ -124,7 +126,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items("#", 5)
         #blueprint.place_equal_items("w", 3)
         #blueprint.place_equal_items("l", 6)
-        blueprint.place_equal_items("N", 6)
+        blueprint.place_equal_items("N", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -149,7 +151,7 @@ class DungeonLayout(GridLayout):
                     if self.dungeon_level == 1:
                         character = players.Sawyer()
                     else:
-                        character = players.Player.transfer_player("Sawyer")
+                        character = players.Player.transfer_player("sawyer")
                     token_kind = "player"
                     token_species = "sawyer"
 
@@ -157,7 +159,7 @@ class DungeonLayout(GridLayout):
                     if self.dungeon_level == 1:
                         character = players.Hawkins()
                     else:
-                        character = players.Player.transfer_player("Hawkins")
+                        character = players.Player.transfer_player("hawkins")
                     token_kind = "player"
                     token_species = "hawkins"
 
@@ -165,7 +167,7 @@ class DungeonLayout(GridLayout):
                     if self.dungeon_level == 1:
                         character = players.CrusherJane()
                     else:
-                        character = players.Player.transfer_player("Crusher Jane")
+                        character = players.Player.transfer_player("crusherjane")
                     token_kind = "player"
                     token_species = "crusherjane"
 
@@ -291,7 +293,6 @@ class DungeonLayout(GridLayout):
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
-
                 if tile_position != (self.rows - 1 , 0): # position lower left corner does not need to be repositioned
                     self.level_start.append(tile.position) # Works with Tile.update_tokens_pos()
                 tile.place_item(token_kind, token_species, character)

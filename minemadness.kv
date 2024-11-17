@@ -151,17 +151,9 @@
                 value: 0
                 id: experience_bar
 
-        ScrollView:
+        ScrollView: # contains the DungeonLayout (initialized by MineMadnessGame.generate_level())
             size_hint: 1, None
             height: min(self.parent.height * 0.575, 335 * dp(1))
-
-            DungeonLayout:
-                game: root
-                dungeon_level: 1
-                stats: DungeonStats(self.dungeon_level)
-                rows: self.stats.size()
-                cols: self.stats.size()
-                blueprint: self.generate_blueprint(self.rows, self.cols)
 
         BoxLayout:
             orientation: "horizontal"

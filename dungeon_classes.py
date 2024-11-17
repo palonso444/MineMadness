@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from kivy import level
 from kivy.properties import ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 from collections import deque
@@ -21,22 +20,20 @@ class DungeonLayout(GridLayout):
 
     level_start = ListProperty([])
 
-    def __init__(self, game: MineMadnessGame | None = None,
+    def __init__(self, game: MineMadnessGame,
                  blueprint: Blueprint | None = None,
                  **kwargs):
         super().__init__(**kwargs)
 
-        # game is passed as argument from level 2 onwards
-        if game is not None:
-            self.game: MineMadnessGame = game
-            self.dungeon_level: int = game.level
-            self.stats: DungeonStats = DungeonStats(self.dungeon_level)
-            self.rows: int = self.stats.size()
-            self.cols: int = self.stats.size()
-            if self.blueprint is None:
-                self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
-            else:
-                self.blueprint = blueprint
+        self.game: MineMadnessGame = game
+        self.dungeon_level: int = game.level
+        self.stats: DungeonStats = DungeonStats(self.dungeon_level)
+        self.rows: int = self.stats.size()
+        self.cols: int = self.stats.size()
+        if blueprint is None:
+            self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
+        else:
+            self.blueprint = blueprint
 
         self.tiles_dict: dict[tuple: Tile] | None = None
         

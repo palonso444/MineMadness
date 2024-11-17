@@ -16,9 +16,9 @@ class Blueprint:
             self.y_axis = y_axis
             self.x_axis = x_axis
         else:
-            y_axis = len(layout[0])
-            x_axis = len(layout[0][0])
-        self.area = y_axis * x_axis
+            self.y_axis = len(layout[0])
+            self.x_axis = len(layout[0][0])
+        self.area = self.y_axis * self.x_axis
 
         if layout is None:
             self.layout = self.generate_empty_layout(y_axis, x_axis)

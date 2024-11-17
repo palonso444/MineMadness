@@ -110,9 +110,13 @@ class CharacterStats(ABC):
     # needed for players in fight_on_tile()
     experience_when_killed: int | None = None
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {key:value for key, value in vars(self).items()}
 
+    def overwrite_attributes(self, attributes_dict: dict) -> None:
+
+        for attribute, value in attributes_dict.items():
+            setattr(self, attribute, value)
 
 @dataclass
 class PlayerStats(CharacterStats, ABC):

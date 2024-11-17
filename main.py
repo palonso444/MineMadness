@@ -65,6 +65,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
     @staticmethod
     def on_dungeon(game, dungeon) -> None:
 
+        print(players.Player.data)
         game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
         players.Player.set_starting_player_order()
@@ -243,7 +244,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if players.Player.all_dead():
             monsters.Monster.data.clear()
             self.level += 1
-            self.generate_next_level(self.level)
+            self.add_dungeon()
 
         elif self.active_character_id == len(players.Player.data):
             self.update_switch("turn")
@@ -317,15 +318,18 @@ class MineMadnessGame(Screen):  # initialized in kv file
             # needs to be reset to None otherwise it is not possible to pick 2 equal objects in a row
             game.inv_object = None
 
-    def generate_next_level(self, new_dungeon_level: int) -> None:
+    def add_dungeon(self, dungeon: DungeonLayout | None = None) -> None:
         """
-        Removed current level board and generates instantiates a new one
-        :param new_dungeon_level: number of the next level
+        Adds a dungeon to the game
+        :param dungeon: DungeonLayout to add. If None, a random one according to self.level is generated
         :return: None
         """
         scrollview = self.children[0].children[1]
         scrollview.remove_widget(self.dungeon)
-        scrollview.add_widget(DungeonLayout(game=self))
+        if dungeon is None:
+            scrollview.add_widget(DungeonLayout(game=self))
+        else:
+            scrollview.add_widget(dungeon)
         self.turn = None
 
 
@@ -368,6 +372,7 @@ class MineMadnessApp(App):
             remove(self.saved_game_file)
             self.saved_game = False
         self.game = MineMadnessGame(name="game_screen")
+        self.game.add_dungeon()
         self.sm.add_widget(self.game)
 
         self.ongoing_game = True
@@ -389,8 +394,8 @@ class MineMadnessApp(App):
             data = load(f)
 
         game = MineMadnessGame(name="game_screen")
-        game.dungeon = DungeonLayout(game=game, layout = Blueprint(layout=data["blueprint"]))
-
+        game.add_dungeon(DungeonLayout(game=game,
+                                       blueprint = Blueprint(layout=data["blueprint"]["layout"])))
 
         #self.game = MineMadnessGame(name="game_screen")
         #self.sm.add_widget(self.game)

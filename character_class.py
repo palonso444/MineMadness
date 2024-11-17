@@ -72,10 +72,23 @@ class Character(ABC):
         Converts the instance of the class to a dictionary containing its attributes and their values
         :return: dictionary containing the names of the attributes as keys and the values as values
         """
-        # Token objects are not JSON serializable
+        # Token objects are not JSON serializable. They ara added within DungeonLayout.match_blueprint()
         as_dict = {key: value for key,value in vars(self).items() if key != "token"}
         as_dict["stats"] = self.stats.to_dict()
         return as_dict
+
+    def overwrite_attributes(self, attributes_dict: dict) -> None:
+        """
+        Overwrites the default attributes of the Character with custom ones
+        :param attributes_dict: dictionary containing the names of the attributes as keys and the new values
+        as values
+        :return: None
+        """
+        for attribute, value in attributes_dict.items():
+            if attribute == "stats":
+                self.stats.overwrite_attributes(attributes_dict)
+            else:
+                setattr(self, attribute, value)
 
 
     def setup_character(self):

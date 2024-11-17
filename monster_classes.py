@@ -430,7 +430,7 @@ class Kobold(Monster):
     LOW strength
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "K"
         self.name: str = "Kobold"
@@ -438,6 +438,9 @@ class Kobold(Monster):
         self.step_transition: str = "in_out_quad"  # walking
         self.step_duration: float = 0.35
         self.stats = stats.KoboldStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
         super().move_token_or_behave(self.assess_path_random())
@@ -449,7 +452,7 @@ class BlindLizard(Monster):
     MEDIUM strength
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "L"
         self.name: str = "Blind Lizard"
@@ -457,6 +460,9 @@ class BlindLizard(Monster):
         self.step_transition: str = "in_out_quad"  # walking
         self.step_duration: float = 0.35
         self.stats = stats.BlindLizardStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
         super().move_token_or_behave(self.assess_path_random())
@@ -468,7 +474,7 @@ class BlackDeath(Monster):
     VERY HIGH strength
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "B"
         self.name: str = "Black Death"
@@ -476,6 +482,9 @@ class BlackDeath(Monster):
         self.step_transition: str = "in_out_quad"  # walking
         self.step_duration: float = 0.35
         self.stats = stats.BlackDeathStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
         super().move_token_or_behave(self.assess_path_random())
@@ -486,7 +495,7 @@ class BlackDeath(Monster):
 
 class CaveHound(Monster):
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "H"
         self.name: str = "Cave Hound"
@@ -494,6 +503,9 @@ class CaveHound(Monster):
         self.step_transition: str = "in_quart"  # gallop
         self.step_duration: float = 0.3
         self.stats = stats.CaveHoundStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
@@ -511,7 +523,7 @@ class Growl(Monster):
     HIGH strength
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "G"
         self.name: str = "Growl"
@@ -519,6 +531,9 @@ class Growl(Monster):
         self.step_transition: str = "in_out_elastic"  # stomping
         self.step_duration: float = 0.7
         self.stats = stats.GrowlStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
@@ -536,7 +551,7 @@ class RockGolem(Monster):
     VERY HIGH strength
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "R"
         self.name: str = "Rock Golem"
@@ -544,6 +559,9 @@ class RockGolem(Monster):
         self.step_transition: str = "in_out_elastic"  # stomping
         self.step_duration: float = 0.7
         self.stats = stats.RockGolemStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
@@ -564,7 +582,7 @@ class DarkGnome(Monster):
     MEDIUM movement
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "O"
         self.name: str = "Dark Gnome"
@@ -572,6 +590,9 @@ class DarkGnome(Monster):
         self.step_transition: str = "in_out_quad"  # walking
         self.step_duration: float = 0.35
         self.stats = stats.DarkGnomeStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
@@ -585,7 +606,7 @@ class DarkGnome(Monster):
 
 class NightMare(Monster):
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "N"
         self.name: str = "Nightmare"
@@ -593,6 +614,9 @@ class NightMare(Monster):
         self.step_transition: str = "in_quart"  # gallop
         self.step_duration: float = 0.3
         self.stats = stats.NightmareStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
@@ -606,7 +630,7 @@ class NightMare(Monster):
 
 class LindWorm(Monster):
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "Y"
         self.name: str = "Lindworm"
@@ -614,6 +638,9 @@ class LindWorm(Monster):
         self.step_transition: str = "in_out_elastic"  # stomping
         self.step_duration: float = 0.7
         self.stats = stats.LindWormStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
@@ -633,8 +660,7 @@ class WanderingShadow(Monster):
     RANDOM HIGH movement
     MEDIUM strength
     """
-
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "S"
         self.name: str = "Wandering Shadow"
@@ -647,7 +673,8 @@ class WanderingShadow(Monster):
         self.cannot_share_tile_with: list[str] = ["monster", "player"]
         self.ignores: list[str] = self.ignores + ["rock"]
 
-
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
         super().move_token_or_behave(self.assess_path_random())
@@ -659,7 +686,7 @@ class DepthsWisp(Monster):
     LOW strength
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "W"
         self.name: str = "Depths Wisp"
@@ -672,7 +699,8 @@ class DepthsWisp(Monster):
         self.cannot_share_tile_with: list[str] = ["monster", "player"]
         self.ignores: list[str] = self.ignores + ["rock"]
 
-
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
@@ -690,7 +718,7 @@ class MountainDjinn(Monster):
     HIGH strength
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "D"
         self.name: str = "Mountain Djinn"
@@ -703,7 +731,8 @@ class MountainDjinn(Monster):
         self.cannot_share_tile_with: list[str] = ["monster", "player"]
         self.ignores: list[str] = self.ignores + ["rock"]
 
-
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
@@ -726,7 +755,7 @@ class Pixie(Monster):
     Chases pickables and makes them disappear
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "P"
         self.name: str = "Pixie"
@@ -737,6 +766,8 @@ class Pixie(Monster):
 
         self.chases: str = "pickable"
 
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def act_on_tile(self, tile: Tile) -> None:
         """

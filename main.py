@@ -64,8 +64,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     @staticmethod
     def on_dungeon(game, dungeon) -> None:
-
-        print(players.Player.data)
         game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
         players.Player.set_starting_player_order()
@@ -85,9 +83,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: dictionary with the state of the game (blueprint, alive players, dead players)
         """
         game_state = dict()
+        game_state["level"] = self.level
         game_state["blueprint"] = self.dungeon.blueprint.to_dict()
-        game_state["players_alive"] = {player.species: player.to_dict() for player in Player.data}
-        game_state["players_dead"] = {player.species: player.to_dict() for player in Player.dead_data}
+        game_state["players_alive"] = {player.__class__.__name__: player.to_dict() for player in Player.data}
+        game_state["players_dead"] = {player.__class__.__name__: player.to_dict() for player in Player.dead_data}
         return game_state
 
     def initialize_switches(self) -> None:
@@ -372,9 +371,11 @@ class MineMadnessApp(App):
             remove(self.saved_game_file)
             self.saved_game = False
         self.game = MineMadnessGame(name="game_screen")
-        self.game.add_dungeon()
-        self.sm.add_widget(self.game)
+        self._setup_dungeon_screen()
 
+    def _setup_dungeon_screen(self, dungeon: DungeonLayout | None = None):
+        self.game.add_dungeon(dungeon)
+        self.sm.add_widget(self.game)
         self.ongoing_game = True
         self.sm.current = "game_screen"
 
@@ -392,16 +393,15 @@ class MineMadnessApp(App):
     def load_game(self) -> None:
         with open(self.saved_game_file, "r") as f:
             data = load(f)
-
-        game = MineMadnessGame(name="game_screen")
-        game.add_dungeon(DungeonLayout(game=game,
+        self.game = MineMadnessGame(name="game_screen")
+        self.game.level = data["level"]
+        if self.game.level > 1:
+            players.Player.data = [getattr(players, key)(attributes_dict=data["players_alive"][key])
+                                   for key in data["players_alive"].keys()]
+            players.Player.dead_data = [getattr(players, key)(attributes_dict=data["players_dead"][key])
+                                   for key in data["players_dead"].keys()]
+        self._setup_dungeon_screen(DungeonLayout(game=self.game,
                                        blueprint = Blueprint(layout=data["blueprint"]["layout"])))
-
-        #self.game = MineMadnessGame(name="game_screen")
-        #self.sm.add_widget(self.game)
-
-        #self.ongoing_game = True
-        #self.sm.current = "game_screen"
 
     @staticmethod
     def on_music_on(app, music_on):

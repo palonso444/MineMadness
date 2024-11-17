@@ -126,7 +126,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items("#", 5)
         #blueprint.place_equal_items("w", 3)
         #blueprint.place_equal_items("l", 6)
-        #blueprint.place_equal_items("N", 6)
+        blueprint.place_equal_items("N", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -151,7 +151,7 @@ class DungeonLayout(GridLayout):
                     if self.dungeon_level == 1:
                         character = players.Sawyer()
                     else:
-                        character = players.Player.transfer_player("Sawyer")
+                        character = players.Player.transfer_player("sawyer")
                     token_kind = "player"
                     token_species = "sawyer"
 
@@ -159,7 +159,7 @@ class DungeonLayout(GridLayout):
                     if self.dungeon_level == 1:
                         character = players.Hawkins()
                     else:
-                        character = players.Player.transfer_player("Hawkins")
+                        character = players.Player.transfer_player("hawkins")
                     token_kind = "player"
                     token_species = "hawkins"
 
@@ -167,7 +167,7 @@ class DungeonLayout(GridLayout):
                     if self.dungeon_level == 1:
                         character = players.CrusherJane()
                     else:
-                        character = players.Player.transfer_player("Crusher Jane")
+                        character = players.Player.transfer_player("crusherjane")
                     token_kind = "player"
                     token_species = "crusherjane"
 
@@ -289,12 +289,10 @@ class DungeonLayout(GridLayout):
                     token_species = "gem"
 
             if character is not None:
-                # if character.kind in dict, overwrite
                 character.setup_character()
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
-
                 if tile_position != (self.rows - 1 , 0): # position lower left corner does not need to be repositioned
                     self.level_start.append(tile.position) # Works with Tile.update_tokens_pos()
                 tile.place_item(token_kind, token_species, character)

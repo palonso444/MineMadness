@@ -16,8 +16,8 @@ class Blueprint:
             self.y_axis = y_axis
             self.x_axis = x_axis
         else:
-            self.y_axis = len(layout[0])
-            self.x_axis = len(layout[0][0])
+            self.y_axis = len(layout)
+            self.x_axis = len(layout[0])
         self.area = self.y_axis * self.x_axis
 
         if layout is None:
@@ -82,7 +82,7 @@ class Blueprint:
         """
         return randint(0, self.y_axis - 1), randint(0, self.x_axis - 1)
 
-    def print_map(self) -> None:
+    def print_layout(self) -> None:
         """
         Prints the room grid in a pretty and legible way
         :return: None
@@ -180,4 +180,4 @@ if __name__ == "__main__":
     #test.place_items("4", 0.5)
     #test.place_equal_items("2",99)
     #test.place_items_as_group(("A","B","C", "D", "E"),1, 2, scatter=True)
-    test.print_map()
+    test.print_layout()

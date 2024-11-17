@@ -84,9 +84,10 @@ class Character(ABC):
         as values
         :return: None
         """
+        print("OVERWRITTEN")
         for attribute, value in attributes_dict.items():
             if attribute == "stats":
-                self.stats.overwrite_attributes(attributes_dict)
+                self.stats.overwrite_attributes(attributes_dict["stats"])
             else:
                 setattr(self, attribute, value)
 

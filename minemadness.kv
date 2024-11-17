@@ -200,6 +200,7 @@
                 main_menu_info.text = ""
         Button:
             text: "Mode: NORMAL" if app.game_mode_normal else "Mode: HARDCORE"
+            disabled: True if app.ongoing_game else False
             on_release:
                 app.game_mode_normal = not app.game_mode_normal
                 main_menu_info.text ="Mode NORMAL: saved game is preserved if characters are killed" \

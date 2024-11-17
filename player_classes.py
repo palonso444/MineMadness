@@ -33,18 +33,18 @@ class Player(Character, ABC, EventDispatcher):
 
     @classmethod
     def set_starting_player_order(cls) -> None:
-
+        """
+        Sets the starting player turn order: sawyer, hawkins, crusherjane
+        :return: None
+        """
         sawyer = next(player for player in cls.data if isinstance(player, Sawyer))
         hawkins = next(player for player in cls.data if isinstance(player, Hawkins))
-        crusherjane = next(
-            player for player in cls.data if isinstance(player, CrusherJane)
-        )
-
+        crusherjane = next(player for player in cls.data if isinstance(player, CrusherJane))
         cls.data = [sawyer, hawkins, crusherjane]
         cls.rearrange_ids()
 
     @classmethod
-    def swap_characters(cls, index_char_1, index_char_2):
+    def swap_characters(cls, index_char_1, index_char_2) -> None:
         """
         Swaps the order of 2 characters in cls.data
         :param index_char_1: index of a character
@@ -71,15 +71,22 @@ class Player(Character, ABC, EventDispatcher):
             return {player.char for player in cls.exited}
 
     @classmethod
-    def transfer_player(cls, name: str) -> Character:
+    def transfer_player(cls, species: str) -> Player:
         """
-        Heals and disables the ability of exited players and transfers them to the next level.
+        Retrieves players from Players.exited or Players.data to transfer them to a dungeon level
+        :param species: Player.species of the player to be retrieved
+        :return: the Player instance
         """
-        for player in cls.exited:
-            if player.name == name:
-                player.heal(player.stats.recovery_end_of_level)
-                player.ability_active = False
-                return player
+        if len(cls.exited) > 0:
+            for player in cls.exited:
+                if player.species == species:
+                    player.heal(player.stats.recovery_end_of_level)
+                    player.ability_active = False
+                    return player
+        elif len(cls.data) > 0:
+            for player in cls.data:
+                if player.species == species:
+                    return player
 
     @classmethod
     def all_alive(cls) -> bool:
@@ -402,7 +409,7 @@ class Sawyer(Player):
     def is_hidden(self):
         return self.ability_active
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "%"
         self.name: str = "Sawyer"
@@ -415,6 +422,9 @@ class Sawyer(Player):
         self.special_items: dict[str:int] | None = {"powder": 5}
         self.ability_display: str = "Hide"
         self.ability_active: bool = False
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def can_dig(self, token_species: str) -> bool:
         if token_species == "rock":
@@ -482,7 +492,7 @@ class CrusherJane(Player):
     LOW movement
     """
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "&"
         self.name: str = "Crusher Jane"
@@ -495,6 +505,9 @@ class CrusherJane(Player):
         self.special_items: dict[str:int] = {"weapons": self.stats.weapons}
         self.ability_display: str = "Use Weapons"
         self.ability_active: bool = False
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def can_dig(self, token_species: str) -> bool:
         if token_species == "rock":
@@ -559,7 +572,7 @@ class Hawkins(Player):
     MEDIUM strength
     MEDIUM movement"""
 
-    def __init__(self):
+    def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "?"
         self.name: str = "Hawkins"
@@ -572,6 +585,9 @@ class Hawkins(Player):
         self.special_items: dict[str:int] | None = {"dynamite": 2}
         self.ability_display: str = "Use Dynamite"
         self.ability_active: bool = False
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
 
     def can_dig(self, token_species: str) -> bool:
         if token_species == "rock":

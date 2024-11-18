@@ -84,7 +84,6 @@ class Character(ABC):
         as values
         :return: None
         """
-        print("OVERWRITTEN")
         for attribute, value in attributes_dict.items():
             if attribute == "stats":
                 self.stats.overwrite_attributes(attributes_dict["stats"])
@@ -225,14 +224,3 @@ class Character(ABC):
         del self.__class__.data[self.id]
         self.__class__.rearrange_ids()
         self.token.delete_token(tile)
-
-    # MOVEMENT METHODS TO IMPLEMENT
-
-    def glide(self):
-        raise NotImplementedError()
-
-    def walk(self):
-        raise NotImplementedError()
-
-    def stomp(self):
-        raise NotImplementedError()

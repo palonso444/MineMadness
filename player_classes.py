@@ -37,10 +37,10 @@ class Player(Character, ABC, EventDispatcher):
         Sets the starting player turn order: sawyer, hawkins, crusherjane
         :return: None
         """
-        sawyer = next(player for player in cls.data if isinstance(player, Sawyer))
-        hawkins = next(player for player in cls.data if isinstance(player, Hawkins))
-        crusherjane = next(player for player in cls.data if isinstance(player, CrusherJane))
-        cls.data = [sawyer, hawkins, crusherjane]
+        sawyer = next((player for player in cls.data if isinstance(player, Sawyer)), None)
+        hawkins = next((player for player in cls.data if isinstance(player, Hawkins)), None)
+        crusherjane = next((player for player in cls.data if isinstance(player, CrusherJane)), None)
+        cls.data = [item for item in [sawyer, hawkins, crusherjane] if item is not None]
         cls.rearrange_ids()
 
     @classmethod

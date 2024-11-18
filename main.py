@@ -91,7 +91,7 @@ class MineMadnessApp(App):
         self.game = MineMadnessGame(name="game_screen")
         self._setup_dungeon_screen()
 
-    def _setup_dungeon_screen(self, dungeon: DungeonLayout | None = None):
+    def _setup_dungeon_screen(self, dungeon: DungeonLayout | None = None) -> None:
         self.add_dungeon_to_game(dungeon)
         self.sm.add_widget(self.game)
         self.ongoing_game = True

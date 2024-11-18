@@ -34,17 +34,17 @@ class Player(Character, ABC, EventDispatcher):
     @classmethod
     def set_starting_player_order(cls) -> None:
         """
-        Sets the starting player turn order: sawyer, hawkins, crusherjane
+        Sets the starting player turn order: Sawyer, Hawkins, Crusher Jane
         :return: None
         """
-        sawyer = next(player for player in cls.data if isinstance(player, Sawyer))
-        hawkins = next(player for player in cls.data if isinstance(player, Hawkins))
-        crusherjane = next(player for player in cls.data if isinstance(player, CrusherJane))
-        cls.data = [sawyer, hawkins, crusherjane]
+        sawyer = next((player for player in cls.data if isinstance(player, Sawyer)), None)
+        hawkins = next((player for player in cls.data if isinstance(player, Hawkins)), None)
+        crusherjane = next((player for player in cls.data if isinstance(player, CrusherJane)), None)
+        cls.data = [item for item in [sawyer, hawkins, crusherjane] if item is not None]
         cls.rearrange_ids()
 
     @classmethod
-    def swap_characters(cls, index_char_1, index_char_2) -> None:
+    def swap_characters(cls, index_char_1: int, index_char_2: int) -> None:
         """
         Swaps the order of 2 characters in cls.data
         :param index_char_1: index of a character

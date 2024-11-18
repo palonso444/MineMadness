@@ -38,7 +38,13 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.total_gems: int | None = None  # defined by MineMadnessGame.DungeonLayout.on_pos()
 
     @staticmethod
-    def on_dungeon(game, dungeon) -> None:
+    def on_dungeon(game: MineMadnessGame, dungeon: DungeonLayout) -> None:
+        """
+        Triggered when dungeon is ready and assigned to MineMadnessGame.dungeon attribute.
+        :param game: instance of MineMadnessGame
+        :param dungeon: assigned dungeon instance
+        :return: None
+        """
         game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
         players.Player.gems = 0
         players.Player.set_starting_player_order()
@@ -94,7 +100,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         setattr(self, switch_name, switch_value)
 
-    def update_experience_bar(self):
+    def update_experience_bar(self) -> None:
         """
         Updates the range of the experience bar according to the current active character.
         :return: None
@@ -105,57 +111,59 @@ class MineMadnessGame(Screen):  # initialized in kv file
         else:
             self.ids.experience_bar.value = 0
 
-    def on_ability_button(self, *args):
+    @staticmethod
+    def on_ability_button(game: MineMadnessGame, value: bool) -> None:
         """
-        Updates the state of the ability button depending on the circumstances of the game.
-        :param args: needed for the functioning of the callback. Args are: game instance and a boolean value of
-        the corresponding switch.
+        Updates the state of the ability button depending on the circumstances of the game
+        :param game: current instance of MineMadnessGame
+        :param value: current boolean value of the switch
         :return: None
         """
-        self.ability_button_active = False
+        game.ability_button_active = False
 
-        if isinstance(self.active_character, monsters.Monster):
-            self.ids.ability_button.disabled = True
-            self.ids.ability_button.state = "normal"
+        if isinstance(game.active_character, monsters.Monster):
+            game.ids.ability_button.disabled = True
+            game.ids.ability_button.state = "normal"
 
-        elif isinstance(self.active_character, players.Player):
-            self.ids.ability_button.disabled = not self.ids.ability_button.condition_active
-            self.ids.ability_button.state = "down" if self.active_character.ability_active else "normal"
+        elif isinstance(game.active_character, players.Player):
+            game.ids.ability_button.disabled = not game.ids.ability_button.condition_active
+            game.ids.ability_button.state = "down" if game.active_character.ability_active else "normal"
 
-        self.ability_button_active = True
-
-    def on_character_done(self, *args):
-        """
-        Checks what to do when a character finishes a movement, but it may still have movements left
-        :param args: needed for the functioning of the callback. Args are: game instance and a boolean value of
-        the corresponding switch
-        :return: None
-        """
-        if monsters.Monster.all_dead() and self.active_character.stats.remaining_moves == 0:
-            self.active_character.stats.remaining_moves = self.active_character.stats.moves
-            self.active_character.remove_effects_if_over(self.turn)
-            self.active_character.token.unselect_token()
-            self.update_switch("turn")
-
-        if isinstance(self.active_character, players.Player) and self.active_character.stats.remaining_moves > 0:
-            if self.active_character.using_dynamite:
-                self.activate_accessible_tiles(self.active_character.stats.shooting_range)
-            else:
-                self.activate_accessible_tiles(self.active_character.stats.remaining_moves)
-
-        else:  # if self.active_character remaining moves == 0
-            if isinstance(self.active_character, players.Player):
-                self.active_character.remove_effects_if_over(self.turn)
-                self.active_character.token.unselect_token()
-            self.next_character()  # switch turns if character last of character.characters
+        game.ability_button_active = True
 
     @staticmethod
-    def on_turn(game, turn):
+    def on_character_done(game: MineMadnessGame, value: bool) -> None:
+        """
+        Checks what to do when a character finishes a movement, but it may still have movements left
+        :param game: current instance of MineMadnessGame
+        :param value: current boolean value of the switch
+        :return: None
+        """
+        if monsters.Monster.all_dead() and game.active_character.stats.remaining_moves == 0:
+            game.active_character.stats.remaining_moves = game.active_character.stats.moves
+            game.active_character.remove_effects_if_over(game.turn)
+            game.active_character.token.unselect_token()
+            game.update_switch("turn")
+
+        if isinstance(game.active_character, players.Player) and game.active_character.stats.remaining_moves > 0:
+            if game.active_character.using_dynamite:
+                game.activate_accessible_tiles(game.active_character.stats.shooting_range)
+            else:
+                game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
+
+        else:  # if self.active_character remaining moves == 0
+            if isinstance(game.active_character, players.Player):
+                game.active_character.remove_effects_if_over(game.turn)
+                game.active_character.token.unselect_token()
+            game.next_character()  # switch turns if character last of character.characters
+
+    @staticmethod
+    def on_turn(game: MineMadnessGame, turn: int | None) -> None:
         """
         On new turn, resets movements of the characters (monsters or players). Sets self.active_character_id to 0
-        and updates it if the value was already 0 (there is only one character left).
-        :param game: current instance of the game.
-        :param turn: turn number (even for players, odd for monsters).
+        and updates it if the value was already 0 (there is only one character left)
+        :param game: current instance of MineMadnessGame
+        :param turn: turn number (even for players, odd for monsters)
         :return: None
         """
         if turn is not None:
@@ -171,11 +179,11 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.active_character_id = 0
 
     @staticmethod
-    def on_active_character_id(game, character_id):
+    def on_active_character_id(game: MineMadnessGame, character_id: int | None) -> None:
         """
         Checks what to do when the active character changes.
-        :param game: current instance of the game.
-        :param character_id: id of the new active character.
+        :param game: current instance of MineMadnessGame
+        :param character_id: id of the new active character
         :return: None
         """
         if character_id is not None and not Player.all_dead():
@@ -207,35 +215,36 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.active_character.token.select_character()
                 game.active_character.move()
 
-    def on_player_exited(self, *args):
+    @staticmethod
+    def on_player_exited(game: MineMadnessGame, value: bool) -> None:
         """
-        Handles the change of level or turn when the active character exits the level.
-        :param args: needed for the functioning of then callback. Args are: game instance and a boolean value of
-        the corresponding switch.
+        Handles the change of level or turn when the active character exits the level
+        :param game: current instance of MineMadnessGame
+        :param value: current boolean value of the switch
         :return: None
         """
         # in this case all out of game
         if players.Player.all_dead():
             monsters.Monster.data.clear()
-            self.level += 1
+            game.level += 1
             App.get_running_app().remove_dungeon_from_game()
             App.get_running_app().add_dungeon_to_game()
-            self.turn = None
+            game.turn = None
 
-        elif self.active_character_id == len(players.Player.data):
-            self.update_switch("turn")
+        elif game.active_character_id == len(players.Player.data):
+            game.update_switch("turn")
 
         else:
-            self.update_switch("active_character_id")
+            game.update_switch("active_character_id")
 
-    def next_character(self):
+    def next_character(self) -> None:
         if self.active_character.id < len(self.active_character.__class__.data) - 1:
             self.active_character_id += 1  # next character on list moves
 
         else:  # if end of characters list reached (all have moved)
             self.update_switch("turn")
 
-    def activate_accessible_tiles(self, steps:int) -> None:
+    def activate_accessible_tiles(self, steps: int) -> None:
         """
         Gets the total range of activable tiles (player movement range and other player positions if player.
         did not move if monsters are present, otherwise all other players positions).
@@ -259,7 +268,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         positions_in_range = players_not_yet_active.union(player_movement_range)
         self.dungeon.enable_tiles(positions_in_range, self.active_character)
 
-    def switch_character(self, new_active_character):
+    def switch_character(self, new_active_character: Character) -> None:
         """
         Changes the active character (self.active_character).
         :param new_active_character: character to be activated.
@@ -275,21 +284,19 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.active_character_id = players.Player.data.index(self.active_character)
 
     @staticmethod
-    def on_inv_object(game, inv_object):
+    def on_inv_object(game: MineMadnessGame, inv_object: str | None) -> None:
         """
         When a character picks up an object enables the corresponding button if applicable.
         :param game: current instance of the game.
-        :param inv_object: object of the inventory just picked up.
+        :param inv_object: object of the inventory just picked up
         :return: None
         """
         if inv_object is not None:
-
             character = game.active_character
 
             if character.inventory is None or character.inventory[inv_object] == 0:
                 game.ids[inv_object + "_button"].disabled = True
             else:
                 game.ids[inv_object + "_button"].disabled = False
-
             # needs to be reset to None otherwise it is not possible to pick 2 equal objects in a row
             game.inv_object = None

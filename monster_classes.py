@@ -66,7 +66,6 @@ class Monster(Character, ABC):
 
     def act_on_tile(self, tile: Tile) -> None:
         self.attack_players()
-        #self.stats.remaining_moves = 0
         self.get_dungeon().game.update_switch("character_done")
 
 

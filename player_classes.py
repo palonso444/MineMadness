@@ -59,6 +59,10 @@ class Player(Character, ABC, EventDispatcher):
         return len(cls.data) == len(cls.player_chars)
 
     @classmethod
+    def all_players_dead(cls):
+        return len(cls.dead_data) == len(cls.player_chars)
+
+    @classmethod
     def get_alive_players(cls) -> set[str] | tuple[str:str:str]:
         """
         Determines the number of alive players at the end of a level
@@ -317,9 +321,6 @@ class Player(Character, ABC, EventDispatcher):
     def kill_character(self, tile):
         super().kill_character(tile)
         self.dead_data.append(self)
-
-        if len(self.dead_data) == len(Player.player_chars):
-            App.get_running_app().game_over = True
 
     def resurrect(self, dungeon: DungeonLayout) -> None:
         """

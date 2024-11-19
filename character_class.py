@@ -36,7 +36,7 @@ class Character(ABC):
             character.stats.remaining_moves = character.stats.moves
 
     @classmethod
-    def all_dead(cls) -> bool:
+    def all_dead_or_out(cls) -> bool:
         """
         Checks if all instances characters of the class are dead or out of game
         :return:: True if all are dead or out of game, False otherwise

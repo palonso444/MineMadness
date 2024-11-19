@@ -236,8 +236,10 @@ class Player(Character, ABC, EventDispatcher):
         """
         if tile.has_token("wall"):
             self._dig(tile)
+            self.token.dungeon.game.update_switch("character_done")
         elif tile.has_token("monster"):
             self.fight_on_tile(tile)
+            self.token.dungeon.game.update_switch("character_done")
         else:
             if tile.has_token("pickable"):
                 self._pick_object(tile)

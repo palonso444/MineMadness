@@ -139,23 +139,30 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param value: current boolean value of the switch
         :return: None
         """
-        if monsters.Monster.all_dead() and game.active_character.stats.remaining_moves == 0:
-            game.active_character.stats.remaining_moves = game.active_character.stats.moves
-            game.active_character.remove_effects_if_over(game.turn)
-            game.active_character.token.unselect_token()
-            game.update_switch("turn")
-
-        if isinstance(game.active_character, players.Player) and game.active_character.stats.remaining_moves > 0:
-            if game.active_character.using_dynamite:
-                game.activate_accessible_tiles(game.active_character.stats.shooting_range)
+        if players.Player.all_dead_or_out():
+            if players.Player.all_players_dead():
+                App.get_running_app().game_over = True
             else:
-                game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
+                game.finish_level()
 
-        else:  # if self.active_character remaining moves == 0
-            if isinstance(game.active_character, players.Player):
+        else:
+            if monsters.Monster.all_dead_or_out() and game.active_character.stats.remaining_moves == 0:
+                game.active_character.stats.remaining_moves = game.active_character.stats.moves
                 game.active_character.remove_effects_if_over(game.turn)
                 game.active_character.token.unselect_token()
-            game.next_character()  # switch turns if character last of character.characters
+                game.update_switch("turn")
+
+            if isinstance(game.active_character, players.Player) and game.active_character.stats.remaining_moves > 0:
+                if game.active_character.using_dynamite:
+                    game.activate_accessible_tiles(game.active_character.stats.shooting_range)
+                else:
+                    game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
+
+            else:  # if self.active_character remaining moves == 0
+                if isinstance(game.active_character, players.Player):
+                    game.active_character.remove_effects_if_over(game.turn)
+                    game.active_character.token.unselect_token()
+                game.next_character()  # switch turns if character last of character.characters
 
     @staticmethod
     def on_turn(game: MineMadnessGame, turn: int | None) -> None:
@@ -168,7 +175,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         if turn is not None:
 
-            if turn % 2 == 0 or monsters.Monster.all_dead():
+            if turn % 2 == 0 or monsters.Monster.all_dead_or_out():
                 players.Player.reset_moves()
             else:
                 monsters.Monster.reset_moves()
@@ -186,12 +193,12 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param character_id: id of the new active character
         :return: None
         """
-        if character_id is not None and not Player.all_dead():
+        if character_id is not None and not Player.all_dead_or_out():
             # if player turn or no monsters
-            if game.turn % 2 == 0 or monsters.Monster.all_dead():
+            if game.turn % 2 == 0 or monsters.Monster.all_dead_or_out():
                 game.active_character = players.Player.data[character_id]
 
-                if game.active_character.has_moved and not monsters.Monster.all_dead():
+                if game.active_character.has_moved and not monsters.Monster.all_dead_or_out():
                     game.next_character()
 
                 else:
@@ -223,17 +230,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param value: current boolean value of the switch
         :return: None
         """
-        # in this case all out of game
-        if players.Player.all_dead():
-            monsters.Monster.data.clear()
-            game.level += 1
-            App.get_running_app().remove_dungeon_from_game()
-            App.get_running_app().add_dungeon_to_game()
-            game.turn = None
-
+        if players.Player.all_dead_or_out():
+            game.finish_level()
         elif game.active_character_id == len(players.Player.data):
             game.update_switch("turn")
-
         else:
             game.update_switch("active_character_id")
 
@@ -252,7 +252,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
 
-        if monsters.Monster.all_dead():
+        if monsters.Monster.all_dead_or_out():
             players_not_yet_active = {
                 player.token.position for player in players.Player.data
             }
@@ -300,3 +300,14 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.ids[inv_object + "_button"].disabled = False
             # needs to be reset to None otherwise it is not possible to pick 2 equal objects in a row
             game.inv_object = None
+
+    def finish_level(self) -> None:
+        """
+        Finishes the level and notified MineMadnessApp to provide a new level
+        :return: None
+        """
+        monsters.Monster.data.clear()
+        self.level += 1
+        App.get_running_app().remove_dungeon_from_game()
+        App.get_running_app().add_dungeon_to_game()
+        self.turn = None

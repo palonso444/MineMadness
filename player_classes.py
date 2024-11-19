@@ -2,7 +2,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from kivy.properties import NumericProperty
 from kivy.event import EventDispatcher
-from kivy.app import App
 
 from character_class import Character
 import game_stats as stats
@@ -60,6 +59,10 @@ class Player(Character, ABC, EventDispatcher):
     @classmethod
     def all_players_dead(cls):
         return len(cls.dead_data) == len(cls.player_chars)
+
+    @classmethod
+    def check_if_dead(cls, player_species):
+        return any(player.species == player_species for player in cls.dead_data)
 
     @classmethod
     def get_alive_players(cls) -> set[str] | tuple[str:str:str]:

@@ -21,6 +21,10 @@
     # disabled: True
     halign: "center"
 
+<TitleLabel@Label>
+    font_size: "40sp"
+    halign: 'center'
+
 <MainMenuButton@Button>
     text: "Main Menu"
     on_release:
@@ -162,7 +166,7 @@
                 value: 0
                 id: experience_bar
 
-        ScrollView: # contains the DungeonLayout (initialized by MineMadnessApp.add_dungeon_to_game())
+        ScrollView:  # contains the DungeonLayout (initialized by MineMadnessApp.add_dungeon_to_game())
             size_hint: 1, None
             height: min(self.parent.height * 0.575, 335 * dp(1))
 
@@ -176,10 +180,8 @@
 
 <GameOver>:
     MenuLayout:
-        Label:
-            text: "GAME OVER"
-            halign: "center"
-            font_size: "80sp"
+        TitleLabel:
+            text: f"GAME OVER\n\n\nYou have reached a depth of {str(app.level * 30)} feet" if app.level is not None else ""
             size_hint: 1, 0.9
         MainMenuButton:
             size_hint: 1, 0.1
@@ -187,34 +189,40 @@
 
 <OutGameOptions>
     MenuLayout:
-        Label:
+        TitleLabel:
             text: "Options"
-            font_size: "40sp"
-            halign: 'center'
-            size_hint: 1, 0.8
+            size_hint: 1, 0.5
         MusicButton:
             size_hint: 1, 0.1
+        Button:
+            text: "FX effects"
+            size_hint: 1, 0.1
+        Label:  # empty Label to act as spacer
+            size_hint: 1, 0.2
         MainMenuButton:
             size_hint: 1, 0.1
 
+
 <InGameOptions>
     MenuLayout:
-        Label:
+        TitleLabel:
             text: "Options"
-            font_size: "40sp"
-            halign: 'center'
-            size_hint: 1, 0.8
+            size_hint: 1, 0.5
         MusicButton:
             size_hint: 1, 0.1
+        Button:
+            text: "FX effects"
+            size_hint: 1, 0.1
+        Label:  # empty Label to act as spacer
+            size_hint: 1, 0.2
         ContinueOrLoadButton:
             size_hint: 1, 0.1
 
+
 <NewGameConfig>
     MenuLayout:
-        Label:
+        TitleLabel:
             text: "New Game"
-            font_size: "40sp"
-            halign: "center"
         Button:
             text: "Get into the mine!"
             on_release:
@@ -231,10 +239,8 @@
 
 <MainMenu>
     MenuLayout:
-        Label:
+        TitleLabel:
             text: "Mine Madness"
-            font_size: "40sp"
-            halign: 'center'
         Button:
             text: "New game"
             on_release:

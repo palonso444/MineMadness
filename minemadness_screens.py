@@ -8,6 +8,14 @@ import monster_classes as monsters
 from interface import Interfacebutton
 from player_classes import Player
 
+class MainMenu(Screen):
+    pass
+
+class HowToPlay(Screen):
+    pass
+
+class GameOver(Screen):
+    pass
 
 class MineMadnessGame(Screen):  # initialized in kv file
 
@@ -49,7 +57,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         players.Player.gems = 0
         players.Player.set_starting_player_order()
         for player in players.Player.data:
-            player.remove_all_effects(game.turn)
+            player.remove_all_effects()  # 0 is the default turn argument
         players.Player.exited.clear()
 
         App.get_running_app().save_game()

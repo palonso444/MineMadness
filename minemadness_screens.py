@@ -280,14 +280,13 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param new_active_character: character to be activated.
         :return: None
         """
-        index_new_char = players.Player.data.index(new_active_character)
-        index_old_char = players.Player.data.index(self.active_character)
-        players.Player.swap_characters(index_new_char,index_old_char)
+        players.Player.swap_characters(new_active_character.id, self.active_character.id)
 
         self.active_character.token.unselect_token()
         self.active_character = new_active_character
-        self.active_character_id = None
-        self.active_character_id = players.Player.data.index(self.active_character)
+        self.update_switch("active_character_id")
+        #self.active_character_id = None
+        #self.active_character_id = players.Player.data.index(self.active_character)
 
     @staticmethod
     def on_inv_object(game: MineMadnessGame, inv_object: str | None) -> None:

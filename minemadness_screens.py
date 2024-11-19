@@ -64,20 +64,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         game.initialize_switches() # this starts the game
 
-    def get_game_state(self) -> dict:
-        """
-        Captures the state of the dungeon (blueprint) and the data of alive and dead players
-        and stores everything into a dictionary. ONLY WORKS IF USED AT THE VERY BEGINNING OF LEVEL,
-        NOT ONCE THE LEVEL STARTED
-        :return: dictionary with the state of the game (blueprint, alive players, dead players)
-        """
-        game_state = dict()
-        game_state["level"] = self.level
-        game_state["blueprint"] = self.dungeon.blueprint.to_dict()
-        game_state["players_alive"] = {player.__class__.__name__: player.to_dict() for player in Player.data}
-        game_state["players_dead"] = {player.__class__.__name__: player.to_dict() for player in Player.dead_data}
-        return game_state
-
     def initialize_switches(self) -> None:
         self.turn = 0  # even for players, odd for monsters. Player starts
 

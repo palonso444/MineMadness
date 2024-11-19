@@ -29,7 +29,6 @@ class Player(Character, ABC, EventDispatcher):
         super().clear_character_data()
         cls.dead_data.clear()
         cls.exited.clear()
-        #cls.gems = 0
 
     @classmethod
     def set_starting_player_order(cls) -> None:
@@ -216,7 +215,6 @@ class Player(Character, ABC, EventDispatcher):
         for attribute, effects in self.effects.items():
 
             for effect in effects:
-
                 if effect["end_turn"] <= turn:
                     player_stat = getattr(self.stats, attribute)
                     if isinstance(player_stat, int):

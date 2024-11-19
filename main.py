@@ -15,20 +15,11 @@ from dungeon_blueprint import Blueprint
 import player_classes as players
 import monster_classes as monsters
 from dungeon_classes import DungeonLayout
-from minemadness_game import MineMadnessGame
+from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver
 
 # LabelBase.register(name = 'Vollkorn',
 # fn_regular= 'fonts/Vollkorn-Regular.ttf',
 # fn_italic='fonts/Vollkorn-Italic.ttf'
-
-class MainMenu(Screen):
-    pass
-
-class HowToPlay(Screen):
-    pass
-
-class GameOver(Screen):
-    pass
 
 class MineMadnessApp(App):
 

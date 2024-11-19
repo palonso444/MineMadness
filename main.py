@@ -12,7 +12,7 @@ from os.path import exists
 from os import remove
 
 from dungeon_blueprint import Blueprint
-from player_classes import Player, Sawyer, Hawkins, CrusherJane
+from player_classes import Player
 import monster_classes as monsters
 from dungeon_classes import DungeonLayout
 from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig
@@ -27,6 +27,7 @@ class MineMadnessApp(App):
     game_mode_normal = BooleanProperty(None)
     ongoing_game = BooleanProperty(False)
     game_over = BooleanProperty(False)
+    level = NumericProperty(None)
 
     def __init__(self):
         super().__init__()
@@ -40,7 +41,6 @@ class MineMadnessApp(App):
 
         self.game: MineMadnessGame | None = None
         self.sm: ScreenManager | None = None
-
 
     def build(self) -> ScreenManager:
         Builder.load_file("how_to_play.kv")

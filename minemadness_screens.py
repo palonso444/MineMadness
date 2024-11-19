@@ -1,6 +1,6 @@
 from __future__ import annotations
-from kivy.app import App  # type: ignore
-from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
+from kivy.app import App
+from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty
 from kivy.uix.screenmanager import Screen
 
 import player_classes as players
@@ -14,9 +14,6 @@ class MainMenu(Screen):
 class HowToPlay(Screen):
     pass
 
-class GameOver(Screen):
-    pass
-
 class OutGameOptions(Screen):
     pass
 
@@ -24,6 +21,9 @@ class InGameOptions(Screen):
     pass
 
 class NewGameConfig(Screen):
+    pass
+
+class GameOver(Screen):
     pass
 
 class MineMadnessGame(Screen):  # initialized in kv file
@@ -70,6 +70,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         players.Player.exited.clear()
 
         App.get_running_app().save_game()
+        App.get_running_app().level = game.level
 
         game.initialize_switches() # this starts the game
 
@@ -142,7 +143,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param value: current boolean value of the switch
         :return: None
         """
-        if players.Player.all_dead_or_out():
+        if Player.check_if_dead("sawyer") and Player.gems < game.total_gems:
+            App.get_running_app().game_over = True
+        elif players.Player.all_dead_or_out():
             if players.Player.all_players_dead():
                 App.get_running_app().game_over = True
             else:

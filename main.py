@@ -12,7 +12,7 @@ from os.path import exists
 from os import remove
 
 from dungeon_blueprint import Blueprint
-import player_classes as players
+from player_classes import Player, Sawyer, Hawkins, CrusherJane
 import monster_classes as monsters
 from dungeon_classes import DungeonLayout
 from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver
@@ -73,7 +73,7 @@ class MineMadnessApp(App):
 
     def start_new_game(self) -> None:
         if "game_screen" in self.sm.screen_names:
-            players.Player.clear_character_data()
+            Player.clear_character_data()
             monsters.Monster.clear_character_data()
             self.sm.remove_widget(self.sm.get_screen("game_screen"))
         if self.saved_game:
@@ -90,8 +90,23 @@ class MineMadnessApp(App):
 
     def save_game(self) -> None:
         with open(self.saved_game_file, "w") as f:
-            dump(self.game.get_game_state(), f)
+            dump(self._get_game_state(), f)
         self.saved_game = True
+
+    def _get_game_state(self) -> dict:
+        """
+        Captures the state of the dungeon (blueprint) and the data of alive and dead players
+        and stores everything into a dictionary. ONLY WORKS IF USED AT THE VERY BEGINNING OF LEVEL,
+        NOT ONCE THE LEVEL STARTED
+        :return: dictionary with the state of the game (blueprint, alive players, dead players)
+        """
+        game_state = dict()
+        game_state["level"] = self.game.level
+        game_state["game_mode_normal"] = self.game_mode_normal
+        game_state["blueprint"] = self.game.dungeon.blueprint.to_dict()
+        game_state["players_alive"] = {player.__class__.__name__: player.to_dict() for player in Player.data}
+        game_state["players_dead"] = {player.__class__.__name__: player.to_dict() for player in Player.dead_data}
+        return game_state
 
     def continue_game_or_load(self):
         if self.ongoing_game:
@@ -102,15 +117,31 @@ class MineMadnessApp(App):
     def load_game(self) -> None:
         with open(self.saved_game_file, "r") as f:
             data = load(f)
+        data = self._convert_digit_keys_to_int(data)
+        self.game_mode_normal = data["game_mode_normal"]
         self.game = MineMadnessGame(name="game_screen")
         self.game.level = data["level"]
         if self.game.level > 1:
-            players.Player.data = [getattr(players, key)(attributes_dict=data["players_alive"][key])
+            Player.data = [globals()[key](attributes_dict=data["players_alive"][key])
                                    for key in data["players_alive"].keys()]
-            players.Player.dead_data = [getattr(players, key)(attributes_dict=data["players_dead"][key])
+            Player.dead_data = [globals()[key](attributes_dict=data["players_dead"][key])
                                    for key in data["players_dead"].keys()]
         self._setup_dungeon_screen(DungeonLayout(game=self.game,
                                        blueprint = Blueprint(layout=data["blueprint"]["layout"])))
+
+
+    def _convert_digit_keys_to_int(self, dictionary: dict) -> dict:
+        """
+        Checks all keys of a dictionary (also nested) and converts them to int if they are str and digit
+        :param dictionary: dictionary to convert
+        :return: converted dictionary
+        """
+        new_dict = dict()
+        for key, value in dictionary.items():
+            new_key = int(key) if isinstance(key, str) and key.isdigit() else key
+            new_dict[new_key] = self._convert_digit_keys_to_int(value) if isinstance(value, dict) else value
+
+        return new_dict
 
     @staticmethod
     def on_music_on(app, music_on):

@@ -17,6 +17,15 @@ class HowToPlay(Screen):
 class GameOver(Screen):
     pass
 
+class OutGameOptions(Screen):
+    pass
+
+class InGameOptions(Screen):
+    pass
+
+class NewGameConfig(Screen):
+    pass
+
 class MineMadnessGame(Screen):  # initialized in kv file
 
     # GENERAL PROPERTIES

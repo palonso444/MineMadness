@@ -23,12 +23,23 @@
 
 <MainMenuButton@Button>
     text: "Main Menu"
-    on_release: app.root.current = "main_menu"
+    on_release:
+        app.root.current = "main_menu"
 
 <MusicButton@Button>
     text: "Music OFF" if app.music_on else "Music ON"
     on_release:
         app.music_on = not app.music_on
+
+<OptionsButton@Button>
+    text: "Options"
+    on_release:
+        app.root.current = "in_game_options" if app.ongoing_game else "out_game_options"
+
+<ContinueOrLoadButton@Button>
+    text: "Continue game" if app.ongoing_game else "Load game"
+    on_release:
+        app.continue_game_or_load()
 
 <MenuLayout@BoxLayout>
     orientation: "vertical"
@@ -160,7 +171,7 @@
             size_hint: 1, 0.05
             padding: "0dp", "10dp","0dp","5dp"
             spacing: "5dp"
-            MusicButton:
+            OptionsButton:
             MainMenuButton:
 
 <GameOver>:
@@ -174,6 +185,50 @@
             size_hint: 1, 0.1
 
 
+<OutGameOptions>
+    MenuLayout:
+        Label:
+            text: "Options"
+            font_size: "40sp"
+            halign: 'center'
+            size_hint: 1, 0.8
+        MusicButton:
+            size_hint: 1, 0.1
+        MainMenuButton:
+            size_hint: 1, 0.1
+
+<InGameOptions>
+    MenuLayout:
+        Label:
+            text: "Options"
+            font_size: "40sp"
+            halign: 'center'
+            size_hint: 1, 0.8
+        MusicButton:
+            size_hint: 1, 0.1
+        ContinueOrLoadButton:
+            size_hint: 1, 0.1
+
+<NewGameConfig>
+    MenuLayout:
+        Label:
+            text: "New Game"
+            font_size: "40sp"
+            halign: "center"
+        Button:
+            text: "Get into the mine!"
+            on_release:
+                app.start_new_game()
+        Button:
+            text: "Mode: NORMAL" if app.game_mode_normal else "Mode: HARDCORE"
+            on_release:
+                app.game_mode_normal = not app.game_mode_normal
+                new_game_info.text ="Mode NORMAL: saved game is preserved if characters are killed" \
+                if app.game_mode_normal else "Mode HARDCORE: saved game is erased if characters are killed"
+        MainMenuButton:
+        Label:
+            id: new_game_info
+
 <MainMenu>
     MenuLayout:
         Label:
@@ -183,31 +238,17 @@
         Button:
             text: "New game"
             on_release:
-                main_menu_info.text = ""
-                app.start_new_game()
-        Button:
-            text: "Continue game" if app.ongoing_game else "Load game"
-            on_release:
-                main_menu_info.text = ""
-                app.continue_game_or_load()
+                app.root.current = "new_game_config"
+        ContinueOrLoadButton:
         Button:
             text: "How to play"
             on_release:
                 app.root.current = "how_to_play"
-                main_menu_info.text = ""
-        MusicButton:
-            on_release:
-                main_menu_info.text = ""
-        Button:
-            text: "Mode: NORMAL" if app.game_mode_normal else "Mode: HARDCORE"
-            disabled: True if app.ongoing_game else False
-            on_release:
-                app.game_mode_normal = not app.game_mode_normal
-                main_menu_info.text ="Mode NORMAL: saved game is preserved if characters are killed" \
-                if app.game_mode_normal else "Mode HARDCORE: saved game is erased if characters are killed"
+        OptionsButton:
         Button:
             text: "Quit"
             on_release:
                 app.stop()
         Label:
-            id: main_menu_info
+            text: "(c) AppsBrivalles 2024"
+            halign: "center"

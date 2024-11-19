@@ -15,7 +15,7 @@ from dungeon_blueprint import Blueprint
 from player_classes import Player, Sawyer, Hawkins, CrusherJane
 import monster_classes as monsters
 from dungeon_classes import DungeonLayout
-from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver
+from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig
 
 # LabelBase.register(name = 'Vollkorn',
 # fn_regular= 'fonts/Vollkorn-Regular.ttf',
@@ -48,6 +48,9 @@ class MineMadnessApp(App):
         self.sm.add_widget(MainMenu(name="main_menu"))
         self.sm.add_widget(HowToPlay(name="how_to_play"))
         self.sm.add_widget(GameOver(name="game_over"))
+        self.sm.add_widget(OutGameOptions(name="out_game_options"))
+        self.sm.add_widget(InGameOptions(name="in_game_options"))
+        self.sm.add_widget(NewGameConfig(name="new_game_config"))
         self.sm.current = "main_menu"
         return self.sm
 

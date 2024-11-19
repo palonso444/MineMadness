@@ -231,29 +231,33 @@ class Player(Character, ABC, EventDispatcher):
         self.token.modified_attributes = attribute_names
 
     def act_on_tile(self, tile:Tile) -> None:
-
-        if tile.kind == "exit" and self.has_all_gems:
-            self.exit_level()
-            tile.dungeon.game.update_switch("player_exited")
+        """
+        Handles the logic of PLayer behaviour depending on Tile.token
+        :param tile: Tile upon which the Player should behave
+        :return: None
+        """
+        if tile.has_token("wall"):
+            self._dig(tile)
+        elif tile.has_token("monster"):
+            self.fight_on_tile(tile)
         else:
-            if tile.has_token("wall"):
-                self.dig(tile)
-            elif tile.has_token("monster"):
-                self.fight_on_tile(tile)
-            elif tile.has_token("pickable"):
-                self.pick_object(tile)
-            elif tile.has_token("treasure"):
-                self.pick_treasure(tile)
+            if tile.has_token("pickable"):
+                self._pick_object(tile)
+            if tile.has_token("treasure"):
+                self._pick_treasure(tile)
+            if tile.kind == "exit" and self.has_all_gems:
+                self._exit_level()
+                tile.dungeon.game.update_switch("player_exited")
+            else:
+                self.token.dungeon.game.update_switch("character_done")
 
-            self.token.dungeon.game.update_switch("character_done")
-
-    def exit_level(self) -> None:
+    def _exit_level(self) -> None:
         Player.exited.add(self)
         Player.data.remove(self)
         self.rearrange_ids()
         self.token.delete_token(self.token.get_current_tile())
 
-    def pick_object(self, tile: Tile) -> None:
+    def _pick_object(self, tile: Tile) -> None:
 
         game = self.get_dungeon().game
         # if tile.token.species not in self.ignores:
@@ -275,30 +279,30 @@ class Player(Character, ABC, EventDispatcher):
 
             tile.get_token("pickable").delete_token(tile)
 
-    def pick_treasure(self, tile:Tile)-> None:
+    def _pick_treasure(self, tile:Tile)-> None:
         game=self.get_dungeon().game
         if "treasure" not in self.ignores:
             Player.gems += 1
             game.update_switch("gems")
             tile.get_token("treasure").delete_token(tile)
 
-    def dig(self, wall_tile: Tile) -> None:
+    def _dig(self, wall_tile: Tile) -> None:
 
         game = self.get_dungeon().game
 
-        if wall_tile.has_token("wall", "granite") and self.can_dig("granite"):
+        if wall_tile.has_token("wall", "granite"): #and self.can_dig("granite"):
             self.stats.shovels -= 1
             game.update_switch("shovels")
-            self.stats.remaining_moves -= self.stats.digging_moves
-            wall_tile.get_token("wall").show_digging()
-            wall_tile.get_token("wall").delete_token(wall_tile)
-        if wall_tile.has_token("wall", "rock") and self.can_dig("rock"):
+            #self.stats.remaining_moves -= self.stats.digging_moves
+            #wall_tile.get_token("wall").show_digging()
+            #wall_tile.get_token("wall").delete_token(wall_tile)
+        if wall_tile.has_token("wall", "rock"): #and self.can_dig("rock"):
             if not isinstance(self, Hawkins):
                 self.stats.shovels -= 1
                 game.update_switch("shovels")
-            self.stats.remaining_moves -= self.stats.digging_moves
-            wall_tile.get_token("wall").show_digging()
-            wall_tile.get_token("wall").delete_token(wall_tile)
+        self.stats.remaining_moves -= self.stats.digging_moves
+        wall_tile.get_token("wall").show_digging()
+        wall_tile.get_token("wall").delete_token(wall_tile)
 
     def fight_on_tile(self, opponent_tile) -> None:
         opponent = opponent_tile.get_token("monster").character

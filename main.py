@@ -5,14 +5,14 @@ from kivy.lang import Builder
 # from kivy.core.text import LabelBase    # type: ignore
 # from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
-from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
+from kivy.uix.screenmanager import ScreenManager, FadeTransition
 from kivy.core.audio import SoundLoader
 from json import dump, load
 from os.path import exists
 from os import remove
 
 from dungeon_blueprint import Blueprint
-from player_classes import Player
+from player_classes import Player, Sawyer, Hawkins, CrusherJane  # players needed for globals()
 import monster_classes as monsters
 from dungeon_classes import DungeonLayout
 from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig
@@ -163,6 +163,7 @@ class MineMadnessApp(App):
             app.sm.transition.duration = 1.5
             app.sm.current = "game_over"
             app.game_over = False
+            app.ongoing_game = False
             app.sm.transition.duration = 0.3
 
 

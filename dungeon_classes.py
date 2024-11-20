@@ -128,7 +128,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items("#", 5)
         blueprint.place_equal_items("*", 3)
         blueprint.place_equal_items("{", 2)
-        #blueprint.place_equal_items("N", 1)
+        blueprint.place_equal_items("N", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -458,9 +458,8 @@ class DungeonLayout(GridLayout):
             excluded_positions: set[tuple] = self.scan_tiles(excluded)
         excluded_positions.add(start_tile_position)
 
-        if ((self.get_tile(start_tile_position).has_token("monster")
-                and end_tile_position in excluded_positions) or include_last):
-
+        if ((self.get_tile(start_tile_position).has_token("monster") or include_last)
+                and end_tile_position in excluded_positions):
             excluded_positions.remove(end_tile_position)
 
         while queue:

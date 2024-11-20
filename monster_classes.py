@@ -58,11 +58,10 @@ class Monster(Character, ABC):
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
     def move_token_or_behave(self, path) -> None:
-        if path is not None:
-            self.token.slide(path, self.token.on_move_completed)
-        else:
+        if path is None:
             self.act_on_tile(self.token.get_current_tile())
-
+        else:
+            self.token.slide(path, self.token.on_move_completed)
 
     def act_on_tile(self, tile: Tile) -> None:
         self.attack_players()

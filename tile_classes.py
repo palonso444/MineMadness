@@ -165,7 +165,7 @@ class Tile(Button):
         if active_player.using_dynamite:
             return self.dungeon.check_if_connexion(active_player.token.position,
                                                    self.position,
-                                                   self.blocked_by,
+                                                   active_player.blocked_by,
                                                    active_player.stats.shooting_range,
                                                    include_last=True)
 

@@ -123,13 +123,21 @@ class MineMadnessApp(App):
         game_state["players_dead"] = {player.__class__.__name__: player.to_dict() for player in Player.dead_data}
         return game_state
 
-    def continue_game_or_load(self):
+    def continue_game_or_load(self) -> None:
+        """
+        Regulates the function of the ContinueButton defined in the kv file
+        :return: None
+        """
         if self.ongoing_game:
             self.sm.current = "game_screen"
         else:
             self.load_game()
 
     def load_game(self) -> None:
+        """
+        Loads the game from the JSON file, cleans the previous one and generated Player.data and Player.dead_data
+        :return: None
+        """
         with open(self.saved_game_file, "r") as f:
             data = load(f)
         data = self._convert_digit_keys_to_int(data)

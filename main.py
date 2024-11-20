@@ -74,11 +74,18 @@ class MineMadnessApp(App):
         scrollview = self.game.children[0].children[1]
         scrollview.remove_widget(self.game.dungeon)
 
+    def _clean_previous_game(self) -> None:
+        """
+        Cleans the data from the previous MineMadnessGame and removes it from the ScreenManager
+        :return: None
+        """
+        Player.clear_character_data()
+        monsters.Monster.clear_character_data()
+        self.sm.remove_widget(self.sm.get_screen("game_screen"))
+
     def start_new_game(self) -> None:
         if "game_screen" in self.sm.screen_names:
-            Player.clear_character_data()
-            monsters.Monster.clear_character_data()
-            self.sm.remove_widget(self.sm.get_screen("game_screen"))
+            self._clean_previous_game()
         if self.saved_game:
             remove(self.saved_game_file)
             self.saved_game = False
@@ -86,6 +93,11 @@ class MineMadnessApp(App):
         self._setup_dungeon_screen()
 
     def _setup_dungeon_screen(self, dungeon: DungeonLayout | None = None) -> None:
+        """
+        Adds a new dungeon to MineMadnessGame
+        :param dungeon: dungeon to add. If None, a random one is added
+        :return: None
+        """
         self.add_dungeon_to_game(dungeon)
         self.sm.add_widget(self.game)
         self.ongoing_game = True
@@ -124,6 +136,10 @@ class MineMadnessApp(App):
         self.game_mode_normal = data["game_mode_normal"]
         self.game = MineMadnessGame(name="game_screen")
         self.game.level = data["level"]
+
+        if "game_screen" in self.sm.screen_names:
+            self._clean_previous_game()
+
         if self.game.level > 1:
             Player.data = [globals()[key](attributes_dict=data["players_alive"][key])
                                    for key in data["players_alive"].keys()]

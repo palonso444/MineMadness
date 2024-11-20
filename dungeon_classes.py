@@ -75,17 +75,19 @@ class DungeonLayout(GridLayout):
         )
 
     def check_if_connexion(self, position_1: tuple [int,int], position_2: tuple[int,int],
-                           obstacles_kinds: list[str], num_of_steps: int) -> bool:
+                           obstacles_kinds: list[str], num_of_steps: int, include_last:bool = False) -> bool:
         """
         Checks if two positions of the DungeonLayout are connected or there are obstacles on the way that makes
         one inaccessible from the other in the given number of steps
+        :param include_last: bool indicating if path should return None if only last position is invalid, or return
+        last position in such cases
         :param position_1: coordinates of the first position
         :param position_2: coordinates of the second position
         :param obstacles_kinds: Token.kinds of the obstacles to consider
         :param num_of_steps: maximum number of steps
         :return: True if there is a connexion, False otherwise
         """
-        path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
+        path = self.find_shortest_path(position_1, position_2, obstacles_kinds, include_last)
         return path is not None and len(path) <= num_of_steps
 
     @staticmethod
@@ -124,8 +126,8 @@ class DungeonLayout(GridLayout):
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("#", 5)
-        #blueprint.place_equal_items("w", 3)
-        blueprint.place_equal_items("N", 2)
+        blueprint.place_equal_items("*", 3)
+        blueprint.place_equal_items("{", 2)
         #blueprint.place_equal_items("N", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
@@ -437,12 +439,14 @@ class DungeonLayout(GridLayout):
                            any(tile.has_token(token) for token in token_kinds )}
 
     def find_shortest_path(
-        self, start_tile_position, end_tile_position, excluded: list[str]|None = None
+            self, start_tile_position, end_tile_position, excluded: list[str]|None = None, include_last: bool = False
     ) -> list[tuple] | None:
         """
         Returns the shortest path from start_tile to end_tile in the form of list of positions
         e.g. [(0,1), (0,2), (1,2)]. Start tile position NOT INCLUDED in path. End tile included.
         Returns None if there is no possible path.
+        :param include_last: bool indicating if path should return None if only last position is invalid, or return
+        last position in such cases
         """
         directions: tuple = (-1, 0), (1, 0), (0, -1), (0, 1)
         queue: deque = deque(
@@ -454,10 +458,9 @@ class DungeonLayout(GridLayout):
             excluded_positions: set[tuple] = self.scan_tiles(excluded)
         excluded_positions.add(start_tile_position)
 
-        if (
-                self.get_tile(start_tile_position).has_token("monster")
-            and end_tile_position in excluded_positions
-        ):
+        if ((self.get_tile(start_tile_position).has_token("monster")
+                and end_tile_position in excluded_positions) or include_last):
+
             excluded_positions.remove(end_tile_position)
 
         while queue:

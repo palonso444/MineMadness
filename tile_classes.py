@@ -161,11 +161,13 @@ class Tile(Button):
         :param active_player: current active Player of the game
         :return: True if the Tile has to be activated, False otherwise
         """
+        #tuple(item for item in active_player.blocked_by if item != "monster"),
         if active_player.using_dynamite:
             return self.dungeon.check_if_connexion(active_player.token.position,
                                                    self.position,
-                                                   tuple(item for item in active_player.blocked_by if item != "monster"),
-                                                   active_player.stats.shooting_range)
+                                                   self.blocked_by,
+                                                   active_player.stats.shooting_range,
+                                                   include_last=True)
 
         elif self.is_nearby(active_player.token.position):
             return active_player.can_fight(self.get_token("monster").species)
@@ -182,7 +184,8 @@ class Tile(Button):
             return (self.dungeon.check_if_connexion(active_player.token.position,
                                             self.position,
                                             active_player.blocked_by,
-                                            active_player.stats.shooting_range) and
+                                            active_player.stats.shooting_range,
+                                            include_last=True) and
             not self.has_token("wall","rock"))
 
         elif self.is_nearby(active_player.token.position) and not active_player.is_hidden:

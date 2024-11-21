@@ -115,8 +115,8 @@ class Player(Character, ABC, EventDispatcher):
             "jerky": 2,
             "coffee": 0,
             "tobacco": 0,
-            "whisky": 2,
-            "talisman": 1,
+            "whisky": 0,
+            "talisman": 0,
         }
         self.effects: dict[str:list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None

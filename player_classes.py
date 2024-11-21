@@ -147,8 +147,11 @@ class Player(Character, ABC, EventDispatcher):
         pass
 
     @property
-    def has_all_gems(self):
+    def has_all_gems(self) -> bool:
         return Player.gems == self.get_dungeon().game.total_gems
+
+    def has_item(self, item: str) -> bool:
+        return self.inventory[item] > 0
 
     @abstractmethod
     def can_fight(self, token_species: str) -> bool:

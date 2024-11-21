@@ -143,7 +143,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param value: current boolean value of the switch
         :return: None
         """
-        if Player.check_if_dead("sawyer") and Player.gems < game.total_gems:
+        if Player.check_if_dead("sawyer") and Player.gems < game.total_gems \
+                and not any(player.has_item("talisman") for player in Player.data):
             App.get_running_app().game_over = True
         elif players.Player.all_dead_or_out():
             if players.Player.all_players_dead():

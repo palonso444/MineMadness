@@ -84,12 +84,11 @@ class MineMadnessApp(App):
         self.sm.remove_widget(self.sm.get_screen("game_screen"))
 
     def start_new_game(self) -> None:
-        if "game_screen" in self.sm.screen_names:
-            self._clean_previous_game()
         if self.saved_game:
             remove(self.saved_game_file)
             self.saved_game = False
         self.game = MineMadnessGame(name="game_screen")
+        self.ongoing_game = True
         self._setup_dungeon_screen()
 
     def _setup_dungeon_screen(self, dungeon: DungeonLayout | None = None) -> None:
@@ -100,7 +99,6 @@ class MineMadnessApp(App):
         """
         self.add_dungeon_to_game(dungeon)
         self.sm.add_widget(self.game)
-        self.ongoing_game = True
         self.sm.current = "game_screen"
 
     def save_game(self) -> None:
@@ -145,14 +143,12 @@ class MineMadnessApp(App):
         self.game = MineMadnessGame(name="game_screen")
         self.game.level = data["level"]
 
-        if "game_screen" in self.sm.screen_names:
-            self._clean_previous_game()
-
         if self.game.level > 1:
             Player.data = [globals()[key](attributes_dict=data["players_alive"][key])
                                    for key in data["players_alive"].keys()]
             Player.dead_data = [globals()[key](attributes_dict=data["players_dead"][key])
                                    for key in data["players_dead"].keys()]
+        self.ongoing_game = True
         self._setup_dungeon_screen(DungeonLayout(game=self.game,
                                        blueprint = Blueprint(layout=data["blueprint"]["layout"])))
 
@@ -188,6 +184,7 @@ class MineMadnessApp(App):
             app.sm.current = "game_over"
             app.game_over = False
             app.ongoing_game = False
+            app._clean_previous_game()
             app.sm.transition.duration = 0.3
 
 

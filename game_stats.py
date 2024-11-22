@@ -81,9 +81,9 @@ class RockWallStats(SceneryStats):
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
         if seed < 8:
-            return randint(2, 7) * 0.1
+            return uniform(0.2, 0.7)
         else:
-            randint(2, seed // 3) if seed < 18 else randint(2, 6)
+            return uniform(0.03, 0.07) * seed if seed < 18 else uniform(0.1, 0.7)
 
 
 class GraniteWallStats(SceneryStats):
@@ -91,10 +91,10 @@ class GraniteWallStats(SceneryStats):
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
-        if seed < 8:
+        if seed < randint (6, 9):
             return 0
         else:
-            randint(0, seed // 2) if seed < 14 else randint(0, 7)
+            return uniform(0, 0.08) * seed / 2 if seed < 14 else uniform(0, 0.6)
 
 
 class QuartzWallStats(SceneryStats):
@@ -102,10 +102,10 @@ class QuartzWallStats(SceneryStats):
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
-        if seed < 12:
+        if seed < randint(10, 15):
             return 0
         else:
-            randint(0, seed // 3) if seed < 15 else randint(0, 5)
+            return uniform(0, 0.1) * seed / 3 if seed < 15 else uniform (0,0.6)
 
 
 class ShovelStats(SceneryStats):
@@ -121,7 +121,7 @@ class WeaponStats(SceneryStats):
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
-        return seed * 0.9
+        return seed * 0.3
 
 
 class PowderStats(SceneryStats):

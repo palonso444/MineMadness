@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from abc import ABC, abstractmethod
-from random import randint
+from abc import ABC
+from random import randint, uniform
 
 
 class DungeonStats:
@@ -10,17 +10,20 @@ class DungeonStats:
     def __init__(self, dungeon_level: int):
         self.stats_level = dungeon_level
 
-    def size(self):
+    def size(self) -> int:
         return 6 + int(self.stats_level * 0.2)
 
-    def gem_number(self):
+    def gem_number(self) -> int:
 
-        gem_number = int(self.stats_level * 0.2)
+        gem_number = int(self.stats_level * 0.15)
         gem_number = 1 if gem_number < 1 else gem_number
         return gem_number
 
-    def level_progression(self):
-
+    def level_progression(self) -> dict[str:float]:
+        """
+        Organizes in a dictionary the frequency of items in the level
+        :return: dictionary with item.char as key and item frequency as value
+        """
         monster_frequencies = {
             KoboldStats.char: KoboldStats.calculate_frequency(self.stats_level),
             BlindLizardStats.char: BlindLizardStats.calculate_frequency(self.stats_level),
@@ -38,11 +41,16 @@ class DungeonStats:
         }
 
         total_monster_frequency = sum(monster_frequencies.values())
-        wall_frequency = WallStats.calculate_frequency()
+
+        rock_wall_frequency = RockWallStats.calculate_frequency(self.stats_level)
+        granite_wall_frequency = GraniteWallStats.calculate_frequency(self.stats_level)
+        diggable_wall_frequency = rock_wall_frequency + granite_wall_frequency
 
         item_frequencies = {
-            WallStats.char: wall_frequency,
-            ShovelStats.char: ShovelStats.calculate_frequency(wall_frequency),
+            RockWallStats.char: rock_wall_frequency,
+            GraniteWallStats.char: GraniteWallStats.calculate_frequency(self.stats_level),
+            QuartzWallStats.char: QuartzWallStats.calculate_frequency(self.stats_level),
+            ShovelStats.char: ShovelStats.calculate_frequency(diggable_wall_frequency),
             WeaponStats.char: WeaponStats.calculate_frequency(total_monster_frequency),
             JerkyStats.char: JerkyStats.calculate_frequency(total_monster_frequency),
             CoffeeStats.char: CoffeeStats.calculate_frequency(total_monster_frequency),
@@ -66,12 +74,38 @@ class SceneryStats(ABC):
     def calculate_frequency(seed: int | float) -> float:
         pass
 
-class WallStats(SceneryStats):
+
+class RockWallStats(SceneryStats):
     char: str = "#"
 
     @staticmethod
-    def calculate_frequency(seed: int | float | None = None) -> float:
-        return randint(2, 6) * 0.1
+    def calculate_frequency(seed: int | float) -> float:
+        if seed < 8:
+            return randint(2, 7) * 0.1
+        else:
+            randint(2, seed // 3) if seed < 18 else randint(2, 6)
+
+
+class GraniteWallStats(SceneryStats):
+    char: str = "{"
+
+    @staticmethod
+    def calculate_frequency(seed: int | float) -> float:
+        if seed < 8:
+            return 0
+        else:
+            randint(0, seed // 2) if seed < 14 else randint(0, 7)
+
+
+class QuartzWallStats(SceneryStats):
+    char: str = "*"
+
+    @staticmethod
+    def calculate_frequency(seed: int | float) -> float:
+        if seed < 12:
+            return 0
+        else:
+            randint(0, seed // 3) if seed < 15 else randint(0, 5)
 
 
 class ShovelStats(SceneryStats):
@@ -79,7 +113,7 @@ class ShovelStats(SceneryStats):
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
-        return seed * 0.1
+        return seed * 0.07
 
 
 class WeaponStats(SceneryStats):
@@ -87,7 +121,7 @@ class WeaponStats(SceneryStats):
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
-        return seed * 0.15
+        return seed * 0.9
 
 
 class PowderStats(SceneryStats):
@@ -95,7 +129,11 @@ class PowderStats(SceneryStats):
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
-        return randint(0, 1) * seed * 0.02
+        trigger = randint(1, 10)
+        if trigger < 5 or seed < 3:
+            return 0
+        else:
+            return seed * uniform(0.01, 0.05)  # random float
 
 
 class DynamiteStats(SceneryStats):
@@ -103,7 +141,11 @@ class DynamiteStats(SceneryStats):
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
-        return randint(0, 1) * seed * 0.02
+        trigger = randint(1, 10)
+        if trigger < 5 or seed < 3:
+            return 0
+        else:
+            return seed * uniform(0.01, 0.05)  # random float
 
 
 
@@ -124,7 +166,7 @@ class JerkyStats(ItemStats):
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
-        return seed * 0.1
+        return seed * uniform(0.05, 0.2)
 
 
 @dataclass

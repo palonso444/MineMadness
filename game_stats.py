@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from abc import ABC
-from random import randint, uniform
+from random import randint, uniform, random
 
 
 class DungeonStats:
@@ -46,9 +46,9 @@ class DungeonStats:
         granite_wall_frequency = GraniteWallStats.calculate_frequency(self.stats_level)
         diggable_wall_frequency = rock_wall_frequency + granite_wall_frequency
 
-        item_frequencies = {
+        '''item_frequencies = {
             RockWallStats.char: rock_wall_frequency,
-            GraniteWallStats.char: GraniteWallStats.calculate_frequency(self.stats_level),
+            GraniteWallStats.char: granite_wall_frequency,
             QuartzWallStats.char: QuartzWallStats.calculate_frequency(self.stats_level),
             ShovelStats.char: ShovelStats.calculate_frequency(diggable_wall_frequency),
             WeaponStats.char: WeaponStats.calculate_frequency(total_monster_frequency),
@@ -59,12 +59,23 @@ class DungeonStats:
             TalismanStats.char: TalismanStats.calculate_frequency(self.stats_level),
             PowderStats.char: PowderStats.calculate_frequency(self.stats_level),
             DynamiteStats.char: DynamiteStats.calculate_frequency(self.stats_level)
+        }'''
+
+        item_frequencies = {
+            ShovelStats.char: ShovelStats.calculate_frequency(diggable_wall_frequency),
+            WeaponStats.char: WeaponStats.calculate_frequency(total_monster_frequency),
+            JerkyStats.char: JerkyStats.calculate_frequency(total_monster_frequency),
+            CoffeeStats.char: CoffeeStats.calculate_frequency(total_monster_frequency),
+            WhiskyStats.char: WhiskyStats.calculate_frequency(total_monster_frequency),
+            TobaccoStats.char: TobaccoStats.calculate_frequency(total_monster_frequency),
+            TalismanStats.char: TalismanStats.calculate_frequency(self.stats_level)
         }
 
         all_frequencies = {**monster_frequencies, **item_frequencies}
-
+        return item_frequencies
         del monster_frequencies, item_frequencies
-        return all_frequencies
+
+        #return all_frequencies
 
 @dataclass
 class SceneryStats(ABC):
@@ -75,77 +86,92 @@ class SceneryStats(ABC):
         pass
 
 
-class RockWallStats(SceneryStats):
+class RockWallStats(SceneryStats): # DONE
     char: str = "#"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        if seed < 8:
+    def calculate_frequency(seed: int | float) -> float:  # seed is level
+        if seed < randint (6, 9):
             return uniform(0.2, 0.7)
+        if randint(1, 10) < 5:
+            return uniform(0, 0.2)
         else:
-            return uniform(0.03, 0.07) * seed if seed < 18 else uniform(0.1, 0.7)
+            upper_limit = seed * 0.04
+            return uniform(0.1, upper_limit) if seed < 18 else uniform(0.1, 0.7)
 
 
-class GraniteWallStats(SceneryStats):
+class GraniteWallStats(SceneryStats): # DONE
     char: str = "{"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
+    def calculate_frequency(seed: int | float) -> float:  # seed is level
         if seed < randint (6, 9):
             return 0
+        if randint(1, 10) < 5:
+            return uniform(0, 0.2)
         else:
-            return uniform(0, 0.08) * seed / 2 if seed < 14 else uniform(0, 0.6)
+            upper_limit = seed * 0.03
+            return uniform(0, upper_limit) if seed < 16 else uniform(0, 0.5)
 
 
-class QuartzWallStats(SceneryStats):
+class QuartzWallStats(SceneryStats): # DONE
     char: str = "*"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
+    def calculate_frequency(seed: int | float) -> float:  # seed is level
         if seed < randint(10, 15):
             return 0
+        if randint(1, 10) < 5:
+            return uniform(0, 0.15)
         else:
-            return uniform(0, 0.1) * seed / 3 if seed < 15 else uniform (0,0.6)
+            upper_limit = seed * 0.02
+            return uniform(0, upper_limit) if seed < 18 else uniform(0, 0.4)
 
 
-class ShovelStats(SceneryStats):
+class ShovelStats(SceneryStats): # DONE
     char: str = "p"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        return seed * 0.07
+    def calculate_frequency(seed: int | float) -> float:  # seed is diggable wall frequency
+        upper_limit = seed * 0.1
+        frequency =  uniform(0, upper_limit) - uniform(0,upper_limit)
+        return frequency if frequency > 0 else 0
 
 
-class WeaponStats(SceneryStats):
+class WeaponStats(SceneryStats): #DONE
     char: str = "x"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        return seed * 0.3
+    def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
+        upper_limit = seed * 0.3
+        frequency =  uniform(0, upper_limit) - uniform(0, upper_limit)
+        return frequency if frequency > 0 else 0
 
 
-class PowderStats(SceneryStats):
+class PowderStats(SceneryStats): # DONE
     char: str = "h"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        trigger = randint(1, 10)
-        if trigger < 5 or seed < 3:
+    def calculate_frequency(seed: int | float) -> float: # seed is level
+        if randint(1, 10) < 4 or seed < 3:
             return 0
         else:
-            return seed * uniform(0.01, 0.05)  # random float
+            upper_limit = seed * 0.03 if seed < 15 else 0.5
+            frequency = uniform(0, upper_limit) - uniform(0, upper_limit)
+            return frequency if frequency > 0 else 0
 
 
-class DynamiteStats(SceneryStats):
+class DynamiteStats(SceneryStats): # DONE
     char: str = "d"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        trigger = randint(1, 10)
-        if trigger < 5 or seed < 3:
+    def calculate_frequency(seed: int | float) -> float: # seed is level
+        if randint(1, 10) < 4 or seed < 3:
             return 0
         else:
-            return seed * uniform(0.01, 0.05)  # random float
+            upper_limit = seed * 0.03 if seed < 15 else 0.5
+            frequency = uniform(0, upper_limit) - uniform(0, upper_limit)
+            return frequency if frequency > 0 else 0
 
 
 
@@ -159,57 +185,64 @@ class ItemStats(SceneryStats, ABC):
 
 
 @dataclass
-class JerkyStats(ItemStats):
+class JerkyStats(ItemStats):  # DONE
     char: str = "j"
     effect_size: float = 0.3  # percentage of increase respect character stats
     min_effect: int = 2
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        return seed * uniform(0.05, 0.2)
+    def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
+        frequency = uniform(0, seed) - uniform(0, seed)
+        return frequency if frequency > 0 else 0
 
 
 @dataclass
-class CoffeeStats(ItemStats):
+class CoffeeStats(ItemStats):  # DONE
     char: str = "c"
     effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 3
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        return seed * 0.06
+    def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
+        frequency = uniform(0, seed) - uniform(0, seed)
+        return frequency if frequency > 0 else 0
 
 
 @dataclass
-class TobaccoStats(ItemStats):
+class TobaccoStats(ItemStats):  # DONE
     char: str = "l"
     effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 3
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        return seed * 0.06
+    def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
+        frequency = uniform(0, seed) - uniform(0, seed)
+        return frequency if frequency > 0 else 0
 
 
 @dataclass
-class WhiskyStats(ItemStats):
+class WhiskyStats(ItemStats):  # DONE
     char: str = "w"
     effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 3
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        return seed * 0.06
+    def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
+        frequency = uniform(0, seed) - uniform(0, seed)
+        return frequency if frequency > 0 else 0
 
 
 @dataclass
-class TalismanStats(ItemStats):
+class TalismanStats(ItemStats): # DONE
     char: str = "t"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float:
-        return randint(0, 1) * seed * 0.02 if seed > 2 else 0
-
+    def calculate_frequency(seed: int | float) -> float: # seed is level
+        if randint(1, 10) < 5 or seed < randint(6,15):
+            return 0
+        else:
+            frequency = uniform(0, seed * 0.3) - uniform(0, seed * 0.3)
+            return frequency if frequency > 0 else 0
 
 
 @dataclass

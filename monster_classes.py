@@ -477,8 +477,8 @@ class BlackDeath(Monster):
         self.char: str = "B"
         self.name: str = "Black Death"
         self.species: str = "blackdeath"
-        self.step_transition: str = "in_out_quad"  # walking
-        self.step_duration: float = 0.35
+        self.step_transition: str = "linear"  # gliding
+        self.step_duration: float = 0.3
         self.stats = stats.BlackDeathStats()
 
         if attributes_dict is not None:

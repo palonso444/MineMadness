@@ -46,7 +46,7 @@ class DungeonStats:
         granite_wall_frequency = GraniteWallStats.calculate_frequency(self.stats_level)
         diggable_wall_frequency = rock_wall_frequency + granite_wall_frequency
 
-        '''item_frequencies = {
+        item_frequencies = {
             RockWallStats.char: rock_wall_frequency,
             GraniteWallStats.char: granite_wall_frequency,
             QuartzWallStats.char: QuartzWallStats.calculate_frequency(self.stats_level),
@@ -59,9 +59,9 @@ class DungeonStats:
             TalismanStats.char: TalismanStats.calculate_frequency(self.stats_level),
             PowderStats.char: PowderStats.calculate_frequency(self.stats_level),
             DynamiteStats.char: DynamiteStats.calculate_frequency(self.stats_level)
-        }'''
+        }
 
-        item_frequencies = {
+        '''item_frequencies = {
             ShovelStats.char: ShovelStats.calculate_frequency(diggable_wall_frequency),
             WeaponStats.char: WeaponStats.calculate_frequency(total_monster_frequency),
             JerkyStats.char: JerkyStats.calculate_frequency(total_monster_frequency),
@@ -69,13 +69,12 @@ class DungeonStats:
             WhiskyStats.char: WhiskyStats.calculate_frequency(total_monster_frequency),
             TobaccoStats.char: TobaccoStats.calculate_frequency(total_monster_frequency),
             TalismanStats.char: TalismanStats.calculate_frequency(self.stats_level)
-        }
+        }'''
 
         all_frequencies = {**monster_frequencies, **item_frequencies}
-        return item_frequencies
         del monster_frequencies, item_frequencies
 
-        #return all_frequencies
+        return all_frequencies
 
 @dataclass
 class SceneryStats(ABC):
@@ -149,7 +148,7 @@ class WeaponStats(SceneryStats): # BALANCED
     def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
         # Weapons depend on pooled monster frequency. They tend to lower frequencies
         upper_limit = seed * 0.3
-        frequency =  uniform(0, upper_limit) - uniform(0, upper_limit)
+        frequency =  uniform(0, upper_limit) - uniform(0, upper_limit / 2)
         return frequency if frequency > 0 else 0
 
 
@@ -192,8 +191,11 @@ class ItemStats(SceneryStats, ABC):
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
-        # Items depend on pooled monster frequency. They tend to lower frequencies.
-        frequency = uniform(0, seed) - uniform(0, seed)
+        # Items depend on pooled monster frequency. They have 30% change to get a frequency.
+        # They tend to lower frequencies.
+        if randint(1,10) < 4:
+            return 0
+        frequency = uniform(0, seed / 5) - uniform(0, seed / 5)
         return frequency if 0 < frequency < 0.5 else 0
 
 
@@ -378,11 +380,13 @@ class BlackDeathStats(MonsterStats):  # BALANCED
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
-        # Blackdeath can show up at any level
+        # Blackdeath can show up at any level except the first
+        if seed == 1:
+            return 0
         if randint(1, 10) == 10:
-            return uniform(0.1, 0.3)
+            return uniform(0.1, 0.2)
         else:
-            return uniform(0, 0.1)
+            return uniform(0, 0.05)
 
 
 # DIRECT MOVEMENT MONSTERS
@@ -559,6 +563,8 @@ class DepthsWispStats(MonsterStats):  # BALANCED
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # Wisps increase with level increase up to certain point then decrease suddenly
+        if seed == 1:
+            return 0
         if seed < randint(4, 7):
             return uniform(0.05, 0.15) * (seed / 2)
         if seed < randint(8,10):
@@ -605,6 +611,6 @@ class PixieStats(MonsterStats):  # BALANCED
     def calculate_frequency(seed: int) -> float:  # seed is level
         # Pixie can show up at any level
         if randint(1,10) == 10:
-            return uniform(0.2, 0.5)
+            return uniform(0.2, 0.4)
         else:
-            return uniform(0,0.2)
+            return uniform(0,0.1)

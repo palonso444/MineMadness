@@ -86,26 +86,28 @@ class SceneryStats(ABC):
         pass
 
 
-class RockWallStats(SceneryStats): # DONE
+class RockWallStats(SceneryStats): # BALANCED
     char: str = "#"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is level
-        if seed < randint (6, 9):
+        # RockWalls are common at early levels. Later they may be rare or (50% chance) or from rare to common
+        if seed < randint (10, 15):
             return uniform(0.2, 0.7)
         if randint(1, 10) < 5:
             return uniform(0, 0.2)
         else:
-            upper_limit = seed * 0.04
+            upper_limit = seed * 0.04 # max 0.72 at level 18
             return uniform(0.1, upper_limit) if seed < 18 else uniform(0.1, 0.7)
 
 
-class GraniteWallStats(SceneryStats): # DONE
+class GraniteWallStats(SceneryStats): # BALANCED
     char: str = "{"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is level
-        if seed < randint (6, 9):
+        # GraniteWalls appear first at mid-levels. Later they may be rare or (50% chance) or from rare to common-ish
+        if seed < randint (10, 15):
             return 0
         if randint(1, 10) < 5:
             return uniform(0, 0.2)
@@ -114,12 +116,13 @@ class GraniteWallStats(SceneryStats): # DONE
             return uniform(0, upper_limit) if seed < 16 else uniform(0, 0.5)
 
 
-class QuartzWallStats(SceneryStats): # DONE
+class QuartzWallStats(SceneryStats): # BALANCED
     char: str = "*"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is level
-        if seed < randint(10, 15):
+        # QuartzWalls appear first at late levels. Later they may be rare or (50% chance) or from rare to mid-frequent
+        if seed < randint(20, 25):
             return 0
         if randint(1, 10) < 5:
             return uniform(0, 0.15)
@@ -128,31 +131,34 @@ class QuartzWallStats(SceneryStats): # DONE
             return uniform(0, upper_limit) if seed < 18 else uniform(0, 0.4)
 
 
-class ShovelStats(SceneryStats): # DONE
+class ShovelStats(SceneryStats): # BALANCED
     char: str = "p"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is diggable wall frequency
+        # Shovels depend on RockWalls + QuartzWalls frequency. They tend to lower frequencies
         upper_limit = seed * 0.1
         frequency =  uniform(0, upper_limit) - uniform(0,upper_limit)
         return frequency if frequency > 0 else 0
 
 
-class WeaponStats(SceneryStats): #DONE
+class WeaponStats(SceneryStats): # BALANCED
     char: str = "x"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
+        # Weapons depend on pooled monster frequency. They tend to lower frequencies
         upper_limit = seed * 0.3
         frequency =  uniform(0, upper_limit) - uniform(0, upper_limit)
         return frequency if frequency > 0 else 0
 
 
-class PowderStats(SceneryStats): # DONE
+class PowderStats(SceneryStats): # BALANCED
     char: str = "h"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is level
+        # Powder may not appear at very first levels. It tends to lower frequencies depending on level.
         if randint(1, 10) < 4 or seed < 3:
             return 0
         else:
@@ -161,11 +167,12 @@ class PowderStats(SceneryStats): # DONE
             return frequency if frequency > 0 else 0
 
 
-class DynamiteStats(SceneryStats): # DONE
+class DynamiteStats(SceneryStats): # BALANCED
     char: str = "d"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is level
+        # Dynamite may not appear at very first levels. It tends to lower frequencies depending on level.
         if randint(1, 10) < 4 or seed < 3:
             return 0
         else:
@@ -183,66 +190,54 @@ class ItemStats(SceneryStats, ABC):
     min_effect: int = 1
     max_effect: int | None = None
 
+    @staticmethod
+    def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
+        # Items depend on pooled monster frequency. They tend to lower frequencies.
+        frequency = uniform(0, seed) - uniform(0, seed)
+        return frequency if frequency > 0 else 0
+
 
 @dataclass
-class JerkyStats(ItemStats):  # DONE
+class JerkyStats(ItemStats):  # BALANCED
     char: str = "j"
     effect_size: float = 0.3  # percentage of increase respect character stats
     min_effect: int = 2
 
-    @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
-        frequency = uniform(0, seed) - uniform(0, seed)
-        return frequency if frequency > 0 else 0
-
 
 @dataclass
-class CoffeeStats(ItemStats):  # DONE
+class CoffeeStats(ItemStats):  # BALANCED
     char: str = "c"
     effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 3
 
-    @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
-        frequency = uniform(0, seed) - uniform(0, seed)
-        return frequency if frequency > 0 else 0
-
 
 @dataclass
-class TobaccoStats(ItemStats):  # DONE
+class TobaccoStats(ItemStats):  # BALANCED
     char: str = "l"
     effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 3
 
-    @staticmethod
-    def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
-        frequency = uniform(0, seed) - uniform(0, seed)
-        return frequency if frequency > 0 else 0
-
 
 @dataclass
-class WhiskyStats(ItemStats):  # DONE
+class WhiskyStats(ItemStats):  # BALANCED
     char: str = "w"
     effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 3
 
-    @staticmethod
-    def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
-        frequency = uniform(0, seed) - uniform(0, seed)
-        return frequency if frequency > 0 else 0
-
 
 @dataclass
-class TalismanStats(ItemStats): # DONE
+class TalismanStats(ItemStats): # BALANCED
     char: str = "t"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is level
-        if randint(1, 10) < 5 or seed < randint(6,15):
+        # Talisman is an exception among items. It may not appear at very first levels and has only 50% chance to get
+        # a frequency. Frequency is always low.
+        if randint(1, 10) < 5 or seed < 6:
             return 0
         else:
             frequency = uniform(0, seed * 0.3) - uniform(0, seed * 0.3)
-            return frequency if frequency > 0 else 0
+            return frequency if 0 < frequency < 0.3 else 0
 
 
 @dataclass
@@ -334,7 +329,7 @@ class MonsterStats(CharacterStats, ABC):
 
 
 @dataclass
-class KoboldStats(MonsterStats):
+class KoboldStats(MonsterStats): # BALANCED
     char: str = "K"
     health: int = 3
     strength: list[int] = field(default_factory=lambda: [1,2])
@@ -344,12 +339,16 @@ class KoboldStats(MonsterStats):
     experience_when_killed: int = 5
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return 0.2 / seed if seed < 3 else 0
+    def calculate_frequency(seed: int) -> float: # seed is level
+        # Kobolds decrease with level increase
+        if seed < randint(4,7):
+            return uniform(0.2, 0.5) / seed
+        else:
+            return 0
 
 
 @dataclass
-class BlindLizardStats(MonsterStats):
+class BlindLizardStats(MonsterStats):  # BALANCEDj
     char: str = "L"
     health: int = 5
     strength: list[int] = field(default_factory=lambda: [2,4])
@@ -359,12 +358,16 @@ class BlindLizardStats(MonsterStats):
     experience_when_killed: int = 8
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return 0.025 * seed if seed < 4 else 0
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # BlindLizards decrease with level increase
+        if seed < randint (6,8):
+            return 0
+        else:
+            return uniform(0.2, 0.7) / (seed / 2)
 
 
 @dataclass
-class BlackDeathStats(MonsterStats):
+class BlackDeathStats(MonsterStats):  # BALANCED
     char: str = "B"
     health: int = 1
     strength: list[int] = field(default_factory=lambda: [10,20])
@@ -374,15 +377,19 @@ class BlackDeathStats(MonsterStats):
     experience_when_killed: int = 30
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return randint(0, 3) * 0.02 if seed > 1 else 0
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # Blackdeath can show up at any level
+        if randint(1, 10) == 10:
+            return uniform(0.1, 0.3)
+        else:
+            return uniform(0, 0.1)
 
 
 # DIRECT MOVEMENT MONSTERS
 
 
 @dataclass
-class CaveHoundStats(MonsterStats):
+class CaveHoundStats(MonsterStats):  # BALANCED
     char: str = "H"
     health: int = 4
     strength: list[int] = field(default_factory=lambda: [1,4])
@@ -393,11 +400,19 @@ class CaveHoundStats(MonsterStats):
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:
-        return 0.025 * seed if 2 < seed < 4 else 0
+        # CaveHound may overlap with Kobold. They increase up to certain point then decrease steadily
+        if seed < randint(4,6):
+            return 0
+        if seed < randint(6, 11):
+            return uniform(0.1, 0.25) * seed / 3
+        if seed < randint(12, 14):
+            return uniform(0.6, 0.9) / (seed / 2)
+        else:
+            return 0
 
 
 @dataclass
-class GrowlStats(MonsterStats):
+class GrowlStats(MonsterStats):  # BALANCED
     char: str = "G"
     health: int = 10
     strength: list[int] = field(default_factory=lambda: [5,15])
@@ -407,12 +422,22 @@ class GrowlStats(MonsterStats):
     experience_when_killed: int = 20
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return 0.025 * seed if seed > 3 else 0
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # Growls appear and in increasing frequencies before slowly fading
+        if seed < 14:
+            return 0
+        elif seed < 18:
+            return uniform(0,0.2)
+        elif seed < 24:
+            return uniform (0.04, 0.1) * (seed / 5)
+        elif seed < 28:
+            return uniform(0,0.2)
+        else:
+            return 0
 
 
 @dataclass
-class RockGolemStats(MonsterStats):
+class RockGolemStats(MonsterStats):  # BALANCED
     char: str = "R"
     health: int = 50
     strength: list[int] = field(default_factory=lambda: [5,20])
@@ -421,15 +446,21 @@ class RockGolemStats(MonsterStats):
     experience_when_killed: int = 45
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return 0.015 * seed if seed > 4 else 0
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # RockGolems appear with same odds in a wide range of levels and afterward they may still appear
+        if seed < randint(14, 17):
+            return 0
+        if seed < randint(23, 25):
+            return uniform(0.1,0.4)
+        else:
+            return uniform(0, 0.15)
 
 
 # SMART MOVEMENT MONSTERS
 
 
 @dataclass
-class DarkGnomeStats(MonsterStats):
+class DarkGnomeStats(MonsterStats):  # BALANCED
     char: str = "O"
     health: int = 2
     strength: list[int] = field(default_factory=lambda: [1,3])
@@ -439,12 +470,20 @@ class DarkGnomeStats(MonsterStats):
     experience_when_killed: int = 3
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return 0.1 / seed if seed < 4 else 0
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # DarkGnome show up a bit later, increase up to certain point then decrease steadily
+        if seed < randint(2,3):
+            return 0
+        if seed < 8:
+            return uniform(0.1, 0.2) * (seed / 2)
+        if seed < 11:
+            return uniform(0.5, 0.8) / (seed / 2)
+        else:
+            return 0
 
 
 @dataclass
-class NightmareStats(MonsterStats):
+class NightmareStats(MonsterStats): # BALANCED
     char: str = "N"
     health: int = 6
     strength: list[int] = field(default_factory=lambda: [2,6])
@@ -454,12 +493,19 @@ class NightmareStats(MonsterStats):
     experience_when_killed: int = 15
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return 0.015 * seed if 3 < seed < 6 else 0
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # Nightmares own the mine. They appear with same frequency in a wide range of levels and afterward they may
+        # still appear
+        if seed < randint(12, 18):
+            return 0
+        if seed < randint(22, 25):
+            return uniform(0.2, 0.4)
+        else:
+            return uniform(0.1, 0.25)
 
 
 @dataclass
-class LindWormStats(MonsterStats):
+class LindWormStats(MonsterStats):  # BALANCED
     char: str = "Y"
     health: int = 30
     strength: list[int] = field(default_factory=lambda: [20,35])
@@ -468,15 +514,20 @@ class LindWormStats(MonsterStats):
     experience_when_killed: int = 50
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return 0.001 * seed if 4 < seed < 8 else 0
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # Lindworms are very rare at the beginning, but they increase frequency steadily as level increases
+        if seed < 25:
+            return 0
+        else:
+            frequency = 0.03 * seed / 5
+            return frequency if frequency < 0.5 else 0.5
 
 
 # GHOSTS
 
 
 @dataclass
-class WanderingShadowStats(MonsterStats):
+class WanderingShadowStats(MonsterStats):  # BALANCED
     char: str = "S"
     health: int = 2
     strength: list[int] = field(default_factory=lambda: [1,5])
@@ -486,12 +537,18 @@ class WanderingShadowStats(MonsterStats):
     experience_when_killed: int = 10
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return randint(0, 2) * 0.025
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # WanderingShadows appear with same odds in a wide range of levels before suddenly disappearing
+        if seed < randint(6, 8):
+            return 0
+        if seed < randint(9, 20):
+            return uniform(0.1,0.4)
+        else:
+            return 0
 
 
 @dataclass
-class DepthsWispStats(MonsterStats):
+class DepthsWispStats(MonsterStats):  # BALANCED
     char: str = "W"
     health: int = 1
     strength: list[int] = field(default_factory=lambda: [1,2])
@@ -500,12 +557,18 @@ class DepthsWispStats(MonsterStats):
     experience_when_killed: int = 3
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return 0.05 * seed if seed < 3 else 0
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # Wisps increase with level increase up to certain point then decrease suddenly
+        if seed < randint(4, 7):
+            return uniform(0.05, 0.15) * (seed / 2)
+        if seed < randint(8,10):
+            return uniform(0, 0.15)
+        else:
+            return 0
 
 
 @dataclass
-class MountainDjinnStats(MonsterStats):
+class MountainDjinnStats(MonsterStats):  # BALANCED
     char: str = "D"
     health: int = 18
     strength: list[int] = field(default_factory=lambda: [10,18])
@@ -515,14 +578,21 @@ class MountainDjinnStats(MonsterStats):
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:
-        return 0.002 * seed if 4 < seed < 8 else 0
+        # MountainDjinns increase in chance when level increases up to a point. Later they appear with lower frequency
+        if seed < randint(21,25):
+            return 0
+        if seed < 35:
+            frequency = uniform(0,0.1) * seed / 4
+            return frequency if frequency < 0.6 else 0.6
+        else:
+            return uniform(0.1, 0.4)
 
 
 # SPECIAL MONSTERS
 
 
 @dataclass
-class PixieStats(MonsterStats):
+class PixieStats(MonsterStats):  # BALANCED
     char: str = "P"
     health: int = 2
     strength: list[int] = field(default_factory=lambda: [1,1])
@@ -532,5 +602,9 @@ class PixieStats(MonsterStats):
     experience_when_killed: int = 3
 
     @staticmethod
-    def calculate_frequency(seed: int) -> float:
-        return randint(0, 1) * 0.05
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # Pixie can show up at any level
+        if randint(1,10) == 10:
+            return uniform(0.2, 0.5)
+        else:
+            return uniform(0,0.2)

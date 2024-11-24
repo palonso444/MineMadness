@@ -194,7 +194,7 @@ class ItemStats(SceneryStats, ABC):
     def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
         # Items depend on pooled monster frequency. They tend to lower frequencies.
         frequency = uniform(0, seed) - uniform(0, seed)
-        return frequency if frequency > 0 else 0
+        return frequency if 0 < frequency < 0.5 else 0
 
 
 @dataclass

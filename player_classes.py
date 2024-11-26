@@ -184,7 +184,6 @@ class Player(Character, ABC, EventDispatcher):
             for key in self.special_items.keys():
                 self.special_items[key] = 0
 
-
     def on_experience(self, instance, value):
 
         if value >= self.stats.exp_to_next_level:
@@ -296,13 +295,11 @@ class Player(Character, ABC, EventDispatcher):
 
         game = self.get_dungeon().game
 
-        if wall_tile.has_token("wall", "granite"): #and self.can_dig("granite"):
+        if wall_tile.has_token("wall", "granite"):
             self.stats.shovels -= 1
             game.update_switch("shovels")
-            #self.stats.remaining_moves -= self.stats.digging_moves
-            #wall_tile.get_token("wall").show_digging()
-            #wall_tile.get_token("wall").delete_token(wall_tile)
-        if wall_tile.has_token("wall", "rock"): #and self.can_dig("rock"):
+
+        if wall_tile.has_token("wall", "rock"):
             if not isinstance(self, Hawkins):
                 self.stats.shovels -= 1
                 game.update_switch("shovels")

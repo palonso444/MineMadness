@@ -282,8 +282,8 @@ class PlayerStats(CharacterStats, ABC):
 
 
 @dataclass
-class SawyerStats(PlayerStats):
-    health: int = 6
+class SawyerStats(PlayerStats): # BALANCED
+    health: int = 5
     strength: list[int] = field(default_factory=lambda: [1,2])
     advantage_strength_incr: int = 2
     moves: int = 4
@@ -291,17 +291,17 @@ class SawyerStats(PlayerStats):
 
 
 @dataclass
-class HawkinsStats(PlayerStats):
-    health: int = 8
+class HawkinsStats(PlayerStats):  # BALANCED
+    health: int = 7
     strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 3
     shooting_range: int = 2
 
 
 @dataclass
-class CrusherJaneStats(PlayerStats):
+class CrusherJaneStats(PlayerStats):  # BALANCED
     weapons: int = 4
-    health: int = 12
+    health: int = 10
     strength: list[int] = field(default_factory=lambda: [2,4])
     advantage_strength_incr: int = 1
     moves: int = 3
@@ -309,18 +309,11 @@ class CrusherJaneStats(PlayerStats):
 
 @dataclass
 class MonsterStats(CharacterStats, ABC):
-    """
-    From 0 to 10. 10 always mobile, 0 immobile. For monsters with random movement
-    """
 
     random_motility: int = 0  # from 0 to 10. For monsters with random movement
-
-    """
-    From 0 to 14. 14 always dodges if at least 1 free tile available nearby. 10 always dodges if 4 free tiles nearby. 0 never dodges. 
-    """
-
-    dodging_ability: int = 0
-    dodging_moves: int = 2
+    dodging_ability: int = 0  # from 0 to 14. 14 always dodges if at least 1 free tile nearby.
+                              # 10 always dodges if 4 free tiles nearby.
+    dodging_moves: int = 1
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:
@@ -334,10 +327,10 @@ class MonsterStats(CharacterStats, ABC):
 class KoboldStats(MonsterStats): # BALANCED
     char: str = "K"
     health: int = 3
-    strength: list[int] = field(default_factory=lambda: [1,2])
+    strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 5
     random_motility: int = 7
-    dodging_ability: int = 0
+    dodging_ability: int = 7
     experience_when_killed: int = 5
 
     @staticmethod
@@ -350,14 +343,14 @@ class KoboldStats(MonsterStats): # BALANCED
 
 
 @dataclass
-class BlindLizardStats(MonsterStats):  # BALANCEDj
+class BlindLizardStats(MonsterStats):  # BALANCED
     char: str = "L"
-    health: int = 5
-    strength: list[int] = field(default_factory=lambda: [2,4])
-    moves: int = 5
+    health: int = 6
+    strength: list[int] = field(default_factory=lambda: [4,8])
+    moves: int = 4
     random_motility: int = 4
     dodging_ability: int = 3
-    experience_when_killed: int = 8
+    experience_when_killed: int = 15
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -372,10 +365,10 @@ class BlindLizardStats(MonsterStats):  # BALANCEDj
 class BlackDeathStats(MonsterStats):  # BALANCED
     char: str = "B"
     health: int = 1
-    strength: list[int] = field(default_factory=lambda: [10,20])
+    strength: list[int] = field(default_factory=lambda: [5,50])
     moves: int = 7
     random_motility: int = 10
-    dodging_ability: int = 11
+    dodging_ability: int = 12
     experience_when_killed: int = 30
 
     @staticmethod
@@ -396,10 +389,10 @@ class BlackDeathStats(MonsterStats):  # BALANCED
 class CaveHoundStats(MonsterStats):  # BALANCED
     char: str = "H"
     health: int = 4
-    strength: list[int] = field(default_factory=lambda: [1,4])
-    moves: int = 7
-    random_motility: int = 8
-    dodging_ability: int = 6
+    strength: list[int] = field(default_factory=lambda: [2,5])
+    moves: int = 6
+    random_motility: int = 10
+    dodging_ability: int = 9
     experience_when_killed: int = 10
 
     @staticmethod
@@ -419,11 +412,11 @@ class CaveHoundStats(MonsterStats):  # BALANCED
 class GrowlStats(MonsterStats):  # BALANCED
     char: str = "G"
     health: int = 10
-    strength: list[int] = field(default_factory=lambda: [5,15])
+    strength: list[int] = field(default_factory=lambda: [7,12])
     moves: int = 5
     random_motility: int = 5
-    dodging_ability: int = 3
-    experience_when_killed: int = 20
+    dodging_ability: int = 5
+    experience_when_killed: int = 22
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -443,11 +436,11 @@ class GrowlStats(MonsterStats):  # BALANCED
 @dataclass
 class RockGolemStats(MonsterStats):  # BALANCED
     char: str = "R"
-    health: int = 50
-    strength: list[int] = field(default_factory=lambda: [5,20])
+    health: int = 75
+    strength: list[int] = field(default_factory=lambda: [15,30])
     moves: int = 3
     dodging_ability: int = 0
-    experience_when_killed: int = 45
+    experience_when_killed: int = 60
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -466,12 +459,12 @@ class RockGolemStats(MonsterStats):  # BALANCED
 @dataclass
 class DarkGnomeStats(MonsterStats):  # BALANCED
     char: str = "O"
-    health: int = 2
-    strength: list[int] = field(default_factory=lambda: [1,3])
+    health: int = 3
+    strength: list[int] = field(default_factory=lambda: [1,2])
     moves: int = 5
     random_motility: int = 5
-    dodging_ability: int = 14
-    experience_when_killed: int = 3
+    dodging_ability: int = 10
+    experience_when_killed: int = 5
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -489,12 +482,12 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
 @dataclass
 class NightmareStats(MonsterStats): # BALANCED
     char: str = "N"
-    health: int = 6
-    strength: list[int] = field(default_factory=lambda: [2,6])
+    health: int = 15
+    strength: list[int] = field(default_factory=lambda: [10,15])
     random_motility: int = 2
-    moves: int = 6
-    dodging_ability: int = 6
-    experience_when_killed: int = 15
+    moves: int = 8
+    dodging_ability: int = 10
+    experience_when_killed: int = 25
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -511,11 +504,11 @@ class NightmareStats(MonsterStats): # BALANCED
 @dataclass
 class LindWormStats(MonsterStats):  # BALANCED
     char: str = "Y"
-    health: int = 30
-    strength: list[int] = field(default_factory=lambda: [20,35])
+    health: int = 130
+    strength: list[int] = field(default_factory=lambda: [50,75])
     moves: int = 5
     dodging_ability: int = 4
-    experience_when_killed: int = 50
+    experience_when_killed: int = 100
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -533,12 +526,12 @@ class LindWormStats(MonsterStats):  # BALANCED
 @dataclass
 class WanderingShadowStats(MonsterStats):  # BALANCED
     char: str = "S"
-    health: int = 2
-    strength: list[int] = field(default_factory=lambda: [1,5])
-    moves: int = 8
-    random_motility: int = 9
+    health: int = 4
+    strength: list[int] = field(default_factory=lambda: [2,8])
+    moves: int = 7
+    random_motility: int = 10
     dodging_ability: int = 14
-    experience_when_killed: int = 10
+    experience_when_killed: int = 15
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -555,7 +548,7 @@ class WanderingShadowStats(MonsterStats):  # BALANCED
 class DepthsWispStats(MonsterStats):  # BALANCED
     char: str = "W"
     health: int = 1
-    strength: list[int] = field(default_factory=lambda: [1,2])
+    strength: list[int] = field(default_factory=lambda: [1,1])
     moves: int = 4
     dodging_ability: int = 10
     experience_when_killed: int = 3
@@ -576,11 +569,11 @@ class DepthsWispStats(MonsterStats):  # BALANCED
 @dataclass
 class MountainDjinnStats(MonsterStats):  # BALANCED
     char: str = "D"
-    health: int = 18
-    strength: list[int] = field(default_factory=lambda: [10,18])
-    moves: int = 5
-    dodging_ability: int = 5
-    experience_when_killed: int = 30
+    health: int = 30
+    strength: list[int] = field(default_factory=lambda: [20,25])
+    moves: int = 7
+    dodging_ability: int = 10
+    experience_when_killed: int = 50
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:
@@ -604,8 +597,8 @@ class PixieStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [1,1])
     moves: int = 5
     random_motility: int = 10
-    dodging_ability: int = 7
-    experience_when_killed: int = 3
+    dodging_ability: int = 14
+    experience_when_killed: int = 5
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level

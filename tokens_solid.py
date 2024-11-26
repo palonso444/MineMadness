@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC, ABCMeta
 
 from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
 from kivy.animation import Animation

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from abc import ABC
-from random import randint, uniform, random
+from random import randint, uniform
 
 
 class DungeonStats:
@@ -61,19 +61,8 @@ class DungeonStats:
             DynamiteStats.char: DynamiteStats.calculate_frequency(self.stats_level)
         }
 
-        '''item_frequencies = {
-            ShovelStats.char: ShovelStats.calculate_frequency(diggable_wall_frequency),
-            WeaponStats.char: WeaponStats.calculate_frequency(total_monster_frequency),
-            JerkyStats.char: JerkyStats.calculate_frequency(total_monster_frequency),
-            CoffeeStats.char: CoffeeStats.calculate_frequency(total_monster_frequency),
-            WhiskyStats.char: WhiskyStats.calculate_frequency(total_monster_frequency),
-            TobaccoStats.char: TobaccoStats.calculate_frequency(total_monster_frequency),
-            TalismanStats.char: TalismanStats.calculate_frequency(self.stats_level)
-        }'''
-
         all_frequencies = {**monster_frequencies, **item_frequencies}
         del monster_frequencies, item_frequencies
-
         return all_frequencies
 
 @dataclass

@@ -1,8 +1,6 @@
 from __future__ import annotations
 from random import randint
 from abc import ABC, abstractmethod
-from inspect import getmro
-
 
 
 class Character(ABC):

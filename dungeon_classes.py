@@ -132,9 +132,6 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         for key, value in self.stats.level_progression().items():
-            if value > 0:
-                print(key)
-                print(value)
             blueprint.place_items(item=key, frequency=value,
                                   protected=self.stats.mandatory_items)
 

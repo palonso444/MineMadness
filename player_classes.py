@@ -265,22 +265,23 @@ class Player(Character, ABC, EventDispatcher):
     def _pick_object(self, tile: Tile) -> None:
 
         game = self.get_dungeon().game
+        object_name = tile.get_token("pickable").species
         # if tile.token.species not in self.ignores:
-        if "pickable" not in self.ignores:
-            if tile.get_token("pickable").species in self.special_items:
-                self.special_items[tile.token.species] += 1
+        if object_name not in self.ignores:
+            if object_name in self.special_items:
+                self.special_items[object_name] += 1
                 game.update_switch("ability_button")
 
-            elif tile.get_token("pickable").species in self.inventory.keys():
-                self.inventory[tile.get_token("pickable").species] += 1
-                game.inv_object = tile.get_token("pickable").species
+            elif object_name in self.inventory.keys():
+                self.inventory[object_name] += 1
+                game.inv_object = object_name
 
             else:
                 # do not use f-strings here or Buildozer will crash
-                character_attribute = getattr(self.stats, tile.get_token("pickable").species + "s")
+                character_attribute = getattr(self.stats, f"{object_name}s")
                 character_attribute += 1
-                setattr(self.stats, tile.get_token("pickable").species + "s", character_attribute)
-                game.update_switch(tile.get_token("pickable").species + "s")
+                setattr(self.stats, f"{object_name}s", character_attribute)
+                game.update_switch(f"{object_name}s")
                 game.update_switch("ability_button")  # for Crusher Jane
 
             tile.get_token("pickable").delete_token(tile)

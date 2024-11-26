@@ -276,6 +276,7 @@ class Player(Character, ABC, EventDispatcher):
                 game.inv_object = tile.get_token("pickable").species
 
             else:
+                # do not use f-strings here or Buildozer will crash
                 character_attribute = getattr(self.stats, tile.get_token("pickable").species + "s")
                 character_attribute += 1
                 setattr(self.stats, tile.get_token("pickable").species + "s", character_attribute)

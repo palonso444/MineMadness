@@ -28,6 +28,7 @@ class MineMadnessApp(App):
     ongoing_game = BooleanProperty(False)
     game_over = BooleanProperty(False)
     level = NumericProperty(None)
+    saved_game = BooleanProperty(False)
 
     def __init__(self):
         super().__init__()

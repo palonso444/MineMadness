@@ -276,10 +276,10 @@ class Player(Character, ABC, EventDispatcher):
                 game.inv_object = tile.get_token("pickable").species
 
             else:
-                character_attribute = getattr(self.stats, f"{tile.get_token("pickable").species}s")
+                character_attribute = getattr(self.stats, tile.get_token("pickable").species + "s")
                 character_attribute += 1
-                setattr(self.stats, f"{tile.get_token("pickable").species}s", character_attribute)
-                game.update_switch(f"{tile.get_token("pickable").species}s")
+                setattr(self.stats, tile.get_token("pickable").species + "s", character_attribute)
+                game.update_switch(tile.get_token("pickable").species + "s")
                 game.update_switch("ability_button")  # for Crusher Jane
 
             tile.get_token("pickable").delete_token(tile)

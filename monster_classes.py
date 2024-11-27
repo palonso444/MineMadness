@@ -1,6 +1,7 @@
 from __future__ import annotations
 from random import randint, choice
 from abc import ABC, abstractmethod
+from typing import final
 
 import game_stats as stats
 from character_class import Character
@@ -58,7 +59,7 @@ class Monster(Character, ABC):
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
     def move_token_or_behave(self, path) -> None:
-        if path is None:
+        if len(path) == 1:
             self.act_on_tile(self.token.get_current_tile())
         else:
             self.token.slide(path, self.token.on_move_completed)
@@ -266,53 +267,35 @@ class Monster(Character, ABC):
 
         return path
 
-    def assess_path_random(self):
+    def _find_random_target(self, steps: int) -> tuple[int,int] | None:
         """
-        Returns a random path with a maximmum length equal to the remaining moves of the monster.
+        Finds a random free tile within a range of steps
+        :return: random free position in range (if any), otherwise None
         """
+        free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
 
-        path: list | None = list()
-        position: tuple = self.token.position
+        reach_free_positions = {position for position in self.get_dungeon().get_range(self.token.position, steps)
+                         if len(self.get_dungeon().find_shortest_path(
+                self.token.position, position, self.blocked_by)) > 1
+                                and position in free_positions}
 
-        for _ in range(self.stats.remaining_moves):
+        return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
 
-            trigger: int = randint(1, 10)
+    def get_random_path(self) -> list[tuple[int,int]]:
+        """
+        Generates a path aiming to a random target position within movement range and taking into account the
+        Monster.random_motility attribute
+        :return: path to the target. If no target, returns [self.position]
+        """
+        target: tuple[int,int] = self._find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))
+        if target is None:
+            return [self.token.position]
 
-            if trigger <= self.stats.random_motility:
-                direction: int = randint(1, 4)  # 1: NORTH, 2: EAST, 3: SOUTH, 4: WEST
+        path: list[tuple[int,int]] = self.get_dungeon().find_shortest_path(
+            self.token.position, target, self.blocked_by)
 
-                if direction == 1 and self._goes_through(
-                    self.token.dungeon.get_tile((position[0] - 1, position[1]))
-                ):
+        return path
 
-                    position: tuple = (position[0] - 1, position[1])
-                    path.append(position)
-
-                elif direction == 2 and self._goes_through(
-                    self.token.dungeon.get_tile((position[0], position[1] + 1))
-                ):
-
-                    position: tuple = (position[0], position[1] + 1)
-                    path.append(position)
-
-                elif direction == 3 and self._goes_through(
-                    self.token.dungeon.get_tile((position[0] + 1, position[1]))
-                ):
-
-                    position: tuple = (position[0] + 1, position[1])
-                    path.append(position)
-
-                elif direction == 4 and self._goes_through(
-                    self.token.dungeon.get_tile((position[0], position[1] - 1))
-                ):
-
-                    position: tuple = (position[0], position[1] - 1)
-                    path.append(position)
-
-        if len(path) > 0:
-            path = self._check_free_landing(path)
-
-        return path if len(path) > 0 else None
 
     def _find_accesses(
         self, target_tile: tiles.Tile, smart: bool = True
@@ -357,38 +340,6 @@ class Monster(Character, ABC):
 
         return sorted_paths if len(sorted_paths) > 0 else None
 
-    def _goes_through(self, tile):
-
-        if tile:
-            return all(tile.tokens[token_kind] is None for token_kind in self.blocked_by)
-
-    def _check_free_landing(self, path: list[tuple]):
-
-        idx_to_remove = set()
-        last_idx = len(path) - 1
-
-        for i, position in enumerate(reversed(path)):
-
-            if (
-                any(
-                    self.token.dungeon.get_tile(position).has_token(token_kind)
-                    for token_kind in self.cannot_share_tile_with
-                )
-                # position != self.position is necessary for random moves
-                and position != self.token.position
-            ):
-
-                idx = last_idx - i
-                idx_to_remove.add(idx)
-
-            else:
-                break
-
-        path = [
-            position for idx, position in enumerate(path) if idx not in idx_to_remove
-        ]
-
-        return path
 
     def _add_target_position_to_path(self, path: list[tuple]):
 
@@ -441,7 +392,7 @@ class Kobold(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self.assess_path_random())
+        super().move_token_or_behave(self.get_random_path())
 
 
 class BlindLizard(Monster):
@@ -463,7 +414,7 @@ class BlindLizard(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self.assess_path_random())
+        super().move_token_or_behave(self.get_random_path())
 
 
 class BlackDeath(Monster):
@@ -485,7 +436,7 @@ class BlackDeath(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self.assess_path_random())
+        super().move_token_or_behave(self.get_random_path())
 
 
 # DIRECT MOVEMENT MONSTERS
@@ -512,7 +463,7 @@ class CaveHound(Monster):
         if target_tile is not None:
             super().move_token_or_behave(self.assess_path_direct(target_tile))
         else:
-            super().move_token_or_behave(self.assess_path_random())
+            super().move_token_or_behave(self.get_random_path())
 
 
 class Growl(Monster):
@@ -540,7 +491,7 @@ class Growl(Monster):
         if target_tile is not None:
             super().move_token_or_behave(self.assess_path_direct(target_tile))
         else:
-            super().move_token_or_behave(self.assess_path_random())
+            super().move_token_or_behave(self.get_random_path())
 
 
 class RockGolem(Monster):
@@ -599,7 +550,7 @@ class DarkGnome(Monster):
         if target_tile is not None:
             super().move_token_or_behave(self.assess_path_smart(target_tile))
         else:
-            super().move_token_or_behave(self.assess_path_random())
+            super().move_token_or_behave(self.get_random_path())
 
 
 class NightMare(Monster):
@@ -623,7 +574,7 @@ class NightMare(Monster):
         if target_tile is not None:
             super().move_token_or_behave(self.assess_path_smart(target_tile))
         else:
-            return super().move_token_or_behave(self.assess_path_random())
+            return super().move_token_or_behave(self.get_random_path())
 
 
 class LindWorm(Monster):
@@ -675,7 +626,7 @@ class WanderingShadow(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self.assess_path_random())
+        super().move_token_or_behave(self.get_random_path())
 
 
 class DepthsWisp(Monster):
@@ -784,4 +735,4 @@ class Pixie(Monster):
         if target_tile is not None:
             super().move_token_or_behave(self.assess_path_smart(target_tile))
         else:
-            super().move_token_or_behave(self.assess_path_random())
+            super().move_token_or_behave(self.get_random_path())

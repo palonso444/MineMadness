@@ -87,7 +87,7 @@ class DungeonLayout(GridLayout):
         :param num_of_steps: maximum number of steps
         :return: True if there is a connexion, False otherwise
         """
-        path = self.find_shortest_path(position_1, position_2, obstacles_kinds, include_last)
+        path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
         return path is not None and len(path) <= num_of_steps
 
     @staticmethod
@@ -125,15 +125,15 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        #blueprint.place_equal_items("#", 5)
+        blueprint.place_equal_items("#", 7)
         #blueprint.place_equal_items("c", 3)
         #blueprint.place_equal_items("x", 2)
-        #blueprint.place_equal_items("d", 1)
+        blueprint.place_equal_items("K", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
-        for key, value in self.stats.level_progression().items():
-            blueprint.place_items(item=key, frequency=value,
-                                  protected=self.stats.mandatory_items)
+        #for key, value in self.stats.level_progression().items():
+            #blueprint.place_items(item=key, frequency=value,
+                                  #protected=self.stats.mandatory_items)
 
         #blueprint.print_map()
         return blueprint
@@ -440,7 +440,7 @@ class DungeonLayout(GridLayout):
                            any(tile.has_token(token) for token in token_kinds )}
 
     def find_shortest_path(
-            self, start_tile_position: tuple [str,str], end_tile_position: tuple[str,str],
+            self, start_tile_position: tuple [int,int], end_tile_position: tuple[int,int],
             excluded: list[str] | None = None
     ) -> list[tuple] | None:
         """
@@ -450,7 +450,7 @@ class DungeonLayout(GridLayout):
         :param start_tile_position: coordinates of the starting tile
         :param end_tile_position: coordinates of the end tile
         :param excluded: Token.kinds that should be avoided
-        :return: path to target if possible, otherwise list with one element (start_tile_position)
+        :return: path to target if possible, otherwise list with one element [start_tile_position]
         """
         directions: tuple = (-1, 0), (1, 0), (0, -1), (0, 1)
         queue: deque = deque(

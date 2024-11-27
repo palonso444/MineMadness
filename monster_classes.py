@@ -1,6 +1,7 @@
 from __future__ import annotations
 from random import randint, choice
 from abc import ABC, abstractmethod
+from typing import final
 
 import game_stats as stats
 from character_class import Character
@@ -266,6 +267,43 @@ class Monster(Character, ABC):
 
         return path
 
+    def _find_random_target(self, steps: int) -> tuple[int,int] | None:
+        """
+        Finds a random target within movement range
+        :param steps: number of steps within which the target must be found
+        :return: random position (if any), otherwise None
+        """
+        free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
+
+        reach_free_positions = {position for position in self.get_dungeon().get_range(self.token.position, steps)
+                         if len(self.get_dungeon().find_shortest_path(
+                self.token.position, position, self.blocked_by)) > 1
+                                and position in free_positions}
+
+        return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
+
+    def get_random_path(self) -> list[tuple[int,int]]:
+        rem_moves = self.stats.remaining_moves
+        final_path: list[tuple[int,int]] = list()
+
+        while rem_moves > 0:
+            print(rem_moves)
+
+            target: tuple[int,int] = self._find_random_target(rem_moves)
+            if target is None:
+                return [self.token.position]
+            path: list[tuple[[int,int]]] = self.get_dungeon().find_shortest_path(self.token.position, target, self.blocked_by)
+            #print(path)
+
+            for _ in range(len(path)):
+                if randint(1,10) <= self.stats.random_motility:
+                    del path[-1]
+
+            final_path += path
+            rem_moves -= (len(path) - 1)
+        #print(final_path)
+        return final_path
+
     def assess_path_random(self):
         """
         Returns a random path with a maximmum length equal to the remaining moves of the monster.
@@ -441,7 +479,7 @@ class Kobold(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self.assess_path_random())
+        super().move_token_or_behave(self.get_random_path())
 
 
 class BlindLizard(Monster):

@@ -267,14 +267,14 @@ class Monster(Character, ABC):
 
         return path
 
-    def _find_random_target(self) -> tuple[int,int] | None:
+    def _find_random_target(self, steps: int) -> tuple[int,int] | None:
         """
-        Finds a random free tile within movement range
+        Finds a random free tile within a range of steps
         :return: random free position in range (if any), otherwise None
         """
         free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
 
-        reach_free_positions = {position for position in self.get_dungeon().get_range(self.token.position, self.stats.remaining_moves)
+        reach_free_positions = {position for position in self.get_dungeon().get_range(self.token.position, steps)
                          if len(self.get_dungeon().find_shortest_path(
                 self.token.position, position, self.blocked_by)) > 1
                                 and position in free_positions}
@@ -287,16 +287,12 @@ class Monster(Character, ABC):
         Monster.random_motility attribute
         :return: path to the target. If no target, returns [self.position]
         """
-        target: tuple[int,int] = self._find_random_target()
+        target: tuple[int,int] = self._find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))
         if target is None:
             return [self.token.position]
 
         path: list[tuple[int,int]] = self.get_dungeon().find_shortest_path(
             self.token.position, target, self.blocked_by)
-
-        for _ in range(len(path) - 1): # -1 to preserve self.position
-            if randint(1,10) > self.stats.random_motility:
-                del path[-1]
 
         return path
 

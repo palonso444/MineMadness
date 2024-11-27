@@ -101,6 +101,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
                  dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
+        self.start_position: tuple[int,int] | None = None
         self.path: list[tuple[int,int]] | None = None
         self.color: tuple[int,int,int,int]| None = None
         self._display_in_canvas()
@@ -172,7 +173,8 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         self.get_current_tile().remove_token(self)
-        self.path = path
+        self.start_position = path[0]
+        self.path = path[1:]
         self.dungeon.disable_all_tiles()
         self._slide_one_step(on_complete)
 

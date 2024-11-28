@@ -267,6 +267,7 @@ class Monster(Character, ABC):
 
         return path
 
+
     def _find_random_target(self, steps: int) -> tuple[int,int] | None:
         """
         Finds a random free tile within a range of steps
@@ -280,6 +281,7 @@ class Monster(Character, ABC):
                                 and position in free_positions}
 
         return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
+
 
     def get_random_path(self) -> list[tuple[int,int]]:
         """
@@ -295,6 +297,64 @@ class Monster(Character, ABC):
             self.token.position, target, self.blocked_by)
 
         return path
+
+
+    def _find_possible_targets(self) -> set[tuple[int,int]]:
+        """
+        Returns a set with the positions of all possible targets in the dungeon
+        :return: set with target coordinates
+        """
+        return {position for position in self.get_dungeon().scan_tiles([self.chases])
+                if not self.get_dungeon().get_tile(position).get_token(self.chases).is_hidden}
+
+
+    def _find_target_by_distance(self) -> tuple[int,int] | None:
+        """
+        Returns the position of the closest target by straight distance
+        :return: coordinates of the position of the target. None if there is no valid target
+        """
+        targets: set [tuple[int,int]] = self._find_possible_targets()
+        targets_and_distances = {target: self.get_dungeon().get_distance(self.get_position(), target)
+                                 for target in targets}
+        return min(targets_and_distances, key=targets_and_distances.get) if len(targets_and_distances) > 0 else None
+
+
+    def _find_target_by_path(self) -> tuple[int,int] | None:
+        """
+        Returns the position of the closest target by path length (it considers blocking obstacles)
+        :return: coordinates of the position of the target. None if there is no accessible target
+        """
+        targets: set[tuple[int,int]] = self._find_possible_targets()
+        paths = [self.get_dungeon().find_shortest_path(self.token.position, target, self.blocked_by)
+                 for target in targets]
+        sorted_paths = sorted([path for path in paths if len(path) > 1])
+        return sorted_paths[0][-1] if len(sorted_paths) > 0 else None
+
+
+    def _find_closest_accesses(self, target: tuple[int,int]) -> list[tuple[int,int]] | None:
+        """
+        Returns the position of the free tile (without any Token.kind of Monster.cannot_share_tile_with)
+        closest to the target
+        :param target: coordinates of the target
+        :return: list with the coordinates of the closest accesses, None if there is no access
+        """
+        free_positions: list[tuple[int,int]] = (self.token.dungeon.scan_tiles
+                                                     (self.cannot_share_tile_with, exclude=True))
+        paths_to_free_positions = [self.get_dungeon().find_shortest_path(target, position, self.blocked_by)
+                                   for position in free_positions]
+        shortest_length = min(len(path) for path in paths_to_free_positions)
+        accesses = [path[-1] for path in paths_to_free_positions if len(path) == shortest_length]
+
+        return accesses if len(accesses) > 0 else None
+
+
+    def get_direct_path(self, target: tuple[int,int]) -> list[tuple[int,int]]:
+
+        accesses: list[tuple[int,int]] = self._find_closest_accesses(target)
+        paths_to_accesses: list[list[tuple]] =[self.get_dungeon().find_shortest_path(
+            self.token.position, access, self.blocked_by) for access in accesses]
+        path = sorted([paths_to_accesses])[0]
+        print(path)
 
 
     def _find_accesses(

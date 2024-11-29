@@ -143,16 +143,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param value: current boolean value of the switch
         :return: None
         """
-        if Player.check_if_dead("sawyer") and Player.gems < game.total_gems \
-                and not any(player.has_item("talisman") for player in Player.data):
-            App.get_running_app().game_over = True
-        elif players.Player.all_dead_or_out():
-            if players.Player.all_players_dead():
-                App.get_running_app().game_over = True
-            else:
-                game.finish_level()
+        game.check_if_level_continues()
 
-        else:
+        if game.turn is not None:
+
             if monsters.Monster.all_dead_or_out() and game.active_character.stats.remaining_moves == 0:
                 game.active_character.stats.remaining_moves = game.active_character.stats.moves
                 game.active_character.remove_effects_if_over(game.turn)
@@ -286,8 +280,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.active_character.token.unselect_token()
         self.active_character = new_active_character
         self.update_switch("active_character_id")
-        #self.active_character_id = None
-        #self.active_character_id = players.Player.data.index(self.active_character)
 
     @staticmethod
     def on_inv_object(game: MineMadnessGame, inv_object: str | None) -> None:
@@ -307,6 +299,22 @@ class MineMadnessGame(Screen):  # initialized in kv file
             # needs to be reset to None otherwise it is not possible to pick 2 equal objects in a row
             game.inv_object = None
 
+    def check_if_level_continues(self) -> None:
+        """
+        Checks if level should continue or either game is over or player moved to next level
+        :return: None
+        """
+        if (Player.check_if_dead("sawyer") and Player.gems < self.total_gems
+            and not any(player.has_item("talisman") for player in Player.data))\
+                or players.Player.all_players_dead():
+
+            self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+            App.get_running_app().game_over = True
+
+        elif players.Player.all_dead_or_out() and not players.Player.all_players_dead():
+            self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+            self.finish_level()
+
     def finish_level(self) -> None:
         """
         Finishes the level and notified MineMadnessApp to provide a new level
@@ -316,4 +324,4 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.level += 1
         App.get_running_app().remove_dungeon_from_game()
         App.get_running_app().add_dungeon_to_game()
-        self.turn = None
+        self.turn = None  # needed to abort of MineMadnessGame.on_character_done()

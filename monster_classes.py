@@ -1,7 +1,6 @@
 from __future__ import annotations
 from random import randint, choice
 from abc import ABC, abstractmethod
-from typing import final
 
 import game_stats as stats
 from character_class import Character
@@ -58,7 +57,7 @@ class Monster(Character, ABC):
         """
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
-    def move_token_or_behave(self, path) -> None:
+    def move_token_or_behave(self, path: list[tuple]) -> None:
         """
         Handles the logic dictating if a Monster should move to a new Tile or behave one the current Tile
         :param path: path to target
@@ -85,7 +84,7 @@ class Monster(Character, ABC):
         :return: path or None
         """
         path: list[tuple[int,int]] = list()
-        center_position = self.token.position
+        center_position = self.get_position()
         for _ in range(self.stats.dodging_moves):
             nearby_spaces: set[tuple[int, int]] = self.token.dungeon.get_nearby_spaces(center_position,
                                                                                        self.cannot_share_tile_with)
@@ -101,7 +100,7 @@ class Monster(Character, ABC):
         :return:None
         """
         surrounding_tiles = [self.token.dungeon.get_tile(position)
-                             for position in self.token.dungeon.get_nearby_positions(self.token.position)]
+                             for position in self.token.dungeon.get_nearby_positions(self.get_position())]
 
         for tile in surrounding_tiles:
             if self.stats.remaining_moves == 0:
@@ -112,7 +111,7 @@ class Monster(Character, ABC):
     def fight_on_tile(self, opponent_tile: Tile) -> None:
         """
         Specific fighting method for monsters
-        :param opponent_tile: Tile where opponent is localted
+        :param opponent_tile: Tile where opponent is located
         :return: None
         """
         opponent = opponent_tile.tokens["player"].character
@@ -132,9 +131,9 @@ class Monster(Character, ABC):
         """
         free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
 
-        reach_free_positions = {position for position in self.get_dungeon().get_range(self.token.position, steps)
+        reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
                          if len(self.get_dungeon().find_shortest_path(
-                self.token.position, position, self.blocked_by)) > 1
+                self.get_position(), position, self.blocked_by)) > 1
                                 and position in free_positions}
 
         return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
@@ -148,10 +147,10 @@ class Monster(Character, ABC):
         """
         target: tuple[int,int] = self._find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))
         if target is None:
-            return [self.token.position]
+            return [self.get_position()]
 
         path: list[tuple[int,int]] = self.get_dungeon().find_shortest_path(
-            self.token.position, target, self.blocked_by)
+            self.get_position(), target, self.blocked_by)
 
         return path
 
@@ -182,7 +181,7 @@ class Monster(Character, ABC):
         :return: coordinates of the position of the target. None if there is no accessible target
         """
         targets: set[tuple[int,int]] = self._find_possible_targets()
-        paths = [self.get_dungeon().find_shortest_path(self.token.position, target, self.blocked_by)
+        paths = [self.get_dungeon().find_shortest_path(self.get_position(), target, self.blocked_by)
                  for target in targets]
         sorted_paths = sorted([path for path in paths if len(path) > 1], key=len)
         return sorted_paths[0][-1] if len(sorted_paths) > 0 else None
@@ -197,9 +196,11 @@ class Monster(Character, ABC):
         """
         free_positions: list[tuple[int,int]] = (self.token.dungeon.scan_tiles
                                                      (self.cannot_share_tile_with, exclude=True))
+
         paths_to_free_positions = [self.get_dungeon().find_shortest_path(target, position, self.blocked_by)
                                    for position in free_positions]
         paths_to_free_positions = [path for path in paths_to_free_positions if len(path) > 1]
+
         shortest_length = min(len(path) for path in paths_to_free_positions)
         accesses = {path[-1] for path in paths_to_free_positions if len(path) == shortest_length}
 
@@ -216,11 +217,11 @@ class Monster(Character, ABC):
         """
         accesses: set[tuple[int,int]] = self._find_closest_accesses(target)
         paths_to_accesses: list[list[tuple]] =[self.get_dungeon().find_shortest_path(
-            self.token.position, access, self.blocked_by) for access in accesses]
+            self.get_position(), access, self.blocked_by) for access in accesses]
         paths_to_accesses = [path for path in paths_to_accesses if len(path) > 1]
 
         if len(paths_to_accesses) == 0:
-            return [self.token.position]
+            return [self.get_position()]
 
         path = sorted(paths_to_accesses, key=len)[0]
 
@@ -326,7 +327,10 @@ class CaveHound(Monster):
         target: tuple[int,int] | None = self._find_target_by_path()
 
         if target is not None:
-            super().move_token_or_behave(self.get_path_to_target(target, smart=False))
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
             super().move_token_or_behave(self.get_random_path())
 
@@ -351,10 +355,13 @@ class Growl(Monster):
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+        target: tuple[int, int] | None = self._find_target_by_path()
 
-        if target_tile is not None:
-            super().move_token_or_behave(self.assess_path_direct(target_tile))
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
             super().move_token_or_behave(self.get_random_path())
 
@@ -379,12 +386,15 @@ class RockGolem(Monster):
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+        target: tuple[int, int] | None = self._find_target_by_path()
 
-        if target_tile is not None:
-            super().move_token_or_behave(self.assess_path_direct(target_tile))
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
-            super().move_token_or_behave(None)
+            self.get_dungeon().game.update_switch("character_done")
 
 
 # SMART MOVEMENT MONSTERS
@@ -410,10 +420,13 @@ class DarkGnome(Monster):
 
     def move(self):
 
-        target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
+        target: tuple[int, int] | None = self._find_target_by_path()
 
-        if target_tile is not None:
-            super().move_token_or_behave(self.assess_path_smart(target_tile))
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                super().move_token_or_behave(self.get_path_to_target(target, smart=True))
         else:
             super().move_token_or_behave(self.get_random_path())
 
@@ -434,10 +447,13 @@ class NightMare(Monster):
 
     def move(self):
 
-        target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
+        target: tuple[int, int] | None = self._find_target_by_path()
 
-        if target_tile is not None:
-            super().move_token_or_behave(self.assess_path_smart(target_tile))
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                super().move_token_or_behave(self.get_path_to_target(target, smart=True))
         else:
             return super().move_token_or_behave(self.get_random_path())
 
@@ -458,12 +474,15 @@ class LindWorm(Monster):
 
     def move(self):
 
-        target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
+        target: tuple[int, int] | None = self._find_target_by_path()
 
-        if target_tile is not None:
-            super().move_token_or_behave(self.assess_path_smart(target_tile))
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                super().move_token_or_behave(self.get_path_to_target(target, smart=True))
         else:
-            super().move_token_or_behave(None)
+            self.get_dungeon().game.update_switch("character_done")
 
 
 # GHOSTS
@@ -485,7 +504,7 @@ class WanderingShadow(Monster):
 
         self.blocked_by: list = []
         self.cannot_share_tile_with: list[str] = ["monster", "player"]
-        self.ignores: list[str] = self.ignores + ["rock"]
+        self.ignores: list[str] = self.ignores + ["rock", "granite", "quartz"]
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
@@ -511,19 +530,22 @@ class DepthsWisp(Monster):
 
         self.blocked_by: list = []
         self.cannot_share_tile_with: list[str] = ["monster", "player"]
-        self.ignores: list[str] = self.ignores + ["rock"]
+        self.ignores: list[str] = self.ignores + ["rock", "granite", "quartz"]
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
-        target_tile: Tile | None = self.find_closest_reachable_target(self.chases)
+        target: tuple[int,int] | None = self._find_target_by_distance()
 
-        if target_tile is not None:
-            super().move_token_or_behave(self.assess_path_direct(target_tile))
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
-            super().move_token_or_behave(None)
+            self.get_dungeon().game.update_switch("character_done")
 
 
 class MountainDjinn(Monster):
@@ -543,19 +565,22 @@ class MountainDjinn(Monster):
 
         self.blocked_by: list = []
         self.cannot_share_tile_with: list[str] = ["monster", "player"]
-        self.ignores: list[str] = self.ignores + ["rock"]
+        self.ignores: list[str] = self.ignores + ["rock", "granite", "quartz"]
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+        target: tuple[int,int] | None = self._find_target_by_distance()
 
-        if target_tile is not None:
-            super().move_token_or_behave(self.assess_path_direct(target_tile))
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
-            super().move_token_or_behave(None)
+            self.get_dungeon().game.update_switch("character_done")
 
 
 # SPECIAL MONSTERS
@@ -595,9 +620,12 @@ class Pixie(Monster):
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+        target: tuple[int, int] | None = self._find_target_by_path()
 
-        if target_tile is not None:
-            super().move_token_or_behave(self.assess_path_smart(target_tile))
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                super().move_token_or_behave(self.get_path_to_target(target, smart=True))
         else:
             super().move_token_or_behave(self.get_random_path())

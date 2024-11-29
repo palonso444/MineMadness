@@ -266,7 +266,7 @@ class Player(Character, ABC, EventDispatcher):
 
         game = self.get_dungeon().game
         object_name = tile.get_token("pickable").species
-        # if tile.token.species not in self.ignores:
+
         if object_name not in self.ignores:
             if object_name in self.special_items:
                 self.special_items[object_name] += 1

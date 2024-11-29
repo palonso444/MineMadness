@@ -87,7 +87,7 @@ class DungeonLayout(GridLayout):
         :param num_of_steps: maximum number of steps
         :return: True if there is a connexion, False otherwise
         """
-        path = self.find_shortest_path(position_1, position_2, obstacles_kinds, include_last)
+        path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
         return path is not None and len(path) <= num_of_steps
 
     @staticmethod
@@ -125,15 +125,15 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        #blueprint.place_equal_items("#", 5)
+        #blueprint.place_equal_items("#", 32)
         #blueprint.place_equal_items("c", 3)
         #blueprint.place_equal_items("x", 2)
-        #blueprint.place_equal_items("d", 1)
+        blueprint.place_equal_items("N", 15)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
-        for key, value in self.stats.level_progression().items():
-            blueprint.place_items(item=key, frequency=value,
-                                  protected=self.stats.mandatory_items)
+        #for key, value in self.stats.level_progression().items():
+            #blueprint.place_items(item=key, frequency=value,
+                                  #protected=self.stats.mandatory_items)
 
         #blueprint.print_map()
         return blueprint
@@ -440,48 +440,41 @@ class DungeonLayout(GridLayout):
                            any(tile.has_token(token) for token in token_kinds )}
 
     def find_shortest_path(
-            self, start_tile_position, end_tile_position, excluded: list[str]|None = None, include_last: bool = False
+            self, start_tile_position: tuple [int,int], end_tile_position: tuple[int,int],
+            excluded: list[str] | None = None
     ) -> list[tuple] | None:
         """
         Returns the shortest path from start_tile to end_tile in the form of list of positions
-        e.g. [(0,1), (0,2), (1,2)]. Start tile position NOT INCLUDED in path. End tile included.
-        Returns None if there is no possible path.
-        :param include_last: bool indicating if path should return None if only last position is invalid, or return
-        last position in such cases
+        e.g. [(0,1), (0,2), (1,2)]. Start tile positions and end tile positions included in path
+        Returns start tile position if no possible path
+        :param start_tile_position: coordinates of the starting tile
+        :param end_tile_position: coordinates of the end tile
+        :param excluded: Token.kinds that should be avoided
+        :return: path to target if possible, otherwise list with one element [start_tile_position]
         """
         directions: tuple = (-1, 0), (1, 0), (0, -1), (0, 1)
         queue: deque = deque(
-            [(start_tile_position, [])]
-        )  # start_tile_pos is not included in the path
+            [(start_tile_position, [start_tile_position])]
+        )
 
-        excluded_positions = set()
+        excluded_positions: set[tuple] = {start_tile_position}
         if excluded is not None:
-            excluded_positions: set[tuple] = self.scan_tiles(excluded)
-        excluded_positions.add(start_tile_position)
-
-        if ((self.get_tile(start_tile_position).has_token("monster") or include_last)
-                and end_tile_position in excluded_positions):
+            excluded_positions = excluded_positions | self.scan_tiles(excluded)
+        if end_tile_position in excluded_positions:
             excluded_positions.remove(end_tile_position)
 
-        while queue:
-
+        while len(queue) > 0:
             current_position, path = queue.popleft()
 
             if current_position == end_tile_position:
-                return path if len(path) > 0 else None
+                return path
 
             for direction in directions:
+                # explore one step in all 4 directions
+                row, col = (current_position[0] + direction[0], current_position[1] + direction[1])
 
-                row, col = (
-                    current_position[0] + direction[0],
-                    current_position[1] + direction[1],
-                )  # explore one step in all 4 directions
+                if 0 <= row < self.rows and 0 <= col < self.cols and (row, col) not in excluded_positions:
+                    excluded_positions.add((row, col)) # this may increase yield as it limits the number of paths
+                    queue.append(((row, col), path + [(row, col)]))
 
-                if 0 <= row < self.rows and 0 <= col < self.cols:
-
-                    if (row, col) not in excluded_positions:
-
-                        excluded_positions.add((row, col))
-                        queue.append(((row, col), path + [(row, col)]))
-
-        return None
+        return [start_tile_position]

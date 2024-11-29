@@ -210,7 +210,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         self.character.stats.remaining_moves -= 1
-        if len(self.path) > 0 and self.character.stats.remaining_moves > 0:
+        if len(self.path) > 0:
             self._slide_one_step(on_complete)
         else:
             self.update_token_on_tile(current_tile)

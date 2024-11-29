@@ -474,7 +474,7 @@ class NightmareStats(MonsterStats): # BALANCED
     health: int = 15
     strength: list[int] = field(default_factory=lambda: [10,15])
     random_motility: float = 0.2
-    moves: int = 2 #8
+    moves: int = 8
     dodging_ability: int = 10
     experience_when_killed: int = 25
 

@@ -123,7 +123,6 @@ class Monster(Character, ABC):
         if opponent.stats.health <= 0:
             opponent.kill_character(opponent_tile)
 
-
     def _find_random_target(self, steps: int) -> tuple[int,int] | None:
         """
         Finds a random free tile within a range of steps
@@ -230,8 +229,16 @@ class Monster(Character, ABC):
             for idx, position in enumerate(path[1:]):
                 current_distance = self.get_dungeon().get_distance(position, target)
                 if current_distance > max_distance:
-                    return path[:idx + 1]
+                    path = path[:idx + 1]
+                    break
                 max_distance = current_distance
+
+        # trim path by movement range
+        path = path[:self.stats.remaining_moves + 1]  # first position is self.position
+        # remove any landing conflict
+        while len(path) > 1 and any(self.get_dungeon().get_tile(path[-1]).has_token(token_kind)
+                                    for token_kind in self.cannot_share_tile_with):
+            del path [-1]
 
         return path
 
@@ -504,7 +511,7 @@ class WanderingShadow(Monster):
 
         self.blocked_by: list = []
         self.cannot_share_tile_with: list[str] = ["monster", "player"]
-        self.ignores: list[str] = self.ignores + ["rock", "granite", "quartz"]
+        self.ignores: list[str] = self.ignores + ["wall"]
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
@@ -530,7 +537,7 @@ class DepthsWisp(Monster):
 
         self.blocked_by: list = []
         self.cannot_share_tile_with: list[str] = ["monster", "player"]
-        self.ignores: list[str] = self.ignores + ["rock", "granite", "quartz"]
+        self.ignores: list[str] = self.ignores + ["wall"]
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
@@ -565,7 +572,7 @@ class MountainDjinn(Monster):
 
         self.blocked_by: list = []
         self.cannot_share_tile_with: list[str] = ["monster", "player"]
-        self.ignores: list[str] = self.ignores + ["rock", "granite", "quartz"]
+        self.ignores: list[str] = self.ignores + ["wall"]
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)

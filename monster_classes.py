@@ -59,12 +59,22 @@ class Monster(Character, ABC):
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
     def move_token_or_behave(self, path) -> None:
+        """
+        Handles the logic dictating if a Monster should move to a new Tile or behave one the current Tile
+        :param path: path to target
+        :return: None
+        """
         if len(path) == 1:
             self.act_on_tile(self.token.get_current_tile())
         else:
             self.token.slide(path, self.token.on_move_completed)
 
     def act_on_tile(self, tile: Tile) -> None:
+        """
+        Manages behavior of Monsters upon landing (or staying) on a Tile
+        :param tile: Tile where behavios happens
+        :return: None
+        """
         self.attack_players()
         self.get_dungeon().game.update_switch("character_done")
 
@@ -85,10 +95,10 @@ class Monster(Character, ABC):
                 center_position = next_position
         return path if len(path) > 0 else None
 
-    def attack_players(self):
+    def attack_players(self) -> None:
         """
         Manages attack of monsters to surrounding players
-        :return:
+        :return:None
         """
         surrounding_tiles = [self.token.dungeon.get_tile(position)
                              for position in self.token.dungeon.get_nearby_positions(self.token.position)]
@@ -100,6 +110,11 @@ class Monster(Character, ABC):
                 self.fight_on_tile(tile)
 
     def fight_on_tile(self, opponent_tile: Tile) -> None:
+        """
+        Specific fighting method for monsters
+        :param opponent_tile: Tile where opponent is localted
+        :return: None
+        """
         opponent = opponent_tile.tokens["player"].character
         opponent = self.fight_opponent(opponent)
         opponent.token.bar_length = (
@@ -108,164 +123,6 @@ class Monster(Character, ABC):
 
         if opponent.stats.health <= 0:
             opponent.kill_character(opponent_tile)
-
-    def find_closest_reachable_target(self, target_token: str) -> Tile | None:  # pass target_token as (token_kind, token_species)
-        """
-        Finds closest target based on len(path) and returns the tile where this target is placed
-        Returns tile if there is path to tile, None if tile is unreachable"
-        """
-
-        tiles_and_paths: list = list()
-        start_tile: Tile = self.token.get_current_tile()
-
-        for tile in self.token.dungeon.children:
-            if tile.has_token(target_token):
-
-                if target_token == "player" and tile.tokens["player"].character.is_hidden:
-                    continue
-
-                path = self.token.dungeon.find_shortest_path(
-                    start_tile.position, tile.position, self.blocked_by
-                )
-                tiles_and_paths.append((tile, path))
-
-        closest_tile_and_path = None
-
-        for tile_and_path in tiles_and_paths:
-            if tile_and_path[1] is not None:  # if path is not None
-                if closest_tile_and_path is None or len(closest_tile_and_path[1]) > len(
-                    tile_and_path[1]
-                ):
-
-                    closest_tile_and_path = tile_and_path
-
-        return None if closest_tile_and_path is None else closest_tile_and_path[0]
-
-    def assess_path_smart(self, target_tile: Tile) -> list[tuple] | None:
-        """
-        Returns the path to the closest tile and with access to the target within the range of
-        remaining moves of the monster. Returns None if there is no access to the target or all accesses
-        are out of range of remaining moves
-        """
-
-        # if target is nearby and cannot share tile with it, don't move
-        if (self.token.dungeon.are_nearby(self.token.position, target_tile.position)
-                and self.chases in self.cannot_share_tile_with):
-            return None
-
-        accesses: list[list] | None = self._find_accesses(target_tile, smart=True)
-
-        i = 0
-        while i < len(accesses):
-
-            # if access is unreachable or too far away, remove access
-            path_access_end: list[tuple] | None = self.token.dungeon.find_shortest_path(
-                self.token.position,
-                self.token.dungeon.get_tile(accesses[i][-1]).position,
-                self.blocked_by,
-            )
-            if (
-                path_access_end is None
-                or len(path_access_end) > self.stats.remaining_moves
-            ):
-                accesses.remove(accesses[i])
-                continue
-
-            # remove all accesses longer than first access (the shortest)
-            elif len(accesses[i]) > len(accesses[0]):
-                accesses.remove(accesses[i])
-                continue
-
-            # if access end further away from target than monster is, remove access
-            else:
-                monster_to_target: list[tuple] = self.token.dungeon.find_shortest_path(
-                    self.token.position, target_tile.position, self.blocked_by
-                )
-                target_to_access_end: list[tuple] = self.token.dungeon.find_shortest_path(
-                    target_tile.position, self.token.dungeon.get_tile(accesses[i][-1]).position, self.blocked_by
-                )
-
-                if len(target_to_access_end) > len(monster_to_target):
-                    accesses.remove(accesses[i])
-                    continue
-
-            i += 1
-
-        path: list[tuple] | None = None
-
-        for access in accesses:
-
-            end_tile: Tile = self.token.dungeon.get_tile(access[-1])
-            path_to_access: list[tuple] | None = self.token.dungeon.find_shortest_path(
-                self.token.position, end_tile.position, self.blocked_by
-            )
-            if path_to_access is not None:
-                if path is None or len(path) > len(path_to_access):
-                    path = path_to_access
-
-        # this allows monster to end on pickables
-        if self.chases not in self.cannot_share_tile_with:
-            path = self._add_target_position_to_path(path)
-
-        return path
-
-    def assess_path_direct(self, target_tile: Tile) -> list[tuple] | None:
-        """
-        Returns the path to the closest tile and with access to the target within the range of
-        remaining moves of the monster. Returns None if there is no access to the target or all accesses
-        are out of range of remaining moves.
-        Path returned brings closer the monster to the player with every move.
-        """
-
-        accesses: list[list] | None = self._find_accesses(target_tile, smart=False)
-        path: list[tuple] | None = None
-
-        for access in accesses:
-
-            if path:
-                break
-
-            access_tile = self.token.dungeon.get_tile(access[-1])
-            possible_path: list[tuple] = self.token.dungeon.find_shortest_path(
-                self.get_position(), access_tile.position, self.blocked_by
-            )
-
-            # if access unreachable or too far away, check another one
-            if possible_path is None or len(possible_path) > self.stats.remaining_moves:
-                continue
-
-            # get distance to player
-            distance_to_target: int = self.token.dungeon.get_distance(
-                self.token.position, target_tile.position
-            )
-
-            # for each position in path
-            for idx, position in enumerate(possible_path):
-
-                # if going to that position means going further away from player, path not valid
-                if distance_to_target <= self.token.dungeon.get_distance(
-                    position, target_tile.position
-                ):
-                    break
-
-                # if going to that position means getting closer to player, path OK so far
-                if distance_to_target > self.token.dungeon.get_distance(
-                    position, target_tile.position
-                ):
-                    # update distance to target from this new position
-                    distance_to_target = self.token.dungeon.get_distance(
-                        position, target_tile.position
-                    )
-
-                # if this was the last position of path, path approved
-                if idx == len(possible_path) - 1:
-                    path = possible_path
-
-        # this makes monster able to end on pickables
-        if self.chases not in self.cannot_share_tile_with:
-            path = self._add_target_position_to_path(path)
-
-        return path
 
 
     def _find_random_target(self, steps: int) -> tuple[int,int] | None:
@@ -305,7 +162,7 @@ class Monster(Character, ABC):
         :return: set with target coordinates
         """
         return {position for position in self.get_dungeon().scan_tiles([self.chases])
-                if not self.get_dungeon().get_tile(position).get_token(self.chases).is_hidden}
+                if not self.get_dungeon().get_tile(position).get_token(self.chases).character.is_hidden}
 
 
     def _find_target_by_distance(self) -> tuple[int,int] | None:
@@ -327,11 +184,11 @@ class Monster(Character, ABC):
         targets: set[tuple[int,int]] = self._find_possible_targets()
         paths = [self.get_dungeon().find_shortest_path(self.token.position, target, self.blocked_by)
                  for target in targets]
-        sorted_paths = sorted([path for path in paths if len(path) > 1])
+        sorted_paths = sorted([path for path in paths if len(path) > 1], key=len)
         return sorted_paths[0][-1] if len(sorted_paths) > 0 else None
 
 
-    def _find_closest_accesses(self, target: tuple[int,int]) -> list[tuple[int,int]] | None:
+    def _find_closest_accesses(self, target: tuple[int,int]) -> set[tuple[int,int]] | None:
         """
         Returns the position of the free tile (without any Token.kind of Monster.cannot_share_tile_with)
         closest to the target
@@ -342,91 +199,39 @@ class Monster(Character, ABC):
                                                      (self.cannot_share_tile_with, exclude=True))
         paths_to_free_positions = [self.get_dungeon().find_shortest_path(target, position, self.blocked_by)
                                    for position in free_positions]
+        paths_to_free_positions = [path for path in paths_to_free_positions if len(path) > 1]
         shortest_length = min(len(path) for path in paths_to_free_positions)
-        accesses = [path[-1] for path in paths_to_free_positions if len(path) == shortest_length]
+        accesses = {path[-1] for path in paths_to_free_positions if len(path) == shortest_length}
 
         return accesses if len(accesses) > 0 else None
 
 
-    def get_direct_path(self, target: tuple[int,int]) -> list[tuple[int,int]]:
-
-        accesses: list[tuple[int,int]] = self._find_closest_accesses(target)
+    def get_path_to_target(self, target: tuple[int,int], smart:bool) -> list[tuple]:
+        """
+        Finds a path to a target position
+        :param target: coordinates of the target position
+        :param smart: if True, the entire path to target is returned. If False, it is returned a section of
+        the path until a step brings apart the Character from the target (only steps reducing distance allowed)
+        :return: path to target (if any), otherwise [Character.position]
+        """
+        accesses: set[tuple[int,int]] = self._find_closest_accesses(target)
         paths_to_accesses: list[list[tuple]] =[self.get_dungeon().find_shortest_path(
             self.token.position, access, self.blocked_by) for access in accesses]
-        path = sorted([paths_to_accesses])[0]
-        print(path)
+        paths_to_accesses = [path for path in paths_to_accesses if len(path) > 1]
 
+        if len(paths_to_accesses) == 0:
+            return [self.token.position]
 
-    def _find_accesses(
-        self, target_tile: tiles.Tile, smart: bool = True
-    ) -> list[list] | None:
-        """
-        Returns a list of paths, sorted from shorter to longer,
-        from target to all free tiles in the dungeon
-        path[-1] is position of free tile in the dungeon, path[0] is position nearby to target_tile
-        """
+        path = sorted(paths_to_accesses, key=len)[0]
 
-        paths = list()
+        if not smart:
+            max_distance = self.get_dungeon().get_distance(self.get_position(), target)
+            for idx, position in enumerate(path[1:]):
+                current_distance = self.get_dungeon().get_distance(position, target)
+                if current_distance > max_distance:
+                    return path[:idx + 1]
+                max_distance = current_distance
 
-        # look which tile positions are free in the dungeon among ALL tiles
-        scanned: list[tuple] = self.token.dungeon.scan_tiles(
-            self.cannot_share_tile_with, exclude=True
-        )
-
-        # find paths from target_tile to all free tiles scanned
-        for tile_position in scanned:
-
-            scanned_tile: tiles.Tile = self.token.dungeon.get_tile(tile_position)
-
-            if (
-                smart
-            ):  # smart creatures avoid tiles where, althogh closer in position, the path to target is longer
-                path: list[tuple] = self.token.dungeon.find_shortest_path(
-                    target_tile.position, scanned_tile.position, self.blocked_by
-                )
-
-            else:
-                path: list[tuple] = self.token.dungeon.find_shortest_path(
-                    target_tile.position, scanned_tile.position
-                )
-
-            if path:
-
-                paths.append(path)
-
-        # sort paths from player to free tiles from shortest to longest
-
-        sorted_paths = sorted(paths, key=len)
-
-        return sorted_paths if len(sorted_paths) > 0 else None
-
-
-    def _add_target_position_to_path(self, path: list[tuple]):
-
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-
-        for direction in directions:
-
-            if path is None:  # monster and target are nearby
-                end_tile = self.token.dungeon.get_tile(
-                    (
-                        self.token.position[0] + direction[0],
-                        self.token.position[1] + direction[1],
-                    )
-                )
-
-            else:
-                end_tile = self.token.dungeon.get_tile(
-                    (path[-1][0] + direction[0], path[-1][1] + direction[1])
-                )
-
-            if end_tile is not None and end_tile.has_token(self.chases) and not any(end_tile.has_token(token_kind) for
-                                                                                    token_kind in self.cannot_share_tile_with):
-                if self.token.dungeon.are_nearby(self.token.position, end_tile.position):
-                    path = [end_tile.position]
-                else:
-                    path.append(end_tile.position)
-                break
         return path
 
 
@@ -518,10 +323,10 @@ class CaveHound(Monster):
 
     def move(self):
 
-        target_tile: tiles.Tile | None = self.find_closest_reachable_target(self.chases)
+        target: tuple[int,int] | None = self._find_target_by_path()
 
-        if target_tile is not None:
-            super().move_token_or_behave(self.assess_path_direct(target_tile))
+        if target is not None:
+            super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
             super().move_token_or_behave(self.get_random_path())
 

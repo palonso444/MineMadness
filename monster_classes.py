@@ -238,7 +238,7 @@ class Monster(Character, ABC):
         # remove any landing conflict
         while len(path) > 1 and any(self.get_dungeon().get_tile(path[-1]).has_token(token_kind)
                                     for token_kind in self.cannot_share_tile_with):
-            del path [-1]
+            del path[-1]
 
         return path
 

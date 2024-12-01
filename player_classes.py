@@ -139,12 +139,6 @@ class Player(Character, ABC, EventDispatcher):
     def unhide(self) -> None:
         pass
 
-    @abstractmethod
-    def subtract_weapon(self) -> None:
-        """
-        Subtracts used weapons in combat (if applicable)
-        """
-        pass
 
     @property
     def has_all_gems(self) -> bool:
@@ -183,6 +177,11 @@ class Player(Character, ABC, EventDispatcher):
         if self.special_items is not None:
             for key in self.special_items.keys():
                 self.special_items[key] = 0
+
+    def subtract_weapon(self) -> None:
+        game=self.get_dungeon().game
+        self.stats.weapons -= 1
+        game.update_switch("weapons")
 
     def on_experience(self, instance, value):
 
@@ -489,11 +488,6 @@ class Sawyer(Player):
             damage += self.stats.advantage_strength_incr
         return damage
 
-    def subtract_weapon(self):
-        game=self.token.dungeon.game
-        self.stats.weapons -= 1
-        game.update_switch("weapons")
-
 class CrusherJane(Player):
     """
     Can fight with no weapons (MEDIUM strength)
@@ -566,10 +560,9 @@ class CrusherJane(Player):
     def subtract_weapon(self) -> None:
 
         if self.ability_active:
-            game = self.get_dungeon().game
-            self.stats.weapons -= 1
-            game.update_switch("weapons")
+            super().subtract_weapon()
             if self.stats.weapons == 0:
+                game = self.get_dungeon().game
                 self.ability_active = False
                 game.update_switch("ability_button")
 
@@ -646,10 +639,6 @@ class Hawkins(Player):
         self.stats.remaining_moves -= 1
         self.ability_active = False
         self.token.dungeon.game.update_switch("ability_button")
-        if tile.has_token("monster"):
-            path = tile.get_token("monster").character.generate_dodge_path()
-            if path is not None:
-                tile.get_token("monster").slide(path, on_complete=tile.get_token("monster").on_dodge_completed)
         tile.dynamite_fall()
         self.token.dungeon.game.update_switch("character_done")
 
@@ -659,7 +648,3 @@ class Hawkins(Player):
     def unhide(self) -> None:
         pass
 
-    def subtract_weapon(self) -> None:
-        game=self.get_dungeon().game
-        self.stats.weapons -= 1
-        game.update_switch("weapons")

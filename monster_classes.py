@@ -48,13 +48,13 @@ class Monster(Character, ABC):
         """
         return True
 
-    def can_dodge(self, nearby_spaces: set[tuple[int,int]]) -> bool:
+    @property
+    def can_dodge(self) -> bool:
         """
-        Determines if the Monster can dodge depending on its dodging_ability and the number of
-        nearby spaces
-        :param nearby_spaces: tuple containing the coordinates of the nearby spaces
+        Determines if the Monster can dodge depending on its dodging_ability and the nearby spaces
         :return: True if the Monster is able to dodge, False otherwise
         """
+        nearby_spaces = self.get_dungeon().get_nearby_spaces(self.get_position(), self.cannot_share_tile_with)
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
     def move_token_or_behave(self, path: list[tuple]) -> None:
@@ -76,23 +76,6 @@ class Monster(Character, ABC):
         """
         self.attack_players()
         self.get_dungeon().game.update_switch("character_done")
-
-
-    def generate_dodge_path(self) -> list [tuple[int,int]] | None:
-        """
-        Returns dodging path if dodging successful
-        :return: path or None
-        """
-        path: list[tuple[int,int]] = list()
-        center_position = self.get_position()
-        for _ in range(self.stats.dodging_moves):
-            nearby_spaces: set[tuple[int, int]] = self.token.dungeon.get_nearby_spaces(center_position,
-                                                                                       self.cannot_share_tile_with)
-            if len(nearby_spaces) > 0 and self.can_dodge(nearby_spaces):
-                next_position = choice(list(nearby_spaces))
-                path.append(next_position)
-                center_position = next_position
-        return path if len(path) > 0 else None
 
     def attack_players(self) -> None:
         """
@@ -138,13 +121,14 @@ class Monster(Character, ABC):
         return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
 
 
-    def get_random_path(self) -> list[tuple[int,int]]:
+    def get_random_path(self, max_dist: int) -> list[tuple[int,int]]:
         """
-        Generates a path aiming to a random target position within movement range and taking into account the
-        Monster.random_motility attribute
+        Generates a path aiming to a random target position at a distance max_dist or less
+        from Character.position
+        :param max_dist: maximum distance within which the random target must be set
         :return: path to the target. If no target, returns [self.position]
         """
-        target: tuple[int,int] = self._find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))
+        target: tuple[int,int] = self._find_random_target(max_dist)
         if target is None:
             return [self.get_position()]
 
@@ -265,7 +249,8 @@ class Kobold(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self.get_random_path())
+        super().move_token_or_behave(self.get_random_path(
+            int(self.stats.remaining_moves * self.stats.random_motility)))
 
 
 class BlindLizard(Monster):
@@ -287,7 +272,8 @@ class BlindLizard(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self.get_random_path())
+        super().move_token_or_behave(self.get_random_path(
+            int(self.stats.remaining_moves * self.stats.random_motility)))
 
 
 class BlackDeath(Monster):
@@ -309,7 +295,8 @@ class BlackDeath(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self.get_random_path())
+        super().move_token_or_behave(self.get_random_path(
+            int(self.stats.remaining_moves * self.stats.random_motility)))
 
 
 # DIRECT MOVEMENT MONSTERS
@@ -339,7 +326,8 @@ class CaveHound(Monster):
             else:
                 super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
-            super().move_token_or_behave(self.get_random_path())
+            super().move_token_or_behave(self.get_random_path(
+                int(self.stats.remaining_moves * self.stats.random_motility)))
 
 
 class Growl(Monster):
@@ -370,7 +358,8 @@ class Growl(Monster):
             else:
                 super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
-            super().move_token_or_behave(self.get_random_path())
+            super().move_token_or_behave(self.get_random_path(
+                int(self.stats.remaining_moves * self.stats.random_motility)))
 
 
 class RockGolem(Monster):
@@ -401,7 +390,7 @@ class RockGolem(Monster):
             else:
                 super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
-            self.get_dungeon().game.update_switch("character_done")
+            self.get_dungeon().game.next_character()
 
 
 # SMART MOVEMENT MONSTERS
@@ -435,7 +424,8 @@ class DarkGnome(Monster):
             else:
                 super().move_token_or_behave(self.get_path_to_target(target, smart=True))
         else:
-            super().move_token_or_behave(self.get_random_path())
+            super().move_token_or_behave(self.get_random_path(
+                int(self.stats.remaining_moves * self.stats.random_motility)))
 
 
 class NightMare(Monster):
@@ -462,7 +452,8 @@ class NightMare(Monster):
             else:
                 super().move_token_or_behave(self.get_path_to_target(target, smart=True))
         else:
-            return super().move_token_or_behave(self.get_random_path())
+            return super().move_token_or_behave(self.get_random_path(
+                int(self.stats.remaining_moves * self.stats.random_motility)))
 
 
 class LindWorm(Monster):
@@ -489,7 +480,7 @@ class LindWorm(Monster):
             else:
                 super().move_token_or_behave(self.get_path_to_target(target, smart=True))
         else:
-            self.get_dungeon().game.update_switch("character_done")
+            self.get_dungeon().game.next_character()
 
 
 # GHOSTS
@@ -517,7 +508,8 @@ class WanderingShadow(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self.get_random_path())
+        super().move_token_or_behave(self.get_random_path(
+            int(self.stats.remaining_moves * self.stats.random_motility)))
 
 
 class DepthsWisp(Monster):
@@ -552,7 +544,7 @@ class DepthsWisp(Monster):
             else:
                 super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
-            self.get_dungeon().game.update_switch("character_done")
+            self.get_dungeon().game.next_character()
 
 
 class MountainDjinn(Monster):
@@ -587,7 +579,7 @@ class MountainDjinn(Monster):
             else:
                 super().move_token_or_behave(self.get_path_to_target(target, smart=False))
         else:
-            self.get_dungeon().game.update_switch("character_done")
+            self.get_dungeon().game.next_character()
 
 
 # SPECIAL MONSTERS
@@ -635,4 +627,5 @@ class Pixie(Monster):
             else:
                 super().move_token_or_behave(self.get_path_to_target(target, smart=True))
         else:
-            super().move_token_or_behave(self.get_random_path())
+            super().move_token_or_behave(self.get_random_path(
+                int(self.stats.remaining_moves * self.stats.random_motility)))

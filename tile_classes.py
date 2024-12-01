@@ -153,10 +153,6 @@ class Tile(Button):
         if 0 < len(path[1:]) <= active_player.stats.remaining_moves:
             return True
         return False
-        #if len(path[1:]) == 1 or len(path) > active_player.stats.remaining_moves:
-            #return False
-
-        #return True
 
     def _check_with_monster_token(self, active_player: Player) -> bool:
         """
@@ -249,7 +245,12 @@ class Tile(Button):
         :return: None
         """
         if self.has_token("monster"):
-            self.get_token("monster").character.kill_character(self)
+            monster_token = self.get_token("monster")
+            path = monster_token.character.get_random_path(monster_token.character.stats.dodging_moves)
+            if len(path) > 1 and monster_token.character.can_dodge:
+                monster_token.slide(path, on_complete=monster_token.on_dodge_completed)
+            else:
+                monster_token.character.kill_character(self)
         self.delete_all_tokens()
         self.place_item("wall", "rock", None)
         self.show_explosion()

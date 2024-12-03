@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from pickletools import uint8
+
+from kivy.graphics import Rectangle, Color, Ellipse
 from kivy.properties import ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
+from kivy.graphics.texture import Texture
 from collections import deque
 from random import choice
+from numpy import zeros, uint8, ogrid
 
 import player_classes as players
 import monster_classes as monsters
@@ -47,6 +52,7 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         if len(level_start) == 0:
+            dungeon.generate_darkness_layer(alpha_intensity=155, light_positions={(0,0), (5,2), (4,5)}, light_radius=100)
             dungeon.game.dungeon = dungeon
 
     @staticmethod
@@ -125,10 +131,10 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        blueprint.place_equal_items("#", 32)
+        #blueprint.place_equal_items("#", 32)
         #blueprint.place_equal_items("c", 3)
         #blueprint.place_equal_items("x", 2)
-        blueprint.place_equal_items("R", 1)
+        blueprint.place_equal_items("N", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -137,6 +143,35 @@ class DungeonLayout(GridLayout):
 
         #blueprint.print_map()
         return blueprint
+
+    def generate_darkness_layer(self, alpha_intensity: int, light_positions: set[tuple[int,int]] | None = None,
+                         light_radius: int | None = None) -> None:
+        """
+        Draws a darkness layer on top of the DungeonLayout, with optional illuminated areas
+        :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
+        :param light_positions: centers of the illuminated areas
+        :param light_radius: radius of the illuminated areas
+        :return: None
+        """
+        texture = Texture.create(size=self.size, colorfmt="rgba")
+        data = zeros((texture.height, texture.width, 4), dtype=uint8)
+        data[:,:,3] = alpha_intensity
+
+        if light_positions is not None:
+            light_pos = [self.get_tile(position).pos for position in light_positions]
+            print(light_pos)
+            y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
+
+            for pos in light_pos:
+                distance_from_center = (x_pos - pos[0]) ** 2 + (y_pos - pos[1]) ** 2
+                light_mask = (distance_from_center < light_radius ** 2)  # [bool] array
+                data[light_mask, 3] = 0
+
+        texture.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
+
+        with self.canvas.after:
+            Rectangle(texture=texture, pos=self.pos, size=self.size)
+
 
     def match_blueprint(self) -> None:
         """

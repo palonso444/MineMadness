@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from pickletools import uint8
-
-from kivy.graphics import Rectangle, Color, Ellipse
+from kivy.graphics import Rectangle
 from kivy.properties import ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 from kivy.graphics.texture import Texture
+
 from collections import deque
 from random import choice
-from numpy import zeros, uint8, ogrid
+from numpy import uint8, int16, ogrid, zeros, clip
+from math import sqrt
 
 import player_classes as players
 import monster_classes as monsters
@@ -52,7 +52,11 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         if len(level_start) == 0:
-            dungeon.generate_darkness_layer(alpha_intensity=155, light_positions={(0,0), (5,2), (4,5)}, light_radius=100)
+            dungeon.cast_darkness(alpha_intensity=150,
+                                  bright_positions =[(2,3), (3,3),(4,5),(0,0),(3,2)],
+                                  bright_radius=100,
+                                  bright_intensity=1,
+                                  gradient=0.5)
             dungeon.game.dungeon = dungeon
 
     @staticmethod
@@ -81,12 +85,10 @@ class DungeonLayout(GridLayout):
         )
 
     def check_if_connexion(self, position_1: tuple [int,int], position_2: tuple[int,int],
-                           obstacles_kinds: list[str], num_of_steps: int, include_last:bool = False) -> bool:
+                           obstacles_kinds: list[str], num_of_steps: int) -> bool:
         """
         Checks if two positions of the DungeonLayout are connected or there are obstacles on the way that makes
         one inaccessible from the other in the given number of steps
-        :param include_last: bool indicating if path should return None if only last position is invalid, or return
-        last position in such cases
         :param position_1: coordinates of the first position
         :param position_2: coordinates of the second position
         :param obstacles_kinds: Token.kinds of the obstacles to consider
@@ -144,28 +146,41 @@ class DungeonLayout(GridLayout):
         #blueprint.print_map()
         return blueprint
 
-    def generate_darkness_layer(self, alpha_intensity: int, light_positions: set[tuple[int,int]] | None = None,
-                         light_radius: int | None = None) -> None:
+
+    def cast_darkness(self, alpha_intensity: int, bright_positions: list[tuple[int,int]] | None = None,
+                      bright_radius: int = 50, bright_intensity: float = 1.0, gradient: float = 1.0, ) -> None:
         """
         Draws a darkness layer on top of the DungeonLayout, with optional illuminated areas
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
-        :param light_positions: centers of the illuminated areas
-        :param light_radius: radius of the illuminated areas
+        :param bright_positions: centers of the illuminated areas
+        :param bright_radius: radius in pixels of the illuminated areas, default 50
+        :param bright_intensity: modulator of single light intensity. Must range from 0 (light off)
+        to 1 (full intensity). Default 1
+        :param gradient: steepness of brightness decrease with increase of distance form the center. Must range from
+        0 to 1, default 1
         :return: None
         """
+        bright_pos: list = [self.get_tile(position).pos for position in bright_positions]
         texture = Texture.create(size=self.size, colorfmt="rgba")
+
+        # bright radius convert to function of tile_width
+        # center bright_pos at the center of the Tiles
+
         data = zeros((texture.height, texture.width, 4), dtype=uint8)
         data[:,:,3] = alpha_intensity
 
-        if light_positions is not None:
-            light_pos = [self.get_tile(position).pos for position in light_positions]
-            print(light_pos)
+        if bright_pos is not None:
+            max_distance = bright_radius ** 2
             y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
 
-            for pos in light_pos:
+            for pos in bright_pos:
                 distance_from_center = (x_pos - pos[0]) ** 2 + (y_pos - pos[1]) ** 2
-                light_mask = (distance_from_center < light_radius ** 2)  # [bool] array
-                data[light_mask, 3] = 0
+                light_mask = (distance_from_center < max_distance)  # [bool] array
+                brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** gradient)
+                              * alpha_intensity * bright_intensity)
+
+                temp_data = data[light_mask, 3].astype(int16) - brightness.astype(int16)
+                data[light_mask, 3] = clip(temp_data, 0, alpha_intensity).astype(uint8)
 
         texture.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
 

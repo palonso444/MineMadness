@@ -165,8 +165,7 @@ class Tile(Button):
             return self.dungeon.check_if_connexion(active_player.token.position,
                                                    self.position,
                                                    active_player.blocked_by,
-                                                   active_player.stats.shooting_range,
-                                                   include_last=True)
+                                                   active_player.stats.shooting_range)
 
         elif self.is_nearby(active_player.token.position):
             return active_player.can_fight(self.get_token("monster").species)
@@ -183,8 +182,7 @@ class Tile(Button):
             return (self.dungeon.check_if_connexion(active_player.token.position,
                                             self.position,
                                             active_player.blocked_by,
-                                            active_player.stats.shooting_range,
-                                            include_last=True) and
+                                            active_player.stats.shooting_range) and
             not self.has_token("wall","rock"))
 
         elif self.is_nearby(active_player.token.position) and not active_player.is_hidden:

@@ -4,11 +4,11 @@ from kivy.graphics import Rectangle
 from kivy.properties import ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 from kivy.graphics.texture import Texture
+from kivy.clock import Clock
 
 from collections import deque
-from random import choice
+from random import choice, uniform
 from numpy import uint8, int16, ogrid, zeros, clip
-from math import sqrt
 
 import player_classes as players
 import monster_classes as monsters
@@ -41,7 +41,8 @@ class DungeonLayout(GridLayout):
             self.blueprint = blueprint
 
         self.tiles_dict: dict[tuple: Tile] | None = None
-        
+        self.darkness: Rectangle | None = None
+
     @staticmethod
     def on_level_start(dungeon: DungeonLayout, level_start: list) -> None:
         """
@@ -52,11 +53,14 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         if len(level_start) == 0:
-            dungeon.cast_darkness(alpha_intensity=150,
-                                  bright_positions =[(2,3), (3,3),(4,5),(0,0),(3,2)],
-                                  bright_radius=100,
-                                  bright_intensity=1,
-                                  gradient=0.5)
+            Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.9,
+                                                                        low_int=0.45,
+                                                                        alpha_intensity = 150,
+                                                                        bright_positions = [(2, 3), (3, 3), (4, 5), (0, 0), (3, 2)],
+                                                                        bright_radius = 1.0,
+                                                                        bright_intensity = 1.0),
+                                                                        1 / 10)
+
             dungeon.game.dungeon = dungeon
 
     @staticmethod
@@ -146,30 +150,52 @@ class DungeonLayout(GridLayout):
         #blueprint.print_map()
         return blueprint
 
-
-    def cast_darkness(self, alpha_intensity: int, bright_positions: list[tuple[int,int]] | None = None,
-                      bright_radius: int = 50, bright_intensity: float = 1.0, gradient: float = 1.0, ) -> None:
+    def darkness_flicker(self, low_int: float, high_int: float, alpha_intensity: int, bright_positions: list[tuple[int,int]] | None = None,
+                      bright_radius: float = 1.0, bright_intensity: float = 1.0) -> None:
         """
-        Draws a darkness layer on top of the DungeonLayout, with optional illuminated areas
+        Wrapper function that generates a darkness with flickering brightness points. Needs to be scheduled
+        using Clock.schedule_interval() and specifying the desired frequency
+        :param low_int: lowest possible intensity of the brightness flickering
+        :param high_int: highest possible intensity of the brightness flickering
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
         :param bright_positions: centers of the illuminated areas
-        :param bright_radius: radius in pixels of the illuminated areas, default 50
+        :param bright_radius: radius in Tile.width of the illuminated areas, default 1.0
+        :param bright_intensity: modulator of single light intensity. Must range from 0 (light off)
+        to 1 (full intensity). Default 1
+        :return: None
+        """
+        gradient = uniform(low_int, high_int)
+
+        if self.darkness in self.canvas.after.children:
+            self.canvas.after.remove(self.darkness)
+
+        self.cast_darkness(alpha_intensity=alpha_intensity,
+                              bright_positions =bright_positions,
+                              bright_radius=bright_radius,
+                              bright_intensity=bright_intensity,
+                              gradient=gradient)
+
+
+    def cast_darkness(self, alpha_intensity: int, bright_positions: list[tuple[int,int]] | None = None,
+                      bright_radius: float = 1.0, bright_intensity: float = 1.0, gradient: float = 1.0) -> None:
+        """
+        Casts a darkness layer on top of the DungeonLayout, with optional illuminated areas
+        :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
+        :param bright_positions: centers of the illuminated areas
+        :param bright_radius: radius in Tile.width of the illuminated areas, default 1.0
         :param bright_intensity: modulator of single light intensity. Must range from 0 (light off)
         to 1 (full intensity). Default 1
         :param gradient: steepness of brightness decrease with increase of distance form the center. Must range from
         0 to 1, default 1
         :return: None
         """
-        bright_pos: list = [self.get_tile(position).pos for position in bright_positions]
         texture = Texture.create(size=self.size, colorfmt="rgba")
-
-        # bright radius convert to function of tile_width
-        # center bright_pos at the center of the Tiles
-
         data = zeros((texture.height, texture.width, 4), dtype=uint8)
         data[:,:,3] = alpha_intensity
 
-        if bright_pos is not None:
+        if bright_positions is not None:
+            bright_pos: list = [self.get_tile(position).pos for position in bright_positions]
+            bright_radius = self.get_random_tile().width * bright_radius
             max_distance = bright_radius ** 2
             y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
 
@@ -185,7 +211,7 @@ class DungeonLayout(GridLayout):
         texture.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
 
         with self.canvas.after:
-            Rectangle(texture=texture, pos=self.pos, size=self.size)
+            self.darkness = Rectangle(texture=texture, pos=self.pos, size=self.size)
 
 
     def match_blueprint(self) -> None:

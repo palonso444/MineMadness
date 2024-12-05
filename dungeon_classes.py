@@ -60,7 +60,6 @@ class DungeonLayout(GridLayout):
                                                                         bright_radius = 1.0,
                                                                         bright_intensity = 1.0),
                                                                         1 / 10)
-
             dungeon.game.dungeon = dungeon
 
     @staticmethod
@@ -169,17 +168,18 @@ class DungeonLayout(GridLayout):
         if self.darkness in self.canvas.after.children:
             self.canvas.after.remove(self.darkness)
 
-        self.cast_darkness(alpha_intensity=alpha_intensity,
-                              bright_positions =bright_positions,
-                              bright_radius=bright_radius,
-                              bright_intensity=bright_intensity,
-                              gradient=gradient)
+        with self.canvas.after:
+            self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity,
+                                                          bright_positions =bright_positions,
+                                                          bright_radius=bright_radius,
+                                                          bright_intensity=bright_intensity,
+                                                          gradient=gradient)
 
 
-    def cast_darkness(self, alpha_intensity: int, bright_positions: list[tuple[int,int]] | None = None,
-                      bright_radius: float = 1.0, bright_intensity: float = 1.0, gradient: float = 1.0) -> None:
+    def _generate_darkness_layer(self, alpha_intensity: int, bright_positions: list[tuple[int,int]] | None = None,
+                                bright_radius: float = 1.0, bright_intensity: float = 1.0, gradient: float = 1.0) -> Rectangle:
         """
-        Casts a darkness layer on top of the DungeonLayout, with optional illuminated areas
+        Generates a darkness layer with optional illuminated areas
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
         :param bright_positions: centers of the illuminated areas
         :param bright_radius: radius in Tile.width of the illuminated areas, default 1.0
@@ -187,7 +187,7 @@ class DungeonLayout(GridLayout):
         to 1 (full intensity). Default 1
         :param gradient: steepness of brightness decrease with increase of distance form the center. Must range from
         0 to 1, default 1
-        :return: None
+        :return: darkness layer to be displayed on the canvas
         """
         texture = Texture.create(size=self.size, colorfmt="rgba")
         data = zeros((texture.height, texture.width, 4), dtype=uint8)
@@ -210,8 +210,7 @@ class DungeonLayout(GridLayout):
 
         texture.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
 
-        with self.canvas.after:
-            self.darkness = Rectangle(texture=texture, pos=self.pos, size=self.size)
+        return Rectangle(texture=texture, pos=self.pos, size=self.size)
 
 
     def match_blueprint(self) -> None:

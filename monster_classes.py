@@ -97,7 +97,7 @@ class Monster(Character, ABC):
         :param opponent_tile: Tile where opponent is located
         :return: None
         """
-        opponent = opponent_tile.tokens["player"].character
+        opponent = opponent_tile.get_token("player").character
         opponent = self.fight_opponent(opponent)
         opponent.token.bar_length = (
                 opponent.stats.health / opponent.stats.natural_health

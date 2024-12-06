@@ -19,7 +19,7 @@ class Tile(Button):
         self.col: int = col
         self.position: tuple[int,int] = row, col
         self.kind: str = kind
-        self.tokens: dict [str:Token | list[Token] | None] = {
+        self.tokens: dict [str:list[Token] | None] = {
             "player": None,
             "monster": None,
             "wall": None,
@@ -41,10 +41,11 @@ class Tile(Button):
         :param tile_pos: new pos value of the Tile
         :return: None
         """
-        for token in tile.tokens.values():
-            if token is not None:
-                token.pos = tile_pos
-                tile.dungeon.level_start.remove(token.position)
+        for token_list in tile.tokens.values():
+            if token_list is not None:
+                for token in token_list:
+                    token.pos = tile_pos
+                    tile.dungeon.level_start.remove(token.position)
 
     def set_token(self, token:Token) -> None:
         """
@@ -52,7 +53,9 @@ class Tile(Button):
         :param token: Token to set
         :return: None
         """
-        self.tokens[token.kind] = token
+        if self.tokens[token.kind] is None:
+            self.tokens[token.kind] = list()
+        self.tokens[token.kind].append(token)
 
     def get_token(self, token_kind: str) -> Token:
         """
@@ -60,7 +63,7 @@ class Tile(Button):
         :param token_kind: Token.kind of the Token
         :return: None
         """
-        return self.tokens[token_kind]
+        return next((token for token in self.tokens[token_kind] if token.kind == token_kind), None)
 
     def remove_token(self, token:Token) -> None:
         """
@@ -68,16 +71,17 @@ class Tile(Button):
         :param token: Token to remove
         :return: None
         """
-        self.tokens[token.kind] = None
+        self.tokens[token.kind].remove(token)
 
     def delete_all_tokens(self) -> None:
         """
         Clears the Tile of all its Tokens
         :return: None
         """
-        for token in self.tokens.values():
-            if token is not None:
-                token.delete_token(self)
+        for token_list in self.tokens.values():
+            if token_list is not None:
+                for token in token_list:
+                    token.delete_token(self)
 
     def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
         """
@@ -88,11 +92,11 @@ class Tile(Button):
         """
         if token_kind is None:
             if token_species is not None:
-                raise ValueError("token_kind cannot be None and token_species not None")
-            return any(token is not None for token in self.tokens.values())
+                raise ValueError("token_kind cannot be None if token_species not None")
+            return any(token_list is not None and len(token_list) > 0 for token_list in self.tokens.values())
 
-        return (self.tokens[token_kind] is not None and
-                (token_species is None or self.tokens[token_kind].species == token_species))
+        return (self.tokens[token_kind] is not None and len (self.tokens[token_kind]) > 0 and
+                (token_species is None or any(token.species == token_species for token in self.tokens[token_kind])))
 
     def is_nearby(self, position: tuple[int,int]) -> bool:
         """

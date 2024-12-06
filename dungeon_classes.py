@@ -183,9 +183,9 @@ class DungeonLayout(GridLayout):
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("#", 4)
-        #blueprint.place_equal_items("c", 3)
+        blueprint.place_equal_items("c", 3)
         #blueprint.place_equal_items("x", 2)
-        #blueprint.place_equal_items("N", 1)
+        blueprint.place_equal_items("N", 4)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():

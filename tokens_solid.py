@@ -20,7 +20,7 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
     Base abstract class defining all Tokens that stay on the board for extended periods of time
     """
     def __init__(self, kind: str, species:str, position: tuple[int,int],
-                 character: Character, dungeon_instance: DungeonLayout, **kwargs):
+                 character: Character, dungeon_instance: DungeonLayout, size_modifier: float = 1.0, **kwargs):
         super().__init__(**kwargs)
 
         self.kind: str = kind
@@ -30,6 +30,10 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.dungeon: DungeonLayout = dungeon_instance
         self.source: str = "./tokens/" + self.species + "token.png"
         self.shape: Ellipse | Rectangle | None = None  # token.shape (canvas object) initialized in each subclass
+
+        # size attribute comes from the superclass
+        self.size_modifier: float = size_modifier
+        self.size = self.size[0] * size_modifier, self.size[1] * size_modifier
 
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:

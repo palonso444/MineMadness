@@ -19,12 +19,13 @@ class Tile(Button):
         self.col: int = col
         self.position: tuple[int,int] = row, col
         self.kind: str = kind
-        self.tokens: dict [str:Token | None] = {
+        self.tokens: dict [str:Token | list[Token] | None] = {
             "player": None,
             "monster": None,
             "wall": None,
             "pickable": None,
-            "treasure": None
+            "treasure": None,
+            "torches": None
         }
         self.dungeon: DungeonLayout = dungeon_instance
 

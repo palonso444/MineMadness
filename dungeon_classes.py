@@ -41,7 +41,34 @@ class DungeonLayout(GridLayout):
             self.blueprint = blueprint
 
         self.tiles_dict: dict[tuple: Tile] | None = None
+
+        self.torches_dict: dict[tuple:list[str]] | None = None
         self.darkness: Rectangle | None = None
+
+    def _setup_torches_dict(self) -> None:
+        wall_positions = self.scan_tiles(["wall"])
+        wall_free_positions = self.scan_tiles(["wall"], exclude=True)
+
+        all_torches_dict = {wall_position: [position for position in wall_free_positions
+                                         if self.are_nearby(wall_position, position)]
+                                        for wall_position in wall_positions}
+
+        if len(all_torches_dict) > 0:
+            torches_dict: dict = {key: [] for key in all_torches_dict.keys()}
+
+            for _ in range(self.stats.torch_number):
+                random_key = choice(list(all_torches_dict.keys()))
+                random_value = choice(all_torches_dict[random_key])
+
+                torches_dict[random_key].append(self.get_differential_position(random_key, random_value))
+                all_torches_dict[random_key].remove(random_value)
+
+                if len(all_torches_dict[random_key]) == 0:
+                    del all_torches_dict[random_key]
+                    if len(all_torches_dict) == 0:
+                        break
+
+            self.torches_dict = {key: value for key, value in torches_dict.items() if len(value) > 0}
 
     @staticmethod
     def on_level_start(dungeon: DungeonLayout, level_start: list) -> None:
@@ -53,24 +80,42 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         if len(level_start) == 0:
-            Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.9,
+            dungeon._setup_torches_dict()
+
+            '''if dungeon.torches_dict is not None:
+                for position in dungeon.torches_dict.keys():
+                    if dungeon.get_tile(position).tokens["torches"] is None:
+                        dungeon.get_tile(position).tokens["torches"] = []
+                    dungeon.get_tile(position).place_item("light", "torch", character=None)'''
+
+            '''Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.9,
                                                                         low_int=0.45,
                                                                         alpha_intensity = 150,
                                                                         bright_positions = [(2, 3), (3, 3), (4, 5), (0, 0), (3, 2)],
                                                                         bright_radius = 1.0,
                                                                         bright_intensity = 1.0),
-                                                                        1 / 10)
+                                                                        1 / 15)'''
             dungeon.game.dungeon = dungeon
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
         """
-        Returns the distance (in number of movements) between 2 positions of the dungeon
+        Returns the distance (in number of steps) between 2 positions of the dungeon
         :param position1: first position
         :param position2: second position
         :return: distance between the two positions
         """
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
+
+    @staticmethod
+    def get_differential_position(position: tuple[int:int], target_position: tuple[int:int]) -> tuple[int,int]:
+        """
+        Returns the differential position of between the position and the target_position
+        :param position: position of reference
+        :param target_position: position whose differential position must be calculated
+        :return: differential position: (-1, 0) -> up, (1, 0) -> down, (0, -1) -> left, (0, 1) -> right
+        """
+        return target_position[0] - position[0], target_position[1] - position[1]
 
     @staticmethod
     def are_nearby(position_1: tuple[int:int], position_2: tuple[int:int]) -> bool:
@@ -99,7 +144,8 @@ class DungeonLayout(GridLayout):
         :return: True if there is a connexion, False otherwise
         """
         path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
-        return path is not None and len(path) <= num_of_steps
+        return 1 < len(path) <= num_of_steps
+        #return path is not None and len(path) <= num_of_steps
 
     @staticmethod
     def on_pos(dungeon: DungeonLayout, pos: list [int, int]) -> None:
@@ -136,10 +182,10 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        #blueprint.place_equal_items("#", 32)
+        blueprint.place_equal_items("#", 4)
         #blueprint.place_equal_items("c", 3)
         #blueprint.place_equal_items("x", 2)
-        blueprint.place_equal_items("N", 1)
+        #blueprint.place_equal_items("N", 1)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():

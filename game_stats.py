@@ -19,6 +19,10 @@ class DungeonStats:
         gem_number = 1 if gem_number < 1 else gem_number
         return gem_number
 
+    @property
+    def torch_number(self) -> int:
+        return 5
+
     def level_progression(self) -> dict[str:float]:
         """
         Organizes in a dictionary the frequency of items in the level

@@ -19,18 +19,18 @@ class Tile(Button):
         self.col: int = col
         self.position: tuple[int,int] = row, col
         self.kind: str = kind
-        self.tokens: dict [str:list[Token] | None] = {
-            "player": None,
-            "monster": None,
-            "wall": None,
-            "pickable": None,
-            "treasure": None,
-            "torches": None
+        self.tokens: dict [str:list[Token]] = {
+            "player": [],
+            "monster": [],
+            "wall": [],
+            "pickable": [],
+            "treasure": [],
+            "light": []
         }
         self.dungeon: DungeonLayout = dungeon_instance
 
         self.first_click_time: float | None = None
-        self.double_click_interval: float = 0.5
+        self.double_click_interval: float = 0.5  # max time in seconds between double clicks
 
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:
@@ -42,10 +42,9 @@ class Tile(Button):
         :return: None
         """
         for token_list in tile.tokens.values():
-            if token_list is not None:
-                for token in token_list:
-                    token.pos = tile_pos
-                    tile.dungeon.level_start.remove(token.position)
+            for token in token_list:
+                token.pos = tile.pos[0] + token.pos_modifier[0], tile.pos[1] - token.pos_modifier[1]  # (x,y)
+                tile.dungeon.level_start.remove(token.position)
 
     def set_token(self, token:Token) -> None:
         """
@@ -53,8 +52,6 @@ class Tile(Button):
         :param token: Token to set
         :return: None
         """
-        if self.tokens[token.kind] is None:
-            self.tokens[token.kind] = list()
         self.tokens[token.kind].append(token)
 
     def get_token(self, token_kind: str) -> Token:
@@ -63,7 +60,7 @@ class Tile(Button):
         :param token_kind: Token.kind of the Token
         :return: None
         """
-        return next((token for token in self.tokens[token_kind] if token.kind == token_kind), None)
+        return next((token for token in self.tokens[token_kind] if token.kind == token_kind))
 
     def remove_token(self, token:Token) -> None:
         """
@@ -79,9 +76,8 @@ class Tile(Button):
         :return: None
         """
         for token_list in self.tokens.values():
-            if token_list is not None:
-                for token in token_list:
-                    token.delete_token(self)
+            for token in token_list:
+                token.delete_token(self)
 
     def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
         """
@@ -93,9 +89,9 @@ class Tile(Button):
         if token_kind is None:
             if token_species is not None:
                 raise ValueError("token_kind cannot be None if token_species not None")
-            return any(token_list is not None and len(token_list) > 0 for token_list in self.tokens.values())
+            return any(len(token_list) > 0 for token_list in self.tokens.values())
 
-        return (self.tokens[token_kind] is not None and len (self.tokens[token_kind]) > 0 and
+        return (len (self.tokens[token_kind]) > 0 and
                 (token_species is None or any(token.species == token_species for token in self.tokens[token_kind])))
 
     def is_nearby(self, position: tuple[int,int]) -> bool:
@@ -111,22 +107,32 @@ class Tile(Button):
             for dx, dy in directions
         )
 
-    def place_item(self, token_kind: str, token_species: str, character: Character | None) -> None:
+    def place_item(self, token_kind: str, token_species: str,
+                   character: Character | None,
+                   size_modifier: float = 1.0, pos_modifier: tuple[float,float] = (0.0, 0.0)) -> None:
         """
         Places a Token on the Tile
         :param token_kind: Token.kind of the token to be placed
         :param token_species: Token.species of the token to be placed
         :param character: character (if any) associated with the token
+        :param size_modifier: float indicating Token size modification regarding Tile.size
+        :param pos_modifier: tuple indicating how many (Tile.height, Tile.width) times the Token.pos
+        is shifted regarding Tile.pos (lower-left corner)
+        if relation to Tile lower left corner (corresponding to default value (0.0, 0.0))
         :return: None
         """
+        pos_modifier = self.width * pos_modifier[1], self.height * pos_modifier[0]  # order Tile.pos is (x,y)
+
         token_args = {
-            'kind': token_kind,
-            'species': token_species,
-            'position': self.position,
-            'character': character,
-            'dungeon_instance': self.dungeon,
-            'pos': self.pos,
-            'size': self.size,
+            "kind": token_kind,
+            "species": token_species,
+            "position": self.position,
+            "character": character,
+            "dungeon_instance": self.dungeon,
+            "size_modifier": size_modifier,
+            "pos_modifier": pos_modifier,
+            "pos": self.pos,
+            "size": self.size,
         }
 
         if token_kind == "player":

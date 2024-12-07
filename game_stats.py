@@ -11,7 +11,8 @@ class DungeonStats:
         self.stats_level = dungeon_level
 
     def size(self) -> int:
-        return 8 + int(self.stats_level * 0.2)
+        return 4
+        #return 6 + int(self.stats_level * 0.2)
 
     def gem_number(self) -> int:
 
@@ -21,7 +22,7 @@ class DungeonStats:
 
     @property
     def torch_number(self) -> int:
-        return 5
+        return 6
 
     def level_progression(self) -> dict[str:float]:
         """

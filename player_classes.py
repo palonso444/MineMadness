@@ -107,6 +107,7 @@ class Player(Character, ABC, EventDispatcher):
         self.kind: str = "player"
         self.blocked_by: list[str] = ["wall", "monster"]
         self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
+        self.ignores: list[str] = ["light"]
         self.step_transition: str = "in_out_quad" # walking
         self.step_duration: float = 0.35
 
@@ -423,7 +424,7 @@ class Sawyer(Player):
         self.char: str = "%"
         self.name: str = "Sawyer"
         self.species: str = "sawyer"
-        self.ignores: list[str] = ["dynamite"]
+        self.ignores: list[str] = self.ignores + ["dynamite"]
 
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
@@ -501,7 +502,7 @@ class CrusherJane(Player):
         self.char: str = "&"
         self.name: str = "Crusher Jane"
         self.species: str = "crusherjane"
-        self.ignores: list[str] = ["powder", "dynamite", "treasure"]
+        self.ignores: list[str] = self.ignores + ["powder", "dynamite", "treasure"]
 
         self.stats = stats.CrusherJaneStats()
         self._update_level_track(self.player_level)
@@ -580,7 +581,7 @@ class Hawkins(Player):
         self.char: str = "?"
         self.name: str = "Hawkins"
         self.species: str = "hawkins"
-        self.ignores: list[str] = ["gem", "powder", "treasure"]
+        self.ignores: list[str] = self.ignores+ ["gem", "powder", "treasure"]
 
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)

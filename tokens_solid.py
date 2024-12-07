@@ -20,7 +20,8 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
     Base abstract class defining all Tokens that stay on the board for extended periods of time
     """
     def __init__(self, kind: str, species:str, position: tuple[int,int],
-                 character: Character, dungeon_instance: DungeonLayout, size_modifier: float = 1.0, **kwargs):
+                 character: Character, dungeon_instance: DungeonLayout,
+                 size_modifier: float, pos_modifier: tuple[int,int], **kwargs):
         super().__init__(**kwargs)
 
         self.kind: str = kind
@@ -31,9 +32,11 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.source: str = "./tokens/" + self.species + "token.png"
         self.shape: Ellipse | Rectangle | None = None  # token.shape (canvas object) initialized in each subclass
 
-        # size attribute comes from the superclass
+        # size and pos attributes comes from the superclass
+        self.pos_modifier: [tuple[float,float]] = pos_modifier
         self.size_modifier: float = size_modifier
-        self.size = self.size[0] * size_modifier, self.size[1] * size_modifier
+        self.size: [tuple[float,float]] = self.size[0] * size_modifier, self.size[1] * size_modifier
+        self.pos: [tuple[float, float]] = self.pos[0] + pos_modifier[0], self.pos[1] - pos_modifier[1]  # (x,y)
 
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:
@@ -74,7 +77,7 @@ class SceneryToken(SolidToken):
                  character: None, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
-        if self.kind == "wall":
+        if self.kind in ["wall", "light"]:
             canvas_context = self.dungeon.canvas.after
         else:
             canvas_context = self.dungeon.canvas

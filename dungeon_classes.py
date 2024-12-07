@@ -46,6 +46,11 @@ class DungeonLayout(GridLayout):
         self.darkness: Rectangle | None = None
 
     def _setup_torches_dict(self) -> None:
+        """
+        Sets up the DungeonLayout.torches_dict. Keys are wall positions, values are list of pos_modifiers of all
+        torches attached to that wall
+        :return: None
+        """
         wall_positions = self.scan_tiles(["wall"])
         wall_free_positions = self.scan_tiles(["wall"], exclude=True)
 
@@ -80,13 +85,6 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         if len(level_start) == 0:
-            dungeon._setup_torches_dict()
-
-            '''if dungeon.torches_dict is not None:
-                for position in dungeon.torches_dict.keys():
-                    if dungeon.get_tile(position).tokens["torches"] is None:
-                        dungeon.get_tile(position).tokens["torches"] = []
-                    dungeon.get_tile(position).place_item("light", "torch", character=None)'''
 
             '''Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.9,
                                                                         low_int=0.45,
@@ -170,6 +168,7 @@ class DungeonLayout(GridLayout):
                 dungeon.add_widget(tile)
 
         dungeon.match_blueprint()
+        dungeon.place_torches()
 
     def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """
@@ -181,11 +180,11 @@ class DungeonLayout(GridLayout):
         blueprint = Blueprint(y_axis, x_axis)
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
-        blueprint.place_equal_items(" ", 1)
+        blueprint.place_equal_items(" ", 5)
         blueprint.place_equal_items("#", 4)
-        blueprint.place_equal_items("c", 3)
+        #blueprint.place_equal_items("c", 3)
         #blueprint.place_equal_items("x", 2)
-        blueprint.place_equal_items("N", 4)
+        #blueprint.place_equal_items("N", 4)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -258,6 +257,34 @@ class DungeonLayout(GridLayout):
 
         return Rectangle(texture=texture, pos=self.pos, size=self.size)
 
+    def _add_tile_position_to_queue(self, tile_position: tuple[int,int]) -> None:
+        """
+        Adds Tile_position to level_start list. Positions are removed by Tile.update_tokens_pos() after updating
+        Token.pos according to Tile.pos. When last position is removed, means that all Tokens are positioned in their
+        respective pos and game can start.
+        :param tile_position: position to add to the queue
+        :return: None
+        """
+        if tile_position != (self.rows - 1, 0):  # position lower left corner does not need to be repositioned
+            self.level_start.append(tile_position)  # Works with Tile.update_tokens_pos()
+
+    def place_torches(self) -> None:
+        """
+        Sets up DungeonLayout.torches_dict and places torches depending on wall positions (torches are always
+        attached to walls)
+        :return: None
+        """
+        self._setup_torches_dict()
+
+        if self.torches_dict is not None:
+            for tile_position in self.torches_dict.keys():
+                for pos_modifier in self.torches_dict[tile_position]:
+                    print(tile_position)
+                    print(pos_modifier)
+                    print()
+                    self._add_tile_position_to_queue(tile_position)
+                    self.get_tile(tile_position).place_item("light", "torch", character=None,
+                                                          size_modifier=0.5, pos_modifier=pos_modifier)
 
     def match_blueprint(self) -> None:
         """
@@ -417,8 +444,7 @@ class DungeonLayout(GridLayout):
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
-                if tile_position != (self.rows - 1 , 0): # position lower left corner does not need to be repositioned
-                    self.level_start.append(tile.position) # Works with Tile.update_tokens_pos()
+                self._add_tile_position_to_queue(tile_position)
                 tile.place_item(token_kind, token_species, character)
 
     def get_tile(self, position: tuple [int:int]) -> Tile:

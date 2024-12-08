@@ -58,7 +58,7 @@ class Tile(Button):
         """
         Returns from Tile.tokens the Token of the specified kind
         :param token_kind: Token.kind of the Token
-        :return: None
+        :return: Token of the specified kind
         """
         return next((token for token in self.tokens[token_kind] if token.kind == token_kind))
 
@@ -108,8 +108,8 @@ class Tile(Button):
         )
 
     def place_item(self, token_kind: str, token_species: str,
-                   character: Character | None,
-                   size_modifier: float = 1.0, pos_modifier: tuple[float,float] = (0.0, 0.0)) -> None:
+                   character: Character | None,  size_modifier: float = 1.0,
+                   pos_modifier: tuple[float,float] = (0.0, 0.0)) -> None:
         """
         Places a Token on the Tile
         :param token_kind: Token.kind of the token to be placed
@@ -122,7 +122,6 @@ class Tile(Button):
         :return: None
         """
         pos_modifier = self.width * pos_modifier[1], self.height * pos_modifier[0]  # order Tile.pos is (x,y)
-
         token_args = {
             "kind": token_kind,
             "species": token_species,
@@ -171,7 +170,6 @@ class Tile(Button):
         :param active_player: current active Player of the game
         :return: True if the Tile has to be activated, False otherwise
         """
-        #tuple(item for item in active_player.blocked_by if item != "monster"),
         if active_player.using_dynamite:
             return self.dungeon.check_if_connexion(active_player.token.position,
                                                    self.position,

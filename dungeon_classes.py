@@ -103,14 +103,15 @@ class DungeonLayout(GridLayout):
         """
         if len(level_start) == 0:
             dungeon._rotate_torches()
+            torches_pos = [token.pos for tile in dungeon.children for token in tile.tokens["light"]]
 
-            '''Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.9,
+            Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.9,
                                                                         low_int=0.45,
                                                                         alpha_intensity = 150,
-                                                                        bright_positions = [(2, 3), (3, 3), (4, 5), (0, 0), (3, 2)],
+                                                                        bright_pos = torches_pos,
                                                                         bright_radius = 1.0,
                                                                         bright_intensity = 1.0),
-                                                                        1 / 15)'''
+                                                                        1 / 15)
             dungeon.game.dungeon = dungeon
 
     @staticmethod
@@ -199,7 +200,7 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 0)
-        blueprint.place_equal_items("#", 1)
+        blueprint.place_equal_items("#", 6)
         #blueprint.place_equal_items("c", 3)
         #blueprint.place_equal_items("x", 2)
         #blueprint.place_equal_items("N", 4)
@@ -213,7 +214,7 @@ class DungeonLayout(GridLayout):
         return blueprint
 
     def darkness_flicker(self, low_int: float, high_int: float, alpha_intensity: int,
-                         bright_positions: list[tuple[int, int]] | None = None,
+                         bright_pos: list[tuple[int, int]] | None = None,
                          bright_radius: float = 1.0, bright_intensity: float = 1.0) -> None:
         """
         Wrapper function that generates a darkness with flickering brightness points. Needs to be scheduled
@@ -221,7 +222,7 @@ class DungeonLayout(GridLayout):
         :param low_int: lowest possible intensity of the brightness flickering
         :param high_int: highest possible intensity of the brightness flickering
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
-        :param bright_positions: centers of the illuminated areas
+        :param bright_pos: centers of the illuminated areas in pos (tuple[float:float])
         :param bright_radius: radius in Tile.width of the illuminated areas, default 1.0
         :param bright_intensity: modulator of single light intensity. Must range from 0 (light off)
         to 1 (full intensity). Default 1
@@ -234,18 +235,18 @@ class DungeonLayout(GridLayout):
 
         with self.canvas.after:
             self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity,
-                                                          bright_positions=bright_positions,
+                                                          bright_pos=bright_pos,
                                                           bright_radius=bright_radius,
                                                           bright_intensity=bright_intensity,
                                                           gradient=gradient)
 
-    def _generate_darkness_layer(self, alpha_intensity: int, bright_positions: list[tuple[int, int]] | None = None,
+    def _generate_darkness_layer(self, alpha_intensity: int, bright_pos: list[tuple[int, int]] | None = None,
                                  bright_radius: float = 1.0, bright_intensity: float = 1.0,
                                  gradient: float = 1.0) -> Rectangle:
         """
         Generates a darkness layer with optional illuminated areas
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
-        :param bright_positions: centers of the illuminated areas
+        :param bright_pos: centers of the illuminated areas in pos (tuple[float:float])
         :param bright_radius: radius in Tile.width of the illuminated areas, default 1.0
         :param bright_intensity: modulator of single light intensity. Must range from 0 (light off)
         to 1 (full intensity). Default 1
@@ -257,8 +258,7 @@ class DungeonLayout(GridLayout):
         data = zeros((texture.height, texture.width, 4), dtype=uint8)
         data[:, :, 3] = alpha_intensity
 
-        if bright_positions is not None:
-            bright_pos: list = [self.get_tile(position).pos for position in bright_positions]
+        if bright_pos is not None:
             bright_radius = self.get_random_tile().width * bright_radius
             max_distance = bright_radius ** 2
             y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels

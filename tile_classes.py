@@ -19,17 +19,18 @@ class Tile(Button):
         self.col: int = col
         self.position: tuple[int,int] = row, col
         self.kind: str = kind
-        self.tokens: dict [str:Token | None] = {
-            "player": None,
-            "monster": None,
-            "wall": None,
-            "pickable": None,
-            "treasure": None
+        self.tokens: dict [str:list[Token]] = {
+            "player": [],
+            "monster": [],
+            "wall": [],
+            "pickable": [],
+            "treasure": [],
+            "light": []
         }
         self.dungeon: DungeonLayout = dungeon_instance
 
         self.first_click_time: float | None = None
-        self.double_click_interval: float = 0.5
+        self.double_click_interval: float = 0.5  # max time in seconds between double clicks
 
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:
@@ -40,10 +41,10 @@ class Tile(Button):
         :param tile_pos: new pos value of the Tile
         :return: None
         """
-        for token in tile.tokens.values():
-            if token is not None:
-                token.pos = tile_pos
-                tile.dungeon.level_start.remove(token.position)
+        for token_list in tile.tokens.values():
+            for token in token_list:
+                token.pos = tile.pos[0] + token.pos_modifier[0], tile.pos[1] - token.pos_modifier[1]  # (x,y)
+                tile.dungeon.positions_to_update.remove(token.position)
 
     def set_token(self, token:Token) -> None:
         """
@@ -51,15 +52,15 @@ class Tile(Button):
         :param token: Token to set
         :return: None
         """
-        self.tokens[token.kind] = token
+        self.tokens[token.kind].append(token)
 
     def get_token(self, token_kind: str) -> Token:
         """
         Returns from Tile.tokens the Token of the specified kind
         :param token_kind: Token.kind of the Token
-        :return: None
+        :return: Token of the specified kind
         """
-        return self.tokens[token_kind]
+        return next((token for token in self.tokens[token_kind] if token.kind == token_kind))
 
     def remove_token(self, token:Token) -> None:
         """
@@ -67,15 +68,15 @@ class Tile(Button):
         :param token: Token to remove
         :return: None
         """
-        self.tokens[token.kind] = None
+        self.tokens[token.kind].remove(token)
 
     def delete_all_tokens(self) -> None:
         """
         Clears the Tile of all its Tokens
         :return: None
         """
-        for token in self.tokens.values():
-            if token is not None:
+        for token_list in self.tokens.values():
+            for token in token_list:
                 token.delete_token(self)
 
     def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
@@ -87,11 +88,11 @@ class Tile(Button):
         """
         if token_kind is None:
             if token_species is not None:
-                raise ValueError("token_kind cannot be None and token_species not None")
-            return any(token is not None for token in self.tokens.values())
+                raise ValueError("token_kind cannot be None if token_species not None")
+            return any(len(token_list) > 0 for token_list in self.tokens.values())
 
-        return (self.tokens[token_kind] is not None and
-                (token_species is None or self.tokens[token_kind].species == token_species))
+        return (len (self.tokens[token_kind]) > 0 and
+                (token_species is None or any(token.species == token_species for token in self.tokens[token_kind])))
 
     def is_nearby(self, position: tuple[int,int]) -> bool:
         """
@@ -106,22 +107,30 @@ class Tile(Button):
             for dx, dy in directions
         )
 
-    def place_item(self, token_kind: str, token_species: str, character: Character | None) -> None:
+    def place_item(self, token_kind: str, token_species: str,
+                   character: Character | None,  size_modifier: float = 1.0,
+                   pos_modifier: tuple[float,float] = (0.0, 0.0)) -> None:
         """
         Places a Token on the Tile
         :param token_kind: Token.kind of the token to be placed
         :param token_species: Token.species of the token to be placed
         :param character: character (if any) associated with the token
+        :param size_modifier: float indicating Token.shape.size scaling factor
+        :param pos_modifier: tuple [float,float] indicating how many pixels (x, y) the Token.pos is shifted regarding
+        Tile.pos (lower-left corner)
+        if relation to Tile lower left corner (corresponding to default value (0.0, 0.0))
         :return: None
         """
         token_args = {
-            'kind': token_kind,
-            'species': token_species,
-            'position': self.position,
-            'character': character,
-            'dungeon_instance': self.dungeon,
-            'pos': self.pos,
-            'size': self.size,
+            "kind": token_kind,
+            "species": token_species,
+            "position": self.position,
+            "character": character,
+            "dungeon_instance": self.dungeon,
+            "size_modifier": size_modifier,
+            "pos_modifier": pos_modifier,
+            "pos": self.pos,
+            "size": self.size,
         }
 
         if token_kind == "player":
@@ -160,13 +169,11 @@ class Tile(Button):
         :param active_player: current active Player of the game
         :return: True if the Tile has to be activated, False otherwise
         """
-        #tuple(item for item in active_player.blocked_by if item != "monster"),
         if active_player.using_dynamite:
             return self.dungeon.check_if_connexion(active_player.token.position,
                                                    self.position,
                                                    active_player.blocked_by,
-                                                   active_player.stats.shooting_range,
-                                                   include_last=True)
+                                                   active_player.stats.shooting_range)
 
         elif self.is_nearby(active_player.token.position):
             return active_player.can_fight(self.get_token("monster").species)
@@ -183,8 +190,7 @@ class Tile(Button):
             return (self.dungeon.check_if_connexion(active_player.token.position,
                                             self.position,
                                             active_player.blocked_by,
-                                            active_player.stats.shooting_range,
-                                            include_last=True) and
+                                            active_player.stats.shooting_range) and
             not self.has_token("wall","rock"))
 
         elif self.is_nearby(active_player.token.position) and not active_player.is_hidden:

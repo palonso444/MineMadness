@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC, ABCMeta
 
 from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
+from kivy.graphics.context_instructions import PushMatrix, PopMatrix, Rotate
 from kivy.animation import Animation
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ListProperty
@@ -20,7 +21,8 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
     Base abstract class defining all Tokens that stay on the board for extended periods of time
     """
     def __init__(self, kind: str, species:str, position: tuple[int,int],
-                 character: Character, dungeon_instance: DungeonLayout, **kwargs):
+                 character: Character, dungeon_instance: DungeonLayout,
+                 size_modifier: float, pos_modifier: tuple[int,int], **kwargs):
         super().__init__(**kwargs)
 
         self.kind: str = kind
@@ -29,7 +31,18 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.character: Character = character
         self.dungeon: DungeonLayout = dungeon_instance
         self.source: str = "./tokens/" + self.species + "token.png"
+
+        if kind in ["wall", "light"]:
+            self.canvas_context = self.dungeon.canvas.after
+        else:
+            self.canvas_context = self.dungeon.canvas
         self.shape: Ellipse | Rectangle | None = None  # token.shape (canvas object) initialized in each subclass
+
+        # size and pos attributes comes from the superclass
+        self.pos_modifier: [tuple[float,float]] = pos_modifier
+        self.size_modifier: float = size_modifier
+        self.size: [tuple[float,float]] = self.size[0] * size_modifier, self.size[1] * size_modifier
+        self.pos: [tuple[float, float]] = self.pos[0] + pos_modifier[0], self.pos[1] - pos_modifier[1]  # (x,y)
 
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:
@@ -44,9 +57,9 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
     def get_current_tile(self) -> Tile:
         """
         Returns the Tile corresponding to the current position of the Token
-        :return:
+        :return: current Tile where Token is located
         """
-        return self.dungeon.get_tile(self.position)   # this won't work for SceneryTokens! position attribute for Tokens
+        return self.dungeon.get_tile(self.position)  # this won't work for SceneryTokens! position attribute for Tokens
 
     def delete_token(self, tile: Tile) -> None:
         """
@@ -55,10 +68,12 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         tile.remove_token(self)
-        if self.shape in self.dungeon.canvas.children:
+        self.canvas_context.remove(self.shape)
+        self.shape = None
+        '''if self.shape in self.dungeon.canvas.children:
             self.dungeon.canvas.remove(self.shape)
         elif self.shape in self.dungeon.canvas.after.children:  # walls are in canvas after
-            self.dungeon.canvas.after.remove(self.shape)
+            self.dungeon.canvas.after.remove(self.shape)'''
         if self.character is not None:
             self.character.token = None
 
@@ -70,16 +85,27 @@ class SceneryToken(SolidToken):
                  character: None, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
 
-        if self.kind == "wall":
-            canvas_context = self.dungeon.canvas.after
-        else:
-            canvas_context = self.dungeon.canvas
-
-        with canvas_context:
+        with self.canvas_context:
             self.color = Color(1, 1, 1, 1)
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update_pos)
+
+    def rotate_token(self, degrees: int, axis: tuple[float,float]) -> None:
+        """
+        Rotates the Token.shape a number of degrees
+        :param degrees: rotation angle (counterclockwise)
+        :param axis: axis of the rotation. Must be a pos (tuple[float,float]), not a position (tuple[int,int])
+        :return: None
+        """
+        self.canvas_context.remove(self.shape)
+        self.shape = None
+
+        with self.canvas_context:
+            PushMatrix()
+            Rotate(angle=degrees, origin=axis)
+            self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
+            PopMatrix()
 
     def show_digging(self) -> None:
         """
@@ -111,7 +137,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         Displays CharacterToken.shape on the canvas of the DungeonLayout
         :return: None
         """
-        with self.dungeon.canvas:
+        with self.canvas_context:
             if self.character.is_hidden:
                 self.color = Color(1, 1, 1, self.color.a)
             else:
@@ -125,7 +151,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         Resets the display of CharacterToken.shape it ends up in the upper layer of the canvas
         :return: None
         """
-        self.dungeon.canvas.remove(self.shape)
+        self.canvas_context.remove(self.shape)
         self._display_in_canvas()
 
     def unselect_token(self) -> None:
@@ -314,7 +340,7 @@ class PlayerToken(CharacterToken):
         bar_length = token.size[0] * 0.8  # total horizontal length of the bar
         bar_thickness = token.size[1] * 0.1
 
-        with token.dungeon.canvas:
+        with token.canvas_context:
             token.bar_color = Color(0, 1, 0, 1)  # green
             token.green_bar = Rectangle(
                 pos=(bar_pos_x, bar_pos_y),
@@ -359,8 +385,8 @@ class PlayerToken(CharacterToken):
         Removes the health bar
         :return: None
         """
-        self.dungeon.canvas.remove(self.green_bar)
-        self.dungeon.canvas.remove(self.red_bar)
+        self.canvas_context.remove(self.green_bar)
+        self.canvas_context.remove(self.red_bar)
         self.green_bar = None
         self.red_bar = None
 
@@ -369,7 +395,7 @@ class PlayerToken(CharacterToken):
         Displays the selection circle around the selected CharacterToken
         :return: None
         """
-        with self.dungeon.canvas:
+        with self.canvas_context:
             self.circle_color = Color(1, 1, 0, 1)
             self.circle = Line(
                 circle=(
@@ -410,7 +436,7 @@ class PlayerToken(CharacterToken):
         Removes the selection circle
         :return: None
         """
-        self.dungeon.canvas.remove(self.circle)
+        self.canvas_context.remove(self.circle)
         self.circle = None
         self.circle_color = None
 

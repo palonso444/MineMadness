@@ -15,7 +15,7 @@ class Monster(Character, ABC):
         self.kind: str = "monster"
         self.blocked_by: list[str] = ["wall", "player"]
         self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
-        self.ignores: list[str] = ["pickable"]  # token_kind or token_species, not both
+        self.ignores: list[str] = ["pickable", "light"]  # token_kind or token_species, not both
 
         # exclusive of Monster class
         self.chases: str = "player"
@@ -97,7 +97,7 @@ class Monster(Character, ABC):
         :param opponent_tile: Tile where opponent is located
         :return: None
         """
-        opponent = opponent_tile.tokens["player"].character
+        opponent = opponent_tile.get_token("player").character
         opponent = self.fight_opponent(opponent)
         opponent.token.bar_length = (
                 opponent.stats.health / opponent.stats.natural_health

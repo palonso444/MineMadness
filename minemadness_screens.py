@@ -72,7 +72,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         App.get_running_app().save_game()
         App.get_running_app().level = game.level
 
-        game.initialize_switches() # this starts the game
+        game.initialize_switches()  # this starts the game
 
     def initialize_switches(self) -> None:
         self.turn = 0  # even for players, odd for monsters. Player starts

@@ -22,7 +22,7 @@ class DungeonStats:
 
     @property
     def torch_number(self) -> int:
-        return 8
+        return 2
 
     def level_progression(self) -> dict[str:float]:
         """

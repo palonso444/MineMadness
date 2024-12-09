@@ -115,13 +115,12 @@ class Tile(Button):
         :param token_kind: Token.kind of the token to be placed
         :param token_species: Token.species of the token to be placed
         :param character: character (if any) associated with the token
-        :param size_modifier: float indicating Token size modification regarding Tile.size
-        :param pos_modifier: tuple indicating how many (Tile.height, Tile.width) times the Token.pos
-        is shifted regarding Tile.pos (lower-left corner)
+        :param size_modifier: float indicating Token.shape.size scaling factor
+        :param pos_modifier: tuple indicating how many pixels (x, y) the Token.pos is shifted regarding
+        Tile.pos (lower-left corner)
         if relation to Tile lower left corner (corresponding to default value (0.0, 0.0))
         :return: None
         """
-        pos_modifier = self.width * pos_modifier[1], self.height * pos_modifier[0]  # order Tile.pos is (x,y)
         token_args = {
             "kind": token_kind,
             "species": token_species,

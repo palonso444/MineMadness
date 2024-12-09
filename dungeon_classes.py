@@ -64,8 +64,7 @@ class DungeonLayout(GridLayout):
             for _ in range(self.stats.torch_number):
                 random_key = choice(list(all_torches_dict.keys()))
                 random_value = choice(all_torches_dict[random_key])
-                # calculate here pos_modifider
-                torches_dict[random_key].append(self.get_differential_position(random_key, random_value))
+                torches_dict[random_key].append(self.get_relative_position(random_key, random_value))
                 all_torches_dict[random_key].remove(random_value)
 
                 if len(all_torches_dict[random_key]) == 0:
@@ -75,41 +74,26 @@ class DungeonLayout(GridLayout):
 
             self.torches_dict = {key: value for key, value in torches_dict.items() if len(value) > 0}
 
-    def _rotate_torches(self) -> None:
-        """
-        Rotates the torches depending on which side of the wall they are located
-        :return: None
-        """
-        for tile in self.children:
-            for token in tile.tokens["light"]:
-                axis = token.shape.pos[0] + token.shape.size[0] / 2, token.shape.pos[1]
-                if token.pos_modifier[0] == tile.width * 0.75:
-                    token.rotate_token(degrees=90, axis=axis)
-                elif token.pos_modifier[0] > 0 > token.pos_modifier[1]:  # x_axis, y_axis
-                    token.rotate_token(degrees=180, axis=axis)
-                elif token.pos_modifier[1] == 0:
-                    pass
-                elif token.pos_modifier[0] < 0:
-                    token.rotate_token(degrees=270, axis=axis)
-
     @staticmethod
     def on_level_start(dungeon: DungeonLayout, level_start: list) -> None:
         """
         This function assigns DungeonLayout to the dungeon attribute of MineMadnessGame and starts the level.
-        This happens when all Tokens are positioned in their correct pos.
+        Triggered when all Tokens are positioned in their correct pos (level_start list is empty)
         :param dungeon: dungeon
-        :param level_start: list of token positions that need to be positioned. When empty, lever starts.
+        :param level_start: list of token positions that need to be positioned. When empty, lever starts
         :return: None
         """
         if len(level_start) == 0:
             dungeon._rotate_torches()
-            torches_pos = [token.pos for tile in dungeon.children for token in tile.tokens["light"]]
+            torches_centers = [(token.shape.pos[0] + token.shape.size[0] / 2, token.shape.pos[1] + token.shape.size[1] / 2)
+                               for tile in dungeon.children for token in tile.tokens["light"]]
+            bright_radius = dungeon.get_random_tile().width * 2.5
 
-            Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.9,
+            Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.8,
                                                                         low_int=0.45,
                                                                         alpha_intensity = 150,
-                                                                        bright_pos = torches_pos,
-                                                                        bright_radius = 1.0,
+                                                                        bright_pos = torches_centers,
+                                                                        bright_radius = bright_radius,
                                                                         bright_intensity = 1.0),
                                                                         1 / 15)
             dungeon.game.dungeon = dungeon
@@ -125,12 +109,12 @@ class DungeonLayout(GridLayout):
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
     @staticmethod
-    def get_differential_position(position: tuple[int:int], target_position: tuple[int:int]) -> tuple[int, int]:
+    def get_relative_position(position: tuple[int:int], target_position: tuple[int:int]) -> tuple[int, int]:
         """
-        Returns the differential position of between the position and the target_position
+        Returns the relative position of between the position and the target_position
         :param position: position of reference
-        :param target_position: position whose differential position must be calculated
-        :return: differential position: (-1, 0) -> up, (1, 0) -> down, (0, -1) -> left, (0, 1) -> right
+        :param target_position: position whose relative position must be calculated
+        :return: relative position. Examples: (-1, 0) -> up, (1, 0) -> down, (0, -1) -> left, (0, 1) -> right
         """
         return target_position[0] - position[0], target_position[1] - position[1]
 
@@ -241,13 +225,13 @@ class DungeonLayout(GridLayout):
                                                           gradient=gradient)
 
     def _generate_darkness_layer(self, alpha_intensity: int, bright_pos: list[tuple[int, int]] | None = None,
-                                 bright_radius: float = 1.0, bright_intensity: float = 1.0,
+                                 bright_radius: int | float | None = None, bright_intensity: float = 1.0,
                                  gradient: float = 1.0) -> Rectangle:
         """
         Generates a darkness layer with optional illuminated areas
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
         :param bright_pos: centers of the illuminated areas in pos (tuple[float:float])
-        :param bright_radius: radius in Tile.width of the illuminated areas, default 1.0
+        :param bright_radius: radius in pixels of the illuminated area, default Tile.width
         :param bright_intensity: modulator of single light intensity. Must range from 0 (light off)
         to 1 (full intensity). Default 1
         :param gradient: steepness of brightness decrease with increase of distance form the center. Must range from
@@ -259,7 +243,8 @@ class DungeonLayout(GridLayout):
         data[:, :, 3] = alpha_intensity
 
         if bright_pos is not None:
-            bright_radius = self.get_random_tile().width * bright_radius
+            if bright_radius is None:
+                bright_radius = self.get_random_tile().width
             max_distance = bright_radius ** 2
             y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
 
@@ -294,22 +279,50 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         self._setup_torches_dict()
+        tile_side = self.get_random_tile().width
+        torch_side = tile_side * size_modifier
+        pos_modifier: tuple[float,float] | None = None
 
         if self.torches_dict is not None:
             for tile_position in self.torches_dict.keys():
-                for pos_modifier in self.torches_dict[tile_position]:
-                    if pos_modifier[0] < 0:  # y_axis
-                        pos_modifier = (-1, 0.25)
-                    elif pos_modifier[0] > 0:  # y_axis
-                        pos_modifier = (0, 0.25)
-                    elif pos_modifier[1] > 0:  # x_axis
-                        pos_modifier = (-0.5, 0.75)
-                    elif pos_modifier[1] < 0:  # x_axis
-                        pos_modifier = (-0.5, -0.25)
+                for relative_position in self.torches_dict[tile_position]:
+                    match relative_position:  # relative positions (y, x), pos_modifiers (x, y)
+                        case (-1, 0):
+                            pos_modifier = (tile_side / 2 - torch_side / 2, -tile_side + torch_side)  # upper
+                        case (1, 0):
+                            pos_modifier = (tile_side / 2 - torch_side / 2, 0)  # lower
+                        case (0, 1):
+                            pos_modifier = (tile_side - torch_side, -tile_side/ 2 + torch_side / 2)   # right
+                        case (0, -1):
+                            pos_modifier = (0 ,-tile_side/ 2 + torch_side / 2)  # left
 
                     self._add_tile_position_to_queue(tile_position)
                     self.get_tile(tile_position).place_item("light", "torch", character=None,
                                                             size_modifier=size_modifier, pos_modifier=pos_modifier)
+
+    def _rotate_torches(self) -> None:
+        """
+        Rotates the torches depending on which side of the wall they are located. Must be called after updating
+        torches.shape.pos as it needs the final Token.shape position to be established
+        :return: None
+        """
+        for tile in self.children:
+            for token in tile.tokens["light"]:
+                # axis of rotation is center of each torch so pos does not change
+                axis = token.shape.pos[0] + token.shape.size[0] / 2, token.shape.pos[1] + token.shape.size[1] / 2
+
+                # pos_modifiers (x, y)
+                if token.pos_modifier == (tile.width / 2 - token.size[0] / 2, -tile.width + token.size[0]):  # upper
+                    token.rotate_token(degrees=180, axis=axis)
+
+                elif token.pos_modifier == (tile.width / 2 - token.size[0] / 2, 0):  # lower
+                    pass
+
+                elif token.pos_modifier == (tile.width - token.size[0], -tile.width/ 2 + token.size[0] / 2):   # right
+                    token.rotate_token(degrees=90, axis=axis)
+
+                elif token.pos_modifier == (0 ,-tile.width/ 2 + token.size[0] / 2):  # left
+                    token.rotate_token(degrees=270, axis=axis)
 
     def match_blueprint(self) -> None:
         """

@@ -44,7 +44,7 @@ class Tile(Button):
         for token_list in tile.tokens.values():
             for token in token_list:
                 token.pos = tile.pos[0] + token.pos_modifier[0], tile.pos[1] - token.pos_modifier[1]  # (x,y)
-                tile.dungeon.level_start.remove(token.position)
+                tile.dungeon.positions_to_update.remove(token.position)
 
     def set_token(self, token:Token) -> None:
         """
@@ -116,7 +116,7 @@ class Tile(Button):
         :param token_species: Token.species of the token to be placed
         :param character: character (if any) associated with the token
         :param size_modifier: float indicating Token.shape.size scaling factor
-        :param pos_modifier: tuple indicating how many pixels (x, y) the Token.pos is shifted regarding
+        :param pos_modifier: tuple [float,float] indicating how many pixels (x, y) the Token.pos is shifted regarding
         Tile.pos (lower-left corner)
         if relation to Tile lower left corner (corresponding to default value (0.0, 0.0))
         :return: None

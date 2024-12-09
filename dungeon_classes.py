@@ -23,7 +23,7 @@ class DungeonLayout(GridLayout):
     features are determined by DungeonLayout.DungeonStats
     """
 
-    level_start = ListProperty([])
+    positions_to_update = ListProperty([])
 
     def __init__(self, game: MineMadnessGame,
                  blueprint: Blueprint | None = None,
@@ -75,15 +75,15 @@ class DungeonLayout(GridLayout):
             self.torches_dict = {key: value for key, value in torches_dict.items() if len(value) > 0}
 
     @staticmethod
-    def on_level_start(dungeon: DungeonLayout, level_start: list) -> None:
+    def on_positions_to_update(dungeon: DungeonLayout, positions_to_update: list) -> None:
         """
         This function assigns DungeonLayout to the dungeon attribute of MineMadnessGame and starts the level.
         Triggered when all Tokens are positioned in their correct pos (level_start list is empty)
         :param dungeon: dungeon
-        :param level_start: list of token positions that need to be positioned. When empty, lever starts
+        :param positions_to_update: list of token positions that need to be positioned. When empty, lever starts
         :return: None
         """
-        if len(level_start) == 0:
+        if len(positions_to_update) == 0:
             dungeon._rotate_torches()
             torches_centers = [(token.shape.pos[0] + token.shape.size[0] / 2, token.shape.pos[1] + token.shape.size[1] / 2)
                                for tile in dungeon.children for token in tile.tokens["light"]]
@@ -171,7 +171,7 @@ class DungeonLayout(GridLayout):
                 dungeon.add_widget(tile)
 
         dungeon.match_blueprint()
-        dungeon.place_torches()
+        dungeon.place_torches(size_modifier=0.5)
 
     def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """
@@ -225,7 +225,7 @@ class DungeonLayout(GridLayout):
                                                           gradient=gradient)
 
     def _generate_darkness_layer(self, alpha_intensity: int, bright_pos: list[tuple[int, int]] | None = None,
-                                 bright_radius: int | float | None = None, bright_intensity: float = 1.0,
+                                 bright_radius: float | None = None, bright_intensity: float = 1.0,
                                  gradient: float = 1.0) -> Rectangle:
         """
         Generates a darkness layer with optional illuminated areas
@@ -261,18 +261,18 @@ class DungeonLayout(GridLayout):
 
         return Rectangle(texture=texture, pos=self.pos, size=self.size)
 
-    def _add_tile_position_to_queue(self, tile_position: tuple[int, int]) -> None:
+    def _add_to_positions_to_update(self, tile_position: tuple[int, int]) -> None:
         """
-        Adds Tile_position to level_start list. Positions are removed by Tile.update_tokens_pos() after updating
+        Adds Tile_position to positions_to_update list. Positions are removed by Tile.update_tokens_pos() after updating
         Token.pos according to Tile.pos. When last position is removed, means that all Tokens are positioned in their
         respective pos and game can start.
         :param tile_position: position to add to the queue
         :return: None
         """
         if tile_position != (self.rows - 1, 0):  # position lower left corner does not need to be repositioned
-            self.level_start.append(tile_position)  # Works with Tile.update_tokens_pos()
+            self.positions_to_update.append(tile_position)  # Works with Tile.update_tokens_pos()
 
-    def place_torches(self, size_modifier: float = 0.5) -> None:
+    def place_torches(self, size_modifier: float) -> None:
         """
         Sets up DungeonLayout.torches_dict and places torches depending on wall positions (torches are always
         attached to walls)
@@ -288,15 +288,19 @@ class DungeonLayout(GridLayout):
                 for relative_position in self.torches_dict[tile_position]:
                     match relative_position:  # relative positions (y, x), pos_modifiers (x, y)
                         case (-1, 0):
-                            pos_modifier = (tile_side / 2 - torch_side / 2, -tile_side + torch_side)  # upper
+                            pos_modifier = (tile_side / 2 - torch_side / 2,
+                                            -tile_side + torch_side)  # upper
                         case (1, 0):
-                            pos_modifier = (tile_side / 2 - torch_side / 2, 0)  # lower
+                            pos_modifier = (tile_side / 2 - torch_side / 2,
+                                            0)  # lower
                         case (0, 1):
-                            pos_modifier = (tile_side - torch_side, -tile_side/ 2 + torch_side / 2)   # right
+                            pos_modifier = (tile_side - torch_side,
+                                            -tile_side/ 2 + torch_side / 2)  # right
                         case (0, -1):
-                            pos_modifier = (0 ,-tile_side/ 2 + torch_side / 2)  # left
+                            pos_modifier = (0,
+                                            -tile_side/ 2 + torch_side / 2)  # left
 
-                    self._add_tile_position_to_queue(tile_position)
+                    self._add_to_positions_to_update(tile_position)
                     self.get_tile(tile_position).place_item("light", "torch", character=None,
                                                             size_modifier=size_modifier, pos_modifier=pos_modifier)
 
@@ -309,19 +313,24 @@ class DungeonLayout(GridLayout):
         for tile in self.children:
             for token in tile.tokens["light"]:
                 # axis of rotation is center of each torch so pos does not change
-                axis = token.shape.pos[0] + token.shape.size[0] / 2, token.shape.pos[1] + token.shape.size[1] / 2
+                axis = (token.shape.pos[0] + token.shape.size[0] / 2,
+                        token.shape.pos[1] + token.shape.size[1] / 2)
 
                 # pos_modifiers (x, y)
-                if token.pos_modifier == (tile.width / 2 - token.size[0] / 2, -tile.width + token.size[0]):  # upper
+                if token.pos_modifier == (tile.width / 2 - token.size[0] / 2,
+                                          -tile.width + token.size[0]):  # upper
                     token.rotate_token(degrees=180, axis=axis)
 
-                elif token.pos_modifier == (tile.width / 2 - token.size[0] / 2, 0):  # lower
+                elif token.pos_modifier == (tile.width / 2 - token.size[0] / 2,
+                                            0):  # lower
                     pass
 
-                elif token.pos_modifier == (tile.width - token.size[0], -tile.width/ 2 + token.size[0] / 2):   # right
+                elif token.pos_modifier == (tile.width - token.size[0],
+                                            -tile.width/ 2 + token.size[0] / 2):   # right
                     token.rotate_token(degrees=90, axis=axis)
 
-                elif token.pos_modifier == (0 ,-tile.width/ 2 + token.size[0] / 2):  # left
+                elif token.pos_modifier == (0,
+                                            -tile.width/ 2 + token.size[0] / 2):  # left
                     token.rotate_token(degrees=270, axis=axis)
 
     def match_blueprint(self) -> None:
@@ -482,7 +491,7 @@ class DungeonLayout(GridLayout):
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
-                self._add_tile_position_to_queue(tile_position)
+                self._add_to_positions_to_update(tile_position)
                 tile.place_item(token_kind, token_species, character)
 
     def get_tile(self, position: tuple[int:int]) -> Tile:

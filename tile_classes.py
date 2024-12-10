@@ -257,8 +257,12 @@ class Tile(Button):
                 monster_token.slide(path, on_complete=monster_token.on_dodge_completed)
             else:
                 monster_token.character.kill_character(self)
+
+        has_light: bool = self.has_token("light")
         self.delete_all_tokens()
-        self.dungeon.update_torches_centers()
+        if has_light:  # no need to check all dungeon if tile has no torch
+            self.dungeon.update_torches_centers()
+
         self.place_item("wall", "rock", None)
         self.show_explosion()
 

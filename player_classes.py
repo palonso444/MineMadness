@@ -311,9 +311,10 @@ class Player(Character, ABC, EventDispatcher):
         wall_tile.get_token("wall").show_digging()
         wall_tile.get_token("wall").delete_token(wall_tile)
 
-        while len(wall_tile.tokens["light"]) > 0:
-            wall_tile.get_token("light").delete_token(wall_tile)
-        self.get_dungeon().update_torches_centers()
+        if wall_tile.has_token("light"):
+            while len(wall_tile.tokens["light"]) > 0:
+                wall_tile.get_token("light").delete_token(wall_tile)
+            self.get_dungeon().update_torches_centers()
 
     def fight_on_tile(self, opponent_tile) -> None:
         opponent = opponent_tile.get_token("monster").character

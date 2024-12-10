@@ -76,8 +76,8 @@ class Tile(Button):
         :return: None
         """
         for token_list in self.tokens.values():
-            for token in token_list:
-                token.delete_token(self)
+            while len(token_list) > 0:
+                token_list[0].delete_token(self)
 
     def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
         """
@@ -258,6 +258,7 @@ class Tile(Button):
             else:
                 monster_token.character.kill_character(self)
         self.delete_all_tokens()
+        self.dungeon.update_torches_centers()
         self.place_item("wall", "rock", None)
         self.show_explosion()
 

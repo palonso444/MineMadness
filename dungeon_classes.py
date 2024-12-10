@@ -24,6 +24,7 @@ class DungeonLayout(GridLayout):
     """
 
     positions_to_update = ListProperty([])
+    torches_centers = ListProperty([])
 
     def __init__(self, game: MineMadnessGame,
                  blueprint: Blueprint | None = None,
@@ -44,6 +45,7 @@ class DungeonLayout(GridLayout):
 
         self.torches_dict: dict[tuple:list[str]] | None = None
         self.darkness: Rectangle | None = None
+        self.flickering_lights: ClockEvent | None = None
 
     def _setup_torches_dict(self) -> None:
         """
@@ -85,18 +87,37 @@ class DungeonLayout(GridLayout):
         """
         if len(positions_to_update) == 0:
             dungeon._rotate_torches()
-            torches_centers = [(token.shape.pos[0] + token.shape.size[0] / 2, token.shape.pos[1] + token.shape.size[1] / 2)
-                               for tile in dungeon.children for token in tile.tokens["light"]]
-            bright_radius = dungeon.get_random_tile().width * 2.5
-
-            Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.8,
-                                                                        low_int=0.45,
-                                                                        alpha_intensity = 150,
-                                                                        bright_pos = torches_centers,
-                                                                        bright_radius = bright_radius,
-                                                                        bright_intensity = 1.0),
-                                                                        1 / 15)
+            dungeon.update_torches_centers()
             dungeon.game.dungeon = dungeon
+
+    def update_torches_centers(self) -> None:
+        """
+        Collects the centers of all existing torches and in the DungeonLayout.torches_centers property
+        :return: None
+        """
+        self.torches_centers = [
+            (token.shape.pos[0] + token.shape.size[0] / 2, token.shape.pos[1] + token.shape.size[1] / 2)
+            for tile in self.children for token in tile.tokens["light"]]
+
+    @staticmethod
+    def on_torches_centers(dungeon: DungeonLayout, torches_centers: list) -> None:
+        """
+        Callback triggered upon modification of DungeonLayout.torches_centers.
+        :param dungeon: DungeonLayout instance
+        :param torches_centers: list containing the center pos of all torches centers
+        :return: None
+        """
+        if dungeon.flickering_lights is not None:
+            dungeon.flickering_lights.cancel()
+
+        bright_radius = dungeon.get_random_tile().width * 2.5
+        dungeon.flickering_lights = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.8,
+                                                                                            low_int=0.45,
+                                                                                            alpha_intensity=150,
+                                                                                            bright_pos=torches_centers,
+                                                                                            bright_radius=bright_radius,
+                                                                                            bright_intensity=1.0),
+                                                                                            1 / 15)
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
@@ -184,7 +205,7 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 0)
-        blueprint.place_equal_items("#", 6)
+        blueprint.place_equal_items("{", 6)
         #blueprint.place_equal_items("c", 3)
         #blueprint.place_equal_items("x", 2)
         #blueprint.place_equal_items("N", 4)
@@ -276,6 +297,7 @@ class DungeonLayout(GridLayout):
         """
         Sets up DungeonLayout.torches_dict and places torches depending on wall positions (torches are always
         attached to walls)
+        :param size_modifier: modifier to apply to the original size of the torch (from 0 to 1, 1 being Tile.size)
         :return: None
         """
         self._setup_torches_dict()

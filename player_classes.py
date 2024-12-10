@@ -305,9 +305,15 @@ class Player(Character, ABC, EventDispatcher):
             if not isinstance(self, Hawkins):
                 self.stats.shovels -= 1
                 game.update_switch("shovels")
+
         self.stats.remaining_moves -= self.stats.digging_moves
+
         wall_tile.get_token("wall").show_digging()
         wall_tile.get_token("wall").delete_token(wall_tile)
+
+        while len(wall_tile.tokens["light"]) > 0:
+            wall_tile.get_token("light").delete_token(wall_tile)
+        self.get_dungeon().update_torches_centers()
 
     def fight_on_tile(self, opponent_tile) -> None:
         opponent = opponent_tile.get_token("monster").character
@@ -586,7 +592,7 @@ class Hawkins(Player):
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)
 
-        self.special_items: dict[str:int] | None = {"dynamite": 2}
+        self.special_items: dict[str:int] | None = {"dynamite": 12}  #2
         self.ability_display: str = "Use Dynamite"
         self.ability_active: bool = False
 

@@ -118,6 +118,10 @@ class MineMadnessApp(App):
         game_state["level"] = self.game.level
         game_state["game_mode_normal"] = self.game_mode_normal
         game_state["blueprint"] = self.game.dungeon.blueprint.to_dict()
+
+        # keys must be converted from tuple to str in order to be JSON encoded
+        game_state["torches_dict"] = {str(key): value for key,value in self.game.dungeon.torches_dict.items()}
+
         game_state["players_alive"] = {player.__class__.__name__: player.to_dict() for player in Player.data}
         game_state["players_dead"] = {player.__class__.__name__: player.to_dict() for player in Player.dead_data}
         return game_state
@@ -139,7 +143,13 @@ class MineMadnessApp(App):
         """
         with open(self.saved_game_file, "r") as f:
             data = load(f)
-        data = self._convert_digit_keys_to_int(data)
+
+        # torches dict keys are str and need to be converted to tuple
+        data["torches_dict"] = {(int(key[1]), int(key[4])): value
+                                for key, value in data["torches_dict"].items()}
+        #level_track are nested dict and keys are str which must be converted to int
+        data = self._convert_all_digit_keys_to_int(data)
+
         self.game_mode_normal = data["game_mode_normal"]
         self.game = MineMadnessGame(name="game_screen")
         self.game.level = data["level"]
@@ -151,10 +161,11 @@ class MineMadnessApp(App):
                                    for key in data["players_dead"].keys()]
         self.ongoing_game = True
         self._setup_dungeon_screen(DungeonLayout(game=self.game,
-                                       blueprint = Blueprint(layout=data["blueprint"]["layout"])))
+                                                 blueprint = Blueprint(layout=data["blueprint"]["layout"]),
+                                                 torches_dict = data["torches_dict"]))
 
 
-    def _convert_digit_keys_to_int(self, dictionary: dict) -> dict:
+    def _convert_all_digit_keys_to_int(self, dictionary: dict) -> dict:
         """
         Checks all keys of a dictionary (also nested) and converts them to int if they are str and digit
         :param dictionary: dictionary to convert
@@ -163,9 +174,10 @@ class MineMadnessApp(App):
         new_dict = dict()
         for key, value in dictionary.items():
             new_key = int(key) if isinstance(key, str) and key.isdigit() else key
-            new_dict[new_key] = self._convert_digit_keys_to_int(value) if isinstance(value, dict) else value
+            new_dict[new_key] = self._convert_all_digit_keys_to_int(value) if isinstance(value, dict) else value
 
         return new_dict
+
 
     @staticmethod
     def on_music_on(app, music_on):

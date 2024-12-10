@@ -28,6 +28,7 @@ class DungeonLayout(GridLayout):
 
     def __init__(self, game: MineMadnessGame,
                  blueprint: Blueprint | None = None,
+                 torches_dict: dict[tuple:[list]] | None = None,
                  **kwargs):
         super().__init__(**kwargs)
 
@@ -43,7 +44,7 @@ class DungeonLayout(GridLayout):
 
         self.tiles_dict: dict[tuple: Tile] | None = None
 
-        self.torches_dict: dict[tuple:list[str]] | None = None
+        self.torches_dict: dict[tuple:list] | None = torches_dict
         self.darkness: Rectangle | None = None
         self.flickering_lights: ClockEvent | None = None
 
@@ -204,7 +205,7 @@ class DungeonLayout(GridLayout):
         blueprint = Blueprint(y_axis, x_axis)
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
-        blueprint.place_equal_items(" ", 0)
+        blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("{", 6)
         #blueprint.place_equal_items("c", 3)
         #blueprint.place_equal_items("x", 2)
@@ -300,7 +301,9 @@ class DungeonLayout(GridLayout):
         :param size_modifier: modifier to apply to the original size of the torch (from 0 to 1, 1 being Tile.size)
         :return: None
         """
-        self._setup_torches_dict()
+        if self.torches_dict is None:
+            self._setup_torches_dict()
+
         tile_side = self.get_random_tile().width
         torch_side = tile_side * size_modifier
         pos_modifier: tuple[float,float] | None = None

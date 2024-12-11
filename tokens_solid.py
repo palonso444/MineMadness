@@ -22,7 +22,8 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
     """
     def __init__(self, kind: str, species:str, position: tuple[int,int],
                  character: Character, dungeon_instance: DungeonLayout,
-                 size_modifier: float, pos_modifier: tuple[int,int], **kwargs):
+                 size_modifier: float, pos_modifier: tuple[int,int],
+                 bright_radius: float, bright_int: float, flickers: bool, **kwargs):
         super().__init__(**kwargs)
 
         self.kind: str = kind
@@ -43,6 +44,10 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.size_modifier: float = size_modifier
         self.size: [tuple[float,float]] = self.size[0] * size_modifier, self.size[1] * size_modifier
         self.pos: [tuple[float, float]] = self.pos[0] + pos_modifier[0], self.pos[1] - pos_modifier[1]  # (x,y)
+
+        self.bright_radius: float = bright_radius
+        self.bright_int: float = bright_int
+        self.flickers: bool = flickers
 
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:

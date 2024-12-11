@@ -96,9 +96,7 @@ class DungeonLayout(GridLayout):
         Collects the centers of all existing torches and in the DungeonLayout.torches_centers property
         :return: None
         """
-        self.torches_centers = [
-            (token.shape.pos[0] + token.shape.size[0] / 2, token.shape.pos[1] + token.shape.size[1] / 2)
-            for tile in self.children for token in tile.tokens["light"]]
+        self.torches_centers = [token.center for tile in self.children for token in tile.tokens["light"]]
 
     @staticmethod
     def on_torches_centers(dungeon: DungeonLayout, torches_centers: list) -> None:
@@ -337,14 +335,10 @@ class DungeonLayout(GridLayout):
         """
         for tile in self.children:
             for token in tile.tokens["light"]:
-                # axis of rotation is center of each torch so pos does not change
-                axis = (token.shape.pos[0] + token.shape.size[0] / 2,
-                        token.shape.pos[1] + token.shape.size[1] / 2)
-
                 # pos_modifiers (x, y)
                 if token.pos_modifier == (tile.width / 2 - token.size[0] / 2,
                                           -tile.width + token.size[0]):  # upper
-                    token.rotate_token(degrees=180, axis=axis)
+                    token.rotate_token(degrees=180, axis=token.center)
 
                 elif token.pos_modifier == (tile.width / 2 - token.size[0] / 2,
                                             0):  # lower
@@ -352,11 +346,11 @@ class DungeonLayout(GridLayout):
 
                 elif token.pos_modifier == (tile.width - token.size[0],
                                             -tile.width/ 2 + token.size[0] / 2):   # right
-                    token.rotate_token(degrees=90, axis=axis)
+                    token.rotate_token(degrees=90, axis=token.center)
 
                 elif token.pos_modifier == (0,
                                             -tile.width/ 2 + token.size[0] / 2):  # left
-                    token.rotate_token(degrees=270, axis=axis)
+                    token.rotate_token(degrees=270, axis=token.center)
 
     def match_blueprint(self) -> None:
         """

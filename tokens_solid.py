@@ -47,7 +47,7 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
 
         self.bright_radius: float = bright_radius
         self.bright_int: float = bright_int
-        self.gradient: tuple [float, float] = gradient
+        self.gradient: tuple [float, float] = gradient  # (min, max). If equals constant brightness, otherwise flickers
 
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:

@@ -110,7 +110,7 @@ class Tile(Button):
     def place_item(self, token_kind: str, token_species: str,
                    character: Character | None,  size_modifier: float = 1.0,
                    pos_modifier: tuple[float,float] = (0.0, 0.0),
-                   bright_radius: float = 0.0, bright_int: float = 0.0, flickers: bool = False) -> None:
+                   bright_radius: float = 0.0, bright_int: float = 0.0) -> None:
         """
         Places a Token on the Tile
         :param token_kind: Token.kind of the token to be placed
@@ -120,7 +120,6 @@ class Tile(Button):
         :param pos_modifier: tuple [float,float] indicating how many pixels (x, y) the Token.pos is shifted regarding
         :param bright_int: intensity of the brightness, from 0 (no brightness) to 1 (max brightness)
         :param bright_radius: radius of the illuminated area
-        :param flickers: boolean indicating if the Token flickers or has constant brightness
         Tile.pos (lower-left corner)
         if relation to Tile lower left corner (corresponding to default value (0.0, 0.0))
         :return: None
@@ -136,8 +135,7 @@ class Tile(Button):
             "pos": self.pos,
             "size": self.size,
             "bright_radius": bright_radius,
-            "bright_int": bright_int,
-            "flickers": flickers
+            "bright_int": bright_int
         }
 
         if token_kind == "player":
@@ -281,7 +279,7 @@ class Tile(Button):
         with self.dungeon.canvas.after:
             ExplosionToken(pos=self.pos, size=self.size)
 
-        self.dungeon.add_brightspot(center=self.center,
+        self.dungeon.add_bright_spot(center=self.center,
                                     radius=self.width*2,
                                     intensity=1.0,
                                     gradient=0.8,

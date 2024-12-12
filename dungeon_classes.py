@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from kivy.graphics import Rectangle
 from kivy.properties import ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
@@ -17,19 +15,6 @@ import monster_classes as monsters
 import tile_classes as tiles
 from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
-
-@dataclass
-class BrightSpot:
-    """
-    Dataclass defining the darkness bright spots caused by bright Tokens
-    """
-    center: tuple[float,float]
-    radius: float
-    intensity: float
-    gradient: float | None
-    flickers: bool  # if True, gradient is randomized
-    timeout: float | None = None  # seconds elapsed from appearance
-    max_timeout: float | None = None  # seconds of permanence on the board
 
 
 class DungeonLayout(GridLayout):
@@ -108,39 +93,41 @@ class DungeonLayout(GridLayout):
 
     def update_bright_spots(self) -> None:
         """
-        Stores in DungeonLayout.bright_spots one BrightSpot for each Token with bright_intensity > 0
+        Stores in DungeonLayout.bright_spots one bright spot dict for each Token with bright_intensity > 0
         :return: None
         """
         current_bright_spots = self.bright_spots[:]
 
-        self.bright_spots = ([BrightSpot(center=token.center,
-                                        radius=token.bright_radius,
-                                        intensity=token.bright_int,
-                                        gradient=None,
-                                        flickers=token.flickers)
-                             for tile in self.children
-                             for token_list in tile.tokens.values()
-                             for token in token_list if token.bright_int > 0]
+        self.bright_spots = ([{"center": token.center,
+                               "radius": token.bright_radius,
+                               "intensity": token.bright_int,
+                               "gradient": None,
+                               "timeout": None,
+                               "max_timeout": None}
+                              for tile in self.children
+                              for token_list in tile.tokens.values()
+                              for token in token_list if token.bright_int > 0]
 
                              +
 
-                             [brightspot for brightspot in current_bright_spots if brightspot.max_timeout is not None])
+                             [bright_spot for bright_spot in current_bright_spots if
+                              bright_spot["max_timeout"] is not None])
 
-    def add_brightspot(self, center: tuple[float,float], radius: float, intensity: float,
-                       gradient: float, timeout:float | None, max_timeout:float | None) -> None:
+    def add_bright_spot(self, center: tuple[float, float], radius: float, intensity: float,
+                       gradient: float, timeout: float | None, max_timeout: float | None) -> None:
         """
-        Adds a single BrightSpot to DungeonLayout.bright_spots
+        Adds a single bright spot dict to DungeonLayout.bright_spots
         :return: None
         """
-        self.bright_spots.append(BrightSpot(center=center,
-                                        radius=radius,
-                                        intensity=intensity,
-                                        gradient=gradient,
-                                        timeout=timeout,
-                                        max_timeout=max_timeout))
+        self.bright_spots.append({"center": center,
+                                  "radius": radius,
+                                  "intensity": intensity,
+                                  "gradient": gradient,
+                                  "timeout": timeout,
+                                  "max_timeout": max_timeout})
 
     @staticmethod
-    def on_bright_spots(dungeon: DungeonLayout, bright_spots: list[BrightSpot]) -> None:
+    def on_bright_spots(dungeon: DungeonLayout, bright_spots: list[dict]) -> None:
         """
         Callback triggered upon modification of DungeonLayout.bright_spots
         :param dungeon: DungeonLayout instance
@@ -154,7 +141,7 @@ class DungeonLayout(GridLayout):
                                                                                                 low_int=0.45,
                                                                                                 alpha_intensity=150,
                                                                                                 dt=dt),
-                                                                                                1 / 15)
+                                                            1 / 15)
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
@@ -267,11 +254,11 @@ class DungeonLayout(GridLayout):
         """
         gradient = uniform(0.4, 0.9)
 
-        for brightspot in self.bright_spots:
-            if brightspot.timeout is not None:
-                brightspot.timeout += dt
-                if brightspot.timeout > brightspot.max_timeout:
-                    self.bright_spots.remove(brightspot)
+        for bright_spot in self.bright_spots:
+            if bright_spot["timeout"] is not None:
+                bright_spot["timeout"] += dt
+                if bright_spot["timeout"] > bright_spot["max_timeout"]:
+                    self.bright_spots.remove(bright_spot)
 
         if self.darkness in self.canvas.after.children:
             self.canvas.after.remove(self.darkness)
@@ -293,17 +280,16 @@ class DungeonLayout(GridLayout):
         data[:, :, 3] = alpha_intensity
 
         for bright_spot in self.bright_spots:
+            bright_spot["gradient"] = gradient  # TODO: gradient can be randomized here for torches so not all have same
+            # TODO: flickering pattern
 
-            bright_spot.gradient = gradient  # TODO: gradient can be randomized here for torches so not all have same
-                                            # TODO: flickering pattern
-
-            max_distance = bright_spot.radius ** 2
+            max_distance = bright_spot["radius"] ** 2
             y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
 
-            distance_from_center = (x_pos - bright_spot.center[0]) ** 2 + (y_pos - bright_spot.center[1]) ** 2
+            distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
             light_mask = (distance_from_center < max_distance)  # [bool] array
-            brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** bright_spot.gradient)
-                          * alpha_intensity * bright_spot.intensity)
+            brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** bright_spot["gradient"])
+                          * alpha_intensity * bright_spot["intensity"])
 
             temp_data = data[light_mask, 3].astype(int16) - brightness.astype(int16)
             data[light_mask, 3] = clip(temp_data, 0, alpha_intensity).astype(uint8)
@@ -335,7 +321,7 @@ class DungeonLayout(GridLayout):
 
         tile_side = self.get_random_tile().width
         torch_side = tile_side * size_modifier
-        pos_modifier: tuple[float,float] | None = None
+        pos_modifier: tuple[float, float] | None = None
 
         if self.torches_dict is not None:
             for tile_position in self.torches_dict.keys():
@@ -349,17 +335,17 @@ class DungeonLayout(GridLayout):
                                             0)  # lower
                         case (0, 1):
                             pos_modifier = (tile_side - torch_side,
-                                            -tile_side/ 2 + torch_side / 2)  # right
+                                            -tile_side / 2 + torch_side / 2)  # right
                         case (0, -1):
                             pos_modifier = (0,
-                                            -tile_side/ 2 + torch_side / 2)  # left
+                                            -tile_side / 2 + torch_side / 2)  # left
 
                     self._add_to_positions_to_update(tile_position)
 
                     tile = self.get_tile(tile_position)
                     tile.place_item("light", "torch", character=None,
-                                                      size_modifier=size_modifier, pos_modifier=pos_modifier,
-                                                      bright_radius=tile.width * 2, bright_int = 1.0)
+                                    size_modifier=size_modifier, pos_modifier=pos_modifier,
+                                    bright_radius=tile.width * 2, bright_int=1.0)
 
     def _rotate_torches(self) -> None:
         """
@@ -379,11 +365,11 @@ class DungeonLayout(GridLayout):
                     pass
 
                 elif token.pos_modifier == (tile.width - token.size[0],
-                                            -tile.width/ 2 + token.size[0] / 2):   # right
+                                            -tile.width / 2 + token.size[0] / 2):  # right
                     token.rotate_token(degrees=90, axis=token.center)
 
                 elif token.pos_modifier == (0,
-                                            -tile.width/ 2 + token.size[0] / 2):  # left
+                                            -tile.width / 2 + token.size[0] / 2):  # left
                     token.rotate_token(degrees=270, axis=token.center)
 
     def match_blueprint(self) -> None:

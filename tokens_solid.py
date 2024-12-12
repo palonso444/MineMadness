@@ -22,7 +22,8 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
     """
     def __init__(self, kind: str, species:str, position: tuple[int,int],
                  character: Character, dungeon_instance: DungeonLayout,
-                 size_modifier: float, pos_modifier: tuple[int,int], **kwargs):
+                 size_modifier: float, pos_modifier: tuple[int,int],
+                 bright_radius: float, bright_int: float, gradient: tuple[float,float], **kwargs):
         super().__init__(**kwargs)
 
         self.kind: str = kind
@@ -43,6 +44,10 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.size_modifier: float = size_modifier
         self.size: [tuple[float,float]] = self.size[0] * size_modifier, self.size[1] * size_modifier
         self.pos: [tuple[float, float]] = self.pos[0] + pos_modifier[0], self.pos[1] - pos_modifier[1]  # (x,y)
+
+        self.bright_radius: float = bright_radius
+        self.bright_int: float = bright_int
+        self.gradient: tuple [float, float] = gradient  # (min, max). If equals constant brightness, otherwise flickers
 
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:
@@ -82,8 +87,12 @@ class SceneryToken(SolidToken):
     Base class defining Tokens without associated Character
     """
     def __init__(self, kind: str, species: str, position: tuple[int,int],
-                 character: None, dungeon_instance: DungeonLayout, **kwargs):
-        super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
+                 character: None, dungeon_instance: DungeonLayout,
+                 size_modifier: float, pos_modifier: tuple[int, int],
+                 bright_radius: float, bright_int: float,
+                 gradient: tuple[float,float], **kwargs):
+        super().__init__(kind, species, position, character, dungeon_instance,
+                         size_modifier, pos_modifier, bright_radius, bright_int, gradient, **kwargs)
 
         with self.canvas_context:
             self.color = Color(1, 1, 1, 1)
@@ -124,8 +133,11 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
     """
 
     def __init__(self, kind: str, species: str, position: tuple[int,int], character: Character,
-                 dungeon_instance: DungeonLayout, **kwargs):
-        super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
+                 dungeon_instance: DungeonLayout, size_modifier: float, pos_modifier: tuple[int,int],
+                 bright_radius: float, bright_int: float,
+                 gradient: tuple[float,float], **kwargs):
+        super().__init__(kind, species, position, character, dungeon_instance,
+                         size_modifier, pos_modifier, bright_radius, bright_int, gradient, **kwargs)
 
         self.start_position: tuple[int,int] | None = None
         self.path: list[tuple[int,int]] | None = None
@@ -259,8 +271,11 @@ class PlayerToken(CharacterToken):
     modified_attributes = ListProperty([])
 
     def __init__(self, kind: str, species: str, character: Player, position: tuple[int,int],
-                 dungeon_instance: DungeonLayout, **kwargs):
-        super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
+                 dungeon_instance: DungeonLayout, size_modifier: float, pos_modifier: tuple[int,int],
+                 bright_radius: float, bright_int: float,
+                 gradient: tuple[float,float], **kwargs):
+        super().__init__(kind, species, position, character, dungeon_instance,
+                         size_modifier, pos_modifier, bright_radius, bright_int, gradient,**kwargs)
 
         self.circle: Line | None = None
         self.circle_color: Line | None = None
@@ -456,8 +471,12 @@ class MonsterToken(CharacterToken):
     Class defining Tokens representing Monsters
     """
     def __init__(self, kind: str, species: str, position: tuple [int,int],
-                 character: Monster, dungeon_instance: DungeonLayout, **kwargs):
-        super().__init__(kind, species, position, character, dungeon_instance, **kwargs)
+                 character: Monster, dungeon_instance: DungeonLayout,
+                 size_modifier: float, pos_modifier: tuple[int,int],
+                 bright_radius: float, bright_int: float,
+                 gradient: tuple[float,float], **kwargs):
+        super().__init__(kind, species, position, character, dungeon_instance,
+                         size_modifier, pos_modifier, bright_radius, bright_int, gradient, **kwargs)
 
 
     def on_dodge_completed(self, animation_obj: Animation, token_shape: Ellipse,

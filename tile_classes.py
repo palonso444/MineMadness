@@ -110,7 +110,7 @@ class Tile(Button):
     def place_item(self, token_kind: str, token_species: str,
                    character: Character | None,  size_modifier: float = 1.0,
                    pos_modifier: tuple[float,float] = (0.0, 0.0),
-                   bright_radius: float = 0.0, bright_int: float = 0.0) -> None:
+                   bright_radius: float = 0.0, bright_int: float = 0.0, gradient: tuple [float,float] = (0.0,0.0)) -> None:
         """
         Places a Token on the Tile
         :param token_kind: Token.kind of the token to be placed
@@ -120,8 +120,9 @@ class Tile(Button):
         :param pos_modifier: tuple [float,float] indicating how many pixels (x, y) the Token.pos is shifted regarding
         :param bright_int: intensity of the brightness, from 0 (no brightness) to 1 (max brightness)
         :param bright_radius: radius of the illuminated area
-        Tile.pos (lower-left corner)
-        if relation to Tile lower left corner (corresponding to default value (0.0, 0.0))
+        :param gradient: tuple indicating min and max steepness of brightness decrease with increase of distance
+        from the center. Must range from 0 to 1. If different values, brightness flickers between those values. If
+        equals, brightness is constant
         :return: None
         """
         token_args = {
@@ -135,7 +136,8 @@ class Tile(Button):
             "pos": self.pos,
             "size": self.size,
             "bright_radius": bright_radius,
-            "bright_int": bright_int
+            "bright_int": bright_int,
+            "gradient": gradient
         }
 
         if token_kind == "player":
@@ -280,8 +282,8 @@ class Tile(Button):
             ExplosionToken(pos=self.pos, size=self.size)
 
         self.dungeon.add_bright_spot(center=self.center,
-                                    radius=self.width*2,
+                                    radius=self.width * 2,
                                     intensity=1.0,
-                                    gradient=0.8,
+                                    gradient=(0.95, 0.95),
                                     timeout=0,
-                                    max_timeout=0.3)
+                                    max_timeout=0.25)

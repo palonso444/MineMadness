@@ -101,7 +101,7 @@ class DungeonLayout(GridLayout):
         self.bright_spots = ([{"center": token.center,
                                "radius": token.bright_radius,
                                "intensity": token.bright_int,
-                               "gradient": None,
+                               "gradient": token.gradient,
                                "timeout": None,
                                "max_timeout": None}
                               for tile in self.children
@@ -114,17 +114,12 @@ class DungeonLayout(GridLayout):
                               bright_spot["max_timeout"] is not None])
 
     def add_bright_spot(self, center: tuple[float, float], radius: float, intensity: float,
-                       gradient: float, timeout: float | None, max_timeout: float | None) -> None:
+                       gradient: tuple[float, float], timeout: float | None, max_timeout: float | None) -> None:
         """
         Adds a single bright spot dict to DungeonLayout.bright_spots
         :return: None
         """
-        self.bright_spots.append({"center": center,
-                                  "radius": radius,
-                                  "intensity": intensity,
-                                  "gradient": gradient,
-                                  "timeout": timeout,
-                                  "max_timeout": max_timeout})
+        self.bright_spots.append({key: value for key, value in locals().items() if key != "self"})
 
     @staticmethod
     def on_bright_spots(dungeon: DungeonLayout, bright_spots: list[dict]) -> None:
@@ -137,11 +132,9 @@ class DungeonLayout(GridLayout):
         if dungeon.flickering_lights is not None:
             dungeon.flickering_lights.cancel()
 
-        dungeon.flickering_lights = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(high_int=0.8,
-                                                                                                low_int=0.45,
-                                                                                                alpha_intensity=150,
+        dungeon.flickering_lights = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(alpha_intensity=150,
                                                                                                 dt=dt),
-                                                            1 / 15)
+                                                                                                1 / 15)
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
@@ -242,18 +235,14 @@ class DungeonLayout(GridLayout):
         #blueprint.print_map()
         return blueprint
 
-    def darkness_flicker(self, low_int: float, high_int: float, alpha_intensity: int, dt: float) -> None:
+    def darkness_flicker(self, alpha_intensity: int, dt: float) -> None:
         """
         Wrapper function that generates a darkness with flickering brightness points. Needs to be scheduled
         using Clock.schedule_interval() and specifying the desired frequency
-        :param low_int: lowest possible intensity of the brightness flickering
-        :param high_int: highest possible intensity of the brightness flickering
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
         :param dt: delta time
         :return: None
         """
-        gradient = uniform(0.4, 0.9)
-
         for bright_spot in self.bright_spots:
             if bright_spot["timeout"] is not None:
                 bright_spot["timeout"] += dt
@@ -264,15 +253,12 @@ class DungeonLayout(GridLayout):
             self.canvas.after.remove(self.darkness)
 
         with self.canvas.after:
-            self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity,
-                                                          gradient=gradient)
+            self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
 
-    def _generate_darkness_layer(self, alpha_intensity: int, gradient: float = 1.0) -> Rectangle:
+    def _generate_darkness_layer(self, alpha_intensity: int) -> Rectangle:
         """
         Generates a darkness layer with optional illuminated areas
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
-        :param gradient: steepness of brightness decrease with increase of distance form the center. Must range from
-        0 to 1, default 1
         :return: darkness layer to be displayed on the canvas
         """
         texture = Texture.create(size=self.size, colorfmt="rgba")
@@ -280,15 +266,13 @@ class DungeonLayout(GridLayout):
         data[:, :, 3] = alpha_intensity
 
         for bright_spot in self.bright_spots:
-            bright_spot["gradient"] = gradient  # TODO: gradient can be randomized here for torches so not all have same
-            # TODO: flickering pattern
-
+            gradient = uniform(bright_spot["gradient"][0], bright_spot["gradient"][1])
             max_distance = bright_spot["radius"] ** 2
             y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
 
             distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
             light_mask = (distance_from_center < max_distance)  # [bool] array
-            brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** bright_spot["gradient"])
+            brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** gradient)
                           * alpha_intensity * bright_spot["intensity"])
 
             temp_data = data[light_mask, 3].astype(int16) - brightness.astype(int16)
@@ -341,11 +325,10 @@ class DungeonLayout(GridLayout):
                                             -tile_side / 2 + torch_side / 2)  # left
 
                     self._add_to_positions_to_update(tile_position)
-
                     tile = self.get_tile(tile_position)
                     tile.place_item("light", "torch", character=None,
                                     size_modifier=size_modifier, pos_modifier=pos_modifier,
-                                    bright_radius=tile.width * 2, bright_int=1.0)
+                                    bright_radius=tile.width * 2.5, bright_int=0.8, gradient = (0.45, 0.75))
 
     def _rotate_torches(self) -> None:
         """

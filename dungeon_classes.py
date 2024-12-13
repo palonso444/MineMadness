@@ -60,6 +60,7 @@ class DungeonLayout(GridLayout):
         all_torches_dict = {wall_position: [position for position in wall_free_positions
                                             if self.are_nearby(wall_position, position)]
                             for wall_position in wall_positions}
+        all_torches_dict = {key: value for key, value in all_torches_dict.items() if len(value) > 0}
 
         if len(all_torches_dict) > 0:
             torches_dict: dict = {key: [] for key in all_torches_dict.keys()}

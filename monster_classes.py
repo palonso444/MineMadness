@@ -143,9 +143,9 @@ class Monster(Character, ABC):
         Returns a set with the positions of all possible targets in the dungeon
         :return: set with target coordinates
         """
-        return {position for position in self.get_dungeon().scan_tiles([self.chases])
-                if not self.get_dungeon().get_tile(position).get_token(self.chases).character.is_hidden}
-
+        target_tokens: set[Token] = {self.get_dungeon().get_tile(position).get_token(self.chases)
+                                    for position in self.get_dungeon().scan_tiles([self.chases])}
+        return {token.position for token in target_tokens if token.character is None or not token.character.is_hidden}
 
     def _find_target_by_distance(self) -> tuple[int,int] | None:
         """
@@ -622,10 +622,7 @@ class Pixie(Monster):
         target: tuple[int, int] | None = self._find_target_by_path()
 
         if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_behave([self.get_position()])
-            else:
-                super().move_token_or_behave(self.get_path_to_target(target, smart=True))
+            super().move_token_or_behave(self.get_dungeon().find_shortest_path(self.get_position(), target))
         else:
             super().move_token_or_behave(self.get_random_path(
                 int(self.stats.remaining_moves * self.stats.random_motility)))

@@ -154,10 +154,11 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.update_switch("turn")
 
             if isinstance(game.active_character, players.Player) and game.active_character.stats.remaining_moves > 0:
-                if game.active_character.using_dynamite:
-                    game.activate_accessible_tiles(game.active_character.stats.shooting_range)
-                else:
-                    game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
+                #if game.active_character.using_dynamite:
+                    #print(game.active_character.stats.shooting_range)
+                    #game.activate_accessible_tiles(game.active_character.stats.shooting_range)
+                #else:
+                game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
 
             else:  # if self.active_character remaining moves == 0
                 if isinstance(game.active_character, players.Player):
@@ -210,10 +211,11 @@ class MineMadnessGame(Screen):  # initialized in kv file
                     game.update_switch("shovels")
                     game.update_switch("weapons")
 
-                    if game.active_character.using_dynamite:
-                        game.activate_accessible_tiles(game.active_character.stats.shooting_range)
-                    else:
-                        game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
+                    #if game.active_character.using_dynamite:
+                        #print(game.active_character.stats.shooting_range)
+                        #game.activate_accessible_tiles(game.active_character.stats.shooting_range)
+                    #else:
+                    game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
 
             else:  # if monsters turn and monsters in the game
                 game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn

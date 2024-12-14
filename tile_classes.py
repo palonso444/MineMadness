@@ -166,9 +166,11 @@ class Tile(Button):
             return self._check_with_wall_token(active_player)
 
         path = self.dungeon.find_shortest_path(active_player.token.position, self.position, active_player.blocked_by)
-        if 0 < len(path[1:]) <= active_player.stats.remaining_moves:
-            return True
-        return False
+
+        if active_player.using_dynamite:
+            return 0 < len(path[1:]) <= active_player.stats.shooting_range
+        else:
+            return 0 < len(path[1:]) <= active_player.stats.remaining_moves
 
     def _check_with_monster_token(self, active_player: Player) -> bool:
         """

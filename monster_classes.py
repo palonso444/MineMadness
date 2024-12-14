@@ -177,15 +177,21 @@ class Monster(Character, ABC):
         :param target: coordinates of the target
         :return: list with the coordinates of the closest accesses, None if there is no access
         """
-        free_positions: list[tuple[int,int]] = (self.token.dungeon.scan_tiles
-                                                     (self.cannot_share_tile_with, exclude=True))
+        paths_to_access_candidates: list[list[tuple]] = [self.get_dungeon().find_shortest_path
+                                                        (target, position, self.blocked_by)
+                                                        for position in self.get_dungeon().scan_tiles
+                                                        (self.cannot_share_tile_with, exclude=True)]
 
-        paths_to_free_positions = [self.get_dungeon().find_shortest_path(target, position, self.blocked_by)
-                                   for position in free_positions]
-        paths_to_free_positions = [path for path in paths_to_free_positions if len(path) > 1]
+        # only considered access candidates with valid paths
+        # of equal or shorter length than from self.token.position to target
+        paths_to_access_candidates = [path for path in paths_to_access_candidates
+                                      if 1 < len(path) <= len(self.get_dungeon().find_shortest_path
+                                      (self.get_position(), target, self.blocked_by))]
 
-        shortest_length = min(len(path) for path in paths_to_free_positions)
-        accesses = {path[-1] for path in paths_to_free_positions if len(path) == shortest_length}
+        accesses = set()
+        if len(paths_to_access_candidates) > 0:
+            shortest_length = min(len(path) for path in paths_to_access_candidates)
+            accesses = {path[-1] for path in paths_to_access_candidates if len(path) == shortest_length}
 
         return accesses if len(accesses) > 0 else None
 
@@ -198,10 +204,14 @@ class Monster(Character, ABC):
         the path until a step brings apart the Character from the target (only steps reducing distance allowed)
         :return: path to target (if any), otherwise [Character.position]
         """
-        accesses: set[tuple[int,int]] = self._find_closest_accesses(target)
-        paths_to_accesses: list[list[tuple]] =[self.get_dungeon().find_shortest_path(
-            self.get_position(), access, self.blocked_by) for access in accesses]
-        paths_to_accesses = [path for path in paths_to_accesses if len(path) > 1]
+        accesses: set[tuple[int,int]] | None = self._find_closest_accesses(target)
+
+        paths_to_accesses: list = []
+        if accesses is not None:
+            paths_to_accesses: list[list[tuple]] =[self.get_dungeon().find_shortest_path
+                                                   (self.get_position(), access, self.blocked_by)
+                                                   for access in accesses]
+            paths_to_accesses = [path for path in paths_to_accesses if len(path) > 1]
 
         if len(paths_to_accesses) == 0:
             return [self.get_position()]

@@ -225,7 +225,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("{", 6)
         blueprint.place_equal_items("c", 3)
-        blueprint.place_equal_items("P", 2)
+        blueprint.place_equal_items("N", 16)
         #blueprint.place_equal_items("N", 4)
         blueprint.place_equal_items("o", self.stats.gem_number())
 

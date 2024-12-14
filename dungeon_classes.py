@@ -185,7 +185,6 @@ class DungeonLayout(GridLayout):
         """
         path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
         return 1 < len(path) <= num_of_steps
-        #return path is not None and len(path) <= num_of_steps
 
     @staticmethod
     def on_pos(dungeon: DungeonLayout, pos: list[int, int]) -> None:

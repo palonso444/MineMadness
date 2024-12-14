@@ -184,7 +184,8 @@ class DungeonLayout(GridLayout):
         :return: True if there is a connexion, False otherwise
         """
         path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
-        return 1 < len(path) <= num_of_steps
+        # +1 added to steps as first position of the path is position_1, does not count
+        return 1 < len(path) <= num_of_steps + 1
 
     @staticmethod
     def on_pos(dungeon: DungeonLayout, pos: list[int, int]) -> None:

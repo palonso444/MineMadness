@@ -246,9 +246,9 @@ class Player(Character, ABC, EventDispatcher):
             self.fight_on_tile(tile)
             self.token.dungeon.game.update_switch("character_done")
         else:
-            if tile.has_token("pickable"):
+            if tile.has_token("pickable") and "pickable" not in self.ignores:
                 self._pick_object(tile)
-            if tile.has_token("treasure"):
+            if tile.has_token("treasure") and "treasure" not in self.ignores:
                 self._pick_treasure(tile)
             if tile.kind == "exit" and self.has_all_gems:
                 self._exit_level()
@@ -267,31 +267,28 @@ class Player(Character, ABC, EventDispatcher):
         game = self.get_dungeon().game
         object_name = tile.get_token("pickable").species
 
-        if object_name not in self.ignores:
-            if object_name in self.special_items:
-                self.special_items[object_name] += 1
-                game.update_switch("ability_button")
+        if object_name in self.special_items:
+            self.special_items[object_name] += 1
+            game.update_switch("ability_button")
 
-            elif object_name in self.inventory.keys():
-                self.inventory[object_name] += 1
-                game.inv_object = object_name
+        elif object_name in self.inventory.keys():
+            self.inventory[object_name] += 1
+            game.inv_object = object_name
 
-            else:
-                # do not use f-strings here or Buildozer will crash
-                character_attribute = getattr(self.stats, f"{object_name}s")
-                character_attribute += 1
-                setattr(self.stats, f"{object_name}s", character_attribute)
-                game.update_switch(f"{object_name}s")
-                game.update_switch("ability_button")  # for Crusher Jane
+        else:
+            character_attribute = getattr(self.stats, f"{object_name}s")
+            character_attribute += 1
+            setattr(self.stats, f"{object_name}s", character_attribute)
+            game.update_switch(f"{object_name}s")
+            game.update_switch("ability_button")  # for Crusher Jane
 
-            tile.get_token("pickable").delete_token(tile)
+        tile.get_token("pickable").delete_token(tile)
 
     def _pick_treasure(self, tile:Tile)-> None:
         game=self.get_dungeon().game
-        if "treasure" not in self.ignores:
-            Player.gems += 1
-            game.update_switch("gems")
-            tile.get_token("treasure").delete_token(tile)
+        Player.gems += 1
+        game.update_switch("gems")
+        tile.get_token("treasure").delete_token(tile)
 
     def _dig(self, wall_tile: Tile) -> None:
 

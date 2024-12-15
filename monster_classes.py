@@ -138,13 +138,18 @@ class Monster(Character, ABC):
         return path
 
 
-    def _find_possible_targets(self) -> set[tuple[int,int]]:
+    def _find_possible_targets(self, free: bool) -> set[tuple[int,int]]:
         """
         Returns a set with the positions of all possible targets in the dungeon
+        :param free: bool stating if target must be in a free tile (not shared with Token.kind of
+        self.cannot_share_tile_with)
         :return: set with target coordinates
         """
         target_tokens: set[Token] = {self.get_dungeon().get_tile(position).get_token(self.chases)
                                     for position in self.get_dungeon().scan_tiles([self.chases])}
+        if free:
+            target_tokens: set[Token] = {token for token in target_tokens if
+                                         not any(self.get_dungeon().get_tile(token.position))}
         return {token.position for token in target_tokens if token.character is None or not token.character.is_hidden}
 
     def _find_target_by_distance(self) -> tuple[int,int] | None:

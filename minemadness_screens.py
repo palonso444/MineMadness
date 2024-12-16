@@ -154,17 +154,13 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.update_switch("turn")
 
             if isinstance(game.active_character, players.Player) and game.active_character.stats.remaining_moves > 0:
-                #if game.active_character.using_dynamite:
-                    #print(game.active_character.stats.shooting_range)
-                    #game.activate_accessible_tiles(game.active_character.stats.shooting_range)
-                #else:
                 game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
 
             else:  # if self.active_character remaining moves == 0
                 if isinstance(game.active_character, players.Player):
                     game.active_character.remove_effects_if_over(game.turn)
                     game.active_character.token.unselect_token()
-                game.next_character()  # switch turns if character last of character.characters
+                game.next_character()
 
     @staticmethod
     def on_turn(game: MineMadnessGame, turn: int | None) -> None:
@@ -211,10 +207,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
                     game.update_switch("shovels")
                     game.update_switch("weapons")
 
-                    #if game.active_character.using_dynamite:
-                        #print(game.active_character.stats.shooting_range)
-                        #game.activate_accessible_tiles(game.active_character.stats.shooting_range)
-                    #else:
                     game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
 
             else:  # if monsters turn and monsters in the game

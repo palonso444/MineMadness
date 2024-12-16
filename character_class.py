@@ -25,7 +25,7 @@ class Character(ABC):
             character.id = cls.data.index(character)
 
     @classmethod
-    def reset_moves(cls) -> None:
+    def initialize_moves_attacks(cls) -> None:
         """
         Resets remaining moves of all characters of the class back to the maximum
         :return: None

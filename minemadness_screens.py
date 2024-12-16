@@ -174,9 +174,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if turn is not None:
 
             if turn % 2 == 0 or monsters.Monster.all_dead_or_out():
-                players.Player.reset_moves()
+                players.Player.initialize_moves_attacks()
             else:
-                monsters.Monster.reset_moves()
+                monsters.Monster.initialize_moves_attacks()
 
             if game.active_character_id == 0:
                 game.update_switch("active_character_id")

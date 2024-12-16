@@ -308,6 +308,8 @@ class MonsterStats(CharacterStats, ABC):
     dodging_ability: int = 0  # from 0 to 14. 14 always dodges if at least 1 free tile nearby
                               # 10 always dodges if 4 free tiles nearby
     dodging_moves: int = 1
+    max_attacks: int | None = None
+    remaining_attacks: int | None = None
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:
@@ -326,6 +328,10 @@ class KoboldStats(MonsterStats): # BALANCED
     random_motility: float = 1.0
     dodging_ability: int = 7
     experience_when_killed: int = 5
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
 
     @staticmethod
     def calculate_frequency(seed: int) -> float: # seed is level
@@ -346,6 +352,10 @@ class BlindLizardStats(MonsterStats):  # BALANCED
     dodging_ability: int = 3
     experience_when_killed: int = 15
 
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
+
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # BlindLizards decrease with level increase
@@ -364,6 +374,10 @@ class BlackDeathStats(MonsterStats):  # BALANCED
     random_motility: float = 1.0
     dodging_ability: int = 12
     experience_when_killed: int = 30
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -389,6 +403,10 @@ class CaveHoundStats(MonsterStats):  # BALANCED
     dodging_ability: int = 9
     experience_when_killed: int = 10
 
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
+
     @staticmethod
     def calculate_frequency(seed: int) -> float:
         # CaveHound may overlap with Kobold. They increase up to certain point then decrease steadily
@@ -411,6 +429,10 @@ class GrowlStats(MonsterStats):  # BALANCED
     random_motility: float = 0.5
     dodging_ability: int = 5
     experience_when_killed: int = 22
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -436,6 +458,10 @@ class RockGolemStats(MonsterStats):  # BALANCED
     dodging_ability: int = 0
     experience_when_killed: int = 60
 
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
+
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # RockGolems appear with same odds in a wide range of levels and afterward they may still appear
@@ -460,6 +486,10 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
     dodging_ability: int = 10
     experience_when_killed: int = 5
 
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
+
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # DarkGnome show up a bit later, increase up to certain point then decrease steadily
@@ -479,9 +509,13 @@ class NightmareStats(MonsterStats): # BALANCED
     health: int = 15
     strength: list[int] = field(default_factory=lambda: [10,15])
     random_motility: float = 0.2
-    moves: int = 8
+    moves: int = 5 # 8
     dodging_ability: int = 10
     experience_when_killed: int = 25
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -503,6 +537,10 @@ class LindWormStats(MonsterStats):  # BALANCED
     moves: int = 5
     dodging_ability: int = 4
     experience_when_killed: int = 100
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -527,6 +565,10 @@ class WanderingShadowStats(MonsterStats):  # BALANCED
     dodging_ability: int = 14
     experience_when_killed: int = 15
 
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
+
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # WanderingShadows appear with same odds in a wide range of levels before suddenly disappearing
@@ -546,6 +588,10 @@ class DepthsWispStats(MonsterStats):  # BALANCED
     moves: int = 4
     dodging_ability: int = 1.0
     experience_when_killed: int = 3
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
@@ -568,6 +614,10 @@ class MountainDjinnStats(MonsterStats):  # BALANCED
     moves: int = 7
     dodging_ability: int = 1.0
     experience_when_killed: int = 50
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:
@@ -593,6 +643,10 @@ class PixieStats(MonsterStats):  # BALANCED
     random_motility: float = 1.0
     dodging_ability: int = 14
     experience_when_killed: int = 5
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level

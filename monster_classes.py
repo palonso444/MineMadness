@@ -1,6 +1,7 @@
 from __future__ import annotations
 from random import randint, choice
 from abc import ABC, abstractmethod
+from statistics import mean, stdev
 
 import game_stats as stats
 from character_class import Character
@@ -63,6 +64,15 @@ class Monster(Character, ABC):
         nearby_spaces = self.get_dungeon().get_nearby_spaces(self.get_position(), self.cannot_share_tile_with)
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
+    @classmethod
+    def initialize_moves_attacks(cls) -> None:
+        """
+        Resets remaining moves and attacks of all Monsters of the class back to the maximum
+        :return: None
+        """
+        super().initialize_moves_attacks()
+        for character in cls.data:
+            character.stats.remaining_attacks = character.stats.max_attacks
 
     def move_token_or_behave(self, path: list[tuple]) -> None:
         """
@@ -91,14 +101,18 @@ class Monster(Character, ABC):
         Manages attack of monsters to surrounding players
         :return:None
         """
-        surrounding_tiles = [self.token.dungeon.get_tile(position)
-                             for position in self.token.dungeon.get_nearby_positions(self.get_position())]
+        if self.stats.remaining_attacks > self.stats.remaining_moves:
+            self.stats.remaining_attacks = self.stats.remaining_moves
 
-        for tile in surrounding_tiles:
-            if self.stats.remaining_moves == 0:
-                break
-            if tile.has_token("player"):
-                self.fight_on_tile(tile)
+        surrounding_player_tiles = [
+            tile for position in self.token.dungeon.get_nearby_positions(self.get_position())
+            if (tile := self.token.dungeon.get_tile(position)).has_token("player")
+        ]
+
+        if len(surrounding_player_tiles) > 0:
+            for attack in range(self.stats.remaining_attacks):
+                self.fight_on_tile(choice(surrounding_player_tiles))
+                self.stats.remaining_attacks -= 1
 
 
     def fight_on_tile(self, opponent_tile: Tile) -> None:
@@ -119,17 +133,63 @@ class Monster(Character, ABC):
 
     def _find_random_target(self, steps: int) -> tuple[int,int] | None:
         """
-        Finds a random free tile within a range of steps
+        Finds a random free position within a range of steps
+        :param steps: max number of steps from self.token.position to the found target
         :return: random free position in range (if any), otherwise None
         """
         free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
 
+        #reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
+                         #if len(self.get_dungeon().find_shortest_path(
+                #self.get_position(), position, self.blocked_by)) > 1
+                                #and position in free_positions}
         reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
-                         if len(self.get_dungeon().find_shortest_path(
-                self.get_position(), position, self.blocked_by)) > 1
+                         if self.get_dungeon().check_if_connexion(self.get_position(), position, steps)
                                 and position in free_positions}
 
         return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
+
+
+    def _find_isolated_target(self, steps: int, exclude: str) -> tuple[int,int] | None:
+        """
+        Finds a free position as far as possible, within the specified number of steps,
+        from the Token.kind specified in exclude
+        :param steps: max number of steps from self.token.position to the found target
+        :param exclude: Token.kind to avoid
+        :return: free position in range (if any), otherwise None
+        """
+        free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
+
+        reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
+                         if self.get_dungeon().check_if_connexion(self.get_position(), position, steps)
+                                and position in free_positions}
+
+        if len(reach_free_positions) == 0:
+            return None  # exit here so no need of useless expensive computation
+
+        # all positions to avoid are considered, not only the ones in range
+        positions_to_avoid = {position for position in self.get_dungeon().scan_tiles(exclude, exclude=False)
+                              if len(self.get_dungeon().find_shortest_path
+                              (self.get_position(), position, self.blocked_by)) > 1}
+
+        position_stats: dict[tuple[int,int]: list] = {
+            rf_position: [
+                mean(path_lengths := [
+                    len(self.get_dungeon().find_shortest_path(rf_position, av_position, self.blocked_by))
+                    for av_position in positions_to_avoid
+                ]),
+                stdev(path_lengths)
+            ]
+            for rf_position in reach_free_positions
+        }
+
+        # suitable positions have the max mean and the min std_dev (equally far from all excluded Token.kinds)
+        max_mean, min_std = (max(value[0] for value in position_stats.values()),
+                             min(value[1] for value in position_stats.values()))
+        position_stats = {rf_position: value for rf_position, value in position_stats.items()
+                           if value[0] == max_mean and value[1] == min_std}
+
+        return choice(list(position_stats.keys()))  # None is returned above
 
 
     def _get_random_path(self, max_dist: int) -> list[tuple[int,int]]:

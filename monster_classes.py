@@ -761,6 +761,8 @@ class RattleSnake(Monster):
             if self.get_dungeon().are_nearby(self.get_position(), target):
                 super().move_token_or_behave([self.get_position()])
             else:
+                # only consider accesses if next to player and close enough to monster
+                # to retrieve after attack
                 accesses: set = {access for access in self._find_closest_accesses(target)
                                  if self.get_dungeon().are_nearby(access, target)
                                  and self.get_dungeon().check_if_connexion

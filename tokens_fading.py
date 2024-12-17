@@ -51,7 +51,7 @@ class DamageToken(FadingToken):
     """
     def __init__(self, pos: tuple[float,float], size: tuple[float,float], **kwargs):
         super().__init__(**kwargs)
-        self.final_opacity = 0.4
+        self.final_opacity = 0.25
         self.duration = 0.2
 
         with self.canvas:

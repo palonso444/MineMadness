@@ -104,7 +104,7 @@ class MineMadnessApp(App):
 
     def save_game(self) -> None:
         with open(self.saved_game_file, "w") as f:
-            dump(self._get_game_state(), f)
+            dump(self._get_game_state(), f, indent=4)
         self.saved_game = True
 
     def _get_game_state(self) -> dict:

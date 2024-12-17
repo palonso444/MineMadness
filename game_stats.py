@@ -662,7 +662,7 @@ class RattleSnakeStats(MonsterStats):
     char: str = "V"
     health: int = 5
     strength: list[int] = field(default_factory=lambda: [2,10])
-    moves: int = 12
+    moves: int = 10
     max_attacks: int = 1
     random_motility: float = 0.5
     dodging_ability: int = 5
@@ -675,7 +675,9 @@ class RattleSnakeStats(MonsterStats):
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # RattleSnake can show up at any level in a range of levels
-        if randint(1,10) == 10:
-            return uniform(0.2, 0.4)
-        else:
-            return uniform(0,0.1)
+        if seed < 2 or seed >= 15:
+            return 0
+        elif seed < 10:
+            return uniform(0.0, 0.4)
+        elif seed < 15:
+            return uniform(0,0.2)

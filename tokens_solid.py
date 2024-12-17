@@ -216,7 +216,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.dungeon.disable_all_tiles()
         self._slide_one_step(on_complete)
 
-    def _slide_one_step(self, on_complete: Callable) -> None:
+    def _slide_one_step(self, on_complete: Callable | None) -> None:
         """
         Starts the animation of the CharacterToken sliding one step on CharacterToken.path
         :param on_complete: callback to be triggered once the path is completed or the character runs out of moves
@@ -226,6 +226,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
 
         animation = Animation(pos=next_tile.pos, duration=self.character.step_duration,
                               transition=self.character.step_transition)
+
 
         animation.bind(on_complete=lambda animation_obj, token_shape: on_complete(animation_obj,
                                                                                token_shape,
@@ -493,3 +494,16 @@ class MonsterToken(CharacterToken):
             self._slide_one_step(on_complete)
         else:
             self.update_token_on_tile(current_tile)
+
+    def on_retreat_completed(self, animation_obj: Animation, token_shape: Ellipse,
+                           current_tile: Tile, on_complete: Callable) -> None:
+        """
+        Callback triggered when a slide step of a MonsterToken after attack is completed
+        :param animation_obj: animation object taking care of sliding the MonsterToken
+        :param token_shape: shape of the MonsterToken
+        :param current_tile: current Tile in which the MonsterToken is located
+        :param on_complete: callback to be triggered once the path is completed or the monster runs out of moves
+        :return: None
+        """
+        self.character.stats.remaining_moves -= 1
+        self.on_dodge_completed(animation_obj,token_shape,current_tile,on_complete)

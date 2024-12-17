@@ -182,16 +182,12 @@ class Monster(Character, ABC):
             ]
             for rf_position in reach_free_positions
         }
-        print(position_stats)
         # suitable positions have the max mean and the min variance (equally far from all excluded Token.kinds)
         max_mean = max(value[0] for value in position_stats.values())
-        print(max_mean)
         position_stats = {rf_position: value for rf_position, value in position_stats.items() if value[0] == max_mean}
         min_var = min(value[1] for value in position_stats.values())
-        print(min_var)
         position_stats = {rf_position: value for rf_position, value in position_stats.items() if value[1] == min_var}
 
-        print(position_stats)
         return choice(list(position_stats.keys()))  # None is returned above
 
 
@@ -751,7 +747,7 @@ class RattleSnake(Monster):
         path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
             self.stats.remaining_moves, self.chases)))
         if len(path) > 1:
-            self.token.slide(path)
+            self.token.slide(path, self.token.on_retreat_completed)
 
 
     def move(self):

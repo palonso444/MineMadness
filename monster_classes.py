@@ -296,7 +296,6 @@ class Monster(Character, ABC):
             return [self.get_position()]
 
         path = sorted(paths_to_accesses, key=len)[0]
-
         if direct_to_target is not None:
             max_distance = self.get_dungeon().get_distance(self.get_position(), direct_to_target)
             for idx, position in enumerate(path[1:]):
@@ -733,7 +732,7 @@ class RattleSnake(Monster):
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "V"
-        self.name: str = "Rattle snake"
+        self.name: str = "Rattlesnake"
         self.species: str = "rattlesnake"
         self.step_transition: str = "linear"  # sliding
         self.step_duration: float = 0.3
@@ -743,6 +742,10 @@ class RattleSnake(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def attack_players(self) -> None:
+        """
+        Attacks and retreats
+        :return: None
+        """
         super().attack_players()
         path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
             self.stats.remaining_moves, self.chases)))
@@ -758,8 +761,15 @@ class RattleSnake(Monster):
             if self.get_dungeon().are_nearby(self.get_position(), target):
                 super().move_token_or_behave([self.get_position()])
             else:
-                accesses = self._find_closest_accesses(target)
-                super().move_token_or_behave(self._select_path_to_target(accesses))
+                accesses: set = {access for access in self._find_closest_accesses(target)
+                                 if self.get_dungeon().are_nearby(access, target)
+                                 and self.get_dungeon().check_if_connexion
+                                 (self.get_position(), access,
+                                  self.blocked_by, self.stats.remaining_moves // randint(2,4))}
+                if len(accesses) == 0:
+                    self.get_dungeon().game.next_character()
+                else:
+                    super().move_token_or_behave(self._select_path_to_target(accesses))
         else:
             super().move_token_or_behave(self.get_path_to_target(
                 self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))

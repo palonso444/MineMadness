@@ -506,4 +506,4 @@ class MonsterToken(CharacterToken):
         :return: None
         """
         self.character.stats.remaining_moves -= 1
-        self.on_dodge_completed(animation_obj,token_shape,current_tile,on_complete)
+        self.on_dodge_completed(animation_obj, token_shape, current_tile, on_complete)

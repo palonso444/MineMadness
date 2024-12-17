@@ -1,6 +1,7 @@
 from __future__ import annotations
 from random import randint, choice
 from abc import ABC, abstractmethod
+from statistics import mean, pvariance
 
 import game_stats as stats
 from character_class import Character
@@ -63,6 +64,15 @@ class Monster(Character, ABC):
         nearby_spaces = self.get_dungeon().get_nearby_spaces(self.get_position(), self.cannot_share_tile_with)
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
+    @classmethod
+    def initialize_moves_attacks(cls) -> None:
+        """
+        Resets remaining moves and attacks of all Monsters of the class back to the maximum
+        :return: None
+        """
+        super().initialize_moves_attacks()
+        for character in cls.data:
+            character.stats.remaining_attacks = character.stats.max_attacks
 
     def move_token_or_behave(self, path: list[tuple]) -> None:
         """
@@ -79,7 +89,7 @@ class Monster(Character, ABC):
     def act_on_tile(self, tile: Tile) -> None:
         """
         Manages behavior of Monsters upon landing (or staying) on a Tile
-        :param tile: Tile where behavios happens
+        :param tile: Tile where behavior happens
         :return: None
         """
         self.attack_players()
@@ -91,14 +101,18 @@ class Monster(Character, ABC):
         Manages attack of monsters to surrounding players
         :return:None
         """
-        surrounding_tiles = [self.token.dungeon.get_tile(position)
-                             for position in self.token.dungeon.get_nearby_positions(self.get_position())]
+        if self.stats.remaining_attacks > self.stats.remaining_moves:
+            self.stats.remaining_attacks = self.stats.remaining_moves
 
-        for tile in surrounding_tiles:
-            if self.stats.remaining_moves == 0:
-                break
-            if tile.has_token("player"):
-                self.fight_on_tile(tile)
+        surrounding_player_tiles = [
+            tile for position in self.token.dungeon.get_nearby_positions(self.get_position())
+            if (tile := self.token.dungeon.get_tile(position)).has_token("player")
+        ]
+
+        if len(surrounding_player_tiles) > 0:
+            for attack in range(self.stats.remaining_attacks):
+                self.fight_on_tile(choice(surrounding_player_tiles))
+                self.stats.remaining_attacks -= 1
 
 
     def fight_on_tile(self, opponent_tile: Tile) -> None:
@@ -117,29 +131,72 @@ class Monster(Character, ABC):
             opponent.kill_character(opponent_tile)
 
 
-    def _find_random_target(self, steps: int) -> tuple[int,int] | None:
+    def find_random_target(self, steps: int) -> tuple[int,int] | None:
         """
-        Finds a random free tile within a range of steps
+        Finds a random free position within a range of steps
+        :param steps: max number of steps from self.token.position to the found target
         :return: random free position in range (if any), otherwise None
         """
         free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
 
+        #reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
+                         #if len(self.get_dungeon().find_shortest_path(
+                #self.get_position(), position, self.blocked_by)) > 1
+                                #and position in free_positions}
         reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
-                         if len(self.get_dungeon().find_shortest_path(
-                self.get_position(), position, self.blocked_by)) > 1
+                         if self.get_dungeon().check_if_connexion(self.get_position(), position, self.blocked_by, steps)
                                 and position in free_positions}
 
         return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
 
 
-    def _get_random_path(self, max_dist: int) -> list[tuple[int,int]]:
+    def _find_isolated_target(self, steps: int, exclude: str) -> tuple[int,int] | None:
         """
-        Generates a path aiming to a random target position at a distance max_dist or less
-        from Character.position
-        :param max_dist: maximum distance within which the random target must be set
-        :return: path to the target. If no target, returns [self.position]
+        Finds a free position as far as possible, within the specified number of steps,
+        from the Token.kind specified in exclude
+        :param steps: max number of steps from self.token.position to the found target
+        :param exclude: Token.kind to avoid
+        :return: free position in range (if any), otherwise None
         """
-        target: tuple[int,int] = self._find_random_target(max_dist)
+        free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
+
+        reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
+                         if self.get_dungeon().check_if_connexion(self.get_position(), position, self.blocked_by, steps)
+                                and position in free_positions}
+
+        if len(reach_free_positions) == 0:
+            return None  # exit here so no need of useless expensive computation
+
+        # all positions to avoid are considered, not only the ones in range
+        positions_to_avoid = {position for position in self.get_dungeon().scan_tiles([exclude], exclude=False)
+                              if len(self.get_dungeon().find_shortest_path
+                              (self.get_position(), position, self.blocked_by)) > 1}
+
+        position_stats: dict[tuple[int,int]: list] = {
+            rf_position: [
+                mean(path_lengths := [
+                    len(self.get_dungeon().find_shortest_path(rf_position, av_position, self.blocked_by))
+                    for av_position in positions_to_avoid
+                ]),
+                pvariance(path_lengths)
+            ]
+            for rf_position in reach_free_positions
+        }
+        # suitable positions have the max mean and the min variance (equally far from all excluded Token.kinds)
+        max_mean = max(value[0] for value in position_stats.values())
+        position_stats = {rf_position: value for rf_position, value in position_stats.items() if value[0] == max_mean}
+        min_var = min(value[1] for value in position_stats.values())
+        position_stats = {rf_position: value for rf_position, value in position_stats.items() if value[1] == min_var}
+
+        return choice(list(position_stats.keys()))  # None is returned above
+
+
+    def get_path_to_target(self, target: tuple[int,int] | None) -> list[tuple[int,int]]:
+        """
+        Generates a path aiming directly to a target from Character.position
+        :param target: target position
+        :return: path to the target. If target is unreachable, returns [self.position]
+        """
         if target is None:
             return [self.get_position()]
 
@@ -239,7 +296,6 @@ class Monster(Character, ABC):
             return [self.get_position()]
 
         path = sorted(paths_to_accesses, key=len)[0]
-
         if direct_to_target is not None:
             max_distance = self.get_dungeon().get_distance(self.get_position(), direct_to_target)
             for idx, position in enumerate(path[1:]):
@@ -281,8 +337,8 @@ class Kobold(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self._get_random_path(
-            int(self.stats.remaining_moves * self.stats.random_motility)))
+        super().move_token_or_behave(self.get_path_to_target(
+            self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
 
 class BlindLizard(Monster):
@@ -304,8 +360,8 @@ class BlindLizard(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self._get_random_path(
-            int(self.stats.remaining_moves * self.stats.random_motility)))
+        super().move_token_or_behave(self.get_path_to_target(
+            self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
 
 class BlackDeath(Monster):
@@ -327,8 +383,8 @@ class BlackDeath(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self._get_random_path(
-            int(self.stats.remaining_moves * self.stats.random_motility)))
+        super().move_token_or_behave(self.get_path_to_target(
+            self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
 
 # DIRECT MOVEMENT MONSTERS
@@ -359,8 +415,8 @@ class CaveHound(Monster):
                 accesses = self._find_closest_accesses(target)
                 super().move_token_or_behave(self._select_path_to_target(accesses, direct_to_target=target))
         else:
-            super().move_token_or_behave(self._get_random_path(
-                int(self.stats.remaining_moves * self.stats.random_motility)))
+            super().move_token_or_behave(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
 
 class Growl(Monster):
@@ -392,8 +448,8 @@ class Growl(Monster):
                 accesses = self._find_closest_accesses(target)
                 super().move_token_or_behave(self._select_path_to_target(accesses, direct_to_target=target))
         else:
-            super().move_token_or_behave(self._get_random_path(
-                int(self.stats.remaining_moves * self.stats.random_motility)))
+            super().move_token_or_behave(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
 
 class RockGolem(Monster):
@@ -460,8 +516,8 @@ class DarkGnome(Monster):
                 accesses = self._find_closest_accesses(target)
                 super().move_token_or_behave(self._select_path_to_target(accesses))
         else:
-            return super().move_token_or_behave(self._get_random_path(
-                int(self.stats.remaining_moves * self.stats.random_motility)))
+            super().move_token_or_behave(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
 
 class NightMare(Monster):
@@ -489,8 +545,8 @@ class NightMare(Monster):
                 accesses = self._find_closest_accesses(target)
                 super().move_token_or_behave(self._select_path_to_target(accesses))
         else:
-            return super().move_token_or_behave(self._get_random_path(
-                int(self.stats.remaining_moves * self.stats.random_motility)))
+            super().move_token_or_behave(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
 
 class LindWorm(Monster):
@@ -546,8 +602,8 @@ class WanderingShadow(Monster):
             self.overwrite_attributes(attributes_dict)
 
     def move(self):
-        super().move_token_or_behave(self._get_random_path(
-            int(self.stats.remaining_moves * self.stats.random_motility)))
+        super().move_token_or_behave(self.get_path_to_target(
+            self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
 
 class DepthsWisp(Monster):
@@ -664,5 +720,58 @@ class Pixie(Monster):
         if len(targets) > 0:
             super().move_token_or_behave(self._select_path_to_target(targets))
         else:
-            super().move_token_or_behave(self._get_random_path(
-                int(self.stats.remaining_moves * self.stats.random_motility)))
+            super().move_token_or_behave(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+
+class RattleSnake(Monster):
+    """
+    HIGH movement
+    Attacks player once and tries to escape
+    """
+
+    def __init__(self, attributes_dict: dict | None = None):
+        super().__init__()
+        self.char: str = "V"
+        self.name: str = "Rattlesnake"
+        self.species: str = "rattlesnake"
+        self.step_transition: str = "linear"  # sliding
+        self.step_duration: float = 0.3
+        self.stats = stats.RattleSnakeStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
+
+    def attack_players(self) -> None:
+        """
+        Attacks and retreats
+        :return: None
+        """
+        super().attack_players()
+        path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
+            self.stats.remaining_moves, self.chases)))
+        if len(path) > 1:
+            self.token.slide(path, self.token.on_retreat_completed)
+
+
+    def move(self):
+
+        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
+
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                # only consider accesses if next to player and close enough to monster
+                # to retrieve after attack
+                accesses: set = {access for access in self._find_closest_accesses(target)
+                                 if self.get_dungeon().are_nearby(access, target)
+                                 and self.get_dungeon().check_if_connexion
+                                 (self.get_position(), access,
+                                  self.blocked_by, self.stats.remaining_moves // randint(2,4))}
+                if len(accesses) == 0:
+                    self.get_dungeon().game.next_character()
+                else:
+                    super().move_token_or_behave(self._select_path_to_target(accesses))
+        else:
+            super().move_token_or_behave(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))

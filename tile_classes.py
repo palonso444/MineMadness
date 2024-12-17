@@ -261,7 +261,8 @@ class Tile(Button):
         """
         if self.has_token("monster"):
             monster_token = self.get_token("monster")
-            path = monster_token.character.get_random_path(monster_token.character.stats.dodging_moves)
+            path = monster_token.character.get_path_to_target(
+                monster_token.character.find_random_target(monster_token.character.stats.dodging_moves))
             if len(path) > 1 and monster_token.character.can_dodge:
                 monster_token.slide(path, on_complete=monster_token.on_dodge_completed)
             else:

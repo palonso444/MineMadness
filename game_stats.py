@@ -43,6 +43,7 @@ class DungeonStats:
             DepthsWispStats.char: DepthsWispStats.calculate_frequency(self.stats_level),
             MountainDjinnStats.char: MountainDjinnStats.calculate_frequency(self.stats_level),
             PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
+            RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
         }
 
         total_monster_frequency = sum(monster_frequencies.values())
@@ -651,6 +652,29 @@ class PixieStats(MonsterStats):  # BALANCED
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # Pixie can show up at any level
+        if randint(1,10) == 10:
+            return uniform(0.2, 0.4)
+        else:
+            return uniform(0,0.1)
+
+@dataclass
+class RattleSnakeStats(MonsterStats):
+    char: str = "V"
+    health: int = 5
+    strength: list[int] = field(default_factory=lambda: [2,10])
+    moves: int = 12
+    max_attacks: int = 1
+    random_motility: float = 0.5
+    dodging_ability: int = 5
+    experience_when_killed: int = 15
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
+
+    @staticmethod
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # RattleSnake can show up at any level in a range of levels
         if randint(1,10) == 10:
             return uniform(0.2, 0.4)
         else:

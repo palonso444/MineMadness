@@ -225,7 +225,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items(" ", 1)
         blueprint.place_equal_items("{", 15)
         blueprint.place_equal_items("c", 3)
-        blueprint.place_equal_items("N", 1)
+        blueprint.place_equal_items("V", 1)
         #blueprint.place_equal_items("N", 4)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
@@ -456,6 +456,11 @@ class DungeonLayout(GridLayout):
                     token_kind = "monster"
                     token_species = "pixie"
                     character = monsters.Pixie()
+
+                case "V":
+                    token_kind = "monster"
+                    token_species = "rattlesnake"
+                    character = monsters.RattleSnake()
 
                 case "#":
                     token_kind = "wall"

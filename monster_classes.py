@@ -724,3 +724,45 @@ class Pixie(Monster):
         else:
             super().move_token_or_behave(self.get_path_to_target(
                 self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+
+class RattleSnake(Monster):
+    """
+    HIGH movement
+    Attacks player once and tries to escape
+    """
+
+    def __init__(self, attributes_dict: dict | None = None):
+        super().__init__()
+        self.char: str = "V"
+        self.name: str = "Rattle snake"
+        self.species: str = "rattlesnake"
+        self.step_transition: str = "linear"  # sliding
+        self.step_duration: float = 0.3
+        self.stats = stats.RattleSnakeStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
+
+    def act_on_tile(self, tile: Tile) -> None:
+        """
+        Consumes pickables before calling the parent method
+        :param tile: Tile on which to act
+        :return: None
+        """
+        if tile.has_token("pickable"):
+            tile.get_token("pickable").delete_token(tile)
+        super().act_on_tile(tile)
+
+    def move(self):
+
+        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
+
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                accesses = self._find_closest_accesses(target)
+                super().move_token_or_behave(self._select_path_to_target(accesses))
+        else:
+            super().move_token_or_behave(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))

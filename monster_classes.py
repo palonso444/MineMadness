@@ -89,7 +89,7 @@ class Monster(Character, ABC):
     def act_on_tile(self, tile: Tile) -> None:
         """
         Manages behavior of Monsters upon landing (or staying) on a Tile
-        :param tile: Tile where behavios happens
+        :param tile: Tile where behavior happens
         :return: None
         """
         self.attack_players()
@@ -161,14 +161,14 @@ class Monster(Character, ABC):
         free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
 
         reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
-                         if self.get_dungeon().check_if_connexion(self.get_position(), position, steps)
+                         if self.get_dungeon().check_if_connexion(self.get_position(), position, self.blocked_by, steps)
                                 and position in free_positions}
 
         if len(reach_free_positions) == 0:
             return None  # exit here so no need of useless expensive computation
 
         # all positions to avoid are considered, not only the ones in range
-        positions_to_avoid = {position for position in self.get_dungeon().scan_tiles(exclude, exclude=False)
+        positions_to_avoid = {position for position in self.get_dungeon().scan_tiles([exclude], exclude=False)
                               if len(self.get_dungeon().find_shortest_path
                               (self.get_position(), position, self.blocked_by)) > 1}
 
@@ -182,13 +182,16 @@ class Monster(Character, ABC):
             ]
             for rf_position in reach_free_positions
         }
-
+        print(position_stats)
         # suitable positions have the max mean and the min variance (equally far from all excluded Token.kinds)
-        max_mean, min_var = (max(value[0] for value in position_stats.values()),
-                             min(value[1] for value in position_stats.values()))
-        position_stats = {rf_position: value for rf_position, value in position_stats.items()
-                           if value[0] == max_mean and value[1] == min_var}
+        max_mean = max(value[0] for value in position_stats.values())
+        print(max_mean)
+        position_stats = {rf_position: value for rf_position, value in position_stats.items() if value[0] == max_mean}
+        min_var = min(value[1] for value in position_stats.values())
+        print(min_var)
+        position_stats = {rf_position: value for rf_position, value in position_stats.items() if value[1] == min_var}
 
+        print(position_stats)
         return choice(list(position_stats.keys()))  # None is returned above
 
 
@@ -743,15 +746,13 @@ class RattleSnake(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def act_on_tile(self, tile: Tile) -> None:
-        """
-        Consumes pickables before calling the parent method
-        :param tile: Tile on which to act
-        :return: None
-        """
-        if tile.has_token("pickable"):
-            tile.get_token("pickable").delete_token(tile)
-        super().act_on_tile(tile)
+    def attack_players(self) -> None:
+        super().attack_players()
+        path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
+            self.stats.remaining_moves, self.chases)))
+        if len(path) > 1:
+            self.token.slide(path)
+
 
     def move(self):
 

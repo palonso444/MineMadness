@@ -22,7 +22,7 @@ class DungeonStats:
 
     @property
     def torch_number(self) -> int:
-        return 2
+        return 10
 
     def level_progression(self) -> dict[str:float]:
         """
@@ -44,6 +44,7 @@ class DungeonStats:
             MountainDjinnStats.char: MountainDjinnStats.calculate_frequency(self.stats_level),
             PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
             RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
+            ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level)
         }
 
         total_monster_frequency = sum(monster_frequencies.values())
@@ -664,7 +665,7 @@ class RattleSnakeStats(MonsterStats):
     strength: list[int] = field(default_factory=lambda: [2,10])
     moves: int = 10
     max_attacks: int = 1
-    random_motility: float = 0.5
+    random_motility: float = 0.2
     dodging_ability: int = 5
     experience_when_killed: int = 15
 
@@ -681,3 +682,28 @@ class RattleSnakeStats(MonsterStats):
             return uniform(0.0, 0.4)
         elif seed < 15:
             return uniform(0,0.2)
+
+
+@dataclass
+class ClawJawStats(MonsterStats):
+    char: str = "C"
+    health: int = 5
+    strength: list[int] = field(default_factory=lambda: [10,30])
+    moves: int = 10
+    random_motility: float = 0.7
+    dodging_ability: int = 7
+    experience_when_killed: int = 30
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
+
+    @staticmethod
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # ClawJaw can show up at any level from a certain level
+        if seed < 2:
+            return 0
+        elif seed < 10:
+            return uniform(0.0, 0.2)
+        elif seed >= 10:
+            return uniform(0,0.4)

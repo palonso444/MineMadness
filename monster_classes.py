@@ -109,10 +109,12 @@ class Monster(Character, ABC):
             if (tile := self.token.dungeon.get_tile(position)).has_token("player")
         ]
 
-        if len(surrounding_player_tiles) > 0:
-            for attack in range(self.stats.remaining_attacks):
-                self.fight_on_tile(choice(surrounding_player_tiles))
-                self.stats.remaining_attacks -= 1
+        for attack in range(self.stats.remaining_attacks):
+            surrounding_player_tiles = [tile for tile in surrounding_player_tiles if tile.has_token("player")]
+            if len(surrounding_player_tiles) == 0:
+                break
+            self.fight_on_tile(choice(surrounding_player_tiles))
+            self.stats.remaining_attacks -= 1
 
 
     def fight_on_tile(self, opponent_tile: Tile) -> None:
@@ -157,7 +159,7 @@ class Monster(Character, ABC):
         from the Token.kind specified in exclude
         :param steps: max number of steps from self.token.position to the found target
         :param exclude: Token.kind to avoid
-        :param exclude_blocked_by: Token.kinds that blocks the exclude Token.character (if any)
+        :param exclude_blocked_by: Token.kinds that block the exclude Token.character (if any)
         :return: free position in range (if any), otherwise None
         """
         free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
@@ -740,7 +742,7 @@ class RattleSnake(Monster):
         self.name: str = "Rattlesnake"
         self.species: str = "rattlesnake"
         self.step_transition: str = "linear"  # sliding
-        self.step_duration: float = 0.3
+        self.step_duration: float = 0.4
         self.stats = stats.RattleSnakeStats()
 
         if attributes_dict is not None:
@@ -780,3 +782,75 @@ class RattleSnake(Monster):
         else:
             super().move_token_or_behave(self.get_path_to_target(
                 self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+
+class ClawJaw(Monster):
+    """
+    Chases players directly and destroys walls on the way
+    """
+
+    def __init__(self, attributes_dict: dict | None = None):
+        super().__init__()
+        self.char: str = "C"
+        self.name: str = "ClawJaw"
+        self.species: str = "clawjaw"
+        self.step_transition: str = "linear"  # gliding
+        self.step_duration: float = 0.3
+        self.stats = stats.ClawJawStats()
+
+        self.blocked_by: list = []
+        self.cannot_share_tile_with: list[str] = ["monster", "player"]
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
+
+    def stop_upon_wall(self, path):
+
+        for idx, position in enumerate(path):
+            if self.get_dungeon().get_tile(position).has_token("wall"):
+                path = path[:idx]
+        return path
+
+    def dig(self, wall_tile: Tile):
+
+        digging_moves = 1
+        self.stats.remaining_moves -= digging_moves
+
+        wall_tile.get_token("wall").show_digging()
+        wall_tile.get_token("wall").delete_token(wall_tile)
+
+        if wall_tile.has_token("light"):
+            while len(wall_tile.tokens["light"]) > 0:
+                wall_tile.get_token("light").delete_token(wall_tile)
+            self.get_dungeon().update_bright_spots()
+
+
+    def act_on_tile(self, tile: Tile) -> None:
+        """
+        If there is a wall, calls move again in order to dig. Otherwise, acts normally on tile.
+        :param tile: Tile on which to act
+        :return: None
+        """
+        # if stopped and no players around, there is a wall
+        if self.stats.remaining_moves > 0 and not any(self.get_dungeon().get_tile(position).has_token(self.chases)
+                                                      for position in self.get_dungeon().get_nearby_positions
+                                                          (self.get_position())):
+            self.move()
+        else:
+            super().act_on_tile(tile)
+
+
+    def move(self):
+
+        target: tuple[int, int] | None = self._find_target_by_distance(self._find_possible_targets(free=False))
+
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_behave([self.get_position()])
+            else:
+                path = self._select_path_to_target(self._find_closest_accesses(target))
+                possible_wall_tile = self.get_dungeon().get_tile(path[1])
+                if possible_wall_tile.has_token("wall"):
+                    self.dig(possible_wall_tile)
+                super().move_token_or_behave(self.stop_upon_wall(path))
+        else:
+            self.get_dungeon().game.next_character()

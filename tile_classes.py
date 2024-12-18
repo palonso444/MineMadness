@@ -60,7 +60,8 @@ class Tile(Button):
         :param token_kind: Token.kind of the Token
         :return: Token of the specified kind
         """
-        return next((token for token in self.tokens[token_kind] if token.kind == token_kind))
+        return next((token for token in self.tokens[token_kind]))
+        #return next((token for token in self.tokens[token_kind] if token.kind == token_kind))
 
     def remove_token(self, token:Token) -> None:
         """

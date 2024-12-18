@@ -150,12 +150,14 @@ class Monster(Character, ABC):
         return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
 
 
-    def _find_isolated_target(self, steps: int, exclude: str) -> tuple[int,int] | None:
+    def _find_isolated_target(self, steps: int, exclude: str,
+                              exclude_blocked_by: list[str] | None = None) -> tuple[int,int] | None:
         """
         Finds a free position as far as possible, within the specified number of steps,
         from the Token.kind specified in exclude
         :param steps: max number of steps from self.token.position to the found target
         :param exclude: Token.kind to avoid
+        :param exclude_blocked_by: Token.kinds that blocks the exclude Token.character (if any)
         :return: free position in range (if any), otherwise None
         """
         free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
@@ -170,18 +172,21 @@ class Monster(Character, ABC):
         # all positions to avoid are considered, not only the ones in range
         positions_to_avoid = {position for position in self.get_dungeon().scan_tiles([exclude], exclude=False)
                               if len(self.get_dungeon().find_shortest_path
-                              (self.get_position(), position, self.blocked_by)) > 1}
+                              (self.get_position(), position, exclude_blocked_by)) > 1}
 
-        position_stats: dict[tuple[int,int]: list] = {
-            rf_position: [
-                mean(path_lengths := [
-                    len(self.get_dungeon().find_shortest_path(rf_position, av_position, self.blocked_by))
-                    for av_position in positions_to_avoid
-                ]),
-                pvariance(path_lengths)
-            ]
-            for rf_position in reach_free_positions
-        }
+        if len(positions_to_avoid) == 0:
+            raise Exception("There is nothing to flee from!")
+
+        position_stats: dict[tuple[int,int]: list] = {rf_position : [len(self.get_dungeon().find_shortest_path
+                                                                        (rf_position, av_position, exclude_blocked_by))
+                                                                    for av_position in positions_to_avoid]
+                                                      for rf_position in reach_free_positions}
+
+        position_stats = {rf_position: ([mean(position_stats[rf_position]), pvariance(position_stats[rf_position])]
+                                         if len(position_stats[rf_position]) > 1
+                                         else [position_stats[rf_position][0], 0])
+                          for rf_position in position_stats.keys()}
+
         # suitable positions have the max mean and the min variance (equally far from all excluded Token.kinds)
         max_mean = max(value[0] for value in position_stats.values())
         position_stats = {rf_position: value for rf_position, value in position_stats.items() if value[0] == max_mean}
@@ -748,7 +753,7 @@ class RattleSnake(Monster):
         """
         super().attack_players()
         path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
-            self.stats.remaining_moves, self.chases)))
+            self.stats.remaining_moves, self.chases, ["wall"])))
         if len(path) > 1:
             self.token.slide(path, self.token.on_retreat_completed)
 

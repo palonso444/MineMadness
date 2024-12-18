@@ -687,11 +687,11 @@ class RattleSnakeStats(MonsterStats):
 @dataclass
 class ClawJawStats(MonsterStats):
     char: str = "C"
-    health: int = 5
+    health: int = 45
     strength: list[int] = field(default_factory=lambda: [10,30])
-    moves: int = 10
+    moves: int = 5
     random_motility: float = 0.7
-    dodging_ability: int = 7
+    dodging_ability: int = 5
     experience_when_killed: int = 30
 
     def __post_init__(self):

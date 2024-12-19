@@ -441,6 +441,11 @@ class Sawyer(Player):
             self.overwrite_attributes(attributes_dict)
 
     def can_dig(self, token_species: str) -> bool:
+        """
+        Determines if a Character is able to dig a certain kind of wall
+        :param token_species: Token.species of the wall Token
+        :return: True if can dig, False otherwise
+        """
         if token_species == "rock":
             return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
         if token_species in ["granite", "quartz"]:

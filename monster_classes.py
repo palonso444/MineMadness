@@ -910,7 +910,7 @@ class ClawJaw(Monster):
             self.blocked_by, self.cannot_share_tile_with = ["wall", "player"], ["wall", "monster", "player"]
             path: list[tuple] = self._select_path_to_target(self._find_closest_accesses(target_path))
             # if path too long, will go across walls
-            if len(path) > self.get_dungeon().get_distance(self.get_position(), target_dist) * 2.5:
+            if len(path) > self.get_dungeon().get_distance(self.get_position(), target_dist) * 2:
             # if (len(path) == 1 or
                 # len(path) > self.get_dungeon().get_distance(self.get_position(), target_dist) * 2.5):
                 self._move_across_walls(target_dist)

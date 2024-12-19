@@ -282,7 +282,7 @@ class SawyerStats(PlayerStats): # BALANCED
     health: int = 200 #5
     strength: list[int] = field(default_factory=lambda: [1,2])
     advantage_strength_incr: int = 2
-    moves: int = 4
+    moves: int = 40#4
     digging_moves: int = 3
 
 
@@ -290,7 +290,7 @@ class SawyerStats(PlayerStats): # BALANCED
 class HawkinsStats(PlayerStats):  # BALANCED
     health: int = 200 #7
     strength: list[int] = field(default_factory=lambda: [1,3])
-    moves: int = 3
+    moves: int = 40#3
     shooting_range: int = 2
 
 
@@ -300,7 +300,7 @@ class CrusherJaneStats(PlayerStats):  # BALANCED
     health: int = 200#10
     strength: list[int] = field(default_factory=lambda: [2,4])
     advantage_strength_incr: int = 1
-    moves: int = 3
+    moves: int = 40#3
 
 
 @dataclass

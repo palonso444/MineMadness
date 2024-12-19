@@ -11,7 +11,6 @@ class Monster(Character, ABC):
 
     data: list[Character] = list()
 
-
     def __init__(self):
         super().__init__()
         self.kind: str = "monster"
@@ -785,43 +784,83 @@ class RattleSnake(Monster):
 
 class ClawJaw(Monster):
     """
-    Chases players and destroys walls if any on the way. This monster pushes the boundaries of the game
-    structure and should not be modified without a profound refactoring of the code
+    Chases players and destroys walls if any on the way.
     """
 
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "C"
-        self.name: str = "ClawJaw"
+        self.name: str = "Claw Jaw"
         self.species: str = "clawjaw"
-        self.blocked_by: list | None = None  # initialized in self.move()
-        self.cannot_share_tile_with: list[str] = ["monster", "player"]
+        self.blocked_by: list | None = None  # values vary in _set_possible_targets() and self.move()
+        self.cannot_share_tile_with: list[str] | None = None  # values vary in _set_possible_targets() and self.move()
         self.step_transition: str = "linear"  # gliding
         self.step_duration: float = 0.4
         self.stats = stats.ClawJawStats()
 
+        # exclusive of Claw Jaw. Position of the wall to dig
+        self.dig_position: tuple[int,int] | None = None
+
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
+    def can_dig(self, token_species: str) -> bool:
+        """
+        Determines if a Character is able to dig a certain kind of wall
+        :param token_species: Token.species of the wall Token
+        :return: True if can dig, False otherwise
+        """
+        match token_species:
+            case "rock":
+                return self.stats.remaining_moves >= 1
+            case "granite":
+                return self.stats.remaining_moves >= 3
+            case "quartz":
+                return self.stats.remaining_moves == self.stats.moves
+            case _:
+                raise ValueError(f"Invalid token_species {token_species}")
 
-    def stop_upon_wall(self, path: list[tuple]) -> list[tuple]:
+
+    def act_on_tile(self, tile: Tile) -> None:
+        """
+        Digs walls, if required. Afterwards acts just as any other monster
+        :param tile: Tile on which to act
+        :return: None
+        """
+        if self.dig_position is not None:
+            tile_to_dig = self.get_dungeon().get_tile(self.dig_position)
+            self.dig_position = None
+            if self.can_dig(tile_to_dig.get_token("wall").species):
+                self.dig(tile_to_dig)
+
+        super().act_on_tile(tile)
+
+    def stop_upon_wall(self, path: list[tuple]) -> tuple[list, tuple | None]:
         """
         Trims the path until the first wall is found so monster will stop right in front of it
-        :param path: monster path
-        :return: None
+        :param path: whole path
+        :return: the trimmed path and the wall position (if any) otherwise the whole path
         """
         for idx, position in enumerate(path):
             if self.get_dungeon().get_tile(position).has_token("wall"):
-                return path[:idx]
-        return path
+                return path[:idx], path[idx]
+        return path, None
 
 
     def dig(self, wall_tile: Tile) -> None:
         """
-        Digging method for Clawjaw
+        Digging method for Claw Jaw
         :param wall_tile: Tile upon which the digging must be performed
         :return: None
         """
+        match wall_tile.get_token("wall").species:
+            case "rock":
+                self.stats.remaining_moves -= 1
+            case "granite":
+                self.stats.remaining_moves -= 2
+            case "quartz":
+                self.stats.remaining_moves = 0
+
         wall_tile.get_token("wall").show_digging()
         wall_tile.get_token("wall").delete_token(wall_tile)
 
@@ -830,28 +869,50 @@ class ClawJaw(Monster):
                 wall_tile.get_token("light").delete_token(wall_tile)
             self.get_dungeon().update_bright_spots()
 
+    def _move_across_walls(self, target: tuple[int,int]) -> None:
+        """
+        This method allows the Claw Jaw to chase a target going across walls and stopping
+        when encountering one
+        :param target: target position to reach
+        :return: None
+        """
+        self.blocked_by, self.cannot_share_tile_with = ["player"], ["monster", "player"]
+        path, wall_position = self.stop_upon_wall(self._select_path_to_target
+                                                  (self._find_closest_accesses(target)))
+
+        self.dig_position: tuple[int, int] | None = wall_position
+        super().move_token_or_behave(path)
+
+    def _set_possible_targets(self) -> tuple:
+        """
+        This method finds two possible targets at once, one by distance and the other by path
+        :return: coordinates of the target by distance, coordinates of the target by path
+        """
+        self.cannot_share_tile_with: list[str] = ["monster", "player"]
+        target_dist: tuple[int, int] | None = self._find_target_by_distance(self._find_possible_targets(free=False))
+
+        self.blocked_by, self.cannot_share_tile_with = ["wall", "player"], ["wall", "monster", "player"]
+        target_path: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
+
+        return target_dist, target_path
 
     def move(self):
 
-        target: tuple[int, int] | None = self._find_target_by_distance(self._find_possible_targets(free=False))
+        target_dist, target_path = self._set_possible_targets()
 
-        if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_behave([self.get_position()])
-            else:
-                # first will try to look for a path with no walls
-                self.blocked_by: list[str] = ["wall", "player"]
-                path: list[tuple] = self._select_path_to_target(self._find_closest_accesses(target))
-
-                if len(path) == 1: # if no path, go directly across walls
-                    self.blocked_by: list[str] = ["player"]
-                    path: list[tuple] = self._select_path_to_target(self._find_closest_accesses(target))
-                    if len(path) > 1:
-                        # digs the first tile on the path
-                        possible_wall_tile: Tile = self.get_dungeon().get_tile(path[1])
-                        if possible_wall_tile.has_token("wall"):
-                            self.dig(possible_wall_tile)
-
-                super().move_token_or_behave(self.stop_upon_wall(path))
-        else:
+        if target_path is None and target_dist is None:
             self.get_dungeon().game.next_character()
+        elif self.get_dungeon().are_nearby(self.get_position(), target_dist):
+            super().move_token_or_behave([self.get_position()])
+        elif target_path is None:
+            self._move_across_walls(target_dist)
+        else:
+            self.blocked_by, self.cannot_share_tile_with = ["wall", "player"], ["wall", "monster", "player"]
+            path: list[tuple] = self._select_path_to_target(self._find_closest_accesses(target_path))
+            # if path too long, will go across walls
+            if len(path) > self.get_dungeon().get_distance(self.get_position(), target_dist) * 1.5:
+            # if (len(path) == 1 or
+                # len(path) > self.get_dungeon().get_distance(self.get_position(), target_dist) * 2.5):
+                self._move_across_walls(target_dist)
+            else:
+                super().move_token_or_behave(path)

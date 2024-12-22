@@ -90,7 +90,8 @@ class Monster(Character, ABC):
         """
         if len(path) == 1:
             self.act_on_tile(self.token.get_current_tile())
-            self.get_dungeon().game.update_switch("character_done")
+            if not self.can_retreat:
+                self.get_dungeon().game.update_switch("character_done")
         else:
             self.token.slide(path, self.token.on_move_completed)
 
@@ -102,7 +103,6 @@ class Monster(Character, ABC):
         :return: None
         """
         self.attack_players()
-        #self.get_dungeon().game.update_switch("character_done")
 
 
     def attack_players(self) -> None:

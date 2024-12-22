@@ -254,7 +254,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         else:
             self.update_token_on_tile(current_tile)
             self.character.act_on_tile(current_tile)
-            if not self.character.can_retreat:
+            if not self.character.can_retreat and not self.character.is_exited:
                 self.dungeon.game.update_switch("character_done")
 
     def show_damage(self) -> None:
@@ -512,5 +512,4 @@ class MonsterToken(CharacterToken):
             self._slide_one_step(on_complete)
         else:
             self.update_token_on_tile(current_tile)
-            print("RETREAT COMPLETED")
             self.dungeon.game.update_switch("character_done")

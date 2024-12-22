@@ -165,6 +165,14 @@ class Character(ABC):
         return False
 
     @property
+    def is_exited(self) -> bool:  # needed for everybody for self.fight_on_tile()
+        """
+        Checks if the character has exited the level
+        :return: True if character is hidden, False otherwise
+        """
+        return False
+
+    @property
     def using_dynamite(self) -> bool:  # needed for everybody for Token.on_slide_completed()
         """
         Checks if the character is using dynamite

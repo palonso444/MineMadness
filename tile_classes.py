@@ -245,6 +245,7 @@ class Tile(Button):
 
         elif player.using_dynamite:
             player.throw_dynamite(self)
+            self.dungeon.game.update_switch("character_done")
 
         # TODO: make this more clear
         elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):

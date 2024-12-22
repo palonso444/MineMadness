@@ -55,6 +55,8 @@ class AbilityButton(ToggleButton):
                 match character.species:
                     case "sawyer":
                         character.unhide()
+                        self.game.update_switch("ability_button")
+                        self.game.update_switch("character_done")
 
                     case "hawkins":
                         self.game.activate_accessible_tiles(character.stats.remaining_moves)

@@ -61,8 +61,22 @@ class Player(Character, ABC, EventDispatcher):
         return len(cls.dead_data) == len(cls.player_chars)
 
     @classmethod
-    def check_if_dead(cls, player_species):
+    def check_if_dead(cls, player_species: str) -> bool:
+        """
+        Checks if a particular Player is dead
+        :param player_species: Player.species of the player to check
+        :return: True if dead, False otherwise
+        """
         return any(player.species == player_species for player in cls.dead_data)
+
+    @classmethod
+    def check_if_exited(cls, player_species: str) -> bool:
+        """
+        Checks if a particular Player has exited the level
+        :param player_species: Player.species of the player to check
+        :return: True if exited, False otherwise
+        """
+        return any(player.species == player_species for player in cls.exited)
 
     @classmethod
     def get_alive_players(cls) -> set[str] | tuple[str:str:str]:
@@ -123,6 +137,8 @@ class Player(Character, ABC, EventDispatcher):
         self.state: str | None = None
         self.special_items: dict[str:int] | None = None
         self.level_track: dict[int:dict] = dict()
+
+        self.attacks_and_retreats: bool = False # needed for CharacterToken.on_move_completed()
 
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
@@ -241,10 +257,10 @@ class Player(Character, ABC, EventDispatcher):
         """
         if tile.has_token("wall"):
             self._dig(tile)
-            self.token.dungeon.game.update_switch("character_done")
+            #self.token.dungeon.game.update_switch("character_done")
         elif tile.has_token("monster"):
             self.fight_on_tile(tile)
-            self.token.dungeon.game.update_switch("character_done")
+            #self.token.dungeon.game.update_switch("character_done")
         else:
             if tile.has_token("pickable") and "pickable" not in self.ignores:
                 self._pick_object(tile)
@@ -253,8 +269,8 @@ class Player(Character, ABC, EventDispatcher):
             if tile.kind == "exit" and self.has_all_gems:
                 self._exit_level()
                 tile.dungeon.game.update_switch("player_exited")
-            else:
-                self.token.dungeon.game.update_switch("character_done")
+            #else:
+                #self.token.dungeon.game.update_switch("character_done")
 
     def _exit_level(self) -> None:
         Player.exited.add(self)
@@ -490,8 +506,8 @@ class Sawyer(Player):
         self.ignores.remove("pickable")
         self.ignores.remove("treasure")
         self.ability_active = False
-        game.update_switch("ability_button")
-        game.update_switch("character_done")
+        #game.update_switch("ability_button")
+        #game.update_switch("character_done")
 
     def enhance_damage(self, damage) -> int:
         if self.ability_active:
@@ -650,7 +666,7 @@ class Hawkins(Player):
         self.ability_active = False
         self.token.dungeon.game.update_switch("ability_button")
         tile.dynamite_fall()
-        self.token.dungeon.game.update_switch("character_done")
+        #self.token.dungeon.game.update_switch("character_done")
 
     def enhance_damage(self, damage: int) -> int:
         return damage

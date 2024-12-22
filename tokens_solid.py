@@ -254,6 +254,9 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         else:
             self.update_token_on_tile(current_tile)
             self.character.act_on_tile(current_tile)
+            if (self.character.attacks_and_retreats and self.character.stats.remaining_moves == 0) or \
+                not self.character.attacks_and_retreats:
+                self.dungeon.game.update_switch("character_done")
 
     def show_damage(self) -> None:
         """
@@ -506,4 +509,8 @@ class MonsterToken(CharacterToken):
         :return: None
         """
         self.character.stats.remaining_moves -= 1
-        self.on_dodge_completed(animation_obj, token_shape, current_tile, on_complete)
+        if len(self.path) > 0:
+            self._slide_one_step(on_complete)
+        else:
+            self.update_token_on_tile(current_tile)
+            self.dungeon.game.update_switch("character_done")

@@ -61,7 +61,12 @@ class Player(Character, ABC, EventDispatcher):
         return len(cls.dead_data) == len(cls.player_chars)
 
     @classmethod
-    def check_if_dead(cls, player_species):
+    def check_if_dead(cls, player_species: str) -> bool:
+        """
+        Checks if a particular Player is dead
+        :param player_species: Player.species of the player to check
+        :return: True if dead, False otherwise
+        """
         return any(player.species == player_species for player in cls.dead_data)
 
     @classmethod
@@ -148,6 +153,14 @@ class Player(Character, ABC, EventDispatcher):
     def has_item(self, item: str) -> bool:
         return self.inventory[item] > 0
 
+    @property
+    def is_exited(self) -> bool:
+        """
+        Checks if the character has exited the level
+        :return: True if character is hidden, False otherwise
+        """
+        return self in Player.exited
+
     @abstractmethod
     def can_fight(self, token_species: str) -> bool:
         """
@@ -167,6 +180,14 @@ class Player(Character, ABC, EventDispatcher):
         :return: True if the Player can dig, False otherwise
         """
         pass
+
+    @property
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        return False
 
     def reset_objects(self) -> None:
         """
@@ -241,10 +262,8 @@ class Player(Character, ABC, EventDispatcher):
         """
         if tile.has_token("wall"):
             self._dig(tile)
-            self.token.dungeon.game.update_switch("character_done")
         elif tile.has_token("monster"):
             self.fight_on_tile(tile)
-            self.token.dungeon.game.update_switch("character_done")
         else:
             if tile.has_token("pickable") and "pickable" not in self.ignores:
                 self._pick_object(tile)
@@ -253,8 +272,6 @@ class Player(Character, ABC, EventDispatcher):
             if tile.kind == "exit" and self.has_all_gems:
                 self._exit_level()
                 tile.dungeon.game.update_switch("player_exited")
-            else:
-                self.token.dungeon.game.update_switch("character_done")
 
     def _exit_level(self) -> None:
         Player.exited.add(self)
@@ -490,8 +507,6 @@ class Sawyer(Player):
         self.ignores.remove("pickable")
         self.ignores.remove("treasure")
         self.ability_active = False
-        game.update_switch("ability_button")
-        game.update_switch("character_done")
 
     def enhance_damage(self, damage) -> int:
         if self.ability_active:
@@ -650,7 +665,6 @@ class Hawkins(Player):
         self.ability_active = False
         self.token.dungeon.game.update_switch("ability_button")
         tile.dynamite_fall()
-        self.token.dungeon.game.update_switch("character_done")
 
     def enhance_damage(self, damage: int) -> int:
         return damage

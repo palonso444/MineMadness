@@ -148,10 +148,26 @@ class Character(ABC):
         """
         pass
 
+    @abstractmethod
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        pass
+
     @property
     def is_hidden(self) -> bool:  # needed for everybody for self.fight_on_tile()
         """
         Checks if the character is hidden
+        :return: True if character is hidden, False otherwise
+        """
+        return False
+
+    @property
+    def is_exited(self) -> bool:  # needed for everybody for self.fight_on_tile()
+        """
+        Checks if the character has exited the level
         :return: True if character is hidden, False otherwise
         """
         return False

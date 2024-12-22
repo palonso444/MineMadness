@@ -17,6 +17,7 @@ class Monster(Character, ABC):
         self.blocked_by: list[str] = ["wall", "player"]
         self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
         self.ignores: list[str] = ["pickable", "light"]  # token_kind or token_species, not both
+        self.attacks_and_retreats: bool = False
 
         # exclusive of Monster class
         self.chases: str = "player"
@@ -53,6 +54,14 @@ class Monster(Character, ABC):
         """
         return True
 
+    @property
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        return False
+
 
     @property
     def can_dodge(self) -> bool:
@@ -81,6 +90,8 @@ class Monster(Character, ABC):
         """
         if len(path) == 1:
             self.act_on_tile(self.token.get_current_tile())
+            if not self.can_retreat:
+                self.get_dungeon().game.update_switch("character_done")
         else:
             self.token.slide(path, self.token.on_move_completed)
 
@@ -92,7 +103,6 @@ class Monster(Character, ABC):
         :return: None
         """
         self.attack_players()
-        self.get_dungeon().game.update_switch("character_done")
 
 
     def attack_players(self) -> None:
@@ -747,6 +757,16 @@ class RattleSnake(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
+
+    @property
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        return self.stats.remaining_moves > 0
+
+
     def attack_players(self) -> None:
         """
         Attacks and retreats
@@ -798,8 +818,9 @@ class ClawJaw(Monster):
         self.step_duration: float = 0.4
         self.stats = stats.ClawJawStats()
 
-        # exclusive of Claw Jaw. Position of the wall to dig
-        self.dig_position: tuple[int,int] | None = None
+        # exclusive of claw jaw
+        self.dig_position: tuple[int,int] | None = None  # position of the wall to dig
+        self.dig_factor: float = 0.75  # the higher, the higher the chance of taking digging path if free available
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
@@ -910,7 +931,7 @@ class ClawJaw(Monster):
             self.blocked_by, self.cannot_share_tile_with = ["wall", "player"], ["wall", "monster", "player"]
             path: list[tuple] = self._select_path_to_target(self._find_closest_accesses(target_path))
             # if path too long, will go across walls
-            if len(path) > self.get_dungeon().get_distance(self.get_position(), target_dist) * 1.5:
+            if len(path) * self.dig_factor > self.get_dungeon().get_distance(self.get_position(), target_dist):
             # if (len(path) == 1 or
                 # len(path) > self.get_dungeon().get_distance(self.get_position(), target_dist) * 2.5):
                 self._move_across_walls(target_dist)

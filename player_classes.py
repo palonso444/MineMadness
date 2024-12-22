@@ -138,8 +138,6 @@ class Player(Character, ABC, EventDispatcher):
         self.special_items: dict[str:int] | None = None
         self.level_track: dict[int:dict] = dict()
 
-        self.attacks_and_retreats: bool = False # needed for CharacterToken.on_move_completed()
-
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
 
@@ -183,6 +181,14 @@ class Player(Character, ABC, EventDispatcher):
         :return: True if the Player can dig, False otherwise
         """
         pass
+
+    @property
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        return False
 
     def reset_objects(self) -> None:
         """

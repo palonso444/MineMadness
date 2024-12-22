@@ -54,6 +54,14 @@ class Monster(Character, ABC):
         """
         return True
 
+    @property
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        return False
+
 
     @property
     def can_dodge(self) -> bool:
@@ -744,11 +752,20 @@ class RattleSnake(Monster):
         self.species: str = "rattlesnake"
         self.step_transition: str = "linear"  # sliding
         self.step_duration: float = 0.4
-        self.attacks_and_retreats: bool = True
         self.stats = stats.RattleSnakeStats()
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
+
+
+    @property
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        return self.stats.remaining_moves > 0
+
 
     def attack_players(self) -> None:
         """

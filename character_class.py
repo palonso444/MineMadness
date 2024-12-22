@@ -64,7 +64,6 @@ class Character(ABC):
         self.step_duration: float | None = None  # defines speed of movement, from 0 to 1
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
         self.ability_display: str | None = None  # needed for AbilityButton.display_text()
-        self.attacks_and_retreats: bool | None = None
 
     def to_dict(self):
         """
@@ -146,6 +145,14 @@ class Character(ABC):
         represented by a Token of the specified Token.species
         :param token_species: Token.species of the wall
         :return: True if the character can dig, False otherwise
+        """
+        pass
+
+    @abstractmethod
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
         """
         pass
 

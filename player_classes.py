@@ -75,7 +75,7 @@ class Player(Character, ABC, EventDispatcher):
         Determines the number of alive players at the end of a level
         :return: set or tuple containing the characters representing live players
         """
-        if cls.all_alive():
+        if len(Player.dead_data) == 0:  # cannot be done with all_players_alive()
             return cls.player_chars
             # return "&"
         else:
@@ -98,13 +98,6 @@ class Player(Character, ABC, EventDispatcher):
             for player in cls.data:
                 if player.species == species:
                     return player
-
-    @classmethod
-    def all_alive(cls) -> bool:
-        """
-        Checks if all instances of the class (players or monsters) dead or out of game
-        """
-        return len(cls.dead_data) == 0
 
 
     def __init__(self):
@@ -257,7 +250,7 @@ class Player(Character, ABC, EventDispatcher):
     def act_on_tile(self, tile:Tile) -> None:
         """
         Handles the logic of PLayer behaviour depending on Tile.token
-        :param tile: Tile upon which the Player should behave
+        :param tile: Tile upon which the Player should act
         :return: None
         """
         if tile.has_token("wall"):

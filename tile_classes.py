@@ -269,16 +269,25 @@ class Tile(Button):
                 monster_token.slide(path, on_complete=monster_token.on_dodge_completed)
             else:
                 monster_token.character.kill_character(self)
+                self.dynamite_explode()
 
+        else:
+            self.dynamite_explode()
+
+    def dynamite_explode(self) -> None:
+        """
+        Handles the logic and the consequences of a dynamite explosion
+        :return: None
+        """
         has_light: bool = self.has_token("light")
         self.delete_all_tokens()
         if has_light:  # no need to check all dungeon if tile has no torch
             self.dungeon.update_bright_spots()
 
         self.place_item("wall", "rock", None)
-        self.show_explosion()
+        self._show_explosion()
 
-    def show_explosion(self) -> None:
+    def _show_explosion(self) -> None:
         """
         Shows an explosion on the Tile
         :return: None

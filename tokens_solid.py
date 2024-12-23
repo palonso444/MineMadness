@@ -201,6 +201,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.position = tile.position
         self.pos: tuple[int, int] = self.shape.pos
         self.path: list[tuple[int, int]] | None = None
+        self.start_position: tuple [int,int] | None = None
 
     def slide(self, path: list [tuple[int,int]],
                     on_complete: Callable[[Animation, Ellipse, Tile, Callable], None]) -> None:
@@ -495,7 +496,9 @@ class MonsterToken(CharacterToken):
         if len(self.path) > 0:
             self._slide_one_step(on_complete)
         else:
+            start_tile = self.dungeon.get_tile(self.start_position)
             self.update_token_on_tile(current_tile)
+            start_tile.dynamite_explode()
 
     def on_retreat_completed(self, animation_obj: Animation, token_shape: Ellipse,
                            current_tile: Tile, on_complete: Callable) -> None:

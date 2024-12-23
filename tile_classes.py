@@ -102,7 +102,6 @@ class Tile(Button):
         :return: True if is nearby, False otherwise
         """
         directions = (-1, 0), (1, 0), (0, -1), (0, 1)
-
         return any(
             (self.position[0] + dx, self.position[1] + dy) == position
             for dx, dy in directions
@@ -185,7 +184,7 @@ class Tile(Button):
                                                    active_player.blocked_by,
                                                    active_player.stats.shooting_range)
 
-        elif self.is_nearby(active_player.token.position):
+        elif self.is_nearby(active_player.get_position()):
             return active_player.can_fight(self.get_token("monster").species)
 
         return False
@@ -245,9 +244,9 @@ class Tile(Button):
 
         elif player.using_dynamite:
             player.throw_dynamite(self)
-            self.dungeon.game.update_switch("character_done")
+            # game.update_switch("character_done") at the end of self.dynamite_explode(). Here does not work
 
-        # TODO: make this more clear
+        # move player
         elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):
             path = self.dungeon.find_shortest_path(
                 player.token.position, self.position, player.blocked_by)
@@ -255,6 +254,7 @@ class Tile(Button):
 
         else:
             player.act_on_tile(self)
+            self.dungeon.game.update_switch("character_done")
 
     def dynamite_fall(self) -> None:
         """
@@ -286,6 +286,7 @@ class Tile(Button):
 
         self.place_item("wall", "rock", None)
         self._show_explosion()
+        self.dungeon.game.update_switch("character_done")
 
     def _show_explosion(self) -> None:
         """

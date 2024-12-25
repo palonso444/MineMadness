@@ -61,7 +61,6 @@ class Tile(Button):
         :return: Token of the specified kind
         """
         return next((token for token in self.tokens[token_kind]))
-        #return next((token for token in self.tokens[token_kind] if token.kind == token_kind))
 
     def remove_token(self, token:Token) -> None:
         """
@@ -268,7 +267,6 @@ class Tile(Button):
             if len(path) > 1 and monster_token.character.can_dodge:
                 monster_token.slide(path, on_complete=monster_token.on_dodge_completed)
             else:
-                monster_token.character.kill_character(self)
                 self.dynamite_explode()
 
         else:
@@ -280,7 +278,9 @@ class Tile(Button):
         :return: None
         """
         has_light: bool = self.has_token("light")
-        self.delete_all_tokens()
+        for token in self.tokens["monster"]:
+            token.character.kill_character(self)
+        self.delete_all_tokens()  # delete all pickables
         if has_light:  # no need to check all dungeon if tile has no torch
             self.dungeon.update_bright_spots()
 

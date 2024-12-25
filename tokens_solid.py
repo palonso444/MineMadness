@@ -305,8 +305,8 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         super().select_character()
-        self._display_health_bar(self, self.bar_length)
         self._display_selection_circle()
+        self._display_health_bar(self, self.bar_length)
 
     @staticmethod
     def on_modified_attributes(character_token: CharacterToken, modified_attributes: list[str]) -> None:

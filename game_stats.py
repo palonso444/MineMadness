@@ -229,12 +229,15 @@ class TalismanStats(ItemStats): # BALANCED
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is level
-        # Talisman is an exception among items. It may not appear at very first levels and has only 50% chance to get
-        # a frequency. Frequency is always low.
+        # Talisman does not appear in very first levels. In other levels has low frequency, ges higher when characters
+        # are dead
+        from player_classes import Player
+
         if randint(1, 10) < 5 or seed < 6:
             return 0
         else:
-            frequency = uniform(0, seed * 0.3) - uniform(0, seed * 0.3)
+            dead_char = len(Player.dead_data) + 1  # higher frequency if some players dead
+            frequency = uniform(0, seed * 0.1 * dead_char) - uniform(0, seed * 0.1 * dead_char)
             return frequency if 0 < frequency < 0.3 else 0
 
 
@@ -512,7 +515,7 @@ class NightmareStats(MonsterStats): # BALANCED
     strength: list[int] = field(default_factory=lambda: [10,15])
     random_motility: float = 0.2
     moves: int = 5 # 8
-    dodging_ability: int = 15 #10
+    dodging_ability: int = 10
     experience_when_killed: int = 25
 
     def __post_init__(self):

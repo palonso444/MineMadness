@@ -802,6 +802,70 @@ class RattleSnake(Monster):
             super().move_token_or_act_on_tile(self.get_path_to_target(
                 self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
+
+class Penumbra(Monster):
+    """
+    HIGH movement
+    Attacks player once and tries to escape
+    """
+
+    def __init__(self, attributes_dict: dict | None = None):
+        super().__init__()
+        self.char: str = "A"
+        self.name: str = "Penumbra"
+        self.species: str = "penumbra"
+        self.step_transition: str = "in_out_quad"  # walking
+        self.step_duration: float = 0.35
+        self.stats = stats.PenumbraStats()
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
+
+
+    @property
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        return self.stats.remaining_moves > 0
+
+
+    def attack_players(self) -> None:
+        """
+        Attacks and retreats
+        :return: None
+        """
+        super().attack_players()
+        path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
+            self.stats.remaining_moves, self.chases, ["wall"])))
+        if len(path) > 1:
+            self.token.slide(path, self.token.on_retreat_completed)
+
+
+    def move(self):
+
+        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
+
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_act_on_tile([self.get_position()])
+            else:
+                # only consider accesses if next to player and close enough to monster
+                # to retrieve after attack
+                accesses: set = {access for access in self._find_closest_accesses(target)
+                                 if self.get_dungeon().are_nearby(access, target)
+                                 and self.get_dungeon().check_if_connexion
+                                 (self.get_position(), access,
+                                  self.blocked_by, self.stats.remaining_moves // randint(2,4))}
+                if len(accesses) == 0:
+                    self.get_dungeon().game.next_character()
+                else:
+                    super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
+        else:
+            super().move_token_or_act_on_tile(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+
 class ClawJaw(Monster):
     """
     Chases players and destroys walls if any on the way.

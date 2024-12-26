@@ -223,10 +223,10 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        blueprint.place_equal_items("{", 1)
-        blueprint.place_equal_items("*", 1)
-        blueprint.place_equal_items("N", 2)
-        #blueprint.place_equal_items("N", 4)
+        blueprint.place_equal_items("{", 4)
+        blueprint.place_equal_items("*", 4)
+        blueprint.place_equal_items("#", 4)
+        blueprint.place_equal_items("G", 2)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -461,6 +461,11 @@ class DungeonLayout(GridLayout):
                     token_kind = "monster"
                     token_species = "rattlesnake"
                     character = monsters.RattleSnake()
+
+                case "A":
+                    token_kind = "monster"
+                    token_species = "penumbra"
+                    character = monsters.Penumbra()
 
                 case "C":
                     token_kind = "monster"

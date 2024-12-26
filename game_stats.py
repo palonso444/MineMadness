@@ -44,6 +44,7 @@ class DungeonStats:
             MountainDjinnStats.char: MountainDjinnStats.calculate_frequency(self.stats_level),
             PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
             RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
+            PenumbraStats.char: PenumbraStats.calculate_frequency(self.stats_level),
             ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level)
         }
 
@@ -685,6 +686,32 @@ class RattleSnakeStats(MonsterStats):
             return uniform(0.0, 0.4)
         elif seed < 15:
             return uniform(0,0.2)
+
+
+@dataclass
+class PenumbraStats(MonsterStats):
+    char: str = "A"
+    health: int = 5
+    strength: list[int] = field(default_factory=lambda: [2,10])
+    moves: int = 10
+    max_attacks: int = 1
+    random_motility: float = 0
+    dodging_ability: int = 5
+    experience_when_killed: int = 15
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
+
+    @staticmethod
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # Penumbra can show up at any starting at level 15
+        if seed < 15:
+            return 0
+        elif seed < 20:
+            return uniform(0.0, 0.2)
+        else:
+            return uniform(0,0.4)
 
 
 @dataclass

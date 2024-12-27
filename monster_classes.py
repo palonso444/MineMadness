@@ -114,8 +114,8 @@ class Monster(Character, ABC):
             self.stats.remaining_attacks = self.stats.remaining_moves
 
         surrounding_player_tiles = [
-            tile for position in self.token.dungeon.get_nearby_positions(self.get_position())
-            if (tile := self.token.dungeon.get_tile(position)).has_token("player")
+            tile for position in self.get_dungeon().get_nearby_positions(self.get_position())
+            if (tile := self.get_dungeon().get_tile(position)).has_token("player")
         ]
 
         for attack in range(self.stats.remaining_attacks):
@@ -157,7 +157,8 @@ class Monster(Character, ABC):
 
         if min_steps is not None:
             reach_free_positions = {position for position in reach_free_positions
-                                    if self.get_dungeon().get_distance(self.get_position(), position) >= min_steps}
+                                    if not self.get_dungeon().check_if_connexion
+                                    (self.get_position(), position, self.blocked_by, min_steps - 1)}  # min is included
 
         return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
 
@@ -779,8 +780,7 @@ class RattleSnake(Monster):
         super().attack_players()
         path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
             self.stats.remaining_moves, self.chases, ["wall"])))
-        if len(path) > 1:
-            self.token.slide(path, self.token.on_retreat_completed)
+        self.token.slide(path, self.token.on_retreat_completed)   # no check if path > 1. It must always be so
 
 
     def move(self):
@@ -839,6 +839,7 @@ class Penumbra(Monster):
         """
         return self.stats.remaining_moves > 0
 
+
     @property
     def is_hidden(self) -> bool:
         """
@@ -869,10 +870,16 @@ class Penumbra(Monster):
         :return: None
         """
         super().attack_players()
-        path: list[tuple[int,int]] = (self.get_path_to_target(self.find_random_target(
-            max_steps=self.stats.remaining_moves, min_steps=4)))
-        if len(path) > 1:
-            self.token.slide(path, self.token.on_retreat_completed)
+
+        if self.stats.remaining_attacks < self.stats.max_attacks:
+            path: list[tuple[int,int]] = (self.get_path_to_target(self.find_random_target(
+                max_steps=self.stats.remaining_moves, min_steps=self.stats.min_retreat_dist)))
+            self.token.slide(path, self.token.on_retreat_completed)  # no check if path > 1. It must always be so
+        elif self.stats.remaining_attacks == self.stats.max_attacks:
+            self.stats.remaining_moves = 0  # no retreat if no attack happened
+        else:
+            raise ValueError("stats.remaining_attacks cannot be higher than stats.max_attacks!")
+
 
 
     def move(self):
@@ -883,22 +890,11 @@ class Penumbra(Monster):
             if self.get_dungeon().are_nearby(self.get_position(), target):
                 super().move_token_or_act_on_tile([self.get_position()])
             else:
-                # only consider accesses if next to player and close enough to monster to retreat after attack
-                accesses = self._find_closest_accesses(target)
-                chosen_accesses: set = {access for access in accesses
-                                 if self.get_dungeon().are_nearby(access, target)
-                                 and self.get_dungeon().check_if_connexion
-                                 (self.get_position(), access,
-                                  self.blocked_by, self.stats.remaining_moves // randint(2,4))}
-                # If no suitable access nearby to player, penumbra will go to other accesses regardless distance
-                if len(chosen_accesses) == 0:
-                    chosen_accesses: set = {access for access in accesses
-                                            if not self.get_dungeon().are_nearby(access, target)}
-
-                if len(chosen_accesses) > 0:
-                    super().move_token_or_act_on_tile(self._select_path_to_target(chosen_accesses))
-                else:
-                    self.get_dungeon().game.next_character()
+                # penumbra does not get too close to player. It ensures max_attacks and retreat moves
+                path: list[tuple] = self._select_path_to_target(self._find_closest_accesses(target))
+                max_dist: int = self.stats.remaining_moves - self.stats.max_attacks - self.stats.min_retreat_dist
+                path = path[:max_dist + 1] if len(path) > max_dist + 1 else path
+                super().move_token_or_act_on_tile(path)
 
         else:
             super().move_token_or_act_on_tile(self.get_path_to_target(

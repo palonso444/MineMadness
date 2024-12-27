@@ -699,6 +699,9 @@ class PenumbraStats(MonsterStats):
     dodging_ability: int = 13
     experience_when_killed: int = 15
 
+    # exclusive of penumbra. Minimum distance of retreat from player
+    min_retreat_dist = 3
+
     def __post_init__(self):
         if self.max_attacks is None:
             self.max_attacks = self.moves

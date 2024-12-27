@@ -24,41 +24,36 @@ class AbilityButton(ToggleButton):
 
             character = self.game.active_character
 
-            if value == "down" and character.species == "hawkins":
-                character.ability_active = True
-                character.token.show_effect_token(
-                    "dynamite", character.token.shape.pos, character.token.shape.size
-                )
-                self.game.activate_accessible_tiles(character.stats.shooting_range)
-
-            elif value == "down":
-                character.stats.remaining_moves -= 1
-                character.ability_active = True
-                self.game.activate_accessible_tiles(character.stats.remaining_moves)
-
+            if value == "down":
                 match character.species:
+
                     case "sawyer":
-                        character.special_items["powder"] -= 1
                         character.hide()
+                        self.game.activate_accessible_tiles(character.stats.remaining_moves)
+
+                    case "hawkins":
+                        character.token.show_effect_token(
+                            "dynamite", character.token.shape.pos, character.token.shape.size
+                        )
+                        character.ability_active = True
+                        self.game.activate_accessible_tiles(character.stats.shooting_range)
 
                     case "crusherjane":
+                        character.stats.remaining_moves -= 1
                         character.token.show_effect_token(
                             "armed", character.token.shape.pos, character.token.shape.size
                         )
-
-                if character.stats.remaining_moves == 0:
-                    self.game.update_switch("character_done")
+                        character.ability_active = True
+                        self.game.activate_accessible_tiles(character.stats.remaining_moves)
 
             elif value == "normal":
-                character.ability_active = False
-
                 match character.species:
+
                     case "sawyer":
                         character.unhide()
-                        self.game.update_switch("ability_button")
-                        self.game.update_switch("character_done")
 
                     case "hawkins":
+                        character.ability_active = False
                         self.game.activate_accessible_tiles(character.stats.remaining_moves)
 
                     case "crusherjane":
@@ -68,8 +63,10 @@ class AbilityButton(ToggleButton):
                             character.token.shape.size,
                             effect_ends=True,
                         )
+                        character.ability_active = False
 
-                self.game.update_switch("ability_button")
+            self.game.update_switch("ability_button")
+            self.game.update_switch("character_done")
 
 
 class Interfacebutton(Button):

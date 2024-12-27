@@ -486,8 +486,10 @@ class Sawyer(Player):
         #print(self.stats)
 
     def hide(self):
-        self.token.color.a = 0.6  # changes transparency
+        self.stats.remaining_moves -= 1
+        self.special_items["powder"] -= 1
         self.ignores += ["pickable","treasure"]
+        self.token.color.a = 0.6  # changes transparency
         self.ability_active = True
 
     def unhide(self):

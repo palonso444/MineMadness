@@ -114,8 +114,8 @@ class Monster(Character, ABC):
             self.stats.remaining_attacks = self.stats.remaining_moves
 
         surrounding_player_tiles = [
-            tile for position in self.token.dungeon.get_nearby_positions(self.get_position())
-            if (tile := self.token.dungeon.get_tile(position)).has_token("player")
+            tile for position in self.get_dungeon().get_nearby_positions(self.get_position())
+            if (tile := self.get_dungeon().get_tile(position)).has_token("player")
         ]
 
         for attack in range(self.stats.remaining_attacks):
@@ -142,21 +142,23 @@ class Monster(Character, ABC):
             opponent.kill_character(opponent_tile)
 
 
-    def find_random_target(self, steps: int) -> tuple[int,int] | None:
+    def find_random_target(self, max_steps: int, min_steps: int | None = None) -> tuple[int,int] | None:
         """
         Finds a random free position within a range of steps
-        :param steps: max number of steps from self.token.position to the found target
+        :param max_steps: max number of steps from self.token.position to the found target
+        :param min_steps: min number of steps from self.token.position to the found target
         :return: random free position in range (if any), otherwise None
         """
         free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
 
-        #reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
-                         #if len(self.get_dungeon().find_shortest_path(
-                #self.get_position(), position, self.blocked_by)) > 1
-                                #and position in free_positions}
-        reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
-                         if self.get_dungeon().check_if_connexion(self.get_position(), position, self.blocked_by, steps)
+        reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), max_steps)
+                         if self.get_dungeon().check_if_connexion(self.get_position(), position, self.blocked_by, max_steps)
                                 and position in free_positions}
+
+        if min_steps is not None:
+            reach_free_positions = {position for position in reach_free_positions
+                                    if not self.get_dungeon().check_if_connexion
+                                    (self.get_position(), position, self.blocked_by, min_steps - 1)}  # min is included
 
         return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
 
@@ -754,6 +756,9 @@ class RattleSnake(Monster):
         self.step_duration: float = 0.4
         self.stats = stats.RattleSnakeStats()
 
+        # exclusive of attack and retreat monsters like Rattlesnake and Penumbra
+        self.hides_when_retreats = False
+
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
@@ -775,8 +780,7 @@ class RattleSnake(Monster):
         super().attack_players()
         path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
             self.stats.remaining_moves, self.chases, ["wall"])))
-        if len(path) > 1:
-            self.token.slide(path, self.token.on_retreat_completed)
+        self.token.slide(path, self.token.on_retreat_completed)   # no check if path > 1. It must always be so
 
 
     def move(self):
@@ -798,6 +802,100 @@ class RattleSnake(Monster):
                     self.get_dungeon().game.next_character()
                 else:
                     super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
+        else:
+            super().move_token_or_act_on_tile(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+
+
+class Penumbra(Monster):
+    """
+    HIGH movement
+    Attacks player once and tries to escape
+    """
+
+    def __init__(self, attributes_dict: dict | None = None):
+        super().__init__()
+        self.char: str = "A"
+        self.name: str = "Penumbra"
+        self.species: str = "penumbra"
+        self.step_transition: str = "in_out_quad"  # walking
+        self.step_duration: float = 0.35
+        self.stats = stats.PenumbraStats()
+
+        # exclusive of attack and retreat monsters like rattlesnake and penumbra
+        self.hides_when_retreats = True
+        # exclusive of penumbra
+        self.ability_active: bool = False
+
+        if attributes_dict is not None:
+            self.overwrite_attributes(attributes_dict)
+
+
+    @property
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        return self.stats.remaining_moves > 0
+
+
+    @property
+    def is_hidden(self) -> bool:
+        """
+        Determines if the Monster is hidden
+        :return: True if hidden, False otherwise
+        """
+        return self.ability_active
+
+    def hide(self) -> None:
+        """
+        Hides the Monster
+        :return: None
+        """
+        self.token.color.a = 0  # changes transparency
+        self.ability_active = True
+
+    def unhide(self) -> None:
+        """
+        Unhides the Monster
+        :return: None
+        """
+        self.token.color.a = 1  # changes transparency
+        self.ability_active = False
+
+    def attack_players(self) -> None:
+        """
+        Attacks and retreats
+        :return: None
+        """
+        super().attack_players()
+
+        if self.stats.remaining_attacks < self.stats.max_attacks:
+            path: list[tuple[int,int]] = (self.get_path_to_target(self.find_random_target(
+                max_steps=self.stats.remaining_moves, min_steps=self.stats.min_retreat_dist)))
+            self.token.slide(path, self.token.on_retreat_completed)  # no check if path > 1. It must always be so
+        elif self.stats.remaining_attacks == self.stats.max_attacks:
+            self.stats.remaining_moves = 0  # no retreat if no attack happened
+        else:
+            raise ValueError("stats.remaining_attacks cannot be higher than stats.max_attacks!")
+
+
+
+    def move(self):
+
+        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
+
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                super().move_token_or_act_on_tile([self.get_position()])
+            else:
+                # penumbra does not get too close to player. It ensures max_attacks and retreat moves
+                path: list[tuple] = self._select_path_to_target(self._find_closest_accesses(target))
+                max_dist: int = self.stats.remaining_moves - self.stats.max_attacks - self.stats.min_retreat_dist
+                path = path[:max_dist + 1] if len(path) > max_dist + 1 else path
+                super().move_token_or_act_on_tile(path)
+
         else:
             super().move_token_or_act_on_tile(self.get_path_to_target(
                 self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))

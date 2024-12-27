@@ -134,11 +134,6 @@ class Player(Character, ABC, EventDispatcher):
     def enhance_damage(self, damage: int) -> int:
         pass
 
-    @abstractmethod
-    def unhide(self) -> None:
-        pass
-
-
     @property
     def has_all_gems(self) -> bool:
         return Player.gems == self.get_dungeon().game.total_gems
@@ -491,11 +486,13 @@ class Sawyer(Player):
         #print(self.stats)
 
     def hide(self):
-        self.token.color.a = 0.6  # changes transparency
+        self.stats.remaining_moves -= 1
+        self.special_items["powder"] -= 1
         self.ignores += ["pickable","treasure"]
+        self.token.color.a = 0.6  # changes transparency
+        self.ability_active = True
 
     def unhide(self):
-        game=self.get_dungeon().game
         self.token.color.a = 1  # changes transparency
         self.ignores.remove("pickable")
         self.ignores.remove("treasure")
@@ -572,8 +569,6 @@ class CrusherJane(Player):
             damage += self.stats.advantage_strength_incr
         return damage
 
-    def unhide(self) -> None:
-        pass
 
     def subtract_weapon(self) -> None:
 
@@ -651,7 +646,6 @@ class Hawkins(Player):
     def using_dynamite(self):
         return self.ability_active
 
-
     def throw_dynamite(self, tile: Tile):
         self.special_items["dynamite"] -= 1
         self.stats.remaining_moves -= 1
@@ -661,7 +655,4 @@ class Hawkins(Player):
 
     def enhance_damage(self, damage: int) -> int:
         return damage
-
-    def unhide(self) -> None:
-        pass
 

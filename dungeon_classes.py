@@ -90,6 +90,7 @@ class DungeonLayout(GridLayout):
         if len(positions_to_update) == 0:
             dungeon._rotate_torches()
             dungeon.update_bright_spots()
+            #dungeon.hide_penumbras()
             dungeon.game.dungeon = dungeon
 
     def update_bright_spots(self) -> None:
@@ -136,6 +137,22 @@ class DungeonLayout(GridLayout):
         dungeon.flickering_lights = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(alpha_intensity=150,
                                                                                                 dt=dt),
                                                                                                 1 / 15)
+    def hide_penumbras(self) -> None:
+        """
+        Hides the penumbras Monster throughout the DungeonLayout (if any), if they have a
+        Player within reachable range
+        :return: None
+        """
+        player_positions = {tile.position for tile in self.children if tile.has_token("player")}
+
+        for tile in self.children:
+            if tile.has_token("monster", "penumbra"):
+                monster_token = tile.get_token("monster")
+                if any(self.check_if_connexion(monster_token.position, player_position,
+                                                  monster_token.character.blocked_by,
+                                                  monster_token.character.stats.moves)
+                       for player_position in player_positions):
+                    monster_token.character.hide()
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
@@ -223,10 +240,11 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        blueprint.place_equal_items("{", 1)
-        blueprint.place_equal_items("*", 1)
-        blueprint.place_equal_items("N", 2)
-        #blueprint.place_equal_items("N", 4)
+        blueprint.place_equal_items("{", 4)
+        blueprint.place_equal_items("*", 4)
+        blueprint.place_equal_items("#", 4)
+        blueprint.place_equal_items("A", 2)
+        blueprint.place_equal_items("K", 0)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():
@@ -461,6 +479,11 @@ class DungeonLayout(GridLayout):
                     token_kind = "monster"
                     token_species = "rattlesnake"
                     character = monsters.RattleSnake()
+
+                case "A":
+                    token_kind = "monster"
+                    token_species = "penumbra"
+                    character = monsters.Penumbra()
 
                 case "C":
                     token_kind = "monster"

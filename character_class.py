@@ -188,6 +188,12 @@ class Character(ABC):
         """
         return self.stats.remaining_moves < self.stats.moves
 
+    def hide(self) -> None:
+        """
+        Placeholder
+        """
+        pass
+
     def unhide(self) -> None:
         """
         Placeholder, needed for Monster.fight_on_tile()

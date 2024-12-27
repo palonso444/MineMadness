@@ -511,6 +511,8 @@ class MonsterToken(CharacterToken):
         :return: None
         """
         self.character.stats.remaining_moves -= 1
+        #if self.character.hides_when_retreats and not self.character.is_hidden:
+            #self.character.hide()
         if len(self.path) > 0:
             self._slide_one_step(on_complete)
         else:

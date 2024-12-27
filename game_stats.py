@@ -44,6 +44,7 @@ class DungeonStats:
             MountainDjinnStats.char: MountainDjinnStats.calculate_frequency(self.stats_level),
             PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
             RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
+            PenumbraStats.char: PenumbraStats.calculate_frequency(self.stats_level),
             ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level)
         }
 
@@ -285,7 +286,7 @@ class SawyerStats(PlayerStats): # BALANCED
     health: int = 200 #5
     strength: list[int] = field(default_factory=lambda: [1,2])
     advantage_strength_incr: int = 2
-    moves: int = 40#4
+    moves: int = 4
     digging_moves: int = 3
 
 
@@ -293,7 +294,7 @@ class SawyerStats(PlayerStats): # BALANCED
 class HawkinsStats(PlayerStats):  # BALANCED
     health: int = 200 #7
     strength: list[int] = field(default_factory=lambda: [1,3])
-    moves: int = 40#3
+    moves: int = 3
     shooting_range: int = 2
 
 
@@ -303,7 +304,7 @@ class CrusherJaneStats(PlayerStats):  # BALANCED
     health: int = 200#10
     strength: list[int] = field(default_factory=lambda: [2,4])
     advantage_strength_incr: int = 1
-    moves: int = 40#3
+    moves: int = 3
 
 
 @dataclass
@@ -685,6 +686,35 @@ class RattleSnakeStats(MonsterStats):
             return uniform(0.0, 0.4)
         elif seed < 15:
             return uniform(0,0.2)
+
+
+@dataclass
+class PenumbraStats(MonsterStats):
+    char: str = "A"
+    health: int = 5
+    strength: list[int] = field(default_factory=lambda: [2,10])
+    moves: int = 10
+    max_attacks: int = 3
+    random_motility: float = 0.4
+    dodging_ability: int = 13
+    experience_when_killed: int = 15
+
+    # exclusive of penumbra. Minimum distance of retreat from player
+    min_retreat_dist = 3
+
+    def __post_init__(self):
+        if self.max_attacks is None:
+            self.max_attacks = self.moves
+
+    @staticmethod
+    def calculate_frequency(seed: int) -> float:  # seed is level
+        # Penumbra can show up at any starting at level 15
+        if seed < 15:
+            return 0
+        elif seed < 20:
+            return uniform(0.0, 0.2)
+        else:
+            return uniform(0,0.4)
 
 
 @dataclass

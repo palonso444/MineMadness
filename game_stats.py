@@ -694,9 +694,9 @@ class PenumbraStats(MonsterStats):
     health: int = 5
     strength: list[int] = field(default_factory=lambda: [2,10])
     moves: int = 10
-    max_attacks: int = 1
-    random_motility: float = 0
-    dodging_ability: int = 5
+    max_attacks: int = 3
+    random_motility: float = 0.4
+    dodging_ability: int = 13
     experience_when_killed: int = 15
 
     def __post_init__(self):

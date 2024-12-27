@@ -883,17 +883,23 @@ class Penumbra(Monster):
             if self.get_dungeon().are_nearby(self.get_position(), target):
                 super().move_token_or_act_on_tile([self.get_position()])
             else:
-                # only consider accesses if next to player and close enough to monster
-                # to retrieve after attack
-                accesses: set = {access for access in self._find_closest_accesses(target)
+                # only consider accesses if next to player and close enough to monster to retreat after attack
+                accesses = self._find_closest_accesses(target)
+                chosen_accesses: set = {access for access in accesses
                                  if self.get_dungeon().are_nearby(access, target)
                                  and self.get_dungeon().check_if_connexion
                                  (self.get_position(), access,
                                   self.blocked_by, self.stats.remaining_moves // randint(2,4))}
-                if len(accesses) == 0:
-                    self.get_dungeon().game.next_character()
+                # If no suitable access nearby to player, penumbra will go to other accesses regardless distance
+                if len(chosen_accesses) == 0:
+                    chosen_accesses: set = {access for access in accesses
+                                            if not self.get_dungeon().are_nearby(access, target)}
+
+                if len(chosen_accesses) > 0:
+                    super().move_token_or_act_on_tile(self._select_path_to_target(chosen_accesses))
                 else:
-                    super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
+                    self.get_dungeon().game.next_character()
+
         else:
             super().move_token_or_act_on_tile(self.get_path_to_target(
                 self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))

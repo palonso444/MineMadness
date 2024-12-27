@@ -90,7 +90,7 @@ class DungeonLayout(GridLayout):
         if len(positions_to_update) == 0:
             dungeon._rotate_torches()
             dungeon.update_bright_spots()
-            dungeon.hide_penumbras()
+            #dungeon.hide_penumbras()
             dungeon.game.dungeon = dungeon
 
     def update_bright_spots(self) -> None:
@@ -244,6 +244,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items("*", 4)
         blueprint.place_equal_items("#", 4)
         blueprint.place_equal_items("A", 2)
+        blueprint.place_equal_items("K", 0)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
         #for key, value in self.stats.level_progression().items():

@@ -818,6 +818,9 @@ class Penumbra(Monster):
         self.step_duration: float = 0.35
         self.stats = stats.PenumbraStats()
 
+        # exclusive of penumbra
+        self.ability_active: bool = False
+
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
@@ -830,6 +833,29 @@ class Penumbra(Monster):
         """
         return self.stats.remaining_moves > 0
 
+    @property
+    def is_hidden(self) -> bool:
+        """
+        Determines if the Monster is hidden
+        :return: True if hidden, False otherwise
+        """
+        return self.ability_active
+
+    def hide(self) -> None:
+        """
+        Hides the Monster
+        :return: None
+        """
+        self.token.color.a = 0  # changes transparency
+        self.ability_active = True
+
+    def unhide(self) -> None:
+        """
+        Unhides the Monster
+        :return: None
+        """
+        self.token.color.a = 1  # changes transparency
+        self.ability_active = False
 
     def attack_players(self) -> None:
         """

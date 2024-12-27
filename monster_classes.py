@@ -142,21 +142,22 @@ class Monster(Character, ABC):
             opponent.kill_character(opponent_tile)
 
 
-    def find_random_target(self, steps: int) -> tuple[int,int] | None:
+    def find_random_target(self, max_steps: int, min_steps: int | None = None) -> tuple[int,int] | None:
         """
         Finds a random free position within a range of steps
-        :param steps: max number of steps from self.token.position to the found target
+        :param max_steps: max number of steps from self.token.position to the found target
+        :param min_steps: min number of steps from self.token.position to the found target
         :return: random free position in range (if any), otherwise None
         """
         free_positions: set[tuple[int,int]] = self.get_dungeon().scan_tiles(self.cannot_share_tile_with, exclude=True)
 
-        #reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
-                         #if len(self.get_dungeon().find_shortest_path(
-                #self.get_position(), position, self.blocked_by)) > 1
-                                #and position in free_positions}
-        reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), steps)
-                         if self.get_dungeon().check_if_connexion(self.get_position(), position, self.blocked_by, steps)
+        reach_free_positions = {position for position in self.get_dungeon().get_range(self.get_position(), max_steps)
+                         if self.get_dungeon().check_if_connexion(self.get_position(), position, self.blocked_by, max_steps)
                                 and position in free_positions}
+
+        if min_steps is not None:
+            reach_free_positions = {position for position in reach_free_positions
+                                    if self.get_dungeon().get_distance(self.get_position(), position) >= min_steps}
 
         return choice(list(reach_free_positions)) if len(reach_free_positions) > 0 else None
 
@@ -754,6 +755,9 @@ class RattleSnake(Monster):
         self.step_duration: float = 0.4
         self.stats = stats.RattleSnakeStats()
 
+        # exclusive of attack and retreat monsters like Rattlesnake and Penumbra
+        self.hides_when_retreats = False
+
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
@@ -818,6 +822,8 @@ class Penumbra(Monster):
         self.step_duration: float = 0.35
         self.stats = stats.PenumbraStats()
 
+        # exclusive of attack and retreat monsters like rattlesnake and penumbra
+        self.hides_when_retreats = True
         # exclusive of penumbra
         self.ability_active: bool = False
 
@@ -863,8 +869,8 @@ class Penumbra(Monster):
         :return: None
         """
         super().attack_players()
-        path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
-            self.stats.remaining_moves, self.chases, ["wall"])))
+        path: list[tuple[int,int]] = (self.get_path_to_target(self.find_random_target(
+            max_steps=self.stats.remaining_moves, min_steps=4)))
         if len(path) > 1:
             self.token.slide(path, self.token.on_retreat_completed)
 

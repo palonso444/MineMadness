@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from os import remove
 from random import randint, choice
 from abc import ABC, abstractmethod
 from statistics import mean, pvariance
@@ -324,14 +326,25 @@ class Monster(Character, ABC):
                     break
                 max_distance = current_distance
 
-        # trim path by movement range
         path = path[:self.stats.remaining_moves + 1]  # first position is self.position
-        # remove any landing conflict
+        path = self._remove_landing_conflicts(path)
+
+        return path
+
+    def _remove_landing_conflicts(self, path: list[tuple]) -> list[tuple]:
+        """
+        Removed positions starting from the end of the path where Monster cannot land until a suitable position is found
+        :param path: path to check
+        :return: trimmed path
+        """
         while len(path) > 1 and any(self.get_dungeon().get_tile(path[-1]).has_token(token_kind)
                                     for token_kind in self.cannot_share_tile_with):
             del path[-1]
 
         return path
+
+
+
 
 
 # RANDOM MOVEMENT MONSTERS
@@ -915,7 +928,7 @@ class Penumbra(Monster):
                 # penumbra does not get too close to player. It ensures max_attacks and retreat moves
                 # if still far, will approach full movement
                 if len(path) > max_dist + 1 and distance_to_target < (max_dist * 2 + 1):
-                    path = path[:max_dist + 1]
+                    path = self._remove_landing_conflicts(path[:max_dist + 1])
 
                 super().move_token_or_act_on_tile(path)
 

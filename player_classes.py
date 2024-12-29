@@ -323,7 +323,7 @@ class Player(Character, ABC, EventDispatcher):
         opponent = opponent_tile.get_token("monster").character
         opponent = self.fight_opponent(opponent)
         self.subtract_weapon()
-        self.stats.remaining_moves =- 1
+        self.stats.remaining_moves -= 1
 
         if opponent.stats.health <= 0:
             self.experience += opponent.stats.experience_when_killed
@@ -499,6 +499,7 @@ class Sawyer(Player):
         self.ignores.remove("pickable")
         self.ignores.remove("treasure")
         self.ability_active = False
+        self.get_dungeon().game.update_switch("ability_button")  # in case gets attacked must update button
 
     def enhance_damage(self, damage) -> int:
         if self.ability_active:

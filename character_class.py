@@ -60,6 +60,7 @@ class Character(ABC):
         self.blocked_by: list | None = None
         self.cannot_share_tile_with: list | None = None
         self.ignores: list | None = None
+        self.invisible: bool | None = None
         self.step_transition: str | None = None  # defines kind of movement (walk, stomp, glide...)
         self.step_duration: float | None = None  # defines speed of movement, from 0 to 1
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
@@ -157,7 +158,7 @@ class Character(ABC):
         pass
 
     @property
-    def is_hidden(self) -> bool:  # needed for everybody for self.fight_on_tile()
+    def is_hidden(self) -> bool:
         """
         Checks if the character is hidden
         :return: True if character is hidden, False otherwise
@@ -217,10 +218,9 @@ class Character(ABC):
     def fight_opponent(self, opponent: Character) -> Character:
         """
         Generic fighting method. See Player class for particularities in players
-        :param opponent: opponent character
-        :return: experience_when_killed of dead opponent
+        :param opponent: opponent Character
+        :return: opponent Character with inflicted damage
         """
-        self.stats.remaining_moves -= 1
         damage = randint(self.stats.strength[0], self.stats.strength[1])
         damage = opponent.apply_toughness(damage)
         damage = self.enhance_damage(damage)
@@ -230,10 +230,11 @@ class Character(ABC):
         if opponent.is_hidden:
             opponent.unhide()
 
-        opponent.stats.health = opponent.stats.health - damage
+        opponent.stats.health -= damage
         opponent.token.show_damage()
 
         return opponent
+
 
     def kill_character(self, tile: Tile) -> None:
         """

@@ -65,7 +65,7 @@ class AbilityButton(ToggleButton):
                         )
                         character.ability_active = False
 
-            self.game.update_switch("ability_button")
+            #self.game.update_switch("ability_button")
             self.game.update_switch("character_done")
 
 

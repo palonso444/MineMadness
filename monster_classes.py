@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from os import remove
 from random import randint, choice
 from abc import ABC, abstractmethod
 from statistics import mean, pvariance
@@ -18,10 +20,10 @@ class Monster(Character, ABC):
         self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
         self.ignores: list[str] = ["pickable", "light"]  # token_kind or token_species, not both
         self.attacks_and_retreats: bool = False
+        self.invisible: bool = False
 
         # exclusive of Monster class
         self.chases: str = "player"
-
 
     @abstractmethod
     def move(self):
@@ -124,6 +126,7 @@ class Monster(Character, ABC):
                 break
             self.fight_on_tile(choice(surrounding_player_tiles))
             self.stats.remaining_attacks -= 1
+            self.stats.remaining_moves -= 1
 
 
     def fight_on_tile(self, opponent_tile: Tile) -> None:
@@ -323,14 +326,25 @@ class Monster(Character, ABC):
                     break
                 max_distance = current_distance
 
-        # trim path by movement range
         path = path[:self.stats.remaining_moves + 1]  # first position is self.position
-        # remove any landing conflict
+        path = self._remove_landing_conflicts(path)
+
+        return path
+
+    def _remove_landing_conflicts(self, path: list[tuple]) -> list[tuple]:
+        """
+        Removed positions starting from the end of the path where Monster cannot land until a suitable position is found
+        :param path: path to check
+        :return: trimmed path
+        """
         while len(path) > 1 and any(self.get_dungeon().get_tile(path[-1]).has_token(token_kind)
                                     for token_kind in self.cannot_share_tile_with):
             del path[-1]
 
         return path
+
+
+
 
 
 # RANDOM MOVEMENT MONSTERS
@@ -756,9 +770,6 @@ class RattleSnake(Monster):
         self.step_duration: float = 0.4
         self.stats = stats.RattleSnakeStats()
 
-        # exclusive of attack and retreat monsters like Rattlesnake and Penumbra
-        self.hides_when_retreats = False
-
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
@@ -820,10 +831,9 @@ class Penumbra(Monster):
         self.species: str = "penumbra"
         self.step_transition: str = "in_out_quad"  # walking
         self.step_duration: float = 0.35
+        self.invisible = True
         self.stats = stats.PenumbraStats()
 
-        # exclusive of attack and retreat monsters like rattlesnake and penumbra
-        self.hides_when_retreats = True
         # exclusive of penumbra
         self.ability_active: bool = False
 
@@ -834,7 +844,8 @@ class Penumbra(Monster):
     @property
     def can_retreat(self) -> bool:
         """
-        Property defining if a Character can retreat after an attack
+        Property defining if a Character can retreat after an attack. Penumbra.stats.remaining_moves
+        are set to 0 when it cannot reach any player with enough remaining moves to attack and retreat
         :return: True if character can retreat after attack, False otherwise
         """
         return self.stats.remaining_moves > 0
@@ -848,12 +859,28 @@ class Penumbra(Monster):
         """
         return self.ability_active
 
+    def hide_if_player_in_range(self, steps: int, position: tuple[int,int] | None = None) -> None:
+        """
+        Hides if there is a player within reachable range a Player within reachable range
+        :param steps: range within which the Player must be
+        :param position: position from which the steps should be counted (optional)
+        :return: None
+        """
+        player_positions = {tile.position for tile in self.get_dungeon().children if tile.has_token("player")}
+        position = self.get_position() if position is None else position
+
+        if any(self.get_dungeon().check_if_connexion(position, player_position,
+                                       self.blocked_by,
+                                       steps)
+               for player_position in player_positions):
+            self.hide()
+
     def hide(self) -> None:
         """
         Hides the Monster
         :return: None
         """
-        self.token.color.a = 0  # changes transparency
+        self.token.color.a = 0.5  # changes transparency
         self.ability_active = True
 
     def unhide(self) -> None:
@@ -869,16 +896,19 @@ class Penumbra(Monster):
         Attacks and retreats
         :return: None
         """
-        super().attack_players()
+        if any(self.get_dungeon().get_tile(position).has_token("player")
+               for position in self.get_dungeon().get_nearby_positions(self.get_position())):
 
-        if self.stats.remaining_attacks < self.stats.max_attacks:
+            super().attack_players()
             path: list[tuple[int,int]] = (self.get_path_to_target(self.find_random_target(
                 max_steps=self.stats.remaining_moves, min_steps=self.stats.min_retreat_dist)))
-            self.token.slide(path, self.token.on_retreat_completed)  # no check if path > 1. It must always be so
-        elif self.stats.remaining_attacks == self.stats.max_attacks:
-            self.stats.remaining_moves = 0  # no retreat if no attack happened
+            if len(path) > 1:
+                self.token.slide(path, self.token.on_retreat_completed)
+            else:  # if somehow cannot retreat will stay in place
+                self.stats.remaining_moves = 0
+
         else:
-            raise ValueError("stats.remaining_attacks cannot be higher than stats.max_attacks!")
+            self.stats.remaining_moves = 0  # no retreat if no attack happened
 
 
 
@@ -890,10 +920,16 @@ class Penumbra(Monster):
             if self.get_dungeon().are_nearby(self.get_position(), target):
                 super().move_token_or_act_on_tile([self.get_position()])
             else:
-                # penumbra does not get too close to player. It ensures max_attacks and retreat moves
                 path: list[tuple] = self._select_path_to_target(self._find_closest_accesses(target))
+
                 max_dist: int = self.stats.remaining_moves - self.stats.max_attacks - self.stats.min_retreat_dist
-                path = path[:max_dist + 1] if len(path) > max_dist + 1 else path
+                max_dist = 0 if max_dist < 0 else max_dist
+                distance_to_target: int = len(self.get_dungeon().find_shortest_path(self.get_position(), target)) - 1
+                # penumbra does not get too close to player. It ensures max_attacks and retreat moves
+                # if still far, will approach full movement
+                if len(path) > max_dist + 1 and distance_to_target < (max_dist * 2 + 1):
+                    path = self._remove_landing_conflicts(path[:max_dist + 1])
+
                 super().move_token_or_act_on_tile(path)
 
         else:

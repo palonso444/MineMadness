@@ -186,7 +186,7 @@ class Tile(Button):
         elif self.is_nearby(active_player.get_position()):
             return active_player.can_fight(self.get_token("monster").species)
 
-        return False
+        return self.get_token("monster").character.is_hidden
 
     def _check_with_wall_token(self, active_player: Player) -> bool:
         """
@@ -246,7 +246,8 @@ class Tile(Button):
             # game.update_switch("character_done") at the end of self.dynamite_explode(). Here does not work
 
         # move player
-        elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with):
+        elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with)\
+                or (self.has_token("monster") and self.get_token("monster").character.is_hidden):
             path = self.dungeon.find_shortest_path(
                 player.token.position, self.position, player.blocked_by)
             player.token.slide(path, player.token.on_move_completed)

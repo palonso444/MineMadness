@@ -286,7 +286,7 @@ class SawyerStats(PlayerStats): # BALANCED
     health: int = 200 #5
     strength: list[int] = field(default_factory=lambda: [1,2])
     advantage_strength_incr: int = 2
-    moves: int = 4
+    moves: int = 40 #4
     digging_moves: int = 3
 
 
@@ -693,14 +693,14 @@ class PenumbraStats(MonsterStats):
     char: str = "A"
     health: int = 5
     strength: list[int] = field(default_factory=lambda: [2,10])
-    moves: int = 10
-    max_attacks: int = 3
+    moves: int = 5  # 10 # do not go below 7 or will not move due to max_attack and retreat moves
+    max_attacks: int = 1  #3
     random_motility: float = 0.4
     dodging_ability: int = 13
     experience_when_killed: int = 15
 
     # exclusive of penumbra. Minimum distance of retreat from player
-    min_retreat_dist = 3
+    min_retreat_dist = 1  #3
 
     def __post_init__(self):
         if self.max_attacks is None:

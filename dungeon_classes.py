@@ -90,7 +90,7 @@ class DungeonLayout(GridLayout):
         if len(positions_to_update) == 0:
             dungeon._rotate_torches()
             dungeon.update_bright_spots()
-            #dungeon.hide_penumbras()
+            dungeon.hide_penumbras()
             dungeon.game.dungeon = dungeon
 
     def update_bright_spots(self) -> None:
@@ -143,16 +143,10 @@ class DungeonLayout(GridLayout):
         Player within reachable range
         :return: None
         """
-        player_positions = {tile.position for tile in self.children if tile.has_token("player")}
-
         for tile in self.children:
             if tile.has_token("monster", "penumbra"):
-                monster_token = tile.get_token("monster")
-                if any(self.check_if_connexion(monster_token.position, player_position,
-                                                  monster_token.character.blocked_by,
-                                                  monster_token.character.stats.moves)
-                       for player_position in player_positions):
-                    monster_token.character.hide()
+                character = tile.get_token("monster").character
+                character.hide_if_player_in_range(character.stats.moves)  # remaining moves not yet established
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
@@ -696,7 +690,7 @@ class DungeonLayout(GridLayout):
         Returns start tile position if no possible path
         :param start_tile_position: coordinates of the starting tile
         :param end_tile_position: coordinates of the end tile
-        :param excluded: Token.kinds that should be avoided
+        :param excluded: Token.kinds that should be avoided as they block the path
         :return: path to target if possible, otherwise list with one element [start_tile_position]
         """
         directions: tuple = (-1, 0), (1, 0), (0, -1), (0, 1)
@@ -709,6 +703,8 @@ class DungeonLayout(GridLayout):
             excluded_positions = excluded_positions | self.scan_tiles(excluded)
         if end_tile_position in excluded_positions:
             excluded_positions.remove(end_tile_position)
+
+        excluded_positions = self._filter_excluded_positions(excluded_positions)
 
         while len(queue) > 0:
             current_position, path = queue.popleft()
@@ -725,3 +721,14 @@ class DungeonLayout(GridLayout):
                     queue.append(((row, col), path + [(row, col)]))
 
         return [start_tile_position]
+
+    def _filter_excluded_positions(self, excluded_positions: set[tuple]) -> set[tuple]:
+        """
+        Filters excluded positions depending on the game requirements
+        :param excluded_positions: set of positions to filter
+        :return: filtered positions
+        """
+        return {position for position in excluded_positions
+                if not self.get_tile(position).has_token("monster")
+                or not self.get_tile(position).get_token("monster").character.is_hidden}
+

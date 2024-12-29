@@ -106,6 +106,7 @@ class Player(Character, ABC, EventDispatcher):
         self.blocked_by: list[str] = ["wall", "monster"]
         self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
         self.ignores: list[str] = ["light"]
+        self.invisible: bool = False
         self.step_transition: str = "in_out_quad" # walking
         self.step_duration: float = 0.35
 
@@ -322,6 +323,7 @@ class Player(Character, ABC, EventDispatcher):
         opponent = opponent_tile.get_token("monster").character
         opponent = self.fight_opponent(opponent)
         self.subtract_weapon()
+        self.stats.remaining_moves =- 1
 
         if opponent.stats.health <= 0:
             self.experience += opponent.stats.experience_when_killed

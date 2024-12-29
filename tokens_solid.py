@@ -211,20 +211,26 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :param on_complete: callback to be triggered once the path is completed or the character runs out of moves
         :return: None
         """
-        self.get_current_tile().remove_token(self)
         self.start_position = path[0]
         self.path = path[1:]
-        self.dungeon.disable_all_tiles()
-        self._slide_one_step(on_complete)
+        next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
 
-    def _slide_one_step(self, on_complete: Callable | None) -> None:
+        if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
+            # one attack
+            next_tile.get_token("monster").character.fight_on_tile(self.get_current_tile())
+            self.dungeon.game.update_switch("character_done")
+        else:
+            self.get_current_tile().remove_token(self)
+            self.dungeon.disable_all_tiles()
+            self._slide_one_step(next_tile, on_complete)
+
+    def _slide_one_step(self, next_tile: Tile, on_complete: Callable | None) -> None:
         """
         Starts the animation of the CharacterToken sliding one step on CharacterToken.path
+        :param next_tile: next Tile on the path
         :param on_complete: callback to be triggered once the path is completed or the character runs out of moves
         :return: None
         """
-        next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
-
         animation = Animation(pos=next_tile.pos, duration=self.character.step_duration,
                               transition=self.character.step_transition)
 
@@ -250,8 +256,19 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         self.character.stats.remaining_moves -= 1
+
+        if self.character.invisible and not self.character.is_hidden:
+            self.character.hide_if_player_in_range(self.character.stats.moves, position=current_tile.position)
+
         if len(self.path) > 0:
-            self._slide_one_step(on_complete)
+            next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
+            if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
+                self.update_token_on_tile(current_tile)
+                next_tile.get_token("monster").character.fight_on_tile(current_tile)
+                self.dungeon.game.update_switch("character_done")
+            else:
+                self._slide_one_step(next_tile, on_complete)
+
         else:
             self.update_token_on_tile(current_tile)
             self.character.act_on_tile(current_tile)
@@ -494,7 +511,7 @@ class MonsterToken(CharacterToken):
         :return: None
         """
         if len(self.path) > 0:
-            self._slide_one_step(on_complete)
+            self._slide_one_step(self.dungeon.get_tile(self.path.pop(0)), on_complete)
         else:
             start_tile = self.dungeon.get_tile(self.start_position)
             self.update_token_on_tile(current_tile)
@@ -511,10 +528,10 @@ class MonsterToken(CharacterToken):
         :return: None
         """
         self.character.stats.remaining_moves -= 1
-        #if self.character.hides_when_retreats and not self.character.is_hidden:
-            #self.character.hide()
+        if self.character.invisible and not self.character.is_hidden:
+            self.character.hide()
         if len(self.path) > 0:
-            self._slide_one_step(on_complete)
+            self._slide_one_step(self.dungeon.get_tile(self.path.pop(0)), on_complete)
         else:
             self.update_token_on_tile(current_tile)
             self.dungeon.game.update_switch("character_done")

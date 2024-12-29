@@ -53,6 +53,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.level: int = 1
         self.active_character: Character | None = None  # defined by MineMadnessGame.on_active_character_id()
         self.total_gems: int | None = None  # defined by MineMadnessGame.DungeonLayout.on_pos()
+        self.ability_button_active: bool | None = None  # activated and deactivates button (no effect if pressed)
 
     @staticmethod
     def on_dungeon(game: MineMadnessGame, dungeon: DungeonLayout) -> None:
@@ -172,7 +173,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
         if turn is not None:
-
             if turn % 2 == 0 or monsters.Monster.all_dead_or_out():
                 players.Player.initialize_moves_attacks()
             else:

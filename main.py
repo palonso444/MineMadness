@@ -88,6 +88,8 @@ class MineMadnessApp(App):
         if self.saved_game:
             remove(self.saved_game_file)
             self.saved_game = False
+        if self.sm.has_screen("game_screen"):
+            self._clean_previous_game()
         self.game = MineMadnessGame(name="game_screen")
         self.ongoing_game = True
         self._setup_dungeon_screen()

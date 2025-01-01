@@ -1,14 +1,8 @@
 Description of the branch
 ---------------------------
 
-This branch contains the game itself with all the interfaces.
+This branch contains the beginning of the implementation of dynamite explosion affecting multiple Tiles.
 
-Monster and player attributes are already balanced.
+Requires to improve the system of throwing dynamite (more range, not enough if there is connexion. A system of realistic vision field must be implemented)
 
-Monster frequencies per level are already balanced.
-
-Player leveling up is already balanced.
-
-Game mechanics like applying toughness, leveling up, increase attributes when consuming an item... should work but they are not properly unit-tested.
-
-When resuming the project, start with issue number #147
+Implement a counter of dodging tokens. Substract one at the end of on_dodge_completed. When it reaches 0, make dynamite explode in Tile stored as attribute of DungeonLayout

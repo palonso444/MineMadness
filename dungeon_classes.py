@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from kivy.graphics import Rectangle
-from kivy.properties import ListProperty
+from kivy.properties import NumericProperty, ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 from kivy.graphics.texture import Texture
 from kivy.clock import Clock
@@ -23,7 +23,7 @@ class DungeonLayout(GridLayout):
     features are determined by DungeonLayout.DungeonStats
     """
 
-    positions_to_update = ListProperty([])
+    positions_to_update = NumericProperty(0)
     bright_spots = ListProperty([])
 
     def __init__(self, game: MineMadnessGame,
@@ -87,7 +87,7 @@ class DungeonLayout(GridLayout):
         :param positions_to_update: list of token positions that need to be positioned. When empty, lever starts
         :return: None
         """
-        if len(positions_to_update) == 0:
+        if positions_to_update == 0:
             dungeon._rotate_torches()
             dungeon.update_bright_spots()
             dungeon.hide_penumbras()
@@ -297,16 +297,16 @@ class DungeonLayout(GridLayout):
 
         return Rectangle(texture=texture, pos=self.pos, size=self.size)
 
-    def _add_to_positions_to_update(self, tile_position: tuple[int, int]) -> None:
+    def _add_position_to_update(self, tile_position: tuple[int, int]) -> None:
         """
-        Adds Tile_position to positions_to_update list. Positions are removed by Tile.update_tokens_pos() after updating
-        Token.pos according to Tile.pos. When last position is removed, means that all Tokens are positioned in their
+        Updates the counter of positions to update. Counter is decreased by Tile.update_tokens_pos() after updating
+        Token.pos according to Tile.pos. When counter reaches 0, means that all Tokens are positioned in their
         respective pos and game can start.
-        :param tile_position: position to add to the queue
+        :param tile_position: position of the tile where Token must be positioned
         :return: None
         """
         if tile_position != (self.rows - 1, 0):  # position lower left corner does not need to be repositioned
-            self.positions_to_update.append(tile_position)  # Works with Tile.update_tokens_pos()
+            self.positions_to_update += 1
 
     def place_torches(self, size_modifier: float) -> None:
         """
@@ -339,7 +339,7 @@ class DungeonLayout(GridLayout):
                             pos_modifier = (0,
                                             -tile_side / 2 + torch_side / 2)  # left
 
-                    self._add_to_positions_to_update(tile_position)
+                    self._add_position_to_update(tile_position)
                     tile = self.get_tile(tile_position)
                     tile.place_item("light", "torch", character=None,
                                     size_modifier=size_modifier, pos_modifier=pos_modifier,
@@ -543,7 +543,7 @@ class DungeonLayout(GridLayout):
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
-                self._add_to_positions_to_update(tile_position)
+                self._add_position_to_update(tile_position)
                 tile.place_item(token_kind, token_species, character)
 
     def get_tile(self, position: tuple[int:int]) -> Tile:

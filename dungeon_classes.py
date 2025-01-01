@@ -12,6 +12,7 @@ from numpy import uint8, int16, ogrid, zeros, clip
 
 import player_classes as players
 import monster_classes as monsters
+import trap_class as traps
 import tile_classes as tiles
 from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
@@ -237,7 +238,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_equal_items("{", 4)
         blueprint.place_equal_items("*", 4)
         blueprint.place_equal_items("#", 4)
-        blueprint.place_equal_items("A", 2)
+        blueprint.place_equal_items("!", 2)
         # blueprint.place_equal_items("K", 3)
        # blueprint.place_equal_items("N", 4)
         #blueprint.place_equal_items("G", 3)
@@ -537,6 +538,11 @@ class DungeonLayout(GridLayout):
                 case "o":
                     token_kind = "treasure"
                     token_species = "gem"
+
+                case "!":
+                    token_kind = "trap"
+                    token_species = "trap"
+                    character = traps.Trap()
 
             if character is not None:
                 character.setup_character()

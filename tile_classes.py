@@ -22,6 +22,7 @@ class Tile(Button):
         self.tokens: dict [str:list[Token]] = {
             "player": [],
             "monster": [],
+            "trap": [],
             "wall": [],
             "pickable": [],
             "treasure": [],

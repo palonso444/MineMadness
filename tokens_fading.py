@@ -109,9 +109,9 @@ class EffectToken(FadingToken):
         self.effect_ends: bool = effect_ends  # determines if effect start or ends
 
         if effect_ends:
-            self.source = f"./fadingtokens/{self.target_attr}_fades_token.png"
+            self.source = f"./fadingtokens/{self.target_attr}_effect_red_token.png"
         else:
-            self.source = f"./fadingtokens/{self.target_attr}_effect_token.png"
+            self.source = f"./fadingtokens/{self.target_attr}_effect_green_token.png"
 
         with self.canvas:
             self.color = Color(1, 1, 1, 1)

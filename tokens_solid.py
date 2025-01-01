@@ -75,10 +75,6 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         tile.remove_token(self)
         self.canvas_context.remove(self.shape)
         self.shape = None
-        '''if self.shape in self.dungeon.canvas.children:
-            self.dungeon.canvas.remove(self.shape)
-        elif self.shape in self.dungeon.canvas.after.children:  # walls are in canvas after
-            self.dungeon.canvas.after.remove(self.shape)'''
         if self.character is not None:
             self.character.token = None
 
@@ -94,8 +90,13 @@ class SceneryToken(SolidToken):
         super().__init__(kind, species, position, character, dungeon_instance,
                          size_modifier, pos_modifier, bright_radius, bright_int, gradient, **kwargs)
 
+        if self.kind == "trap" and self.character.hidden:
+            alpha: float = 0.5
+        else:
+            alpha: int = 1
+
         with self.canvas_context:
-            self.color = Color(1, 1, 1, 1)
+            self.color = Color(1, 1, 1, alpha)
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update_pos)

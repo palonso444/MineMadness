@@ -44,7 +44,7 @@ class Tile(Button):
         for token_list in tile.tokens.values():
             for token in token_list:
                 token.pos = tile.pos[0] + token.pos_modifier[0], tile.pos[1] - token.pos_modifier[1]  # (x,y)
-                tile.dungeon.positions_to_update.remove(token.position)
+                tile.dungeon.positions_to_update -= 1
 
     def set_token(self, token:Token) -> None:
         """

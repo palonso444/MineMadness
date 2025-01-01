@@ -140,14 +140,18 @@ class Tile(Button):
             "gradient": gradient
         }
 
-        if token_kind == "player":
-            token = PlayerToken(**token_args)
-            character.token = token
-        elif token_kind == "monster":
-            token = MonsterToken(**token_args)
-            character.token = token
-        else:
-            token = SceneryToken(**token_args)
+        match token_kind:
+            case "player":
+                token = PlayerToken(**token_args)
+                character.token = token
+            case "monster":
+                token = MonsterToken(**token_args)
+                character.token = token
+            case "trap":
+                token = SceneryToken(**token_args)
+                character.token = token
+            case _:
+                token = SceneryToken(**token_args)
 
         self.set_token(token)
         self.bind(pos=self.update_tokens_pos)
@@ -164,6 +168,8 @@ class Tile(Button):
             return self._check_with_monster_token(active_player)
         if self.has_token("wall"):
             return self._check_with_wall_token(active_player)
+        if self.has_token("trap"):
+            return self._check_with_trap_token(active_player)
 
         if active_player.using_dynamite:
             return self.dungeon.check_if_connexion(active_player.token.position, self.position,
@@ -222,6 +228,19 @@ class Tile(Button):
 
         return True
 
+    def _check_with_trap_token(self, active_player: Player) -> bool:
+        """
+        Checks if a Tile having a Token of Token.kind "trap" fulfills the requirements to be activated
+        :param active_player: active_player: current active Player of the game
+        :return: True if the Tile has to be activated, False otherwise
+        """
+        if self.get_token("trap").character.hidden:
+            return True
+        if self.is_nearby(active_player.token.position) and active_player.species == "hawkins":
+            return True
+
+        return False
+
     def on_release(self) -> None:
         """
         Handles the logic when a Player falls on the Tile.
@@ -248,7 +267,8 @@ class Tile(Button):
 
         # move player
         elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with)\
-                or (self.has_token("monster") and self.get_token("monster").character.is_hidden):
+                or (self.has_token("monster") and self.get_token("monster").character.is_hidden)\
+                or (self.has_token("trap") and self.get_token("monster").character.hidden):
             path = self.dungeon.find_shortest_path(
                 player.token.position, self.position, player.blocked_by)
             player.token.slide(path, player.token.on_move_completed)

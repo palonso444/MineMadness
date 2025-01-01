@@ -736,7 +736,13 @@ class DungeonLayout(GridLayout):
         :param excluded_positions: set of positions to filter
         :return: filtered positions
         """
-        return {position for position in excluded_positions
-                if not self.get_tile(position).has_token("monster")
-                or not self.get_tile(position).get_token("monster").character.is_hidden}
+        excluded_positions = {position for position in excluded_positions
+                              if not self.get_tile(position).has_token("monster")
+                              or not self.get_tile(position).get_token("monster").character.is_hidden}
+
+        excluded_positions = {position for position in excluded_positions
+                              if not self.get_tile(position).has_token("trap")
+                              or not self.get_tile(position).get_token("trap").character.hidden}
+
+        return excluded_positions
 

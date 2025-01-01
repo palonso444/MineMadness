@@ -103,7 +103,7 @@ class Player(Character, ABC, EventDispatcher):
     def __init__(self):
         super().__init__()
         self.kind: str = "player"
-        self.blocked_by: list[str] = ["wall", "monster"]
+        self.blocked_by: list[str] = ["wall", "monster", "trap"]
         self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
         self.ignores: list[str] = ["light"]
         self.invisible: bool = False
@@ -253,6 +253,12 @@ class Player(Character, ABC, EventDispatcher):
             self._dig(tile)
         elif tile.has_token("monster"):
             self.fight_on_tile(tile)
+        elif tile.has_token("trap"):
+            character = tile.get_token("trap").character
+            if character.hidden:
+                self._fall_in_trap(tile)
+            else:
+                self._disarm_trap(tile)
         else:
             if tile.has_token("pickable") and "pickable" not in self.ignores:
                 self._pick_object(tile)
@@ -295,6 +301,13 @@ class Player(Character, ABC, EventDispatcher):
         Player.gems += 1
         game.update_switch("gems")
         tile.get_token("treasure").delete_token(tile)
+
+    def _fall_in_trap(self, tile:Tile) ->None:
+        tile.get_token("trap").character.show_and_damage(self)
+        self.stats.remaining_moves = 0
+
+    def _disarm_trap(self, tile:Tile) -> None:
+        raise Exception("This method should not be called in Sawyer or Crusher Jane")
 
     def _dig(self, wall_tile: Tile) -> None:
 
@@ -655,6 +668,9 @@ class Hawkins(Player):
         self.ability_active = False
         self.token.dungeon.game.update_switch("ability_button")
         tile.dynamite_fall()
+
+    def _disarm_trap(self, tile:Tile) ->None:
+        pass
 
     def enhance_damage(self, damage: int) -> int:
         return damage

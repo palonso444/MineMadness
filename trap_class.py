@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 from random import randint, uniform
 
@@ -27,6 +28,28 @@ class Trap:
         """
         self.token.color.a = 1  # changes transparency
         self.hidden = False
+
+    def show_and_damage(self, player: Player) -> None:
+        """
+        Method controlling the logic of what happens when a trap is stepped on
+        :param player: PlayerToken stepping on the trap
+        :return:
+        """
+        self.unhide()
+        damage = player.stats.health * uniform(0.0, 1.0)
+        damage = player.apply_toughness(damage)
+
+        if player.is_hidden:
+            player.unhide()
+
+        player.stats.health -= damage
+        player.token.show_damage()
+        self.token.show_effect_token(
+            "trap", self.token.shape.pos, self.token.shape.size, effect_ends=True  # red
+        )
+
+        if player.stats.health <= 0:
+            player.kill_character(self.token.get_current_tile())
 
 
 @dataclass

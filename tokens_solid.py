@@ -64,7 +64,22 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         Returns the Tile corresponding to the current position of the Token
         :return: current Tile where Token is located
         """
-        return self.dungeon.get_tile(self.position)  # this won't work for SceneryTokens! position attribute for Tokens
+        return self.dungeon.get_tile(self.position)
+
+
+    def show_effect_token(self, attribute: str, pos: tuple [float,float],
+                          size: tuple [float,float], effect_ends: bool = False) -> None:
+        """
+        Shows the FadingToken of the effect modifying the specified character attribute
+        :param attribute: attribute being modified
+        :param pos: position of (on the screen) of the CharacterToken that shows the FadingToken
+        :param size: size of the CharacterToken that shows the FadingToken
+        :param effect_ends: specifies if the effect ends (red FadingToken) of begins (green FadingToken)
+        :return: None
+        """
+        with self.dungeon.canvas.after:
+            EffectToken(target_attr=attribute, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
+
 
     def delete_token(self, tile: Tile) -> None:
         """
@@ -347,19 +362,6 @@ class PlayerToken(CharacterToken):
         """
         if fading_token.target_attr in self.modified_attributes:
             self.modified_attributes.remove(fading_token.target_attr)
-
-    def show_effect_token(self, attribute: str, pos: tuple [float,float],
-                          size: tuple [float,float], effect_ends: bool = False) -> None:
-        """
-        Shows the FadingToken of the effect modifying the specified character attribute
-        :param attribute: attribute being modified
-        :param pos: position of (on the screen) of the CharacterToken that shows the FadingToken
-        :param size: size of the CharacterToken that shows the FadingToken
-        :param effect_ends: specifies if the effect ends (red FadingToken) of begins (green FadingToken)
-        :return: None
-        """
-        with self.dungeon.canvas.after:
-            EffectToken(target_attr=attribute, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
     @staticmethod
     def _display_health_bar(token: PlayerToken, percent_natural_health: float) -> None:

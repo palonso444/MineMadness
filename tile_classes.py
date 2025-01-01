@@ -3,8 +3,9 @@ from __future__ import annotations
 from kivy.uix.button import Button  # type: ignore
 from kivy.clock import Clock
 
+from character_class import Character
 from monster_classes import Monster
-from tokens_solid import SceneryToken, PlayerToken, MonsterToken
+from tokens_solid import SceneryToken, PlayerToken, MonsterToken, CharacterToken
 from tokens_fading import ExplosionToken
 
 
@@ -261,17 +262,36 @@ class Tile(Button):
         Handles the logic upon a dynamite fall on the Tile
         :return: None
         """
+        dodging_tokens: list[CharacterToken] = [tile.get_token("monster")
+                                                for position in self.dungeon.get_nearby_positions(self.position)
+                                                if (tile := self.dungeon.get_tile(position)).has_token("monster")]
+        dodging_tokens += [tile.get_token("player") for position in self.dungeon.get_nearby_positions(self.position)
+                           if (tile := self.dungeon.get_tile(position)).has_token("player")]
         if self.has_token("monster"):
-            monster_token = self.get_token("monster")
-            path = monster_token.character.get_path_to_target(
-                monster_token.character.find_random_target(monster_token.character.stats.dodging_moves))
-            if len(path) > 1 and monster_token.character.can_dodge:
-                monster_token.slide(path, on_complete=monster_token.on_dodge_completed)
-            else:
-                self.dynamite_explode()
+            dodging_tokens.append(self.get_token("monster"))
 
-        else:
+        dodging_tokens = [token for token in dodging_tokens if token.character.can_dodge]
+
+        if len(dodging_tokens) == 0:
             self.dynamite_explode()
+        else:
+            dodging_paths: list[list[tuple[int,int]]] = [token.character.get_path_to_target
+                             (token.character.find_random_target(token.character.stats.dodging_moves))
+                             for token in dodging_tokens]
+
+            # TODO: delete dodging paths that go through or end in tile where dynamite explodes
+            # TODO: implemenent a counter as NumericProperty in DungeonLayout of the Tokens that manage to dodge
+            # TODO: (number of dodging paths)
+
+            for path in dodging_paths:
+                token: CharacterToken | None = None
+                if self.dungeon.get_tile(path[0]).has_token("monster"):
+                    token =  self.dungeon.get_tile(path[0]).get_token("monster")
+                elif self.dungeon.get_tile(path[0]).has_token("player"):
+                    token = self.dungeon.get_tile(path[0]).get_token("player")
+
+                if len(path) > 1:
+                    token.slide(path, on_complete=token.on_dodge_completed)
 
     def dynamite_explode(self) -> None:
         """

@@ -234,11 +234,11 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         animation = Animation(pos=next_tile.pos, duration=self.character.step_duration,
                               transition=self.character.step_transition)
 
-
         animation.bind(on_complete=lambda animation_obj, token_shape: on_complete(animation_obj,
                                                                                token_shape,
                                                                                next_tile,
                                                                                on_complete))
+
         animation.bind(on_progress=self._move_selection_circle)
         animation.bind(on_progress=self._move_health_bar)
         animation.start(self)
@@ -513,9 +513,12 @@ class MonsterToken(CharacterToken):
         if len(self.path) > 0:
             self._slide_one_step(self.dungeon.get_tile(self.path.pop(0)), on_complete)
         else:
-            start_tile = self.dungeon.get_tile(self.start_position)
+            self.dungeon.get_tile(self.start_position).dynamite_explode()
             self.update_token_on_tile(current_tile)
-            start_tile.dynamite_explode()
+
+        # TODO: here, instead of making dynamite explode on tile self.start_position, subtract one
+        # TODO: of the dodging tokens counter. Make an event, when counter reaches 0, explode dynamite
+        # TODO: in Tile stored as attribute of DungeonLayout
 
     def on_retreat_completed(self, animation_obj: Animation, token_shape: Ellipse,
                            current_tile: Tile, on_complete: Callable) -> None:

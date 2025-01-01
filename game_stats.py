@@ -294,7 +294,7 @@ class SawyerStats(PlayerStats): # BALANCED
 class HawkinsStats(PlayerStats):  # BALANCED
     health: int = 200 #7
     strength: list[int] = field(default_factory=lambda: [1,3])
-    moves: int = 3
+    moves: int = 30 #3
     shooting_range: int = 2
 
 
@@ -516,7 +516,7 @@ class NightmareStats(MonsterStats): # BALANCED
     strength: list[int] = field(default_factory=lambda: [10,15])
     random_motility: float = 0.2
     moves: int = 5 # 8
-    dodging_ability: int = 10
+    dodging_ability: int = 14
     experience_when_killed: int = 25
 
     def __post_init__(self):

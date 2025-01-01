@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from abc import ABC
 from random import randint, uniform
+from trap_class import TrapStats
 
 
 class DungeonStats:
@@ -45,7 +46,8 @@ class DungeonStats:
             PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
             RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
             PenumbraStats.char: PenumbraStats.calculate_frequency(self.stats_level),
-            ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level)
+            ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level),
+            TrapStats.char: TrapStats.calculate_frequency(self.stats_level)
         }
 
         total_monster_frequency = sum(monster_frequencies.values())

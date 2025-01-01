@@ -20,6 +20,9 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
     """
     Base abstract class defining all Tokens that stay on the board for extended periods of time
     """
+
+    modified_attributes = ListProperty([])
+
     def __init__(self, kind: str, species:str, position: tuple[int,int],
                  character: Character, dungeon_instance: DungeonLayout,
                  size_modifier: float, pos_modifier: tuple[int,int],
@@ -79,6 +82,17 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         """
         with self.dungeon.canvas.after:
             EffectToken(target_attr=attribute, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
+
+
+    def remove_attribute_if_in_queue(self, animation: Animation, fading_token:FadingToken) -> None:
+        """
+        Triggered when fading_out animation of FadingToken is completed
+        :param animation: animation object of fading_out
+        :param fading_token: FadingToken fading out
+        :return: None
+        """
+        if fading_token.target_attr in self.modified_attributes:
+            self.modified_attributes.remove(fading_token.target_attr)
 
 
     def delete_token(self, tile: Tile) -> None:
@@ -305,7 +319,6 @@ class PlayerToken(CharacterToken):
     Class defining Tokens representing Players
     """
     bar_length = NumericProperty(None)
-    modified_attributes = ListProperty([])
 
     def __init__(self, kind: str, species: str, character: Player, position: tuple[int,int],
                  dungeon_instance: DungeonLayout, size_modifier: float, pos_modifier: tuple[int,int],
@@ -353,15 +366,6 @@ class PlayerToken(CharacterToken):
             character_token.show_effect_token(modified_attributes[0], character_token.pos,
                                               character_token.size, effect_ends=True)
 
-    def remove_attribute_if_in_queue(self, animation: Animation, fading_token:FadingToken) -> None:
-        """
-        Triggered when fading_out animation of FadingToken is completed
-        :param animation: animation object of fading_out
-        :param fading_token: FadingToken fading out
-        :return: None
-        """
-        if fading_token.target_attr in self.modified_attributes:
-            self.modified_attributes.remove(fading_token.target_attr)
 
     @staticmethod
     def _display_health_bar(token: PlayerToken, percent_natural_health: float) -> None:

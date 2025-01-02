@@ -137,9 +137,7 @@ class Monster(Character, ABC):
         """
         opponent = opponent_tile.get_token("player").character
         opponent = self.fight_opponent(opponent)
-        opponent.token.bar_length = (
-                opponent.stats.health / opponent.stats.natural_health
-        )
+        opponent.token.bar_length = opponent.stats.health / opponent.stats.natural_health
 
         if opponent.stats.health <= 0:
             opponent.kill_character(opponent_tile)

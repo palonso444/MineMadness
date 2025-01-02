@@ -1,5 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from random import random
+
 from kivy.properties import NumericProperty
 from kivy.event import EventDispatcher
 
@@ -135,12 +137,13 @@ class Player(Character, ABC, EventDispatcher):
     def enhance_damage(self, damage: int) -> int:
         pass
 
+
     @property
     def has_all_gems(self) -> bool:
         return Player.gems == self.get_dungeon().game.total_gems
 
-    def has_item(self, item: str) -> bool:
-        return self.inventory[item] > 0
+    #def has_item(self, item: str) -> bool:
+        #return self.inventory[item] > 0
 
     @property
     def is_exited(self) -> bool:
@@ -177,6 +180,22 @@ class Player(Character, ABC, EventDispatcher):
         :return: True if character can retreat after attack, False otherwise
         """
         return False
+
+    @property
+    def can_find_trap(self) -> bool:
+        """
+        Property defining if a Character is able to spot a trap
+        :return: True if character is able to spot the trap, False otherwise
+        """
+        return random() < self.stats.trap_spotting_chance
+
+    @property
+    def can_disarm_trap(self) -> bool:
+        """
+        Property defining if a Character is able to disarm a trap
+        :return: True if character is able to disarm the trap, False otherwise
+        """
+        return random() < self.stats.trap_disarming_chance
 
     def reset_objects(self) -> None:
         """
@@ -243,6 +262,15 @@ class Player(Character, ABC, EventDispatcher):
 
         self.token.modified_attributes = attribute_names
 
+    def perform_passive_action(self) -> None:
+        """
+        Method defining the passive action that Players perform when turn is skipped (double-click on them)
+        :return: None
+        """
+        # check presence of traps within check if connexion with movement range
+        # if can_find_trap, unhide the trap
+        pass
+
     def act_on_tile(self, tile:Tile) -> None:
         """
         Handles the logic of PLayer behaviour depending on Tile.token
@@ -254,8 +282,7 @@ class Player(Character, ABC, EventDispatcher):
         elif tile.has_token("monster"):
             self.fight_on_tile(tile)
         elif tile.has_token("trap"):
-            character = tile.get_token("trap").character
-            if character.hidden:
+            if self.get_position() == tile.position:
                 self._fall_in_trap(tile)
             else:
                 self._disarm_trap(tile)
@@ -307,7 +334,15 @@ class Player(Character, ABC, EventDispatcher):
         self.stats.remaining_moves = 0
 
     def _disarm_trap(self, tile:Tile) -> None:
-        raise Exception("This method should not be called in Sawyer or Crusher Jane")
+        self.stats.remaining_moves -= 1
+        trap_token = tile.get_token("trap")
+        trap_token.show_effect_token(effect="trap_out",
+                                     pos=trap_token.shape.pos,
+                                     size=trap_token.shape.size)
+        self.experience += trap_token.character.stats.calculate_experience(self.get_dungeon().dungeon_level)
+        self.token.dungeon.game.ids.experience_bar.value = self.experience
+        trap_token.delete_token(tile)
+
 
     def _dig(self, wall_tile: Tile) -> None:
 
@@ -332,7 +367,7 @@ class Player(Character, ABC, EventDispatcher):
                 wall_tile.get_token("light").delete_token(wall_tile)
             self.get_dungeon().update_bright_spots()
 
-    def fight_on_tile(self, opponent_tile) -> None:
+    def fight_on_tile(self, opponent_tile: Tile) -> None:
         opponent = opponent_tile.get_token("monster").character
         opponent = self.fight_opponent(opponent)
         self.subtract_weapon()
@@ -483,7 +518,9 @@ class Sawyer(Player):
         1 health per level,
         1 recovery_end_of_level per level,
         1 advantage_strength_increase per level
-        1 max damage every 2 levels"""
+        1 max damage every 2 levels
+        +0.05 in trap spotting chance every 3 levels
+        """
 
         self._level_up_health(1)
         self.stats.advantage_strength_incr += 1
@@ -493,12 +530,23 @@ class Sawyer(Player):
             self._level_up_moves(1)
             self._level_up_strength((0, 1))
 
+        if value % 3 == 0:
+            self.stats.trap_spotting_chance += 0.05 \
+                if self.stats.trap_spotting_chance < 1.0 else self.stats.trap_spotting_chance
+
         self._update_level_track(value)
 
         #print("SAWYER NEW LEVEL")
         #print(value)
         #print(self.level_track)
         #print(self.stats)
+
+    def perform_passive_action(self) -> None:
+        """
+        Placeholder, for the moment all passive actions are the same (finding traps) and defined within the superclass
+        :return: None
+        """
+        super().perform_passive_action()
 
     def hide(self):
         self.stats.remaining_moves -= 1
@@ -580,6 +628,13 @@ class CrusherJane(Player):
         #print(self.level_track)
         #print(self.stats)
 
+    def perform_passive_action(self) -> None:
+        """
+        Placeholder, for the moment all passive actions are the same (finding traps) and defined within the superclass
+        :return: None
+        """
+        super().perform_passive_action()
+
     def enhance_damage(self, damage: int) -> int:
         if self.ability_active:
             damage += self.stats.advantage_strength_incr
@@ -640,6 +695,7 @@ class Hawkins(Player):
         1 health point every level
         1 recovery_end_of_level every 3 levels
         1 max damage every level and 1 min damage every 2 levels
+        + 0.05 in trap_spotting every 2 levels
         """
         self._level_up_health(1)
         self._level_up_strength((0, 1))
@@ -651,12 +707,23 @@ class Hawkins(Player):
             self._level_up_moves(1)
             self.stats.recovery_end_of_level += 1
 
+        if value % 2 == 0:
+            self.stats.trap_spotting_chance += 0.05 \
+                if self.stats.trap_spotting_chance < 1.0 else self.stats.trap_spotting_chance
+
         self._update_level_track(value)
 
         #print("HAWKINS NEW LEVEL")
         #print(value)
         #print(self.level_track)
         #print(self.stats)
+
+    def perform_passive_action(self) -> None:
+        """
+        Placeholder, for the moment all passive actions are the same (finding traps) and defined within the superclass
+        :return: None
+        """
+        super().perform_passive_action()
 
     @property
     def using_dynamite(self):
@@ -668,9 +735,6 @@ class Hawkins(Player):
         self.ability_active = False
         self.token.dungeon.game.update_switch("ability_button")
         tile.dynamite_fall()
-
-    def _disarm_trap(self, tile:Tile) ->None:
-        pass
 
     def enhance_damage(self, damage: int) -> int:
         return damage

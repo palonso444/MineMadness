@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from random import randint, uniform
+from random import uniform, randint
+
 
 class Trap:
 
@@ -36,7 +37,7 @@ class Trap:
         :return:
         """
         self.unhide()
-        damage = self.stats.calculate_damage(player)
+        damage = self.stats.calculate_damage(self.token.dungeon.dungeon_level)
         damage = player.apply_toughness(damage)
 
         if player.is_hidden:
@@ -47,6 +48,7 @@ class Trap:
         self.token.show_effect_token(
             "trap", self.token.shape.pos, self.token.shape.size, effect_ends=True  # red
         )
+        player.token.bar_length = player.stats.health / player.stats.natural_health
 
         if player.stats.health <= 0:
             player.kill_character(self.token.get_current_tile())
@@ -55,7 +57,8 @@ class Trap:
 @dataclass
 class TrapStats:
     char: str = "!"
-    experience_when_killed: int = 5
+    base_damage: list[int] = field(default_factory=lambda: [1, 6])
+    base_experience_when_disarmed: int = 1  #15
 
     @staticmethod
     def calculate_frequency(seed: int) -> float: # seed is level
@@ -71,6 +74,22 @@ class TrapStats:
         else:
             return uniform(0.1, 0.4)
 
-    @staticmethod
-    def calculate_damage(player: Player) -> int:
-        return player.stats.health * uniform(0.0, 1.0)
+    def calculate_damage(self, dungeon_level: int) -> int:
+        """
+        Damage dealt by traps increases with dungeon level
+        :param dungeon_level: current level of the dungeon
+        :return: damage dealt by the trap
+        """
+        level: int = dungeon_level // 3
+        level = 1 if level < 1 else level
+        return randint(self.base_damage[0], self.base_damage[1]) * level
+
+    def calculate_experience(self, dungeon_level: int) -> int:
+        """
+        Experience granted by traps disarming increases with dungeon level
+        :param dungeon_level: current level of the dungeon
+        :return: experience rewarded by the trap
+        """
+        level: int = dungeon_level // 3
+        level = 1 if level < 1 else level
+        return self.base_experience_when_disarmed * level

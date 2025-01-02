@@ -236,7 +236,7 @@ class Tile(Button):
         """
         if self.get_token("trap").character.hidden:
             return True
-        if self.is_nearby(active_player.token.position) and active_player.species == "hawkins":
+        if not self.get_token("trap").character.hidden and self.is_nearby(active_player.token.position):
             return True
 
         return False
@@ -266,9 +266,10 @@ class Tile(Button):
             # game.update_switch("character_done") at the end of self.dynamite_explode(). Here does not work
 
         # move player
-        elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with)\
+        elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with + ["trap"])\
                 or (self.has_token("monster") and self.get_token("monster").character.is_hidden)\
-                or (self.has_token("trap") and self.get_token("monster").character.hidden):
+                or (self.has_token("trap") and (self.get_token("trap").character.hidden or not player.can_disarm_trap)):
+
             path = self.dungeon.find_shortest_path(
                 player.token.position, self.position, player.blocked_by)
             player.token.slide(path, player.token.on_move_completed)

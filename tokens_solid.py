@@ -288,10 +288,16 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         """
         self.character.stats.remaining_moves -= 1
 
+        # invisible MonsterTokens hide while moving
         if self.character.invisible and not self.character.is_hidden:
             self.character.hide_if_player_in_range(self.character.stats.moves, position=current_tile.position)
 
-        if len(self.path) > 0:
+        if self.character.kind == "player" and current_tile.has_token("trap"):
+            self.update_token_on_tile(current_tile)
+            self.character.fall_in_trap(current_tile)
+            self.dungeon.game.update_switch("character_done")
+
+        elif len(self.path) > 0:
             next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
             if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
                 self.update_token_on_tile(current_tile)

@@ -283,7 +283,7 @@ class Player(Character, ABC, EventDispatcher):
             self.fight_on_tile(tile)
         elif tile.has_token("trap"):
             if self.get_position() == tile.position:
-                self._fall_in_trap(tile)
+                self.fall_in_trap(tile)
             else:
                 self._disarm_trap(tile)
         else:
@@ -329,7 +329,7 @@ class Player(Character, ABC, EventDispatcher):
         game.update_switch("gems")
         tile.get_token("treasure").delete_token(tile)
 
-    def _fall_in_trap(self, tile:Tile) ->None:
+    def fall_in_trap(self, tile:Tile) ->None:
         tile.get_token("trap").character.show_and_damage(self)
         self.stats.remaining_moves = 0
 

@@ -235,11 +235,11 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        blueprint.place_equal_items("{", 4)
-        blueprint.place_equal_items("*", 4)
-        blueprint.place_equal_items("#", 4)
-        blueprint.place_equal_items("!", 2)
-        blueprint.place_equal_items("K", 2)
+        blueprint.place_equal_items("{", 0)
+        blueprint.place_equal_items("*", 0)
+        blueprint.place_equal_items("#", 1)
+        blueprint.place_equal_items("!", 10)
+        blueprint.place_equal_items("K", 10)
        # blueprint.place_equal_items("N", 4)
         #blueprint.place_equal_items("G", 3)
         blueprint.place_equal_items("o", self.stats.gem_number())
@@ -736,13 +736,6 @@ class DungeonLayout(GridLayout):
         :param excluded_positions: set of positions to filter
         :return: filtered positions
         """
-        excluded_positions = {position for position in excluded_positions
-                              if not self.get_tile(position).has_token("monster")
-                              or not self.get_tile(position).get_token("monster").character.is_hidden}
-
-        excluded_positions = {position for position in excluded_positions
-                              if not self.get_tile(position).has_token("trap")
-                              or not self.get_tile(position).get_token("trap").character.hidden}
-
-        return excluded_positions
+        return {position for position in excluded_positions
+                if not self.get_tile(position).has_all_characters_hidden()}
 

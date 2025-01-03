@@ -77,8 +77,11 @@ class Tile(Button):
         :return: None
         """
         for token_list in self.tokens.values():
-            while len(token_list) > 0:
-                token_list[0].delete_token(self)
+            #while len(token_list) > 0:
+                #token_list[0].delete_token(self)
+            for token in token_list:
+                token.delete_token(self)
+
 
     def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
         """
@@ -94,6 +97,17 @@ class Tile(Button):
 
         return (len (self.tokens[token_kind]) > 0 and
                 (token_species is None or any(token.species == token_species for token in self.tokens[token_kind])))
+
+    def has_all_characters_hidden(self) -> bool:
+        """
+        Checks if all Token.characters of the Tile are hidden
+        :return: True if all Token.characters are hidden, False otherwise
+        """
+        return not any(
+            token.character is not None and not token.character.is_hidden
+            for token_list in self.tokens.values()
+            for token in token_list
+        )
 
     def is_nearby(self, position: tuple[int,int]) -> bool:
         """
@@ -164,16 +178,19 @@ class Tile(Button):
         """
         if self.has_token("player"):
             return self._check_with_player_token(active_player)
-        if self.has_token("monster"):
+        if self.has_token("monster") and not self.has_token("trap"):
             return self._check_with_monster_token(active_player)
         if self.has_token("wall"):
             return self._check_with_wall_token(active_player)
-        if self.has_token("trap"):
+        if self.has_token("trap") and not self.has_token("monster"):
             return self._check_with_trap_token(active_player)
+        if self.has_token("trap") and self.has_token("monster"):
+            pass
 
         if active_player.using_dynamite:
+            blocked_by = [token_kind for token_kind in active_player.blocked_by if token_kind != "trap"]
             return self.dungeon.check_if_connexion(active_player.token.position, self.position,
-                                                   active_player.blocked_by, active_player.stats.shooting_range)
+                                                   blocked_by, active_player.stats.shooting_range)
         else:
             return self.dungeon.check_if_connexion(active_player.token.position, self.position,
                                                    active_player.blocked_by, active_player.stats.remaining_moves)
@@ -185,9 +202,10 @@ class Tile(Button):
         :return: True if the Tile has to be activated, False otherwise
         """
         if active_player.using_dynamite:
+            blocked_by = [token_kind for token_kind in active_player.blocked_by if token_kind != "trap"]
             return self.dungeon.check_if_connexion(active_player.token.position,
                                                    self.position,
-                                                   active_player.blocked_by,
+                                                   blocked_by,
                                                    active_player.stats.shooting_range)
 
         elif self.is_nearby(active_player.get_position()):
@@ -202,9 +220,10 @@ class Tile(Button):
         :return: True if the Tile has to be activated, False otherwise
         """
         if active_player.using_dynamite:
+            blocked_by = [token_kind for token_kind in active_player.blocked_by if token_kind != "trap"]
             return (self.dungeon.check_if_connexion(active_player.token.position,
                                             self.position,
-                                            active_player.blocked_by,
+                                            blocked_by,
                                             active_player.stats.shooting_range) and
             not self.has_token("wall","rock"))
 
@@ -234,6 +253,13 @@ class Tile(Button):
         :param active_player: active_player: current active Player of the game
         :return: True if the Tile has to be activated, False otherwise
         """
+        if active_player.using_dynamite:
+            blocked_by = [token_kind for token_kind in active_player.blocked_by if token_kind != "trap"]
+            return self.dungeon.check_if_connexion(active_player.token.position,
+                                                   self.position,
+                                                   blocked_by,
+                                                   active_player.stats.shooting_range)
+
         if self.get_token("trap").character.hidden:
             return True
         if not self.get_token("trap").character.hidden and self.is_nearby(active_player.token.position):

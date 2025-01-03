@@ -16,6 +16,14 @@ class Trap:
         self.token: Token | None = None  # initialized in DungeonLayout.place_item()
         self.stats: TrapStats | None = TrapStats()
 
+    @property
+    def is_hidden(self) -> bool:
+        """
+        Property defining if the trap is hidden
+        :return: True if the trap is hidden, False otherwise
+        """
+        return self.hidden
+
     def setup_character(self):
         """
         Placeholder needed by DungeonLayout.match_blueprint()

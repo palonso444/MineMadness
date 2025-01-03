@@ -288,7 +288,7 @@ class SawyerStats(PlayerStats): # BALANCED
     health: int = 50
     strength: list[int] = field(default_factory=lambda: [1,2])
     advantage_strength_incr: int = 2
-    moves: int = 4
+    moves: int = 40 #4
     digging_moves: int = 3
     trap_spotting_chance: float = 0.2
     trap_disarming_chance: float = 0.0 #0.3

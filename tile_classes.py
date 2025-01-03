@@ -185,7 +185,8 @@ class Tile(Button):
         if self.has_token("trap") and not self.has_token("monster"):
             return self._check_with_trap_token(active_player)
         if self.has_token("trap") and self.has_token("monster"):
-            pass
+            return any((self._check_with_trap_token(active_player),
+                       self._check_with_monster_token(active_player)))
 
         if active_player.using_dynamite:
             blocked_by = [token_kind for token_kind in active_player.blocked_by if token_kind != "trap"]

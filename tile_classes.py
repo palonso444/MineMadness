@@ -98,11 +98,26 @@ class Tile(Button):
         return (len (self.tokens[token_kind]) > 0 and
                 (token_species is None or any(token.species == token_species for token in self.tokens[token_kind])))
 
+    @property
+    def has_character(self) -> bool:
+        """
+        Checks if the Tile has a Token with associated character of any kind: Monster, Player, Trap, etc.
+        :return: True if Tile has a character, False otherwise
+        """
+        return any(token.character is not None
+                   for token_list in self.tokens.values()
+                   for token in token_list
+                   )
+
+    @property
     def has_all_characters_hidden(self) -> bool:
         """
         Checks if all Token.characters of the Tile are hidden
         :return: True if all Token.characters are hidden, False otherwise
         """
+        if not self.has_character:
+            raise Exception(f"Tile {self.position} has no characters!")
+
         return not any(
             token.character is not None and not token.character.is_hidden
             for token_list in self.tokens.values()
@@ -302,7 +317,7 @@ class Tile(Button):
 
         # move player
         elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with + ["trap"])\
-             or self.has_all_characters_hidden()\
+             or (self.has_character and self.has_all_characters_hidden)\
              or (self.has_token("trap")
                  and not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with)
                  and not player.can_disarm_trap):

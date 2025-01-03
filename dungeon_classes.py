@@ -737,5 +737,6 @@ class DungeonLayout(GridLayout):
         :return: filtered positions
         """
         return {position for position in excluded_positions
-                if not self.get_tile(position).has_all_characters_hidden()}
+                if not (tile := self.get_tile(position)).has_character
+                or not tile.has_all_characters_hidden}
 

@@ -196,10 +196,10 @@ class Tile(Button):
             return self._check_with_wall_token(active_player)
 
         # monsters have preference over traps
-        if self.has_token("monster"): #and (not self.get_token("monster").character.is_hidden
+        if self.has_token("monster") and not self.get_token("monster").character.is_hidden:
                                           #or not self.has_token("trap")):
             return self._check_with_monster_token(active_player)
-        if self.has_token("trap"): #and not self.has_token("monster"):
+        if self.has_token("trap") and not self.get_token("trap").character.is_hidden: #and not self.has_token("monster"):
             return self._check_with_trap_token(active_player)
         #if self.has_token("monster") and self.has_token("trap"):
             #return self._check_with_monster_token(active_player) or self._check_with_trap_token(active_player)
@@ -211,6 +211,7 @@ class Tile(Button):
                                                      if token_kind != "trap"],  # traps do not block shooting
                                                     active_player.stats.shooting_range))
         else:
+            # if characters are hidden will give connexion so no need to check within "check_with" methods
             return self.dungeon.check_if_connexion(active_player.token.position, self.position,
                                                    active_player.blocked_by, active_player.stats.remaining_moves)
 
@@ -227,8 +228,8 @@ class Tile(Button):
                                                      if token_kind != "trap"],
                                                     active_player.stats.shooting_range))
 
-        if self.get_token("monster").character.is_hidden:
-            return True
+        #if self.get_token("monster").character.is_hidden:
+            #return True
 
         if self.is_nearby(active_player.get_position()):
             return active_player.can_fight(self.get_token("monster").species)
@@ -282,8 +283,8 @@ class Tile(Button):
                                                      if token_kind != "trap"],
                                                     active_player.stats.shooting_range))
 
-        if self.get_token("trap").character.hidden:
-            return True
+        #if self.get_token("trap").character.hidden:
+            #return True
         if not self.get_token("trap").character.hidden and self.is_nearby(active_player.token.position):
             return True
 
@@ -306,19 +307,12 @@ class Tile(Button):
                 current_time = Clock.get_time()
                 if self.first_click_time and current_time - self.first_click_time < self.double_click_interval:
                     self.first_click_time = None
-                    player.stats.remaining_moves = 0
+                    player.perform_passive_action()
                 else:
                     self.first_click_time = Clock.get_time()
                     return
             else:
                 self.dungeon.game.switch_character(self.get_token("player").character)
-            self.dungeon.game.update_switch("character_done")
-
-        elif self.has_token("monster")\
-              and self.get_token("monster").character.is_hidden\
-                and self.is_nearby(player.get_position()):  # monster is hidden here
-            # one attack from hidden monster if player is nearby
-            self.get_token("monster").character.fight_on_tile(player.token.get_current_tile())
             self.dungeon.game.update_switch("character_done")
 
         elif player.using_dynamite:
@@ -337,7 +331,6 @@ class Tile(Button):
             player.token.slide(path, player.token.on_move_completed)
 
         else:
-            print("ACT ON TILE")
             player.act_on_tile(self)
             self.dungeon.game.update_switch("character_done")
 

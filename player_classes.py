@@ -7,6 +7,7 @@ from kivy.event import EventDispatcher
 
 from character_class import Character
 import game_stats as stats
+from dungeon_classes import DungeonLayout
 
 
 class Player(Character, ABC, EventDispatcher):
@@ -142,6 +143,7 @@ class Player(Character, ABC, EventDispatcher):
     def has_all_gems(self) -> bool:
         return Player.gems == self.get_dungeon().game.total_gems
 
+    # used, do not delete
     def has_item(self, item: str) -> bool:
         return self.inventory[item] > 0
 
@@ -267,9 +269,24 @@ class Player(Character, ABC, EventDispatcher):
         Method defining the passive action that Players perform when turn is skipped (double-click on them)
         :return: None
         """
-        # check presence of traps within check if connexion with movement range
-        # if can_find_trap, unhide the trap
-        pass
+        dungeon: DungeonLayout = self.get_dungeon()
+        hidden_traps_in_range: set[tuple[int,int]] = {position for position in dungeon.get_range(self.get_position(),
+                                                                            self.stats.remaining_moves)
+                                                if dungeon.get_tile(position).has_token("trap")
+                                                and dungeon.get_tile(position).get_token("trap").character.is_hidden}
+
+        for position in hidden_traps_in_range:
+
+            if dungeon.check_if_connexion(self.get_position(),
+                                                     position,
+                                                     [token_kind for token_kind in self.blocked_by
+                                                      if token_kind != "trap"],
+                                                     self.stats.remaining_moves) and self.can_find_trap:
+                trap_token = dungeon.get_tile(position).get_token("trap")
+                trap_token.character.unhide()
+                trap_token.show_effect_token("trap", pos=trap_token.shape.pos, size=trap_token.size)
+
+        self.stats.remaining_moves = 0  # one passive action per turn
 
     def act_on_tile(self, tile:Tile) -> None:
         """

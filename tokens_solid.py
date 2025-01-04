@@ -237,16 +237,25 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
     def slide(self, path: list [tuple[int,int]],
                     on_complete: Callable[[Animation, Ellipse, Tile, Callable], None]) -> None:
         """
-        Initializes the movement of the CharacterToken.
+        Checks if movement can be initiated (presence of hidden Monsters or Traps) and, if so, initializes
+        movement of the CharacterToken
         :param path: list of coordinates that mark the path that the CharacterToken will follow.
         :param on_complete: callback to be triggered once the path is completed or the character runs out of moves
         :return: None
         """
         self.start_position = path[0]
         self.path = path[1:]
-        self.get_current_tile().remove_token(self)
-        self.dungeon.disable_all_tiles()
-        self._slide_one_step(self.dungeon.get_tile(self.path.pop(0)), on_complete)
+        next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
+
+        # this check must be done here
+        if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
+            #one attack
+            next_tile.get_token("monster").character.fight_on_tile(self.get_current_tile())
+            self.dungeon.game.update_switch("character_done")
+        else:
+            self.get_current_tile().remove_token(self)
+            self.dungeon.disable_all_tiles()
+            self._slide_one_step(next_tile, on_complete)
 
     def _slide_one_step(self, next_tile: Tile, on_complete: Callable | None) -> None:
         """
@@ -293,6 +302,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
 
         elif len(self.path) > 0:
             next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
+            # this check must be done here
             if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
                 self.update_token_on_tile(current_tile)
                 next_tile.get_token("monster").character.fight_on_tile(current_tile)

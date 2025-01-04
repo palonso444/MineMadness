@@ -12,6 +12,7 @@ from numpy import uint8, int16, ogrid, zeros, clip
 
 import player_classes as players
 import monster_classes as monsters
+import trap_class as traps
 import tile_classes as tiles
 from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
@@ -234,12 +235,12 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         blueprint.place_equal_items(" ", 1)
-        blueprint.place_equal_items("{", 4)
-        blueprint.place_equal_items("*", 4)
-        blueprint.place_equal_items("#", 4)
-        blueprint.place_equal_items("A", 2)
-        # blueprint.place_equal_items("K", 3)
-       # blueprint.place_equal_items("N", 4)
+        blueprint.place_equal_items("{", 0)
+        blueprint.place_equal_items("*", 0)
+        blueprint.place_equal_items("#", 1)
+        blueprint.place_equal_items("!", 10)
+        # blueprint.place_equal_items("A", 10)
+        # blueprint.place_equal_items("N", 4)
         #blueprint.place_equal_items("G", 3)
         blueprint.place_equal_items("o", self.stats.gem_number())
 
@@ -538,6 +539,11 @@ class DungeonLayout(GridLayout):
                     token_kind = "treasure"
                     token_species = "gem"
 
+                case "!":
+                    token_kind = "trap"
+                    token_species = "trap"
+                    character = traps.Trap()
+
             if character is not None:
                 character.setup_character()
 
@@ -731,6 +737,6 @@ class DungeonLayout(GridLayout):
         :return: filtered positions
         """
         return {position for position in excluded_positions
-                if not self.get_tile(position).has_token("monster")
-                or not self.get_tile(position).get_token("monster").character.is_hidden}
+                if not (tile := self.get_tile(position)).has_character
+                or not tile.has_all_characters_hidden}
 

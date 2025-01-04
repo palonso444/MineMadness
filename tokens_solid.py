@@ -9,6 +9,7 @@ from kivy.properties import NumericProperty, ListProperty
 
 from tokens_fading import DamageToken, DiggingToken, EffectToken
 
+
 class WidgetABCMeta(ABCMeta,type(Widget)):
     """
     Base metaclass allowing to make SolidToken an abstract class (otherwise there is conflict because inherits from
@@ -20,6 +21,9 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
     """
     Base abstract class defining all Tokens that stay on the board for extended periods of time
     """
+
+    effect_queue = ListProperty([])
+
     def __init__(self, kind: str, species:str, position: tuple[int,int],
                  character: Character, dungeon_instance: DungeonLayout,
                  size_modifier: float, pos_modifier: tuple[int,int],
@@ -64,7 +68,33 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         Returns the Tile corresponding to the current position of the Token
         :return: current Tile where Token is located
         """
-        return self.dungeon.get_tile(self.position)  # this won't work for SceneryTokens! position attribute for Tokens
+        return self.dungeon.get_tile(self.position)
+
+
+    def show_effect_token(self, effect: str, pos: tuple [float,float],
+                          size: tuple [float,float], effect_ends: bool = False) -> None:
+        """
+        Shows the FadingToken of the effect modifying the specified character attribute
+        :param attribute: effect to show
+        :param pos: position of (on the screen) of the CharacterToken that shows the FadingToken
+        :param size: size of the CharacterToken that shows the FadingToken
+        :param effect_ends: specifies if the effect ends (red FadingToken) of begins (green FadingToken)
+        :return: None
+        """
+        with self.dungeon.canvas.after:
+            EffectToken(effect=effect, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
+
+
+    def remove_effect_if_in_queue(self, animation: Animation, fading_token:FadingToken) -> None:
+        """
+        Triggered when fading_out animation of FadingToken is completed
+        :param animation: animation object of fading_out
+        :param fading_token: FadingToken fading out
+        :return: None
+        """
+        if fading_token.effect in self.effect_queue:
+           self.effect_queue.remove(fading_token.effect)
+
 
     def delete_token(self, tile: Tile) -> None:
         """
@@ -75,10 +105,6 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         tile.remove_token(self)
         self.canvas_context.remove(self.shape)
         self.shape = None
-        '''if self.shape in self.dungeon.canvas.children:
-            self.dungeon.canvas.remove(self.shape)
-        elif self.shape in self.dungeon.canvas.after.children:  # walls are in canvas after
-            self.dungeon.canvas.after.remove(self.shape)'''
         if self.character is not None:
             self.character.token = None
 
@@ -94,8 +120,13 @@ class SceneryToken(SolidToken):
         super().__init__(kind, species, position, character, dungeon_instance,
                          size_modifier, pos_modifier, bright_radius, bright_int, gradient, **kwargs)
 
+        if self.kind == "trap" and self.character.hidden:
+            alpha: float = 0.5
+        else:
+            alpha: int = 1
+
         with self.canvas_context:
-            self.color = Color(1, 1, 1, 1)
+            self.color = Color(1, 1, 1, alpha)
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update_pos)
@@ -206,7 +237,8 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
     def slide(self, path: list [tuple[int,int]],
                     on_complete: Callable[[Animation, Ellipse, Tile, Callable], None]) -> None:
         """
-        Initializes the movement of the CharacterToken.
+        Checks if movement can be initiated (presence of hidden Monsters or Traps) and, if so, initializes
+        movement of the CharacterToken
         :param path: list of coordinates that mark the path that the CharacterToken will follow.
         :param on_complete: callback to be triggered once the path is completed or the character runs out of moves
         :return: None
@@ -215,8 +247,9 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.path = path[1:]
         next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
 
+        # this check must be done here
         if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
-            # one attack
+            #one attack
             next_tile.get_token("monster").character.fight_on_tile(self.get_current_tile())
             self.dungeon.game.update_switch("character_done")
         else:
@@ -248,7 +281,8 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
                            current_tile: Tile,
                            on_complete: Callable) -> None:
         """
-        Callback triggered when a slide step of a CharacterToken in its turn is completed
+        Callback triggered when a slide step of a CharacterToken in its turn is completed. Applies in-movement
+        events (falling in traps, attacks from hidden monsters, etc.) and continues movement if applicable
         :param animation_obj: animation object taking care of sliding the CharacterToken
         :param token_shape: shape of the CharacterToken
         :param current_tile: current Tile in which the CharacterToken is located
@@ -257,11 +291,18 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         """
         self.character.stats.remaining_moves -= 1
 
+        # invisible MonsterTokens hide while moving
         if self.character.invisible and not self.character.is_hidden:
             self.character.hide_if_player_in_range(self.character.stats.moves, position=current_tile.position)
 
-        if len(self.path) > 0:
+        if self.character.kind == "player" and current_tile.has_token("trap"):
+            self.update_token_on_tile(current_tile)
+            self.character.fall_in_trap(current_tile)
+            self.dungeon.game.update_switch("character_done")
+
+        elif len(self.path) > 0:
             next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
+            # this check must be done here
             if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
                 self.update_token_on_tile(current_tile)
                 next_tile.get_token("monster").character.fight_on_tile(current_tile)
@@ -289,7 +330,6 @@ class PlayerToken(CharacterToken):
     Class defining Tokens representing Players
     """
     bar_length = NumericProperty(None)
-    modified_attributes = ListProperty([])
 
     def __init__(self, kind: str, species: str, character: Player, position: tuple[int,int],
                  dungeon_instance: DungeonLayout, size_modifier: float, pos_modifier: tuple[int,int],
@@ -326,39 +366,17 @@ class PlayerToken(CharacterToken):
         self._display_health_bar(self, self.bar_length)
 
     @staticmethod
-    def on_modified_attributes(character_token: CharacterToken, modified_attributes: list[str]) -> None:
+    def on_effect_queue(character_token: CharacterToken, effect_queue: list[str]) -> None:
         """
         Shows FadingTokens for the effect modifying the next attribute on the queue
         :param character_token: CharacterToken on which FadingToken is shown
-        :param modified_attributes: queue of currently modified attributes
+        :param effect_queue: queue of currently working effects
         :return: None
         """
-        if len(modified_attributes) > 0:
-            character_token.show_effect_token(modified_attributes[0], character_token.pos,
+        if len(effect_queue) > 0:
+            character_token.show_effect_token(effect_queue[0], character_token.pos,
                                               character_token.size, effect_ends=True)
 
-    def remove_attribute_if_in_queue(self, animation: Animation, fading_token:FadingToken) -> None:
-        """
-        Triggered when fading_out animation of FadingToken is completed
-        :param animation: animation object of fading_out
-        :param fading_token: FadingToken fading out
-        :return: None
-        """
-        if fading_token.target_attr in self.modified_attributes:
-            self.modified_attributes.remove(fading_token.target_attr)
-
-    def show_effect_token(self, attribute: str, pos: tuple [float,float],
-                          size: tuple [float,float], effect_ends: bool = False) -> None:
-        """
-        Shows the FadingToken of the effect modifying the specified character attribute
-        :param attribute: attribute being modified
-        :param pos: position of (on the screen) of the CharacterToken that shows the FadingToken
-        :param size: size of the CharacterToken that shows the FadingToken
-        :param effect_ends: specifies if the effect ends (red FadingToken) of begins (green FadingToken)
-        :return: None
-        """
-        with self.dungeon.canvas.after:
-            EffectToken(target_attr=attribute, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
     @staticmethod
     def _display_health_bar(token: PlayerToken, percent_natural_health: float) -> None:

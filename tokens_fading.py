@@ -41,7 +41,7 @@ class FadingToken(Widget, ABC, metaclass=WidgetABCMeta):
         """
         fading_out = Animation(opacity=0, duration=token.duration)
         if isinstance(token, EffectToken):
-            fading_out.bind(on_complete=token.character_token.remove_attribute_if_in_queue)
+            fading_out.bind(on_complete=token.character_token.remove_effect_if_in_queue)
         fading_out.start(token)
 
 
@@ -99,19 +99,19 @@ class EffectToken(FadingToken):
     """
     Class defining the FadingTokens representing effects on Character attributes (moves, strength, etc.)
     """
-    def __init__(self, pos: tuple[float,float], size: tuple[float,float], target_attr: str,
+    def __init__(self, pos: tuple[float,float], size: tuple[float,float], effect: str,
                  character_token: CharacterToken, effect_ends: bool, **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 1
         self.duration = 0.6
-        self.target_attr = target_attr
+        self.effect = effect
         self.character_token: CharacterToken = character_token
         self.effect_ends: bool = effect_ends  # determines if effect start or ends
 
         if effect_ends:
-            self.source = f"./fadingtokens/{self.target_attr}_fades_token.png"
+            self.source = f"./fadingtokens/{self.effect}_effect_red_token.png"
         else:
-            self.source = f"./fadingtokens/{self.target_attr}_effect_token.png"
+            self.source = f"./fadingtokens/{self.effect}_effect_green_token.png"
 
         with self.canvas:
             self.color = Color(1, 1, 1, 1)

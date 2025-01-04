@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from abc import ABC
 from random import randint, uniform
+from trap_class import TrapStats
 
 
 class DungeonStats:
@@ -45,7 +46,8 @@ class DungeonStats:
             PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
             RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
             PenumbraStats.char: PenumbraStats.calculate_frequency(self.stats_level),
-            ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level)
+            ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level),
+            TrapStats.char: TrapStats.calculate_frequency(self.stats_level)
         }
 
         total_monster_frequency = sum(monster_frequencies.values())
@@ -283,11 +285,13 @@ class PlayerStats(CharacterStats, ABC):
 
 @dataclass
 class SawyerStats(PlayerStats): # BALANCED
-    health: int = 200 #5
+    health: int = 50
     strength: list[int] = field(default_factory=lambda: [1,2])
     advantage_strength_incr: int = 2
     moves: int = 40 #4
     digging_moves: int = 3
+    trap_spotting_chance: float = 1.0
+    trap_disarming_chance: float = 0.0 #0.3
 
 
 @dataclass
@@ -296,6 +300,8 @@ class HawkinsStats(PlayerStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 3
     shooting_range: int = 2
+    trap_spotting_chance: float = 0.3
+    trap_disarming_chance: float = 0.6
 
 
 @dataclass
@@ -305,6 +311,8 @@ class CrusherJaneStats(PlayerStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [2,4])
     advantage_strength_incr: int = 1
     moves: int = 3
+    trap_spotting_chance: float = 0.1
+    trap_disarming_chance: float = 0.0
 
 
 @dataclass

@@ -82,22 +82,6 @@ class Tile(Button):
             for token in token_list:
                 token.delete_token(self)
 
-
-    def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
-        """
-        Checks if the Tile has a Token of the specified Token.kind and Token.species (optional)
-        :param token_kind: Token.kind to check
-        :param token_species: Token.species to check (optional)
-        :return: True if the Tile has a Token of the specified kind and species, False otherwise
-        """
-        if token_kind is None:
-            if token_species is not None:
-                raise ValueError("token_kind cannot be None if token_species not None")
-            return any(len(token_list) > 0 for token_list in self.tokens.values())
-
-        return (len (self.tokens[token_kind]) > 0 and
-                (token_species is None or any(token.species == token_species for token in self.tokens[token_kind])))
-
     @property
     def has_character(self) -> bool:
         """
@@ -123,6 +107,21 @@ class Tile(Button):
             for token_list in self.tokens.values()
             for token in token_list
         )
+
+    def has_token(self, token_kind: str | None = None, token_species: str | None = None) -> bool:
+        """
+        Checks if the Tile has a Token of the specified Token.kind and Token.species (optional)
+        :param token_kind: Token.kind to check
+        :param token_species: Token.species to check (optional)
+        :return: True if the Tile has a Token of the specified kind and species, False otherwise
+        """
+        if token_kind is None:
+            if token_species is not None:
+                raise ValueError("token_kind cannot be None if token_species not None")
+            return any(len(token_list) > 0 for token_list in self.tokens.values())
+
+        return (len (self.tokens[token_kind]) > 0 and
+                (token_species is None or any(token.species == token_species for token in self.tokens[token_kind])))
 
     def is_nearby(self, position: tuple[int,int]) -> bool:
         """
@@ -196,13 +195,14 @@ class Tile(Button):
         if self.has_token("wall"):
             return self._check_with_wall_token(active_player)
 
-        if self.has_token("monster") and not self.has_token("trap"):
+        # monsters have preference over traps
+        if self.has_token("monster"): #and (not self.get_token("monster").character.is_hidden
+                                          #or not self.has_token("trap")):
             return self._check_with_monster_token(active_player)
-        if self.has_token("trap") and not self.has_token("monster"):
+        if self.has_token("trap"): #and not self.has_token("monster"):
             return self._check_with_trap_token(active_player)
-        if self.has_token("trap") and self.has_token("monster"):
-            return any((self._check_with_trap_token(active_player),
-                       self._check_with_monster_token(active_player)))
+        #if self.has_token("monster") and self.has_token("trap"):
+            #return self._check_with_monster_token(active_player) or self._check_with_trap_token(active_player)
 
         if active_player.using_dynamite:
             return (self.dungeon.check_if_connexion(active_player.token.position,
@@ -227,10 +227,13 @@ class Tile(Button):
                                                      if token_kind != "trap"],
                                                     active_player.stats.shooting_range))
 
-        elif self.is_nearby(active_player.get_position()):
+        if self.get_token("monster").character.is_hidden:
+            return True
+
+        if self.is_nearby(active_player.get_position()):
             return active_player.can_fight(self.get_token("monster").species)
 
-        return self.get_token("monster").character.is_hidden
+        return False
 
     def _check_with_wall_token(self, active_player: Player) -> bool:
         """
@@ -311,6 +314,13 @@ class Tile(Button):
                 self.dungeon.game.switch_character(self.get_token("player").character)
             self.dungeon.game.update_switch("character_done")
 
+        elif self.has_token("monster")\
+              and self.get_token("monster").character.is_hidden\
+                and self.is_nearby(player.get_position()):  # monster is hidden here
+            # one attack from hidden monster if player is nearby
+            self.get_token("monster").character.fight_on_tile(player.token.get_current_tile())
+            self.dungeon.game.update_switch("character_done")
+
         elif player.using_dynamite:
             player.throw_dynamite(self)
             # game.update_switch("character_done") at the end of self.dynamite_explode(). Here does not work
@@ -327,6 +337,7 @@ class Tile(Button):
             player.token.slide(path, player.token.on_move_completed)
 
         else:
+            print("ACT ON TILE")
             player.act_on_tile(self)
             self.dungeon.game.update_switch("character_done")
 

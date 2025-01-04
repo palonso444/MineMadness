@@ -142,8 +142,8 @@ class Player(Character, ABC, EventDispatcher):
     def has_all_gems(self) -> bool:
         return Player.gems == self.get_dungeon().game.total_gems
 
-    #def has_item(self, item: str) -> bool:
-        #return self.inventory[item] > 0
+    def has_item(self, item: str) -> bool:
+        return self.inventory[item] > 0
 
     @property
     def is_exited(self) -> bool:

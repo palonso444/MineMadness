@@ -240,7 +240,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         #blueprint.place_items(" ", 1)
         blueprint.place_items("{", 10)
-        blueprint.place_items("!", 10)
+        blueprint.place_items("A", 5)
         #blueprint.place_items("#", 10)
         #blueprint.place_items("R", 1)
         blueprint.place_items("o", self.stats.gem_number())

@@ -38,9 +38,9 @@ class Player(Character, ABC, EventDispatcher):
         Sets the starting player turn order: Sawyer, Hawkins, Crusher Jane
         :return: None
         """
-        sawyer = next((player for player in cls.data if isinstance(player, Sawyer)), None)
-        hawkins = next((player for player in cls.data if isinstance(player, Hawkins)), None)
-        crusherjane = next((player for player in cls.data if isinstance(player, CrusherJane)), None)
+        sawyer = next((player for player in cls.data if player.species == "sawyer"), None)
+        hawkins = next((player for player in cls.data if player.species == "hawkins"), None)
+        crusherjane = next((player for player in cls.data if player.species == "crusherjane"), None)
         cls.data = [item for item in [sawyer, hawkins, crusherjane] if item is not None]
         cls.rearrange_ids()
 
@@ -367,7 +367,7 @@ class Player(Character, ABC, EventDispatcher):
             game.update_switch("shovels")
 
         if wall_tile.has_token("wall", "rock"):
-            if not isinstance(self, Hawkins):
+            if not self.species == "hawkins":
                 self.stats.shovels -= 1
                 game.update_switch("shovels")
 

@@ -296,7 +296,7 @@ class SawyerStats(PlayerStats): # BALANCED
 class HawkinsStats(PlayerStats):  # BALANCED
     health: int = 1 #7
     strength: list[int] = field(default_factory=lambda: [1,3])
-    moves: int = 3
+    moves: int = 50 #3
     shooting_range: int = 2
     trap_spotting_chance: float = 0.3
     trap_disarming_chance: float = 0.6

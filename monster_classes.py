@@ -881,6 +881,19 @@ class Penumbra(Monster):
         self.token.color.a = 0.5  # changes transparency
         self.ability_active = True
 
+    def unhide_if_all_players_unreachable(self) -> None:
+        """
+        Unhides the Monster if all players are unreachable (no possible path to them)
+        :return: None
+        """
+        player_positions = {tile.position for tile in self.get_dungeon().children if tile.has_token("player")}
+
+        if all(len(self.get_dungeon().find_shortest_path(self.get_position(),
+                                                         player_position,
+                                                         self.blocked_by)) == 1
+               for player_position in player_positions):
+            self.unhide()
+
     def unhide(self) -> None:
         """
         Unhides the Monster
@@ -911,6 +924,8 @@ class Penumbra(Monster):
 
 
     def move(self):
+
+        self.unhide_if_all_players_unreachable()
 
         target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
 

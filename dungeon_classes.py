@@ -241,8 +241,8 @@ class DungeonLayout(GridLayout):
         #blueprint.place_items("R", 1)
         blueprint.place_items("o", self.stats.gem_number())
 
-        for key, value in self.stats.level_progression().items():
-            blueprint.place_items(item=key, number_of_items=int(value*blueprint.area))
+        for item, frequency in self.stats.level_progression().items():
+            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
         #blueprint.print_map()
         return blueprint

@@ -6,8 +6,6 @@ from trap_class import TrapStats
 
 class DungeonStats:
 
-    mandatory_items: tuple[str,str,str,str,str] = ("%", "?", "&", " ", "o")
-
     def __init__(self, dungeon_level: int):
         self.stats_level = dungeon_level
 

@@ -71,16 +71,19 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         return self.dungeon.get_tile(self.position)
 
 
-    def show_effect_token(self, effect: str, pos: tuple [float,float],
-                          size: tuple [float,float], effect_ends: bool = False) -> None:
+    def show_effect_token(self, effect: str, pos: tuple [float,float] = None,
+                          size: tuple [float,float] = None, effect_ends: bool = False) -> None:
         """
         Shows the FadingToken of the effect modifying the specified character attribute
-        :param attribute: effect to show
+        :param effect: effect to show
         :param pos: position of (on the screen) of the CharacterToken that shows the FadingToken
         :param size: size of the CharacterToken that shows the FadingToken
         :param effect_ends: specifies if the effect ends (red FadingToken) of begins (green FadingToken)
         :return: None
         """
+        pos = self.shape.pos if pos is None else pos
+        size = self.shape.size if size is None else size
+
         with self.dungeon.canvas.after:
             EffectToken(effect=effect, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
@@ -374,8 +377,7 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         if len(effect_queue) > 0:
-            character_token.show_effect_token(effect_queue[0], character_token.pos,
-                                              character_token.size, effect_ends=True)
+            character_token.show_effect_token(effect_queue[0], effect_ends=True)
 
 
     @staticmethod

@@ -33,18 +33,14 @@ class AbilityButton(ToggleButton):
                         self.game.update_switch("character_done")
 
                     case "hawkins":
-                        character.token.show_effect_token(
-                            "dynamite", character.token.shape.pos, character.token.shape.size
-                        )
+                        character.token.show_effect_token("dynamite")
                         character.ability_active = True
                         self.game.activate_accessible_tiles(character.stats.shooting_range)
                         # self.game.update_switch("character_done") must not be activated here
 
                     case "crusherjane":
                         character.stats.remaining_moves -= 1
-                        character.token.show_effect_token(
-                            "armed", character.token.shape.pos, character.token.shape.size
-                        )
+                        character.token.show_effect_token("armed")
                         character.ability_active = True
                         self.game.activate_accessible_tiles(character.stats.remaining_moves)
                         self.game.update_switch("character_done")
@@ -60,12 +56,7 @@ class AbilityButton(ToggleButton):
                         self.game.activate_accessible_tiles(character.stats.remaining_moves)
 
                     case "crusherjane":
-                        character.token.show_effect_token(
-                            "armed",
-                            character.token.shape.pos,
-                            character.token.shape.size,
-                            effect_ends=True,
-                        )
+                        character.token.show_effect_token("armed", effect_ends=True)
                         character.ability_active = False
 
 
@@ -115,9 +106,7 @@ class JerkyButton(Interfacebutton):
         effect_size = self.get_effect_size(character, "natural_health")
         character.heal(effect_size)
         self.game.update_switch("health")
-        character.token.show_effect_token(
-            "heal", character.token.shape.pos, character.token.shape.size
-        )
+        character.token.show_effect_token("heal")
         # this updates health bar
         character.token.bar_length = character.stats.health / character.stats.natural_health
         self.apply_cost("jerky")
@@ -140,9 +129,7 @@ class CoffeeButton(Interfacebutton):
                 "end_turn": self.game.turn + self.stats.effect_duration,
             }
         )
-        character.token.show_effect_token(
-            "moves", character.token.shape.pos, character.token.shape.size
-        )
+        character.token.show_effect_token("moves")
         self.apply_cost("coffee")
 
 
@@ -162,9 +149,7 @@ class TobaccoButton(Interfacebutton):
                 "end_turn": self.game.turn + self.stats.effect_duration,
             }
         )
-        character.token.show_effect_token(
-            "toughness", character.token.shape.pos, character.token.shape.size
-        )
+        character.token.show_effect_token("toughness")
         self.apply_cost("tobacco")
 
 
@@ -194,9 +179,7 @@ class WhiskyButton(Interfacebutton):
             }
         )
 
-        character.token.show_effect_token(
-            "strength", character.token.shape.pos, character.token.shape.size
-        )
+        character.token.show_effect_token("strength")
         self.apply_cost("whisky")
 
 
@@ -213,19 +196,11 @@ class TalismanButton(Interfacebutton):
             character = self.game.active_character
             character.experience = character.stats.exp_to_next_level
 
-            character.token.show_effect_token(
-                "level_up",
-                character.token.shape.pos,
-                character.token.shape.size,
-            )
+            character.token.show_effect_token("level_up")
 
         else:
             player = choice(Player.dead_data)
             player.resurrect(character.get_dungeon())
-            character.token.show_effect_token(
-                "resurrect",
-                player.token.shape.pos,
-                player.token.shape.size,
-            )
+            character.token.show_effect_token("resurrect")
 
         self.apply_cost("talisman")

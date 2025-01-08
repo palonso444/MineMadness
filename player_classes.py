@@ -223,11 +223,7 @@ class Player(Character, ABC, EventDispatcher):
                 self.player_level * self.stats.base_exp_to_level_up
             )
             self.experience = 0
-            self.token.show_effect_token(
-                "level_up",
-                self.token.shape.pos,
-                self.token.shape.size,
-            )
+            self.token.show_effect_token("level_up")
             # experience bar updated by Cragpeongame.update_interface()
 
     def remove_all_effects(self, turn: int = 0) -> None:
@@ -282,9 +278,12 @@ class Player(Character, ABC, EventDispatcher):
                                                      [token_kind for token_kind in self.blocked_by
                                                       if token_kind != "trap"],
                                                      self.stats.remaining_moves) and self.can_find_trap:
+
                 trap_token = dungeon.get_tile(position).get_token("trap")
                 trap_token.character.unhide()
-                trap_token.show_effect_token("trap", pos=trap_token.shape.pos, size=trap_token.size)
+                trap_token.show_effect_token("trap")
+                self.experience += trap_token.character.stats.experience_when_found
+                self.token.dungeon.game.ids.experience_bar.value = self.experience
 
         self.stats.remaining_moves = 0  # one passive action per turn
 
@@ -353,9 +352,7 @@ class Player(Character, ABC, EventDispatcher):
     def _disarm_trap(self, tile:Tile) -> None:
         self.stats.remaining_moves -= 1
         trap_token = tile.get_token("trap")
-        trap_token.show_effect_token(effect="trap_out",
-                                     pos=trap_token.shape.pos,
-                                     size=trap_token.shape.size)
+        trap_token.show_effect_token(effect="trap_out")
         self.experience += trap_token.character.stats.calculate_experience(self.get_dungeon().dungeon_level)
         self.token.dungeon.game.ids.experience_bar.value = self.experience
         trap_token.delete_token(tile)
@@ -391,9 +388,9 @@ class Player(Character, ABC, EventDispatcher):
         self.stats.remaining_moves -= 1
 
         if opponent.stats.health <= 0:
+            opponent.kill_character(opponent_tile)
             self.experience += opponent.stats.experience_when_killed
             self.token.dungeon.game.ids.experience_bar.value = self.experience
-            opponent.kill_character(opponent_tile)
 
 
     def heal(self, extra_points: int):

@@ -81,9 +81,9 @@
         ability_button.text = ability_button.display_text()
 
     on_level: level_label.text = "Depth: " + str(self.level * 30) + " ft."
-    on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.stats.shovels)
-    on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.stats.weapons)
-    on_gems: gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
+    on_shovels: shovels_label.text = "Shovels: " + str(root.active_character.stats.shovels)
+    on_weapons: weapons_label.text = "Weapons: " + str(root.active_character.stats.weapons)
+    on_gems: gems_label.text = "Gems: " + str(root.active_character.gems) + '/' + str(root.total_gems)
 
     BoxLayout:
         orientation: "vertical"

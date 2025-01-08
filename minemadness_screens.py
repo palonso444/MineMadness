@@ -262,7 +262,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
             }
 
         self.dungeon.disable_all_tiles()
-        print(self.active_character)
         player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
         positions_in_range = players_not_yet_active.union(player_movement_range)
         self.dungeon.enable_tiles(positions_in_range, self.active_character)

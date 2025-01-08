@@ -296,7 +296,7 @@ class SawyerStats(PlayerStats): # BALANCED
 
 @dataclass
 class HawkinsStats(PlayerStats):  # BALANCED
-    health: int = 200 #7
+    health: int = 1 #7
     strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 3
     shooting_range: int = 2
@@ -307,7 +307,7 @@ class HawkinsStats(PlayerStats):  # BALANCED
 @dataclass
 class CrusherJaneStats(PlayerStats):  # BALANCED
     weapons: int = 4
-    health: int = 200#10
+    health: int = 1 #10
     strength: list[int] = field(default_factory=lambda: [2,4])
     advantage_strength_incr: int = 1
     moves: int = 3
@@ -523,7 +523,7 @@ class NightmareStats(MonsterStats): # BALANCED
     health: int = 15
     strength: list[int] = field(default_factory=lambda: [10,15])
     random_motility: float = 0.2
-    moves: int = 5 # 8
+    moves: int = 10 # 8
     dodging_ability: int = 10
     experience_when_killed: int = 25
 

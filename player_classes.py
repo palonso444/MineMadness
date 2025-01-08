@@ -73,9 +73,9 @@ class Player(Character, ABC, EventDispatcher):
         return any(player.species == player_species for player in cls.dead_data)
 
     @classmethod
-    def get_alive_players(cls) -> set[str] | tuple[str:str:str]:
+    def get_surviving_players(cls) -> set[str] | tuple[str:str:str]:
         """
-        Determines the number of alive players at the end of a level
+        Returns the players that survived the level
         :return: set or tuple containing the characters representing live players
         """
         if len(Player.dead_data) == 0:  # cannot be done with all_players_alive()
@@ -148,9 +148,16 @@ class Player(Character, ABC, EventDispatcher):
         return self.inventory[item] > 0
 
     @property
+    def is_dead(self) -> bool:
+        """
+        Checks if the Player is dead
+        """
+        return self in Player.dead_data
+
+    @property
     def is_exited(self) -> bool:
         """
-        Checks if the character has exited the level
+        Checks if the Player has exited the level
         :return: True if character is hidden, False otherwise
         """
         return self in Player.exited

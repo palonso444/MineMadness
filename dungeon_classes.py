@@ -94,6 +94,10 @@ class DungeonLayout(GridLayout):
             dungeon.hide_penumbras()
             dungeon.game.dungeon = dungeon
 
+            # if dungeon.bright_spots does not change its values, darkness must be cast manually
+            if len(dungeon.bright_spots) == 0:
+                dungeon.cast_darkness(alpha_intensity=150)
+
     def update_bright_spots(self) -> None:
         """
         Stores in DungeonLayout.bright_spots one bright spot dict for each Token with bright_intensity > 0
@@ -235,14 +239,14 @@ class DungeonLayout(GridLayout):
         #self.stats.stats_level = 20
         blueprint.place_items_as_group(players.Player.get_alive_players(), min_dist=1)
         #blueprint.place_items(" ", 1)
-        #blueprint.place_items("{", 10)
+        blueprint.place_items("{", 10)
         #blueprint.place_items("*", 10)
         #blueprint.place_items("#", 10)
         #blueprint.place_items("R", 1)
         blueprint.place_items("o", self.stats.gem_number())
 
-        for item, frequency in self.stats.level_progression().items():
-            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
+        #for item, frequency in self.stats.level_progression().items():
+            #blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
         #blueprint.print_map()
         return blueprint
@@ -264,6 +268,14 @@ class DungeonLayout(GridLayout):
         if self.darkness in self.canvas.after.children:
             self.canvas.after.remove(self.darkness)
 
+        self.cast_darkness(alpha_intensity=alpha_intensity)
+
+    def cast_darkness(self, alpha_intensity: int) -> None:
+        """
+        Wrapper method to cast a darkness layer on DungeonLayout.canvas
+        :param alpha_intensity: alpha intensity of the darkness layer
+        :return: None
+        """
         with self.canvas.after:
             self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
 

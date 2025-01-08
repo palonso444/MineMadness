@@ -122,7 +122,8 @@ class MineMadnessApp(App):
         game_state["blueprint"] = self.game.dungeon.blueprint.to_dict()
 
         # keys must be converted from tuple to str in order to be JSON encoded
-        game_state["torches_dict"] = {str(key): value for key,value in self.game.dungeon.torches_dict.items()}
+        game_state["torches_dict"] = {str(key): value for key,value in self.game.dungeon.torches_dict.items()}\
+                                        if self.game.dungeon.torches_dict is not None else None
 
         game_state["players_alive"] = {player.__class__.__name__: player.to_dict() for player in Player.data}
         game_state["players_dead"] = {player.__class__.__name__: player.to_dict() for player in Player.dead_data}
@@ -147,8 +148,9 @@ class MineMadnessApp(App):
             data = load(f)
 
         # torches dict keys are str and need to be converted to tuple
-        data["torches_dict"] = {(int(key[1]), int(key[4])): value
-                                for key, value in data["torches_dict"].items()}
+        if data["torches_dict"] is not None:
+            data["torches_dict"] = {(int(key[1]), int(key[4])): value
+                                    for key, value in data["torches_dict"].items()}
         #level_track are nested dict and keys are str which must be converted to int
         data = self._convert_all_digit_keys_to_int(data)
 

@@ -250,11 +250,15 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         self.path = path[1:]
         next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
 
-        # this check must be done here
+        # this check must be done here and also at the end of each move (CharacterToken.on_move_complete()
         if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
             #one attack
             next_tile.get_token("monster").character.fight_on_tile(self.get_current_tile())
-            self.dungeon.game.update_switch("character_done")
+            if self.character.is_dead:
+                self.dungeon.game.next_character()
+            else:
+                self.dungeon.game.update_switch("character_done")
+
         else:
             self.get_current_tile().remove_token(self)
             self.dungeon.disable_all_tiles()
@@ -305,11 +309,14 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
 
         elif len(self.path) > 0:
             next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
-            # this check must be done here
+            # this check must be done here and also at the beginning of the move (CharacterToken.slide())
             if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
                 self.update_token_on_tile(current_tile)
                 next_tile.get_token("monster").character.fight_on_tile(current_tile)
-                self.dungeon.game.update_switch("character_done")
+                if self.character.is_dead:
+                    self.dungeon.game.next_character()
+                else:
+                    self.dungeon.game.update_switch("character_done")
             else:
                 self._slide_one_step(next_tile, on_complete)
 

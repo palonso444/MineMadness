@@ -90,7 +90,7 @@ class Blueprint:
         for row in self.layout:
             print(" ".join(row))
 
-    def place_single_item(self, item:str, position: tuple[int,int]) -> tuple [int,int]:
+    def place_single_item(self, item:str, position: tuple[int,int]) -> None:
         """
         Places the specified item at the specified position of the map. Overwrites position if not free.
         :param item: item to place
@@ -99,25 +99,9 @@ class Blueprint:
         """
         self.layout[position[0]][position[1]] = item
 
-    def place_items(self, item: str, frequency: float=0.1, protected:tuple | None =None) -> None:
+    def place_items(self, item: str, number_of_items = 1) -> None:
         """
-        PLaces an item in approximate numbers defined by the frequency, ranging from 0 to 1. Overwrites items if not
-        specified in parameter "protected"
-        :param item: item to place
-        :param frequency: frequency, ranging from 0 (none placed) to 1 (very frequent)
-        :param protected: tuple containing important items that must not be overwritten
-        :return: None
-        """
-        number_of_items = self.area * frequency
-
-        for number in range(int(number_of_items)):
-            position = self.random_location()
-            if protected is None or self.get_position(position) not in protected:
-                self.place_single_item(item, position)
-
-    def place_equal_items(self, item: str, number_of_items=1) -> None:
-        """
-        Places items in an exact number. Does not overwrite occupied positions.
+        Places a given number of items in the map. Does not overwrite occupied positions.
         :param item: item to place
         :param number_of_items: number of items to place
         :return: None

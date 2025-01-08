@@ -110,7 +110,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         Updates the range of the experience bar according to the current active character.
         :return: None
         """
-        if isinstance(self.active_character, players.Player):
+        if self.active_character.kind == "player":
             self.ids.experience_bar.max = self.active_character.stats.exp_to_next_level
             self.ids.experience_bar.value = self.active_character.experience
         else:
@@ -126,11 +126,11 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         game.ability_button_active = False
 
-        if isinstance(game.active_character, monsters.Monster):
+        if game.active_character.kind == "monster":
             game.ids.ability_button.disabled = True
             game.ids.ability_button.state = "normal"
 
-        elif isinstance(game.active_character, players.Player):
+        elif game.active_character.kind == "player":
             game.ids.ability_button.disabled = not game.ids.ability_button.condition_active
             game.ids.ability_button.state = "down" if game.active_character.ability_active else "normal"
 
@@ -154,11 +154,14 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.active_character.token.unselect_token()
                 game.update_switch("turn")
 
-            if isinstance(game.active_character, players.Player) and game.active_character.stats.remaining_moves > 0:
-                game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
+            if game.active_character.stats.remaining_moves > 0:
+                if game.active_character.kind == "player":
+                    game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
+                elif game.active_character.kind == "monster":
+                    game.active_character.move()
 
-            else:  # if self.active_character remaining moves == 0
-                if isinstance(game.active_character, players.Player):
+            else:
+                if game.active_character.kind == "player":
                     game.active_character.remove_effects_if_over(game.turn)
                     game.active_character.token.unselect_token()
                 game.next_character()

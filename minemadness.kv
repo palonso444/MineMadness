@@ -78,12 +78,11 @@
 <MineMadnessGame>:
     on_active_character_id:
         name_label.text = str(root.active_character.name)
-        ability_button.text = ability_button.display_text()
 
     on_level: level_label.text = "Depth: " + str(self.level * 30) + " ft."
-    on_shovels: shovels_label.text = 'Shovels: ' + str(root.active_character.stats.shovels)
-    on_weapons: weapons_label.text = 'Weapons: ' + str(root.active_character.stats.weapons)
-    on_gems: gems_label.text = 'Gems: ' + str(root.active_character.gems) + '/' + str(root.total_gems)
+    on_shovels: shovels_label.text = "Shovels: " + str(root.active_character.stats.shovels) if root.active_character.kind == "player" else ""
+    on_weapons: weapons_label.text = "Weapons: " + str(root.active_character.stats.weapons) if root.active_character.kind == "player" else ""
+    on_gems: gems_label.text = "Gems: " + str(root.active_character.gems) + '/' + str(root.total_gems) if root.active_character.kind == "player" else ""
 
     BoxLayout:
         orientation: "vertical"
@@ -134,27 +133,22 @@
                 spacing: "5dp"
 
                 JerkyButton:
-                    text: "Jerky"
                     id: jerky_button
                     stats: JerkyStats()
                     game: root
                 CoffeeButton:
-                    text: "Coffee"
                     id: coffee_button
                     stats: CoffeeStats()
                     game: root
                 TobaccoButton:
-                    text: "Tobacco"
                     id: tobacco_button
                     stats: TobaccoStats()
                     game: root
                 WhiskyButton:
-                    text: "Whisky"
                     id: whisky_button
                     stats: WhiskyStats()
                     game: root
                 TalismanButton:
-                    text: "Talisman"
                     id: talisman_button
                     stats: TalismanStats()
                     game: root

@@ -42,7 +42,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
     # INVENTORY PROPERTIES
     inv_object = StringProperty(None, allownone=True)
 
-    # LABEL PROPERTIES
+    # INTERFACE LABELS PROPERTIES
     health = BooleanProperty(None)
     shovels = BooleanProperty(None)
     weapons = BooleanProperty(None)
@@ -86,14 +86,33 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.ability_button_active = True  # TODO: when button unbinding in self.on_ability_button() works this has to go
 
     def update_interface(self) -> None:
-
+        """
+        Updates the interface display
+        :return: None
+        """
         for button_type in Interfacebutton.types:
             self.inv_object = button_type
+
+        self.update_switch("health")
+        self.update_switch("shovels")
+        self.update_switch("weapons")
+        self.update_switch("gems")
         self.update_switch("ability_button")
+
+        self.ids.jerky_button.text = "Jerky" if self.active_character.kind == "player" else ""
+        self.ids.coffee_button.text = "Coffee" if self.active_character.kind == "player" else ""
+        self.ids.tobacco_button.text = "Tobacco" if self.active_character.kind == "player" else ""
+        self.ids.whisky_button.text = "Whisky" if self.active_character.kind == "player" else ""
+        self.ids.talisman_button.text = "Talisman" if self.active_character.kind == "player" else ""
+
         self.update_experience_bar()
 
     def update_switch(self, switch_name) -> None:
-
+        """
+        Updates the value of a switch (Property) to activate it
+        :param switch_name: switch to activate
+        :return: None
+        """
         switch_value = getattr(self, switch_name)
         if isinstance(switch_value, bool):
             switch_value = not switch_value
@@ -127,10 +146,12 @@ class MineMadnessGame(Screen):  # initialized in kv file
         game.ability_button_active = False
 
         if game.active_character.kind == "monster":
+            game.ids.ability_button.text = ""
             game.ids.ability_button.disabled = True
             game.ids.ability_button.state = "normal"
 
         elif game.active_character.kind == "player":
+            game.ids.ability_button.text = game.active_character.ability_display
             game.ids.ability_button.disabled = not game.ids.ability_button.condition_active
             game.ids.ability_button.state = "down" if game.active_character.ability_active else "normal"
 
@@ -205,18 +226,12 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 else:
                     game.active_character.token.select_character()
                     game.update_interface()
-                    # health must be updated here after setting player as active character
-                    game.update_switch("health")
-                    game.update_switch("shovels")
-                    game.update_switch("weapons")
-
                     game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
 
             else:  # if monsters turn and monsters in the game
                 game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
                 game.active_character = monsters.Monster.data[game.active_character_id]
                 game.update_interface()
-                game.update_switch("health")
                 game.active_character.token.select_character()
                 game.active_character.move()
 
@@ -262,7 +277,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
             }
 
         self.dungeon.disable_all_tiles()
-        print(self.active_character)
         player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
         positions_in_range = players_not_yet_active.union(player_movement_range)
         self.dungeon.enable_tiles(positions_in_range, self.active_character)

@@ -13,10 +13,6 @@ class AbilityButton(ToggleButton):
         # for the moment there is only one special item
         return character.special_items[list(character.special_items.keys())[0]] > 0
 
-    def display_text(self):
-        character = self.game.active_character
-        return character.ability_display if character.ability_display is not None else ""
-
     def on_state(self, instance, value):
 
         if self.game.ability_button_active:

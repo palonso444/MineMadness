@@ -107,6 +107,7 @@ class EffectToken(FadingToken):
         self.effect = effect
         self.character_token: CharacterToken = character_token
         self.effect_ends: bool = effect_ends  # determines if effect start or ends
+        self.effect_in_queue: dict = {effect: effect_ends}  # matches effect data in CharacterToken.effect_queue list
 
         if effect_ends:
             self.source = f"./fadingtokens/{self.effect}_effect_red_token.png"

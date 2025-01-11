@@ -283,7 +283,7 @@ class PlayerStats(CharacterStats, ABC):
 
 @dataclass
 class SawyerStats(PlayerStats): # BALANCED
-    health: int = 50
+    health: int =  500 #5
     strength: list[int] = field(default_factory=lambda: [1,2])
     advantage_strength_incr: int = 2
     moves: int = 40 #4
@@ -294,7 +294,7 @@ class SawyerStats(PlayerStats): # BALANCED
 
 @dataclass
 class HawkinsStats(PlayerStats):  # BALANCED
-    health: int = 1 #7
+    health: int = 100 #7
     strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 50 #3
     shooting_range: int = 2
@@ -305,7 +305,7 @@ class HawkinsStats(PlayerStats):  # BALANCED
 @dataclass
 class CrusherJaneStats(PlayerStats):  # BALANCED
     weapons: int = 4
-    health: int = 1 #10
+    health: int = 100 #10
     strength: list[int] = field(default_factory=lambda: [2,4])
     advantage_strength_incr: int = 1
     moves: int = 3
@@ -334,12 +334,12 @@ class MonsterStats(CharacterStats, ABC):
 @dataclass
 class KoboldStats(MonsterStats): # BALANCED
     char: str = "K"
-    health: int = 3
+    health: int = 1 #3
     strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 5
     random_motility: float = 1.0
     dodging_ability: int = 7
-    experience_when_killed: int = 5
+    experience_when_killed: int = 500 #5
 
     def __post_init__(self):
         if self.max_attacks is None:

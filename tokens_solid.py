@@ -95,8 +95,8 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         :param fading_token: FadingToken fading out
         :return: None
         """
-        if fading_token.effect in self.effect_queue:
-           self.effect_queue.remove(fading_token.effect)
+        if fading_token.effect_in_queue in self.effect_queue:
+            self.effect_queue.remove(fading_token.effect_in_queue)
 
 
     def delete_token(self, tile: Tile) -> None:
@@ -376,7 +376,7 @@ class PlayerToken(CharacterToken):
         self._display_health_bar(self, self.bar_length)
 
     @staticmethod
-    def on_effect_queue(character_token: CharacterToken, effect_queue: list[str]) -> None:
+    def on_effect_queue(character_token: CharacterToken, effect_queue: list[dict]) -> None:
         """
         Shows FadingTokens for the effect modifying the next attribute on the queue
         :param character_token: CharacterToken on which FadingToken is shown
@@ -384,7 +384,8 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         if len(effect_queue) > 0:
-            character_token.show_effect_token(effect_queue[0], effect_ends=True)
+            effect_name, effect_ends = list(effect_queue[0].items())[0]
+            character_token.show_effect_token(effect_name, effect_ends=effect_ends)
 
 
     @staticmethod

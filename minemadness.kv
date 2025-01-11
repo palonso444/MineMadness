@@ -79,7 +79,7 @@
     on_active_character_id:
         name_label.text = str(root.active_character.name)
 
-    on_level: level_label.text = "Depth: " + str(self.level * 30) + " ft."
+    #on_level: level_label.text = "Depth: " + str(self.level * 30) + " ft."
     on_shovels: shovels_label.text = "Shovels: " + str(root.active_character.stats.shovels) if root.active_character.kind == "player" else ""
     on_weapons: weapons_label.text = "Weapons: " + str(root.active_character.stats.weapons) if root.active_character.kind == "player" else ""
     on_gems: gems_label.text = "Gems: " + str(root.active_character.gems) + '/' + str(root.total_gems) if root.active_character.kind == "player" else ""

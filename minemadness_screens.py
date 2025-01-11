@@ -43,7 +43,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
     inv_object = StringProperty(None, allownone=True)
 
     # INTERFACE LABELS PROPERTIES
-    health = BooleanProperty(None)
+    # callbacks are defined in the kv file
+    # health = BooleanProperty(None)
     shovels = BooleanProperty(None)
     weapons = BooleanProperty(None)
     gems = BooleanProperty(None)
@@ -93,7 +94,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
         for button_type in Interfacebutton.types:
             self.inv_object = button_type
 
-        self.update_switch("health")
+        self.ids.level_label.text = "Depth: " + str(self.level * 30) + " ft." \
+            if self.active_character.kind == "player" else ""
+        #self.update_switch("health")
         self.update_switch("shovels")
         self.update_switch("weapons")
         self.update_switch("gems")

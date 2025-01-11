@@ -222,15 +222,24 @@ class Player(Character, ABC, EventDispatcher):
         self.stats.weapons -= 1
         game.update_switch("weapons")
 
-    def on_experience(self, instance, value):
-
-        if value >= self.stats.exp_to_next_level:
-            self.player_level += 1
-            self.stats.exp_to_next_level = (
-                self.player_level * self.stats.base_exp_to_level_up
-            )
-            self.experience = 0
-            self.token.show_effect_token("level_up")
+    @staticmethod
+    def on_experience(player, exp_value) -> None:
+        """
+        Checks if the player must level up and, if so, levels up
+        :param player: player instance
+        :param exp_value: experience value
+        :return: None
+        """
+        if player.experience > 0:
+            start_level: int = player.player_level
+            while exp_value >= player.stats.exp_to_next_level:
+                exp_value -= player.stats.exp_to_next_level
+                player.player_level += 1
+                player.stats.exp_to_next_level = (
+                    player.player_level * player.stats.base_exp_to_level_up
+                )
+            player.token.effect_queue = [{"level_up": False} for _ in range(player.player_level - start_level)]
+            player.experience = 0
             # experience bar updated by Cragpeongame.update_interface()
 
     def remove_all_effects(self, turn: int = 0) -> None:
@@ -248,7 +257,7 @@ class Player(Character, ABC, EventDispatcher):
         """
         Removes all effects for which the effect is over
         """
-        attribute_names = list()
+        effect_names = list()
 
         # attributes are: "moves", "toughness", "strength"
         for attribute, effects in self.effects.items():
@@ -260,12 +269,12 @@ class Player(Character, ABC, EventDispatcher):
                         player_stat -= effect["size"]
                     elif isinstance(player_stat, list):
                         player_stat[1] -= effect["size"]
-                    effects.remove(effect)
-                    attribute_names.append(attribute)
+                    effect_names.append(attribute)
                     setattr(self.stats, attribute, player_stat)
-                    continue
 
-        self.token.modified_attributes = attribute_names
+            self.effects[attribute] = [effect for effect in effects if effect["end_turn"] > turn]
+
+        self.token.effect_queue = self.token.effect_queue + [{effect_name: True} for effect_name in effect_names]
 
     def perform_passive_action(self) -> None:
         """

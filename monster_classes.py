@@ -24,6 +24,7 @@ class Monster(Character, ABC):
 
         # exclusive of Monster class
         self.chases: str = "player"
+        self.acted_on_tile: bool | None = None
 
     @abstractmethod
     def move(self):
@@ -38,6 +39,13 @@ class Monster(Character, ABC):
         """
         return False
 
+    @property
+    def has_acted(self) -> bool:
+        """
+        Property defining if a Monster has performed an action this turn (attack, dig, pick object, etc.)
+        :return: True if Monser has performed an action, False otherwise
+        """
+        return self.acted_on_tile
 
     def can_dig(self, token_species: str) -> bool:
         """
@@ -54,7 +62,10 @@ class Monster(Character, ABC):
         :param token_species: Token.species of the opponent
         :return: True
         """
-        return True
+        return (any(self.get_dungeon().get_tile(position).has_token(token_species)
+             for position in self.get_dungeon().get_nearby_positions(self.get_position()))
+         and self.stats.remaining_moves > 0
+         and self.stats.remaining_attacks > 0)
 
     @property
     def can_retreat(self) -> bool:
@@ -83,6 +94,7 @@ class Monster(Character, ABC):
         super().initialize_moves_attacks()
         for character in cls.data:
             character.stats.remaining_attacks = character.stats.max_attacks
+            character.acted_on_tile = False
 
     def move_token_or_act_on_tile(self, path: list[tuple]) -> None:
         """
@@ -104,7 +116,9 @@ class Monster(Character, ABC):
         :param tile: Tile where behavior happens
         :return: None
         """
-        self.attack_players()
+        if self.can_fight("player"):
+            self.attack_players()
+            self.acted_on_tile = True
 
 
     def attack_players(self) -> None:
@@ -741,6 +755,7 @@ class Pixie(Monster):
         """
         if tile.has_token("pickable"):
             tile.get_token("pickable").delete_token(tile)
+            self.acted_on_tile = True
         super().act_on_tile(tile)
 
     def move(self):
@@ -778,7 +793,7 @@ class RattleSnake(Monster):
         Property defining if a Character can retreat after an attack
         :return: True if character can retreat after attack, False otherwise
         """
-        return self.stats.remaining_moves > 0
+        return self.has_acted and self.stats.remaining_moves > 0
 
 
     def attack_players(self) -> None:
@@ -846,7 +861,7 @@ class Penumbra(Monster):
         are set to 0 when it cannot reach any player with enough remaining moves to attack and retreat
         :return: True if character can retreat after attack, False otherwise
         """
-        return self.stats.remaining_moves > 0
+        return self.has_acted and self.stats.remaining_moves > 0
 
 
     @property
@@ -907,19 +922,20 @@ class Penumbra(Monster):
         Attacks and retreats
         :return: None
         """
-        if any(self.get_dungeon().get_tile(position).has_token("player")
-               for position in self.get_dungeon().get_nearby_positions(self.get_position())):
+        #if any(self.get_dungeon().get_tile(position).has_token("player")
+               #for position in self.get_dungeon().get_nearby_positions(self.get_position())):
 
-            super().attack_players()
-            path: list[tuple[int,int]] = (self.get_path_to_target(self.find_random_target(
-                max_steps=self.stats.remaining_moves, min_steps=self.stats.min_retreat_dist)))
-            if len(path) > 1:
-                self.token.slide(path, self.token.on_retreat_completed)
-            else:  # if somehow cannot retreat will stay in place
-                self.stats.remaining_moves = 0
+        super().attack_players()
 
-        else:
-            self.stats.remaining_moves = 0  # no retreat if no attack happened
+        path: list[tuple[int,int]] = (self.get_path_to_target(self.find_random_target(
+            max_steps=self.stats.remaining_moves, min_steps=self.stats.min_retreat_dist)))
+        if len(path) > 1:
+            self.token.slide(path, self.token.on_retreat_completed)
+        else:  # if somehow cannot retreat will stay in place
+            self.stats.remaining_moves = 0
+
+        #else:
+            #self.stats.remaining_moves = 0  # no retreat if no attack happened
 
 
 
@@ -1000,6 +1016,7 @@ class ClawJaw(Monster):
             self.dig_position = None
             if self.can_dig(tile_to_dig.get_token("wall").species):
                 self.dig(tile_to_dig)
+                self.acted_on_tile = True
 
         super().act_on_tile(tile)
 

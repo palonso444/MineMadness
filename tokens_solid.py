@@ -88,6 +88,20 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
             EffectToken(effect=effect, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
 
+    @staticmethod
+    def on_effect_queue(solid_token: SolidToken, effect_queue: list[dict[str:bool]]) -> None:
+        """
+        Shows FadingTokens for the next effect on the queue
+        :param solid_token: SolidToken on which FadingToken is shown
+        :param effect_queue: queue of currently working effects formatted as a dict as follows:
+        {effect_name(str): effect_ends (bool)}
+        :return: None
+        """
+        if len(effect_queue) > 0:
+            effect_name, effect_ends = list(effect_queue[0].items())[0]
+            solid_token.show_effect_token(effect_name, effect_ends=effect_ends)
+
+
     def remove_effect_if_in_queue(self, animation: Animation, fading_token:FadingToken) -> None:
         """
         Triggered when fading_out animation of FadingToken is completed
@@ -95,8 +109,9 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         :param fading_token: FadingToken fading out
         :return: None
         """
-        if fading_token.effect_in_queue in self.effect_queue:
-            self.effect_queue.remove(fading_token.effect_in_queue)
+        effect_in_queue: dict = {fading_token.effect: fading_token.effect_ends}
+        if effect_in_queue in self.effect_queue:
+            self.effect_queue.remove(effect_in_queue)
 
 
     def delete_token(self, tile: Tile) -> None:
@@ -274,7 +289,6 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         animation = Animation(pos=next_tile.pos, duration=self.character.step_duration,
                               transition=self.character.step_transition)
 
-
         animation.bind(on_complete=lambda animation_obj, token_shape: on_complete(animation_obj,
                                                                                token_shape,
                                                                                next_tile,
@@ -374,19 +388,6 @@ class PlayerToken(CharacterToken):
         super().select_character()
         self._display_selection_circle()
         self._display_health_bar(self, self.bar_length)
-
-    @staticmethod
-    def on_effect_queue(character_token: CharacterToken, effect_queue: list[dict]) -> None:
-        """
-        Shows FadingTokens for the effect modifying the next attribute on the queue
-        :param character_token: CharacterToken on which FadingToken is shown
-        :param effect_queue: queue of currently working effects
-        :return: None
-        """
-        if len(effect_queue) > 0:
-            effect_name, effect_ends = list(effect_queue[0].items())[0]
-            character_token.show_effect_token(effect_name, effect_ends=effect_ends)
-
 
     @staticmethod
     def _display_health_bar(token: PlayerToken, percent_natural_health: float) -> None:
@@ -561,5 +562,6 @@ class MonsterToken(CharacterToken):
         if len(self.path) > 0:
             self._slide_one_step(self.dungeon.get_tile(self.path.pop(0)), on_complete)
         else:
+            self.character.stats.remaining_moves = 0  # after retreat, monster cannot do anything else
             self.update_token_on_tile(current_tile)
             self.dungeon.game.update_switch("character_done")

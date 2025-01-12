@@ -33,6 +33,7 @@ class Character(ABC):
         for character in cls.data:
             character.stats.remaining_moves = character.stats.moves
 
+
     @classmethod
     def all_dead_or_out(cls) -> bool:
         """

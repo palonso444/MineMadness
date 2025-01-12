@@ -178,11 +178,15 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.active_character.token.unselect_token()
                 game.update_switch("turn")
 
-            if game.active_character.stats.remaining_moves > 0:
+            elif game.active_character.stats.remaining_moves > 0:
                 if game.active_character.kind == "player":
                     game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
                 elif game.active_character.kind == "monster":
-                    game.active_character.move()
+                    if game.active_character.has_acted:
+                        game.active_character.acted_on_tile = False
+                        game.active_character.move()
+                    else:
+                        game.next_character()
 
             else:
                 if game.active_character.kind == "player":

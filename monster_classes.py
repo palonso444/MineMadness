@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from os import remove
 from random import randint, choice
 from abc import ABC, abstractmethod
 from statistics import mean, pvariance
@@ -56,13 +55,13 @@ class Monster(Character, ABC):
         return False
 
 
-    def can_fight(self, token_species: str) -> bool:
+    def can_fight(self, token_kind: str) -> bool:
         """
-        Placeholder, monsters are always able to fight
-        :param token_species: Token.species of the opponent
-        :return: True
+        Determines if a monster can fight a specific token_kind
+        :param token_kind: Token.kind of the opponent
+        :return: True if the Monster can fight, False otherwise
         """
-        return (any(self.get_dungeon().get_tile(position).has_token(token_species)
+        return (any(self.get_dungeon().get_tile(position).has_token(token_kind)
              for position in self.get_dungeon().get_nearby_positions(self.get_position()))
          and self.stats.remaining_moves > 0
          and self.stats.remaining_attacks > 0)
@@ -894,6 +893,8 @@ class Penumbra(Monster):
         :return: None
         """
         self.token.color.a = 0.5  # changes transparency
+        self.get_dungeon().restore_canvas_color("canvas")  # restores alpha
+        self.get_dungeon().restore_canvas_color("after")
         self.ability_active = True
 
     def unhide_if_all_players_unreachable(self) -> None:

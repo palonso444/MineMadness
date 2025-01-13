@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from kivy.graphics import Rectangle
+from kivy.graphics import Rectangle, Color
 from kivy.properties import NumericProperty, ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 from kivy.graphics.texture import Texture
@@ -152,6 +152,27 @@ class DungeonLayout(GridLayout):
             if tile.has_token("monster", "penumbra"):
                 character = tile.get_token("monster").character
                 character.hide_if_player_in_range(character.stats.moves)  # remaining moves not yet established
+
+
+    def restore_canvas_color(self, canvas: str) -> None:
+        """
+        Restores the canvas Color to the original state
+        :param canvas: canvas to restore (before, after, canvas)
+        :return: None
+        """
+        match canvas:
+            case "canvas":
+                canvas_context = self.canvas
+            case "after":
+                canvas_context = self.canvas.after
+            case "before":
+                canvas_context =  self.canvas.before
+            case _:
+                raise Exception(f"Invalid canvas argument {canvas}. Valid are: before, canvas, after.")
+
+        with canvas_context:
+            Color (1,1,1,1)
+
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:

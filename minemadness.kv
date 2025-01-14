@@ -11,7 +11,7 @@
     width: self.minimum_width
 
 <Label>:
-    text_size: self.size    # needed to make halign work  
+    text_size: self.size  # needed to make halign work
     halign: "left"
     valign: "middle"
     font_size: "20sp"
@@ -164,8 +164,8 @@
         ScrollView:  # contains the DungeonLayout (initialized by MineMadnessApp.add_dungeon_to_game())
 
             size_hint: 1, None
-            height: min(self.parent.height * 0.575, 335 * dp(1))
-
+            height: min(self.parent.height * 0.650, 435 * dp(1))  # change 0.650 to 0.575 and 435 to 335 to reset
+                                                                  # as it was before
         BoxLayout:
             orientation: "horizontal"
             size_hint: 1, 0.05

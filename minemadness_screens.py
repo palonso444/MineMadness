@@ -57,6 +57,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.active_character: Character | None = None  # defined by MineMadnessGame.on_active_character_id()
         self.total_gems: int | None = None  # defined by MineMadnessGame.DungeonLayout.on_pos()
         self.ability_button_active: bool | None = None  # activated and deactivates button (no effect if pressed)
+        self.game_already_over: bool = False  # to avoid interferences of game_over screens if massive killing
 
     @staticmethod
     def on_dungeon(game: MineMadnessGame, dungeon: DungeonLayout) -> None:
@@ -343,14 +344,17 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param damage_token: DamageToken instance
         :return: None
         """
-        if players.Player.all_players_dead():
-            damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
-            App.get_running_app().trigger_game_over("Monsters killed y'all!")
+        if not damage_token.game.game_already_over:  # avoids interferences of game_over screens if massive killing
+            if players.Player.all_players_dead():
+                damage_token.game.game_already_over = True
+                damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+                App.get_running_app().trigger_game_over("Monsters killed y'all!")
 
-        elif (Player.check_if_dead("sawyer") and Player.gems < damage_token.game.total_gems
-            and not any(player.has_item("talisman") for player in Player.data)):
-            damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
-            App.get_running_app().trigger_game_over("Only Sawyer could pick up gems...")
+            elif (Player.check_if_dead("sawyer") and Player.gems < damage_token.game.total_gems
+                and not any(player.has_item("talisman") for player in Player.data)):
+                damage_token.game.game_already_over = True
+                damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+                App.get_running_app().trigger_game_over("Only Sawyer could pick up gems...")
 
     def finish_level(self) -> None:
         """

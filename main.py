@@ -206,7 +206,6 @@ class MineMadnessApp(App):
         self.game_over_message = message
         self.sm.current = "game_over"
         self.ongoing_game = False
-        #self._clean_previous_game()
         self.sm.transition.duration = 0.3
 
 

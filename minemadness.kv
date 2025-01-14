@@ -177,7 +177,7 @@
 <GameOver>:
     MenuLayout:
         TitleLabel:
-            text: f"{app.game_over_message}" if app.game_over_message is not None else ""
+            text: f"{app.game_over_message}\nThat's a game over" if app.game_over_message is not None else ""
             size_hint: 1, 0.5
         TitleLabel:
             text: f"You have reached a depth of {str(app.level * 30)} feet" if app.level is not None else ""

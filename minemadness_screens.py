@@ -225,6 +225,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param character_id: id of the new active character
         :return: None
         """
+        # restores any color modifications from previous Characters (e.g. by hiding)
+        game.dungeon.restore_canvas_color("canvas")
+        game.dungeon.restore_canvas_color("after")
+
         if character_id is not None and not Player.all_dead_or_out():
             # if player turn or no monsters
             if game.turn % 2 == 0 or monsters.Monster.all_dead_or_out():
@@ -339,14 +343,14 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param damage_token: DamageToken instance
         :return: None
         """
-        if (Player.check_if_dead("sawyer") and Player.gems < damage_token.game.total_gems
+        if players.Player.all_players_dead():
+            damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+            App.get_running_app().trigger_game_over("Monsters killed y'all!")
+
+        elif (Player.check_if_dead("sawyer") and Player.gems < damage_token.game.total_gems
             and not any(player.has_item("talisman") for player in Player.data)):
             damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             App.get_running_app().trigger_game_over("Only Sawyer could pick up gems...")
-
-        elif players.Player.all_players_dead():
-            damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
-            App.get_running_app().trigger_game_over("Monsters killed y'all")
 
     def finish_level(self) -> None:
         """

@@ -893,8 +893,8 @@ class Penumbra(Monster):
         :return: None
         """
         self.token.color.a = 0.5  # changes transparency
-        self.get_dungeon().restore_canvas_color("canvas")  # restores alpha
-        self.get_dungeon().restore_canvas_color("after")
+        #self.get_dungeon().restore_canvas_color("canvas")  # restores alpha
+        #self.get_dungeon().restore_canvas_color("after")
         self.ability_active = True
 
     def unhide_if_all_players_unreachable(self) -> None:

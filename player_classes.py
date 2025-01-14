@@ -583,8 +583,8 @@ class Sawyer(Player):
         self.special_items["powder"] -= 1
         self.ignores += ["pickable","treasure"]
         self.token.color.a = 0.6  # changes transparency
-        self.get_dungeon().restore_canvas_color("canvas")  # restores alpha
-        self.get_dungeon().restore_canvas_color("after")
+        #self.get_dungeon().restore_canvas_color("canvas")  # restores alpha
+        #self.get_dungeon().restore_canvas_color("after")
         self.ability_active = True
 
     def unhide(self):

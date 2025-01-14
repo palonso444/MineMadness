@@ -41,7 +41,10 @@ class FadingToken(Widget, ABC, metaclass=WidgetABCMeta):
         """
         fading_out = Animation(opacity=0, duration=token.duration)
         if isinstance(token, EffectToken):
+            # token.character_token is the CharacterToken upon which FadingToken acts
             fading_out.bind(on_complete=token.character_token.remove_effect_if_in_queue)
+        elif isinstance(token, DamageToken):
+            fading_out.bind(on_complete=token.game.check_if_game_over)
         fading_out.start(token)
 
 
@@ -49,10 +52,12 @@ class DamageToken(FadingToken):
     """
     Class defining the FadingTokens representing damage
     """
-    def __init__(self, pos: tuple[float,float], size: tuple[float,float], **kwargs):
+    def __init__(self, pos: tuple[float,float], size: tuple[float,float],
+                 game: MineMadnessGame, **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 0.25
         self.duration = 0.2
+        self.game: MineMadnessGame = game
 
         with self.canvas:
             self.color = Color(1, 0, 0, 1)

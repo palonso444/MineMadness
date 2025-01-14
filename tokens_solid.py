@@ -346,7 +346,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         with self.dungeon.canvas.after:  # canvas.after to ensure is visible on the CharacterToken
-            DamageToken(pos=self.pos, size=self.size)
+            DamageToken(pos=self.pos, size=self.size, game=self.dungeon.game)
 
 
 class PlayerToken(CharacterToken):

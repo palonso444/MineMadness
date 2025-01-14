@@ -7,6 +7,8 @@ import player_classes as players
 import monster_classes as monsters
 from interface import Interfacebutton
 from player_classes import Player
+from tokens_fading import DamageToken
+
 
 class MainMenu(Screen):
     pass
@@ -168,7 +170,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param value: current boolean value of the switch
         :return: None
         """
-        game.check_if_level_continues()
+        game.check_if_all_players_exited()
+        # call game.check_if_game_over() if game over for lack of shovels is implemented
 
         if game.turn is not None:
 
@@ -318,21 +321,32 @@ class MineMadnessGame(Screen):  # initialized in kv file
             # needs to be reset to None otherwise it is not possible to pick 2 equal objects in a row
             game.inv_object = None
 
-    def check_if_level_continues(self) -> None:
+    def check_if_all_players_exited(self) -> None:
         """
-        Checks if level should continue or either game is over or player moved to next level
+        Checks if all Players have exited the level, so game must move to the next level
         :return: None
         """
-        if (Player.check_if_dead("sawyer") and Player.gems < self.total_gems
-            and not any(player.has_item("talisman") for player in Player.data))\
-                or players.Player.all_players_dead():
-
-            self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
-            App.get_running_app().game_over = True
-
-        elif players.Player.all_dead_or_out() and not players.Player.all_players_dead():
+        if players.Player.all_dead_or_out() and not players.Player.all_players_dead():
             self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             self.finish_level()
+
+    @staticmethod
+    def check_if_game_over(animation: Animation, damage_token: DamageToken) -> None:
+        """
+        Checks if the game is over, and if yes, triggers game over screen. It is bound after fading out
+        of DamageToken
+        :param animation: animation object of the DamageToken
+        :param damage_token: DamageToken instance
+        :return: None
+        """
+        if (Player.check_if_dead("sawyer") and Player.gems < damage_token.game.total_gems
+            and not any(player.has_item("talisman") for player in Player.data)):
+            damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+            App.get_running_app().trigger_game_over("Only Sawyer could pick up gems...")
+
+        elif players.Player.all_players_dead():
+            damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+            App.get_running_app().trigger_game_over("Monsters killed y'all")
 
     def finish_level(self) -> None:
         """

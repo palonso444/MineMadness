@@ -26,9 +26,9 @@ class MineMadnessApp(App):
     music_on = BooleanProperty(None)
     game_mode_normal = BooleanProperty(None)
     ongoing_game = BooleanProperty(False)
-    game_over = BooleanProperty(False)
     level = NumericProperty(None)
     saved_game = BooleanProperty(False)
+    game_over_message = StringProperty(None)
 
     def __init__(self):
         super().__init__()
@@ -155,6 +155,8 @@ class MineMadnessApp(App):
         data = self._convert_all_digit_keys_to_int(data)
 
         self.game_mode_normal = data["game_mode_normal"]
+        if self.sm.has_screen("game_screen"):
+            self._clean_previous_game()
         self.game = MineMadnessGame(name="game_screen")
         self.game.level = data["level"]
 
@@ -191,18 +193,21 @@ class MineMadnessApp(App):
         else:
             app.music.stop()
 
-    @staticmethod
-    def on_game_over(app: MineMadnessApp, game_over: bool) -> None:
-        if game_over:
-            if not app.game_mode_normal:
-                remove(app.saved_game_file)
-                app.saved_game = False
-            app.sm.transition.duration = 1.5
-            app.sm.current = "game_over"
-            app.game_over = False
-            app.ongoing_game = False
-            app._clean_previous_game()
-            app.sm.transition.duration = 0.3
+    def trigger_game_over(self, message: str) -> None:
+        """
+        Triggers game over screen
+        :param message: message to display on game over screen (reason why game over)
+        :return: None
+        """
+        if not self.game_mode_normal:
+            remove(self.saved_game_file)
+            self.saved_game = False
+        self.sm.transition.duration = 1.5
+        self.game_over_message = message
+        self.sm.current = "game_over"
+        self.ongoing_game = False
+        #self._clean_previous_game()
+        self.sm.transition.duration = 0.3
 
 
 ######################################################### START APP ###################################################

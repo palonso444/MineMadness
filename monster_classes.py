@@ -23,7 +23,7 @@ class Monster(Character, ABC):
 
         # exclusive of Monster class
         self.chases: str = "player"
-        self.acted_on_tile: bool | None = None
+        self.acted_on_tile: bool = False
 
     @abstractmethod
     def move(self):

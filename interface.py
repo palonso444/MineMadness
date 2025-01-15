@@ -158,8 +158,7 @@ class WhiskyButton(Interfacebutton):
 
         character = self.game.active_character
         effect_size = int(
-            (character.stats.natural_strength[0] + character.stats.natural_strength[1])
-            / 2
+            (character.stats.natural_strength[0] + character.stats.natural_strength[1]) / 2
             * self.stats.effect_size
         )
         effect_size = (

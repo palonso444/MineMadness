@@ -262,7 +262,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_items(" ", 1)
         blueprint.place_items("c", 20)
         #blueprint.place_items("A", 10)
-        #blueprint.place_items("#", 10)
+        blueprint.place_items("N", 10)
         #blueprint.place_items("{", 15)
         #blueprint.place_items("*", 15)
         #blueprint.place_items("K", 3)

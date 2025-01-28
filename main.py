@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from kivy.app import App  # type: ignore
 from kivy.lang import Builder
-# from kivy.core.text import LabelBase    # type: ignore
+from kivy.core.text import LabelBase
 # from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
@@ -17,9 +17,8 @@ import monster_classes as monsters
 from dungeon_classes import DungeonLayout
 from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig
 
-# LabelBase.register(name = 'Vollkorn',
-# fn_regular= 'fonts/Vollkorn-Regular.ttf',
-# fn_italic='fonts/Vollkorn-Italic.ttf'
+LabelBase.register(name = 'duality', fn_regular= 'fonts/duality.otf')
+LabelBase.register(name = 'edmunds', fn_regular= 'fonts/edmunds_distressed.otf')
 
 class MineMadnessApp(App):
 

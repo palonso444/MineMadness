@@ -35,7 +35,7 @@ class MineMadnessApp(App):
         self.saved_game_file: str = "saved_game.json"
         self.saved_game: bool = exists("saved_game.json")
 
-        self.music = SoundLoader.load("./music/stocktune_eternal_nights_embrace.ogg")
+        self.music = SoundLoader.load("./music/stocktune_celestial_dreams_unveiled.mp3")
         self.music.loop = True
         self.music_on: bool = False
 

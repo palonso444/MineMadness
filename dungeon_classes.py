@@ -273,6 +273,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_items("K", 3)
         blueprint.place_items("Y", 3)
         blueprint.place_items("h", 3)
+        # blueprint.place_items("#", 3)
 
         blueprint.place_items("o", self.stats.gem_number())
 

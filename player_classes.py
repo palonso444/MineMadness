@@ -618,7 +618,7 @@ class CrusherJane(Player):
         self._update_level_track(self.player_level)
 
         self.special_items: dict[str:int] = {"weapons": self.stats.weapons}
-        self.ability_display: str = "Use Weapons"
+        self.ability_display: str = "Weapons"
         self.ability_active: bool = False
 
         if attributes_dict is not None:
@@ -702,7 +702,7 @@ class Hawkins(Player):
         self._update_level_track(self.player_level)
 
         self.special_items: dict[str:int] | None = {"dynamite": 12}  #2
-        self.ability_display: str = "Use Dynamite"
+        self.ability_display: str = "Dynamite"
         self.ability_active: bool = False
 
         if attributes_dict is not None:

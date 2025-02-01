@@ -8,7 +8,7 @@
     height: self.minimum_height
 
 <HowToPlayLabel@Label>
-    font_size: "25sp"
+    font_size: "30sp"
     # size of Label is dynamic depending on number of pictures in the parent Layout
     size_hint: 1 - (len(self.parent.children) - 1) * picture_width_hint, None
     height: self.texture_size[1]
@@ -39,10 +39,71 @@
                         font_size: "60sp"
                         color: 1, 0, 0, 1  # red
                 HowToPlayLayout:
-                    HowToPlayPicture:
-                        source: "./tokens/pixietoken.png"
                     HowToPlayLabel:
-                        text: "This is a sample"
+                        text: "In this endless mine, countless foes and riches await in the darkness.\nHow deep can you go?"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/gemtoken.png"
+                    HowToPlayPicture:
+                        source: "./backgrounds/exitbackground.png"
+                    HowToPlayLabel:
+                        text: "Collect all gems and exit through the door to the next level!"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/sawyertoken.png"
+                    HowToPlayLabel:
+                        text: "SAWYER: only she is able to pick up gems. She is also the weakest character. You must protect her!"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/hawkinstoken.png"
+                    HowToPlayLabel:
+                        text: "HAWKINS: can dig through almost any wall without shovels and blow up stuff with dynamite!"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/crusherjanetoken.png"
+                    HowToPlayLabel:
+                        text: "CRUSHER JANE: the tank. Can kill with no weapons. With weapons, she is even more lethal!"
+                HowToPlayLayout:
+                    HowToPlayLabel:
+                        text: "Objects left behind by lost adventurers will aid you in this perilous quest:"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/weapontoken.png"
+                    HowToPlayLabel:
+                        text: "WEAPONS: these jagged peaks once abandoned by early miners now serve as effective weapons!"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/shoveltoken.png"
+                    HowToPlayLabel:
+                        text: "SHOVELS: these rusty tools can be still used to open your own path through the rocky walls."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/jerkytoken.png"
+                    HowToPlayLabel:
+                        text: "JERKY: this meat, dried for decades, will fill you with warmth and restore your lost life."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/coffeetoken.png"
+                    HowToPlayLabel:
+                        text: "COFFEE: black and thick as the surrounding darkness, this potent brew will quicken your stride."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/whiskytoken.png"
+                    HowToPlayLabel:
+                        text: "WHISKY: a swig of this potent firewater will give you the strength to fight courageously."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/tobaccotoken.png"
+                    HowToPlayLabel:
+                        text: "TOBACCO: chewing this aged tobacco will increase your toughness against monster attacks."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: "./tokens/talismantoken.png"
+                    HowToPlayLabel:
+                        text: "TALISMAN: this indian relic will bring back dead characters or level up whoever uses it."
+                HowToPlayLayout:
+                    HowToPlayLabel:
+                        text: "You have learned enough to survive the early levels... Good luck, adventurer!"
 
         MainMenuButton:
             size_hint: 1, 0.1

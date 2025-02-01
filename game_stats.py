@@ -14,7 +14,7 @@ class DungeonStats:
 
     @property
     def size(self) -> int:
-        return 10 + int(self.stats_level * 0.2)
+        return 6 + int(self.stats_level * 0.2)
 
     @property
     def gem_number(self) -> int:

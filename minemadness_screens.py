@@ -81,7 +81,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
     def initialize_switches(self) -> None:
         self.turn = 0  # even for players, odd for monsters. Player starts
 
-        self.health = False
         self.shovels = False
         self.weapons = False
         self.gems = False
@@ -98,7 +97,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         self.ids.level_label.text = "Depth: " + str(self.level * 30) + " ft." \
             if self.active_character.kind == "player" else ""
-        #self.update_switch("health")
+
         self.update_switch("shovels")
         self.update_switch("weapons")
         self.update_switch("gems")

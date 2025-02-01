@@ -75,13 +75,13 @@ class TrapStats:
         if seed < 5:
             return 0
         if seed < 10:
-            return uniform(0, 0.15)
+            return uniform(0, 0.05)
         if seed < 15:
-            return uniform(0, 0.2)
+            return uniform(0, 0.08)
         if seed < 20:
-            return uniform(0.05, 0.3)
+            return uniform(0, 0.12)
         else:
-            return uniform(0.1, 0.4)
+            return uniform(0, 0.18)
 
     def calculate_damage(self, dungeon_level: int) -> int:
         """

@@ -36,8 +36,8 @@ class DungeonLayout(GridLayout):
         self.game: MineMadnessGame = game
         self.dungeon_level: int = game.level
         self.stats: DungeonStats = DungeonStats(self.dungeon_level)
-        self.rows: int = self.stats.size()
-        self.cols: int = self.stats.size()
+        self.rows: int = self.stats.size
+        self.cols: int = self.stats.size
         if blueprint is None:
             self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
         else:
@@ -257,28 +257,13 @@ class DungeonLayout(GridLayout):
         :return: complete blueprint of the dungeon
         """
         blueprint = Blueprint(y_axis, x_axis)
-        #self.stats.stats_level = 20
+        self.stats.stats_level = 24
         blueprint.place_items_as_group(players.Player.get_surviving_players(), min_dist=1)
         blueprint.place_items(" ", 1)
-        #blueprint.place_items("c", 20)
-        blueprint.place_items("d", 3)
-        blueprint.place_items("N", 3)
-        blueprint.place_items("c", 3)
-        blueprint.place_items("l", 3)
-        blueprint.place_items("x", 3)
-        blueprint.place_items("p", 3)
-        blueprint.place_items("w", 3)
-        blueprint.place_items("p", 3)
-        blueprint.place_items("t", 3)
-        blueprint.place_items("K", 3)
-        blueprint.place_items("Y", 3)
-        blueprint.place_items("h", 3)
-        # blueprint.place_items("#", 3)
+        blueprint.place_items("o", self.stats.gem_number)
 
-        blueprint.place_items("o", self.stats.gem_number())
-
-        #for item, frequency in self.stats.level_progression().items():
-            #blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
+        for item, frequency in self.stats.level_progression().items():
+            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
         #blueprint.print_map()
         return blueprint

@@ -46,7 +46,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     # INTERFACE LABELS PROPERTIES
     # callbacks are defined in the kv file
-    # health = BooleanProperty(None)
     shovels = BooleanProperty(None)
     weapons = BooleanProperty(None)
     gems = BooleanProperty(None)
@@ -67,7 +66,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param dungeon: assigned dungeon instance
         :return: None
         """
-        game.total_gems = game.dungeon.stats.gem_number()  # self.game defined in kv file
+        game.total_gems = game.dungeon.stats.gem_number  # self.game defined in kv file
         players.Player.gems = 0
         players.Player.set_starting_player_order()
         for player in players.Player.data:

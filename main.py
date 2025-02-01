@@ -17,8 +17,8 @@ import monster_classes as monsters
 from dungeon_classes import DungeonLayout
 from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig
 
-LabelBase.register(name = 'duality', fn_regular= 'fonts/duality.otf')
-LabelBase.register(name = 'edmunds', fn_regular= 'fonts/edmunds_distressed.otf')
+LabelBase.register(name = 'duality', fn_regular= 'fonts/duality.ttf')
+LabelBase.register(name = 'edmunds', fn_regular= 'fonts/edmunds_distressed.ttf')
 
 class MineMadnessApp(App):
 
@@ -35,7 +35,7 @@ class MineMadnessApp(App):
         self.saved_game_file: str = "saved_game.json"
         self.saved_game: bool = exists("saved_game.json")
 
-        self.music = SoundLoader.load("./music/stocktune_celestial_dreams_unveiled.mp3")
+        self.music = SoundLoader.load("./music/stocktune_eternal_nights_embrace.ogg")
         self.music.loop = True
         self.music_on: bool = False
 

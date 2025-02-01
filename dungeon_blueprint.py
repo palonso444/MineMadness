@@ -13,17 +13,17 @@ class Blueprint:
             raise ValueError("No None allowed in y_axis and x_axis if layout is None.")
 
         if x_axis is not None and y_axis is not None:
-            self.y_axis = y_axis
-            self.x_axis = x_axis
+            self.y_axis: int = y_axis
+            self.x_axis: int = x_axis
         else:
-            self.y_axis = len(layout)
-            self.x_axis = len(layout[0])
-        self.area = self.y_axis * self.x_axis
+            self.y_axis: int = len(layout)
+            self.x_axis: int = len(layout[0])
+        self.area: int = self.y_axis * self.x_axis
 
         if layout is None:
-            self.layout = self.generate_empty_layout(y_axis, x_axis)
+            self.layout: list[list[str]] = self.generate_empty_layout(y_axis, x_axis)
         else:
-            self.layout = layout
+            self.layout: list[list[str]] = layout
 
     @staticmethod
     def get_distance(position1: tuple[int, int], position2: tuple[int, int]) -> int:
@@ -155,6 +155,29 @@ class Blueprint:
 
                     placed_positions.add(cand_position)
                     self.place_single_item(items.popleft(), position=cand_position)
+
+    def purge_blueprint(self, max_total_frequency:float, protected: set | None = None) -> None:
+        """
+        Cleans the blueprint until the max_frequency is reached to avoid overcrowding
+        :param max_total_frequency: max sum frequencies of all items allowed
+        :param protected: items that must be kept
+        :return: None
+        """
+        if protected is None:
+            protected = {"."}
+        else:
+            protected.add(".")
+
+        max_occupied_tiles = self.area * max_total_frequency
+        current_occupied_tiles = sum(len([item for item in row if item != "."]) for row in self.layout)
+
+        while current_occupied_tiles > max_occupied_tiles:
+            if all(item in protected for row in self.layout for item in row):
+                break
+            position = self.random_location()
+            if self.get_position(position) not in protected:
+                self.place_single_item(".", position)
+                current_occupied_tiles = sum(len([item for item in row if item != "."]) for row in self.layout)
 
 
 if __name__ == "__main__":

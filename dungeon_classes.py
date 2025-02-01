@@ -257,7 +257,7 @@ class DungeonLayout(GridLayout):
         :return: complete blueprint of the dungeon
         """
         blueprint = Blueprint(y_axis, x_axis)
-        self.stats.stats_level = 24
+        self.stats.stats_level = 16
         blueprint.place_items_as_group(players.Player.get_surviving_players(), min_dist=1)
         blueprint.place_items(" ", 1)
         blueprint.place_items("o", self.stats.gem_number)
@@ -265,6 +265,8 @@ class DungeonLayout(GridLayout):
         for item, frequency in self.stats.level_progression().items():
             blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
+        blueprint.purge_blueprint(max_total_frequency=0.6,
+                                  protected={" ", "o", "&", "%", "?", "o", "#", "{", "*", "!", "t"})
         #blueprint.print_map()
         return blueprint
 

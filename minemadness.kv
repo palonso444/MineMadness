@@ -275,6 +275,7 @@
         MenuLayout:
             size_hint: 1, 0.65
             Button:
+                disabled: True if app.ongoing_game else False  # this is to avoid a bug, see issue in GitHub
                 text: "New game"
                 font_size: "30sp"
                 on_release:

@@ -230,7 +230,7 @@ class Player(Character, ABC, EventDispatcher):
         :param exp_value: experience value
         :return: None
         """
-        if player.experience > 0:
+        if exp_value >= player.stats.exp_to_next_level:
             start_level: int = player.player_level
             while exp_value >= player.stats.exp_to_next_level:
                 exp_value -= player.stats.exp_to_next_level
@@ -238,8 +238,8 @@ class Player(Character, ABC, EventDispatcher):
                 player.stats.exp_to_next_level = (
                     player.player_level * player.stats.base_exp_to_level_up
                 )
+            player.experience = 0  # TODO: make the value the residual exp after leveling up. Update exp bar before
             player.token.effect_queue = [{"level_up": False} for _ in range(player.player_level - start_level)]
-            player.experience = 0
             # experience bar updated by Cragpeongame.update_interface()
 
     def remove_all_effects(self, turn: int = 0) -> None:

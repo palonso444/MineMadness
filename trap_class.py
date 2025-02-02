@@ -42,7 +42,7 @@ class Trap:
         """
         Method controlling the logic of what happens when a trap is stepped on
         :param player: PlayerToken stepping on the trap
-        :return:
+        :return: None
         """
         self.unhide()
         damage = self.stats.calculate_damage(self.token.dungeon.dungeon_level)
@@ -65,8 +65,8 @@ class Trap:
 @dataclass
 class TrapStats:
     char: str = "!"
-    base_damage: list[int] = field(default_factory=lambda: [1, 6])
-    base_experience_when_disarmed: int = 1  #15
+    base_damage: list[int] = field(default_factory=lambda: [1, 7])
+    base_experience_when_disarmed: int = 12
     experience_when_found: int = 5
 
     @staticmethod
@@ -74,14 +74,16 @@ class TrapStats:
         # Traps start showing late and increase frequency with increasing level
         if seed < 5:
             return 0
-        if seed < 10:
+        trigger = randint(1,10)
+        if seed < 10 and trigger > 4:
             return uniform(0, 0.05)
-        if seed < 15:
+        if seed < 15 and trigger > 4:
             return uniform(0, 0.08)
-        if seed < 20:
+        if seed < 20 and trigger > 3:
             return uniform(0, 0.12)
-        else:
+        if seed >= 20 and trigger > 2:
             return uniform(0, 0.18)
+        return 0
 
     def calculate_damage(self, dungeon_level: int) -> int:
         """

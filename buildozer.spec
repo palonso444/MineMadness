@@ -29,7 +29,7 @@ source.exclude_dirs = tests, bin, venv, __pycache__
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.16
+version = 0.17
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -37,7 +37,7 @@ version = 0.16
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy
+requirements = python3,kivy,numpy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes

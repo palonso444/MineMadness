@@ -139,7 +139,7 @@ class SceneryToken(SolidToken):
                          size_modifier, pos_modifier, bright_radius, bright_int, gradient, **kwargs)
 
         if self.kind == "trap" and self.character.hidden:
-            alpha: float = 0.5
+            alpha: float = 0
         else:
             alpha: int = 1
 

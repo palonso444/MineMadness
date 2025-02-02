@@ -892,7 +892,7 @@ class Penumbra(Monster):
         Hides the Monster
         :return: None
         """
-        self.token.color.a = 0.5  # changes transparency
+        self.token.color.a = 0  # changes transparency
         #self.get_dungeon().restore_canvas_color("canvas")  # restores alpha
         #self.get_dungeon().restore_canvas_color("after")
         self.ability_active = True
@@ -1043,7 +1043,7 @@ class ClawJaw(Monster):
             case "rock":
                 self.stats.remaining_moves -= 1
             case "granite":
-                self.stats.remaining_moves -= 2
+                self.stats.remaining_moves -= 3
             case "quartz":
                 self.stats.remaining_moves = 0
 

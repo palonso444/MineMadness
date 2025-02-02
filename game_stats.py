@@ -296,7 +296,7 @@ class HawkinsStats(PlayerStats):  # BALANCED
     moves: int = 3
     shooting_range: int = 2
     trap_spotting_chance: float = 0.3
-    trap_disarming_chance: float = 0.6
+    trap_disarming_chance: float = 0.7
 
 
 @dataclass
@@ -728,7 +728,7 @@ class ClawJawStats(MonsterStats):
     char: str = "C"
     health: int = 45
     strength: list[int] = field(default_factory=lambda: [10,30])
-    moves: int = 6
+    moves: int = 7
     random_motility: float = 0.7
     dodging_ability: int = 5
     experience_when_killed: int = 30

@@ -13,7 +13,7 @@ package.domain = com.appsbrivalles
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,kv
+source.include_exts = py,png,kv,ogg,otf
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -29,7 +29,7 @@ source.exclude_dirs = tests, bin, venv, __pycache__
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.18
+version = 0.19
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -37,6 +37,9 @@ version = 0.18
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
+# if including numpy, patchelf must be installed or build will fail, run
+# sudo apt-get update
+# sudo apt-get install patchelf
 requirements = python3,kivy,numpy
 
 # (str) Custom source folders for requirements

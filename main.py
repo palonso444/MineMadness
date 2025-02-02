@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from kivy.app import App  # type: ignore
 from kivy.lang import Builder
-# from kivy.core.text import LabelBase
+from kivy.core.text import LabelBase
 # from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
-# from kivy.core.audio import SoundLoader
+from kivy.core.audio import SoundLoader
 from json import dump, load
 from os.path import exists
 from os import remove
@@ -17,8 +17,8 @@ import monster_classes as monsters
 from dungeon_classes import DungeonLayout
 from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig
 
-# LabelBase.register(name = 'duality', fn_regular= 'fonts/western_bangbang_clean.ttf')
-# LabelBase.register(name = 'edmunds', fn_regular= 'fonts/idc_insane_rodeo.ttf')
+LabelBase.register(name = 'duality', fn_regular= 'fonts/duality.otf')
+LabelBase.register(name = 'edmunds', fn_regular= 'fonts/edmunds_distressed.otf')
 
 class MineMadnessApp(App):
 
@@ -35,8 +35,8 @@ class MineMadnessApp(App):
         self.saved_game_file: str = "saved_game.json"
         self.saved_game: bool = exists("saved_game.json")
 
-        # self.music = SoundLoader.load("./music/stocktune_eternal_nights_embrace.ogg")
-        # self.music.loop = True
+        self.music = SoundLoader.load("./music/stocktune_celestial_dreams_unveiled.ogg")
+        self.music.loop = True
         self.music_on: bool = False
 
         self.game: MineMadnessGame | None = None
@@ -187,12 +187,10 @@ class MineMadnessApp(App):
     @staticmethod
     def on_music_on(app, music_on):
         if music_on:
-            pass
-            # app.music.volume = 1
-            # app.music.play()
+            app.music.volume = 1
+            app.music.play()
         else:
-            pass
-            # app.music.stop()
+            app.music.stop()
 
     def trigger_game_over(self, message: str) -> None:
         """

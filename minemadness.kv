@@ -11,7 +11,7 @@
     width: self.minimum_width
 
 <Label>:
-    # font_name: "duality"
+    font_name: "duality"
     color: 0.85, 0.65, 0.5, 1  # very light brown
     font_size: "25sp"
     text_size: self.size  # needed to make halign work
@@ -21,14 +21,14 @@
 
 <Button>:
     # disabled: True
-    # font_name: "duality"
+    font_name: "duality"
     font_size: "25sp"
     halign: "center"
     background_color: 0.19, 0.075, 0.02, 1  # dark brown
     background_normal:""
 
 <TitleLabel@Label>
-    # font_name: "edmunds"
+    font_name: "edmunds"
     font_size: "75sp"
     color: 1, 0, 0, 1  # red
     halign: 'center'
@@ -190,7 +190,7 @@
             font_size: "50sp"
             size_hint: 1, 0.5
         TitleLabel:
-            # font_name: "duality"
+            font_name: "duality"
             font_size: "50sp"
             text: f"You have reached a depth of {str(app.level * 30)} feet" if app.level is not None else ""
             size_hint: 1, 0.4
@@ -275,7 +275,7 @@
         MenuLayout:
             size_hint: 1, 0.65
             Button:
-                # disabled: True if app.ongoing_game else False  # this is to avoid a bug, see issue in GitHub
+                disabled: True if app.ongoing_game else False  # this is to avoid a bug, see issue in GitHub
                 text: "New game"
                 font_size: "30sp"
                 on_release:

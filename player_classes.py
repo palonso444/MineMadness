@@ -406,7 +406,7 @@ class Player(Character, ABC, EventDispatcher):
         if opponent.stats.health <= 0:
             opponent.kill_character(opponent_tile)
             self.experience += opponent.stats.experience_when_killed
-            self.token.dungeon.game.ids.experience_bar.value = self.experience
+            self.get_dungeon().game.ids.experience_bar.value = self.experience
 
 
     def heal(self, extra_points: int):

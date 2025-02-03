@@ -48,7 +48,7 @@ class DungeonLayout(GridLayout):
 
         self.torches_dict: dict[tuple:list] | None = torches_dict
         self.darkness: Rectangle | None = None
-        self.darkness_intensity: int = 150
+        self.darkness_intensity: int = 150  # from 0 to 255
         self.flickering_lights: ClockEvent | None = None
 
     def _setup_torches_dict(self) -> None:

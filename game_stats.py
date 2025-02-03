@@ -25,8 +25,8 @@ class DungeonStats:
 
     @property
     def torch_number(self) -> int:
-        torches = randint(2,self.size)
-        return torches if torches < 7 else 7
+        torches = randint(1,self.size)
+        return torches if torches < 5 else 5
 
     def level_progression(self) -> dict[str:float]:
         """
@@ -94,9 +94,9 @@ class RockWallStats(SceneryStats): # BALANCED
     def calculate_frequency(seed: int | float) -> float:  # seed is level
         # RockWalls are common at early levels. Later they may be rare or (50% chance) or from rare to common
         if seed < 10:
-            return uniform(0.1, 0.4)
+            return  uniform(0.2, 0.45)
         if randint(1, 10) < 5:
-            return uniform(0, 0.15)
+            return uniform(0, 0.2)
         else:
             return uniform(0, 0.3)
 
@@ -110,9 +110,9 @@ class GraniteWallStats(SceneryStats): # BALANCED
         if seed < 10:
             return 0
         if randint(1, 10) < 5:
-            return uniform(0.05, 0.2)
+            return uniform(0, 0.2)
         else:
-            return uniform(0,0.3)
+            return uniform(0.05,0.3)
 
 
 class QuartzWallStats(SceneryStats): # BALANCED
@@ -123,10 +123,10 @@ class QuartzWallStats(SceneryStats): # BALANCED
         # QuartzWalls appear first at level 22. Later they may be rare or (50% chance) or from rare to mid-frequent
         if seed < 22:
             return 0
-        if randint(1, 10) < 5:
-            return uniform(0, 0.1)
+        if randint(1, 10) < 7:
+            return uniform(0, 0.15)
         else:
-            return uniform(0, 0.25)
+            return uniform(0.05, 0.25)
 
 
 class ShovelStats(SceneryStats): # BALANCED

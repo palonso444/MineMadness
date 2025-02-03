@@ -36,6 +36,8 @@
 <MainMenuButton@Button>
     text: "Main Menu"
     on_release:
+        # unschedules flickering of lights and other events
+        app.game.dungeon.unschedule_all_events() if app.ongoing_game else None
         app.root.current = "main_menu"
 
 <MusicButton@Button>
@@ -46,7 +48,9 @@
 <OptionsButton@Button>
     text: "Options"
     on_release:
+        app.game.dungeon.unschedule_all_events() if app.ongoing_game else None
         app.root.current = "in_game_options" if app.ongoing_game else "out_game_options"
+
 
 <ContinueOrLoadButton@Button>
     disabled: True if not app.ongoing_game and not app.saved_game else False
@@ -211,7 +215,7 @@
             MusicButton:
                 size_hint: 1, 0.1
             Button:
-                text: "FX effects"
+                text: "Flickering shadows"
                 size_hint: 1, 0.1
             Label:  # empty Label to act as spacer
                 size_hint: 1, 0.2
@@ -232,7 +236,7 @@
             MusicButton:
                 size_hint: 1, 0.1
             Button:
-                text: "FX effects"
+                text: "Flickering shadows"
                 size_hint: 1, 0.1
             Label:  # empty Label to act as spacer
                 size_hint: 1, 0.2
@@ -275,7 +279,6 @@
         MenuLayout:
             size_hint: 1, 0.65
             Button:
-                disabled: True if app.ongoing_game else False  # this is to avoid a bug, see issue in GitHub
                 text: "New game"
                 font_size: "30sp"
                 on_release:

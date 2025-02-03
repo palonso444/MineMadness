@@ -359,6 +359,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
         monsters.Monster.data.clear()
+        self.dungeon.unschedule_all_events()
         self.level += 1
         App.get_running_app().remove_dungeon_from_game()
         App.get_running_app().add_dungeon_to_game()

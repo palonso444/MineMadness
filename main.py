@@ -3,7 +3,6 @@ from __future__ import annotations
 from kivy.app import App  # type: ignore
 from kivy.lang import Builder
 from kivy.core.text import LabelBase
-# from kivy.uix.image import Image    # type: ignore
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
 from kivy.core.audio import SoundLoader
@@ -81,9 +80,15 @@ class MineMadnessApp(App):
         """
         Player.clear_character_data()
         monsters.Monster.clear_character_data()
+        self.game.dungeon.unschedule_all_events()
         self.sm.remove_widget(self.sm.get_screen("game_screen"))
+        self.game = None
 
     def start_new_game(self) -> None:
+        """
+        Starts a new game
+        :return: None
+        """
         if self.saved_game:
             remove(self.saved_game_file)
             self.saved_game = False
@@ -134,6 +139,8 @@ class MineMadnessApp(App):
         :return: None
         """
         if self.ongoing_game:
+            # resumes the flickering of lights
+            self.game.dungeon.on_bright_spots(self.game.dungeon, self.game.dungeon.bright_spots)
             self.sm.current = "game_screen"
         else:
             self.load_game()
@@ -205,6 +212,7 @@ class MineMadnessApp(App):
         self.game_over_message = message
         self.sm.current = "game_over"
         self.ongoing_game = False
+        self._clean_previous_game()
         self.sm.transition.duration = 0.3
 
 

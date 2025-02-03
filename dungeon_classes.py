@@ -16,6 +16,7 @@ import trap_class as traps
 import tile_classes as tiles
 from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
+from tokens_solid import CharacterToken
 
 
 class DungeonLayout(GridLayout):
@@ -47,6 +48,7 @@ class DungeonLayout(GridLayout):
 
         self.torches_dict: dict[tuple:list] | None = torches_dict
         self.darkness: Rectangle | None = None
+        self.darkness_intensity: int = 150  # from 0 to 255
         self.flickering_lights: ClockEvent | None = None
 
     def _setup_torches_dict(self) -> None:
@@ -79,6 +81,24 @@ class DungeonLayout(GridLayout):
 
             self.torches_dict = {key: value for key, value in torches_dict.items() if len(value) > 0}
 
+    def unschedule_all_events(self) -> None:
+        """
+        Unschedules all events running in the background
+        :return: None
+        """
+        if self.flickering_lights is not None:
+            self.flickering_lights.cancel()
+            self.flickering_lights = None
+
+        for tile in self.children:
+            token: CharacterToken | None = None
+            if tile.has_token("monster"):
+                token = tile.get_token("monster")
+            elif tile.has_token("player"):
+                token = tile.get_token("player")
+            if token is not None:
+                token.effect_queue.clear()
+
     @staticmethod
     def on_positions_to_update(dungeon: DungeonLayout, positions_to_update: list) -> None:
         """
@@ -96,7 +116,7 @@ class DungeonLayout(GridLayout):
 
             # if dungeon.bright_spots does not change its values, darkness must be cast manually
             if len(dungeon.bright_spots) == 0:
-                dungeon.cast_darkness(alpha_intensity=150)
+                dungeon.cast_darkness(alpha_intensity=dungeon.darkness_intensity)
 
     def update_bright_spots(self) -> None:
         """
@@ -139,9 +159,14 @@ class DungeonLayout(GridLayout):
         if dungeon.flickering_lights is not None:
             dungeon.flickering_lights.cancel()
 
-        dungeon.flickering_lights = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(alpha_intensity=150,
-                                                                                                dt=dt),
-                                                                                                1 / 15)
+        if len(dungeon.bright_spots) > 0:
+            dungeon.flickering_lights = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(
+                alpha_intensity= dungeon.darkness_intensity, dt=dt), 1 / 15)
+        else:
+            # if last bright spot is removed, cast static darkness
+            dungeon.canvas.after.remove(dungeon.darkness)
+            dungeon.cast_darkness(alpha_intensity=dungeon.darkness_intensity)
+
     def hide_penumbras(self) -> None:
         """
         Hides the penumbras Monster throughout the DungeonLayout (if any), if they have a

@@ -148,7 +148,7 @@ class WeaponStats(SceneryStats): # BALANCED
         # Weapons depend on pooled monster frequency.
         upper_limit = seed * 0.7
         frequency =  uniform(0, upper_limit)
-        return frequency if frequency < 0.1 else 0.1
+        return frequency if frequency < 0.15 else 0.15
 
 
 class PowderStats(SceneryStats): # BALANCED
@@ -157,7 +157,7 @@ class PowderStats(SceneryStats): # BALANCED
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is level
         # Powder may not appear at very first levels. It tends to lower frequencies depending on level.
-        if randint(1, 10) < 5 or seed < 3:
+        if randint(1, 10) < 4 or seed < 3:
             return 0
         else:
             return uniform(0, 0.05)
@@ -169,7 +169,7 @@ class DynamiteStats(SceneryStats): # BALANCED
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is level
         # Dynamite may not appear at very first levels. It tends to lower frequencies depending on level.
-        if randint(1, 10) < 5 or seed < 3:
+        if randint(1, 10) < 4 or seed < 3:
             return 0
         else:
             return uniform(0, 0.05)
@@ -420,11 +420,11 @@ class CaveHoundStats(MonsterStats):  # BALANCED
     @staticmethod
     def calculate_frequency(seed: int) -> float:
         # CaveHound may overlap with Kobold. They increase up to certain point then decrease steadily
-        if seed < 3:
+        if seed < 4:
             return 0
-        if seed < 10:
+        if seed < 11:
             return uniform(0, 0.05)
-        if seed < 13:
+        if seed < 14:
             return uniform(0.05, 0.15)
         else:
             return 0

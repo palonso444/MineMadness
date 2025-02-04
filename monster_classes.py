@@ -936,12 +936,8 @@ class Penumbra(Monster):
             max_steps=self.stats.remaining_moves, min_steps=self.stats.min_retreat_dist)))
         if len(path) > 1:
             self.token.slide(path, self.token.on_retreat_completed)
-        else:  # if somehow cannot retreat will stay in place
+        else:  # if it cannot retreat will stay in place
             self.stats.remaining_moves = 0
-
-        #else:
-            #self.stats.remaining_moves = 0  # no retreat if no attack happened
-
 
 
     def move(self):

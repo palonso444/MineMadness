@@ -202,7 +202,8 @@ class Monster(Character, ABC):
                               (self.get_position(), position, exclude_blocked_by)) > 1}
 
         if len(positions_to_avoid) == 0:
-            raise Exception("There is nothing to flee from!")
+            return None
+            #raise Exception("There is nothing to flee from!")
 
         position_stats: dict[tuple[int,int]: list] = {rf_position : [len(self.get_dungeon().find_shortest_path
                                                                         (rf_position, av_position, exclude_blocked_by))
@@ -803,7 +804,10 @@ class RattleSnake(Monster):
         super().attack_players()
         path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
             self.stats.remaining_moves, self.chases, ["wall"])))
-        self.token.slide(path, self.token.on_retreat_completed)   # no check if path > 1. It must always be so
+        if len(path) > 1:  # if all players dead, no path
+            self.token.slide(path, self.token.on_retreat_completed)
+        # else:  # this makes the app break because there are no players
+            # self.stats.remaining_moves = 0
 
 
     def move(self):

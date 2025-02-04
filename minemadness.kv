@@ -45,6 +45,11 @@
     on_release:
         app.music_on = not app.music_on
 
+<FlickeringTorchesButton@Button>
+    text: "Flickering torches OFF" if app.flickering_torches_on else "Flickering torches ON"
+    on_release:
+        app.flickering_torches_on = not app.flickering_torches_on
+
 <OptionsButton@Button>
     text: "Options"
     on_release:
@@ -214,8 +219,7 @@
             size_hint: 1, 0.65
             MusicButton:
                 size_hint: 1, 0.1
-            Button:
-                text: "Flickering shadows"
+            FlickeringTorchesButton:
                 size_hint: 1, 0.1
             Label:  # empty Label to act as spacer
                 size_hint: 1, 0.2
@@ -235,8 +239,7 @@
             size_hint: 1, 0.65
             MusicButton:
                 size_hint: 1, 0.1
-            Button:
-                text: "Flickering shadows"
+            FlickeringTorchesButton:
                 size_hint: 1, 0.1
             Label:  # empty Label to act as spacer
                 size_hint: 1, 0.2

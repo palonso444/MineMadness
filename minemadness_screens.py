@@ -329,7 +329,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         Checks if all Players have exited the level, so game must move to the next level
         :return: None
         """
-        if players.Player.all_dead_or_out() and not players.Player.all_players_dead():
+        if players.Player.all_dead_or_out() and not App.get_running_app().game_over: # players.Player.all_players_dead():
             self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             self.finish_level()
 

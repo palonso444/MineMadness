@@ -5,6 +5,7 @@ from kivy.properties import NumericProperty, ListProperty
 from kivy.uix.gridlayout import GridLayout  # type: ignore
 from kivy.graphics.texture import Texture
 from kivy.clock import Clock
+from kivy.app import App
 
 from collections import deque
 from random import choice, uniform
@@ -49,7 +50,7 @@ class DungeonLayout(GridLayout):
         self.torches_dict: dict[tuple:list] | None = torches_dict
         self.darkness: Rectangle | None = None
         self.darkness_intensity: int = 150  # from 0 to 255
-        self.flickering_lights: ClockEvent | None = None
+        self.flickering_torches: ClockEvent | None = None
 
     def _setup_torches_dict(self) -> None:
         """
@@ -86,9 +87,9 @@ class DungeonLayout(GridLayout):
         Unschedules all events running in the background
         :return: None
         """
-        if self.flickering_lights is not None:
-            self.flickering_lights.cancel()
-            self.flickering_lights = None
+        if self.flickering_torches is not None:
+            self.flickering_torches.cancel()
+            self.flickering_torches = None
 
         for tile in self.children:
             token: CharacterToken | None = None
@@ -156,15 +157,16 @@ class DungeonLayout(GridLayout):
         :param bright_spots: list containing the center pos of all torches centers
         :return: None
         """
-        if dungeon.flickering_lights is not None:
-            dungeon.flickering_lights.cancel()
+        if dungeon.flickering_torches is not None:
+            dungeon.flickering_torches.cancel()
 
-        if len(dungeon.bright_spots) > 0:
-            dungeon.flickering_lights = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(
+        if len(dungeon.bright_spots) > 0 and App.get_running_app().flickering_torches_on:
+            dungeon.flickering_torches = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(
                 alpha_intensity= dungeon.darkness_intensity, dt=dt), 1 / 15)
         else:
             # if last bright spot is removed, cast static darkness
-            dungeon.canvas.after.remove(dungeon.darkness)
+            if dungeon.darkness in dungeon.canvas.after.children:
+                dungeon.canvas.after.remove(dungeon.darkness)
             dungeon.cast_darkness(alpha_intensity=dungeon.darkness_intensity)
 
     def hide_penumbras(self) -> None:

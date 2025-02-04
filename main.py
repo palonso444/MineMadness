@@ -22,6 +22,7 @@ LabelBase.register(name = 'edmunds', fn_regular= 'fonts/edmunds_distressed.otf')
 class MineMadnessApp(App):
 
     music_on = BooleanProperty(None)
+    flickering_torches_on = BooleanProperty(None)
     game_mode_normal = BooleanProperty(None)
     ongoing_game = BooleanProperty(False)
     level = NumericProperty(None)
@@ -33,10 +34,13 @@ class MineMadnessApp(App):
         self.game_mode_normal: bool = True
         self.saved_game_file: str = "saved_game.json"
         self.saved_game: bool = exists("saved_game.json")
+        self.game_over: bool = False
 
         self.music = SoundLoader.load("./music/stocktune_celestial_dreams_unveiled.ogg")
         self.music.loop = True
-        self.music_on: bool = False
+        self.music_on: bool = True
+
+        self.flickering_torches_on: bool = True
 
         self.game: MineMadnessGame | None = None
         self.sm: ScreenManager | None = None
@@ -96,6 +100,7 @@ class MineMadnessApp(App):
             self._clean_previous_game()
         self.game = MineMadnessGame(name="game_screen")
         self.ongoing_game = True
+        self.game_over = False
         self._setup_dungeon_screen()
 
     def _setup_dungeon_screen(self, dungeon: DungeonLayout | None = None) -> None:
@@ -205,6 +210,7 @@ class MineMadnessApp(App):
         :param message: message to display on game over screen (reason why game over)
         :return: None
         """
+        self.game_over = True
         if not self.game_mode_normal:
             remove(self.saved_game_file)
             self.saved_game = False

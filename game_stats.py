@@ -686,12 +686,12 @@ class RattleSnakeStats(MonsterStats):
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # RattleSnake can show up at any level in a range of levels
-        if seed < 2 or seed >= 20:
+        if seed < 5 or seed >= 20:
             return 0
         elif seed < 10:
-            return uniform(0.0, 0.1)
+            return uniform(0.0, 0.025)
         else:
-            return uniform(0,0.025)
+            return uniform(0,0.1)
 
 
 @dataclass

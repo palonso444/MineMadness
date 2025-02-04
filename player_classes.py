@@ -238,7 +238,9 @@ class Player(Character, ABC, EventDispatcher):
                 player.stats.exp_to_next_level = (
                     player.player_level * player.stats.base_exp_to_level_up
                 )
-            player.experience = 0  # TODO: make the value the residual exp after leveling up. Update exp bar before
+
+            player.get_dungeon().game.ids.experience_bar.max = player.stats.exp_to_next_level
+            player.experience = exp_value
             player.token.effect_queue = [{"level_up": False} for _ in range(player.player_level - start_level)]
             # experience bar updated by Cragpeongame.update_interface()
 
@@ -299,7 +301,7 @@ class Player(Character, ABC, EventDispatcher):
                 trap_token.character.unhide()
                 trap_token.show_effect_token("trap")
                 self.experience += trap_token.character.stats.experience_when_found
-                self.token.dungeon.game.ids.experience_bar.value = self.experience
+                self.get_dungeon().game.ids.experience_bar.value = self.experience
 
         self.stats.remaining_moves = 0  # one passive action per turn
 
@@ -370,7 +372,7 @@ class Player(Character, ABC, EventDispatcher):
         trap_token = tile.get_token("trap")
         trap_token.show_effect_token(effect="trap_out")
         self.experience += trap_token.character.stats.calculate_experience(self.get_dungeon().dungeon_level)
-        self.token.dungeon.game.ids.experience_bar.value = self.experience
+        self.get_dungeon().game.ids.experience_bar.value = self.experience
         trap_token.delete_token(tile)
 
 

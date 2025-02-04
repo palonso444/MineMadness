@@ -806,8 +806,8 @@ class RattleSnake(Monster):
             self.stats.remaining_moves, self.chases, ["wall"])))
         if len(path) > 1:  # if all players dead, no path
             self.token.slide(path, self.token.on_retreat_completed)
-        # else:  # this makes the app break because there are no players
-            # self.stats.remaining_moves = 0
+        else:  # if it cannot retreat will stay in place
+            self.stats.remaining_moves = 0
 
 
     def move(self):

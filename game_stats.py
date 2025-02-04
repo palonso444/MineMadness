@@ -135,7 +135,7 @@ class ShovelStats(SceneryStats): # BALANCED
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is diggable wall frequency
         # Shovels depend on RockWalls + QuartzWalls frequency.
-        upper_limit = seed * 0.3
+        upper_limit = seed * 0.35
         frequency =  uniform(0, upper_limit)
         return frequency if frequency < 0.1 else 0.1
 
@@ -146,7 +146,7 @@ class WeaponStats(SceneryStats): # BALANCED
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
         # Weapons depend on pooled monster frequency.
-        upper_limit = seed * 0.5
+        upper_limit = seed * 0.7
         frequency =  uniform(0, upper_limit)
         return frequency if frequency < 0.1 else 0.1
 
@@ -263,9 +263,9 @@ class CharacterStats(ABC):
 @dataclass
 class PlayerStats(CharacterStats, ABC):
 
-    shovels: int = 2
+    shovels: int = 3
     digging_moves: int = 1
-    weapons: int = 2
+    weapons: int = 3
     advantage_strength_incr: int | None = None
     shooting_range: int | None = None
     recovery_end_of_level: int = 0  # health points players heal at end of level
@@ -280,8 +280,8 @@ class PlayerStats(CharacterStats, ABC):
 
 @dataclass
 class SawyerStats(PlayerStats): # BALANCED
-    health: int = 4
-    strength: list[int] = field(default_factory=lambda: [1,2])
+    health: int = 5
+    strength: list[int] = field(default_factory=lambda: [1,3])
     advantage_strength_incr: int = 4
     moves: int = 4
     digging_moves: int = 3
@@ -291,8 +291,8 @@ class SawyerStats(PlayerStats): # BALANCED
 
 @dataclass
 class HawkinsStats(PlayerStats):  # BALANCED
-    health: int = 6
-    strength: list[int] = field(default_factory=lambda: [1,3])
+    health: int = 7
+    strength: list[int] = field(default_factory=lambda: [1,4])
     moves: int = 3
     shooting_range: int = 2
     trap_spotting_chance: float = 0.3
@@ -302,8 +302,8 @@ class HawkinsStats(PlayerStats):  # BALANCED
 @dataclass
 class CrusherJaneStats(PlayerStats):  # BALANCED
     weapons: int = 4
-    health: int = 8
-    strength: list[int] = field(default_factory=lambda: [2,4])
+    health: int = 9
+    strength: list[int] = field(default_factory=lambda: [2,5])
     advantage_strength_incr: int = 1
     moves: int = 3
     trap_spotting_chance: float = 0.1

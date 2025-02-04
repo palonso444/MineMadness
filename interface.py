@@ -101,7 +101,6 @@ class JerkyButton(Interfacebutton):
         character = self.game.active_character
         effect_size = self.get_effect_size(character, "natural_health")
         character.heal(effect_size)
-        self.game.update_switch("health")
         character.token.show_effect_token("heal")
         # this updates health bar
         character.token.bar_length = character.stats.health / character.stats.natural_health

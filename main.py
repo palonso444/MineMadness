@@ -1,226 +1,235 @@
-from __future__ import annotations
+from os import path
+import sys
 
-from kivy.app import App  # type: ignore
-from kivy.lang import Builder
-from kivy.core.text import LabelBase
-from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
-from kivy.uix.screenmanager import ScreenManager, FadeTransition
-from kivy.core.audio import SoundLoader
-from json import dump, load
-from os.path import exists
-from os import remove
+from kivy.app import App    # type: ignore
+from kivy.uix.boxlayout import BoxLayout    # type: ignore
+from kivy.uix.scrollview import ScrollView  # type: ignore
+from kivy.uix.label import Label    # type: ignore
+from kivy.uix.button import Button  # type: ignore
+from kivy.core.text import LabelBase    # type: ignore
+from kivy.uix.image import Image    # type: ignore
 
-from dungeon_blueprint import Blueprint
-from player_classes import Player, Sawyer, Hawkins, CrusherJane  # players needed for globals()
-import monster_classes as monsters
-from dungeon_classes import DungeonLayout
-from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig
+import autorol_utils    # type: ignore
 
-LabelBase.register(name = 'duality', fn_regular= 'fonts/duality.otf')
-LabelBase.register(name = 'edmunds', fn_regular= 'fonts/edmunds_distressed.otf')
+# this is needed to set the correct path to resources when compiling with Pyinstaller
+def get_resource_path(relative_path):
 
-class MineMadnessApp(App):
+    if getattr(sys, 'frozen', True) and hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = path.abspath(".")
 
-    music_on = BooleanProperty(None)
-    flickering_torches_on = BooleanProperty(None)
-    game_mode_normal = BooleanProperty(None)
-    ongoing_game = BooleanProperty(False)
-    level = NumericProperty(None)
-    saved_game = BooleanProperty(False)
-    game_over_message = StringProperty(None)
+    return path.join(base_path, relative_path)
 
-    def __init__(self):
-        super().__init__()
-        self.game_mode_normal: bool = True
-        self.saved_game_file: str = "saved_game.json"
-        self.saved_game: bool = exists("saved_game.json")
+LabelBase.register(name = 'Vollkorn',
+                   fn_regular= get_resource_path('fonts/Vollkorn-Regular.ttf'),
+                   fn_italic=get_resource_path('fonts/Vollkorn-Italic.ttf'))
 
-        self.music = SoundLoader.load("./music/stocktune_celestial_dreams_unveiled.ogg")
-        self.music.loop = True
-        self.music_on: bool = True
+LabelBase.register(name = 'CreteRound',
+                   fn_regular= get_resource_path('fonts/CreteRound-Regular.ttf'))
 
-        self.flickering_torches_on: bool = True
-
-        self.game: MineMadnessGame | None = None
-        self.sm: ScreenManager | None = None
-
-    def build(self) -> ScreenManager:
-        Builder.load_file("how_to_play.kv")
-        self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
-        self.sm.add_widget(MainMenu(name="main_menu"))
-        self.sm.add_widget(HowToPlay(name="how_to_play"))
-        self.sm.add_widget(GameOver(name="game_over"))
-        self.sm.add_widget(OutGameOptions(name="out_game_options"))
-        self.sm.add_widget(InGameOptions(name="in_game_options"))
-        self.sm.add_widget(NewGameConfig(name="new_game_config"))
-        self.sm.current = "main_menu"
-        return self.sm
-
-    def add_dungeon_to_game(self, dungeon: DungeonLayout | None = None) -> None:
-        """
-        Adds a dungeon to MineMadnessGame
-        :param dungeon: DungeonLayout to add. If None, a random one according to MineMadnessApp.game.level is generated
-        :return: None
-        """
-        scrollview = self.game.children[0].children[1]
-        if dungeon is None:
-            scrollview.add_widget(DungeonLayout(game=self.game))
-        else:
-            scrollview.add_widget(dungeon)
-
-    def remove_dungeon_from_game(self) -> None:
-        """
-        Removes the dungeon from MineMadnessGame
-        :return: None
-        """
-        scrollview = self.game.children[0].children[1]
-        scrollview.remove_widget(self.game.dungeon)
-
-    def _clean_previous_game(self) -> None:
-        """
-        Cleans the data from the previous MineMadnessGame and removes it from the ScreenManager
-        :return: None
-        """
-        Player.clear_character_data()
-        monsters.Monster.clear_character_data()
-        self.game.dungeon.unschedule_all_events()
-        self.sm.remove_widget(self.sm.get_screen("game_screen"))
-        self.game = None
-
-    def start_new_game(self) -> None:
-        """
-        Starts a new game
-        :return: None
-        """
-        if self.saved_game:
-            remove(self.saved_game_file)
-            self.saved_game = False
-        if self.sm.has_screen("game_screen"):
-            self._clean_previous_game()
-        self.game = MineMadnessGame(name="game_screen")
-        self.ongoing_game = True
-        self._setup_dungeon_screen()
-
-    def _setup_dungeon_screen(self, dungeon: DungeonLayout | None = None) -> None:
-        """
-        Adds a new dungeon to MineMadnessGame
-        :param dungeon: dungeon to add. If None, a random one is added
-        :return: None
-        """
-        self.add_dungeon_to_game(dungeon)
-        self.sm.add_widget(self.game)
-        self.sm.current = "game_screen"
-
-    def save_game(self) -> None:
-        with open(self.saved_game_file, "w") as f:
-            dump(self._get_game_state(), f, indent=4)
-        self.saved_game = True
-
-    def _get_game_state(self) -> dict:
-        """
-        Captures the state of the dungeon (blueprint) and the data of alive and dead players
-        and stores everything into a dictionary. ONLY WORKS IF USED AT THE VERY BEGINNING OF LEVEL,
-        NOT ONCE THE LEVEL STARTED
-        :return: dictionary with the state of the game (blueprint, alive players, dead players)
-        """
-        game_state = dict()
-        game_state["level"] = self.game.level
-        game_state["game_mode_normal"] = self.game_mode_normal
-        game_state["blueprint"] = self.game.dungeon.blueprint.to_dict()
-
-        # keys must be converted from tuple to str in order to be JSON encoded
-        game_state["torches_dict"] = {str(key): value for key,value in self.game.dungeon.torches_dict.items()}\
-                                        if self.game.dungeon.torches_dict is not None else None
-
-        game_state["players_alive"] = {player.__class__.__name__: player.to_dict() for player in Player.data}
-        game_state["players_dead"] = {player.__class__.__name__: player.to_dict() for player in Player.dead_data}
-        return game_state
-
-    def continue_game_or_load(self) -> None:
-        """
-        Regulates the function of the ContinueButton defined in the kv file
-        :return: None
-        """
-        if self.ongoing_game:
-            # resumes the flickering of lights
-            self.game.dungeon.on_bright_spots(self.game.dungeon, self.game.dungeon.bright_spots)
-            self.sm.current = "game_screen"
-        else:
-            self.load_game()
-
-    def load_game(self) -> None:
-        """
-        Loads the game from the JSON file, cleans the previous one and generated Player.data and Player.dead_data
-        :return: None
-        """
-        with open(self.saved_game_file, "r") as f:
-            data = load(f)
-
-        # torches dict keys are str and need to be converted to tuple
-        if data["torches_dict"] is not None:
-            data["torches_dict"] = {(int(key[1]), int(key[4])): value
-                                    for key, value in data["torches_dict"].items()}
-        #level_track are nested dict and keys are str which must be converted to int
-        data = self._convert_all_digit_keys_to_int(data)
-
-        self.game_mode_normal = data["game_mode_normal"]
-        if self.sm.has_screen("game_screen"):
-            self._clean_previous_game()
-        self.game = MineMadnessGame(name="game_screen")
-        self.game.level = data["level"]
-
-        if self.game.level > 1:
-            Player.data = [globals()[key](attributes_dict=data["players_alive"][key])
-                                   for key in data["players_alive"].keys()]
-            Player.dead_data = [globals()[key](attributes_dict=data["players_dead"][key])
-                                   for key in data["players_dead"].keys()]
-        self.ongoing_game = True
-        self._setup_dungeon_screen(DungeonLayout(game=self.game,
-                                                 blueprint = Blueprint(layout=data["blueprint"]["layout"]),
-                                                 torches_dict = data["torches_dict"]))
+LabelBase.register(name = 'Chiller',
+                   fn_regular= get_resource_path('fonts/Chiller.ttf'))
 
 
-    def _convert_all_digit_keys_to_int(self, dictionary: dict) -> dict:
-        """
-        Checks all keys of a dictionary (also nested) and converts them to int if they are str and digit
-        :param dictionary: dictionary to convert
-        :return: converted dictionary
-        """
-        new_dict = dict()
-        for key, value in dictionary.items():
-            new_key = int(key) if isinstance(key, str) and key.isdigit() else key
-            new_dict[new_key] = self._convert_all_digit_keys_to_int(value) if isinstance(value, dict) else value
 
-        return new_dict
+class ImageLayout(BoxLayout):   #defined in the kv file
+
+    pass
 
 
-    @staticmethod
-    def on_music_on(app, music_on):
-        if music_on:
-            app.music.volume = 1
-            app.music.play()
-        else:
-            app.music.stop()
+class TextLayout(BoxLayout):    #defined in the kv file
 
-    def trigger_game_over(self, message: str) -> None:
-        """
-        Triggers game over screen
-        :param message: message to display on game over screen (reason why game over)
-        :return: None
-        """
-        if not self.game_mode_normal:
-            remove(self.saved_game_file)
-            self.saved_game = False
-        self.sm.transition.duration = 1.5
-        self.game_over_message = message
-        self.sm.current = "game_over"
-        self.ongoing_game = False
-        self._clean_previous_game()
-        self.sm.transition.duration = 0.3
+    pass
 
 
-######################################################### START APP ###################################################
+class ButtonLayout(BoxLayout):  #defined in the kv file
+
+    pass
 
 
-if __name__ == "__main__":
-    MineMadnessApp().run()
+class TitleLabel(Label):        #defined in the kv file
+
+    pass
+
+
+class NieblaButton(Button):
+
+    def __init__(self, fate, consequences, **kwargs):
+        super().__init__(**kwargs)
+
+        self.fate = fate
+        self.consequences = consequences
+
+
+
+class NieblaApp(App):
+
+    story = autorol_utils.read_json(get_resource_path('Niebla.json'))   
+
+    scenes = autorol_utils.get_scenes(story, format=True)  #Format True removes html tags and introduces kivy markups
+
+    title = story['titulo']
+    
+    all_variables = autorol_utils.get_variables(scenes)
+    
+    current_scene = autorol_utils.get_intro(scenes)
+
+    scroll = ScrollView()
+
+    
+
+####################################################### MAIN 'LOOP' #############################################################
+
+
+
+    def build (self):
+
+
+        layout = BoxLayout()
+        
+        textlayout = TextLayout()
+
+        buttonlayout = ButtonLayout()
+
+        self.place_text(textlayout)    
+
+        self.place_buttons(buttonlayout)
+
+        layout.add_widget(textlayout)
+
+        layout.add_widget(buttonlayout)
+
+        self.scroll.add_widget(layout)
+
+        return self.scroll
+    
+
+
+    ############################################### PLACE TEXT AND IMAGES #####################################################
+
+    
+
+    def place_text(self, layout):
+
+
+        if self.current_scene['id'] == autorol_utils.get_intro(self.scenes, id_only=True): #if start of the game, add title
+            
+            titledisplay = TitleLabel(text = self.title)
+
+            layout.add_widget(titledisplay)
+
+
+        
+        text_object = autorol_utils.get_text(self.current_scene)
+
+            
+        for text in text_object:
+
+            conditions = autorol_utils.get_conditions(text)
+
+
+            if autorol_utils.compare_conditions(self.all_variables, conditions):
+
+
+                if text['texto'][:8] == '[$image]':     #if text is an image
+                    
+                    display = ImageLayout()             #images must be embedded in BoxLayouts in order to specify padding
+                    
+                    image_path = get_resource_path('pics/'+ text['texto'][8:])     #image folder must be named 'pics'
+
+                    image_display = Image(source = image_path)  #create Image label
+
+                    display.add_widget(image_display)           #embed Image label in BoxLayout
+
+
+                else:                                   #if text is a text
+                
+                    display = Label(text = autorol_utils.align(text['texto'])[0], halign = autorol_utils.align(text['texto'])[1])
+
+                
+                
+                consequences = autorol_utils.get_consequences(text) #consequences are checked for both texts and images
+
+                self.all_variables.update (consequences)
+                
+                layout.add_widget(display)
+
+
+
+    ################################################ PLACE BUTTONS ############################################################## 
+
+
+    
+    def place_buttons (self, layout):
+
+        
+        text_object = autorol_utils.get_text(self.current_scene)
+
+        linked_texts = 0
+
+        for text in text_object:
+
+            links = autorol_utils.get_links(text)
+
+            if len(links) > 0:      #this checks if all the snippets of text of the section have no links
+            
+                linked_texts += 1 
+
+            
+        if linked_texts == 0:     #if end of the game a restart button is created leading to the intro
+
+            intro_id = autorol_utils.get_intro(self.scenes, id_only=True)
+
+            links = [{'texto': 'Volver a empezar', 
+                          'destinoExito': intro_id,
+                          'consecuencias': [],
+                          'condiciones': []}]
+                
+            self.all_variables = {key: 0 for key in self.all_variables}     #sets to 0 all variables of the game
+            
+            
+        for link in links:
+
+            conditions = autorol_utils.get_conditions(link)
+
+            if autorol_utils.compare_conditions(self.all_variables, conditions):    #place button if conditions are met
+
+                button = NieblaButton(text=link['texto'], fate = link['destinoExito'], consequences=autorol_utils.get_consequences(link))
+
+                button.bind(on_release = self.on_button_release)
+
+                layout.add_widget(button)
+
+           
+
+    ######################################## DEFINE BUTTON PRESS ####################################################################
+
+
+
+    def on_button_release(self, instance):  #'instance' refers to the particular button created (instance of Button class)
+
+        self.all_variables.update(instance.consequences)
+
+        self.current_scene = autorol_utils.get_scene(int(instance.fate), self.scenes)
+
+        self.rebuild()
+
+
+
+    def rebuild(self):
+
+        self.scroll.clear_widgets()
+
+        self.build ()
+
+        self.scroll.scroll_y = 1.0          #brings scroll back to the top
+
+    
+
+######################################################### START APP ##########################################################
+
+
+
+if __name__ == '__main__':
+    NieblaApp().run()

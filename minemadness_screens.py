@@ -179,7 +179,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
             if monsters.Monster.all_dead_or_out() and game.active_character.stats.remaining_moves == 0:
                 game.active_character.stats.remaining_moves = game.active_character.stats.moves
                 game.active_character.remove_effects_if_over(game.turn)
-                game.active_character.token.unselect_token()
+                if game.active_character.token is not None:  # dead characters have no Token
+                    game.active_character.token.unselect_token()
                 game.update_switch("turn")
 
             elif game.active_character.stats.remaining_moves > 0:
@@ -195,7 +196,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
             else:
                 if game.active_character.kind == "player":
                     game.active_character.remove_effects_if_over(game.turn)
-                    game.active_character.token.unselect_token()
+                    if game.active_character.token is not None:  # dead characters have no Token
+                        game.active_character.token.unselect_token()
                 game.next_character()
 
     @staticmethod

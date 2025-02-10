@@ -247,6 +247,7 @@ class Player(Character, ABC, EventDispatcher):
     def remove_all_effects(self, turn: int = 0) -> None:
         """
         Removes all effects from the Player, regardless if they are over or not
+        :param turn: turn in which all effects will be removed
         :return: None
         """
         for attribute in self.effects.keys():
@@ -276,7 +277,8 @@ class Player(Character, ABC, EventDispatcher):
 
             self.effects[attribute] = [effect for effect in effects if effect["end_turn"] > turn]
 
-        self.token.effect_queue = self.token.effect_queue + [{effect_name: True} for effect_name in effect_names]
+        if self.token is not None:  # dead characters have no token
+            self.token.effect_queue = self.token.effect_queue + [{effect_name: True} for effect_name in effect_names]
 
     def perform_passive_action(self) -> None:
         """
@@ -423,6 +425,7 @@ class Player(Character, ABC, EventDispatcher):
 
     def kill_character(self, tile):
         super().kill_character(tile)
+        self.remove_all_effects()
         self.dead_data.append(self)
 
     def resurrect(self, dungeon: DungeonLayout) -> None:

@@ -68,15 +68,17 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         game.total_gems = game.dungeon.stats.gem_number  # self.game defined in kv file
         players.Player.gems = 0
-        players.Player.set_starting_player_order()
-        for player in players.Player.data:
-            player.remove_all_effects()  # 0 is the default turn argument
-        players.Player.exited.clear()
+        game.check_if_game_over(game=game)
+        if not game.game_already_over:
+            players.Player.set_starting_player_order()
+            for player in players.Player.data:
+                player.remove_all_effects()  # 0 is the default turn argument
+            players.Player.exited.clear()
 
-        App.get_running_app().save_game()
-        App.get_running_app().level = game.level
+            App.get_running_app().save_game()
+            App.get_running_app().level = game.level
 
-        game.initialize_switches()  # this starts the game
+            game.initialize_switches()  # this starts the game
 
     def initialize_switches(self) -> None:
         self.turn = 0  # even for players, odd for monsters. Player starts
@@ -335,23 +337,34 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.finish_level()
 
     @staticmethod
-    def check_if_game_over(animation: Animation, damage_token: DamageToken) -> None:
+    def check_if_game_over(animation: Animation | None = None,
+                           damage_token: DamageToken | None = None,
+                           game: MineMadnessGame | None = None) -> None:
         """
         Checks if the game is over, and if yes, triggers game over screen. It is bound after fading out
         of DamageToken
         :param animation: animation object of the DamageToken
         :param damage_token: DamageToken instance
+        :param game: this function can also be called manually (not as callback). In that case, game argument must be
+        passed
         :return: None
         """
+        if damage_token is not None:
+            game = damage_token.game
+        elif game is not None:
+            game = game
+        else:
+            raise ValueError("Either game or damage_token must be not None")
+
         if players.Player.all_players_dead():
-            damage_token.game.game_already_over = True
-            damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+            game.game_already_over = True
+            game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             App.get_running_app().trigger_game_over("Monsters killed y'all!")
 
-        elif (Player.check_if_dead("sawyer") and Player.gems < damage_token.game.total_gems
+        elif (Player.check_if_dead("sawyer") and Player.gems < game.total_gems
             and not any(player.has_item("talisman") for player in Player.data)):
-            damage_token.game.game_already_over = True
-            damage_token.game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+            game.game_already_over = True
+            game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             App.get_running_app().trigger_game_over("Only Sawyer could pick up gems...")
 
     def finish_level(self) -> None:

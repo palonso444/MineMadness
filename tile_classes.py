@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from kivy.uix.button import Button  # type: ignore
 from kivy.clock import Clock
+from kivy.app import App  # type: ignore
 
 from monster_classes import Monster
 from tokens_solid import SceneryToken, PlayerToken, MonsterToken
@@ -375,9 +376,10 @@ class Tile(Button):
         with self.dungeon.canvas.after:
             ExplosionToken(pos=self.pos, size=self.size)
 
-        self.dungeon.add_bright_spot(center=self.center,
-                                    radius=self.width * 2,
-                                    intensity=1.0,
-                                    gradient=(0.95, 0.95),
-                                    timeout=0,
-                                    max_timeout=0.25)
+        if App.get_running_app().flickering_torches_on:
+            self.dungeon.add_bright_spot(center=self.center,
+                                        radius=self.width * 2,
+                                        intensity=1.0,
+                                        gradient=(0.95, 0.95),
+                                        timeout=0,
+                                        max_timeout=0.25)

@@ -17,7 +17,7 @@ class Monster(Character, ABC):
         self.kind: str = "monster"
         self.blocked_by: list[str] = ["wall", "player"]
         self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
-        self.ignores: list[str] = ["pickable", "light"]  # token_kind or token_species, not both
+        self.ignores: list[str] = ["pickable", "light", "treasure"]  # token_kind or token_species
         self.attacks_and_retreats: bool = False
         self.invisible: bool = False
 

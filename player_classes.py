@@ -321,9 +321,11 @@ class Player(Character, ABC, EventDispatcher):
             else:
                 self._disarm_trap(tile)
         else:
-            if tile.has_token("pickable") and "pickable" not in self.ignores:
+            if (tile.has_token("pickable") and "pickable" not in self.ignores
+                    and tile.get_token("pickable").species not in self.ignores):
                 self._pick_object(tile)
-            if tile.has_token("treasure") and "treasure" not in self.ignores:
+            if (tile.has_token("treasure") and "treasure" not in self.ignores
+                    and tile.get_token("treasure").species not in self.ignores):
                 self._pick_treasure(tile)
             if tile.kind == "exit" and self.has_all_gems:
                 self._exit_level()
@@ -348,6 +350,7 @@ class Player(Character, ABC, EventDispatcher):
             self.inventory[object_name] += 1
             game.inv_object = object_name
 
+        # weapons and shovels
         else:
             character_attribute = getattr(self.stats, f"{object_name}s")
             character_attribute += 1
@@ -553,8 +556,7 @@ class Sawyer(Player):
         1 max damage every 2 levels
         +0.05 in trap spotting chance every 3 levels
         """
-
-        self._level_up_health(1)
+        self._level_up_health(2)
         self.stats.advantage_strength_incr += 1
         self.stats.recovery_end_of_level += 1
 
@@ -583,7 +585,7 @@ class Sawyer(Player):
     def hide(self):
         self.stats.remaining_moves -= 1
         self.special_items["powder"] -= 1
-        self.ignores += ["pickable","treasure"]
+        self.ignores += ["pickable", "treasure"]
         self.token.color.a = 0.6  # changes transparency
         #self.get_dungeon().restore_canvas_color("canvas")  # restores alpha
         #self.get_dungeon().restore_canvas_color("after")
@@ -645,7 +647,7 @@ class CrusherJane(Player):
         1 recovery_end_of_level per level
         1 adv. strength every 2 levels.
         """
-        self._level_up_health(2)
+        self._level_up_health(3)
         self._level_up_strength((1, 2))
 
         if not value % 2 == 0:
@@ -698,12 +700,12 @@ class Hawkins(Player):
         self.char: str = "?"
         self.name: str = "Hawkins"
         self.species: str = "hawkins"
-        self.ignores: list[str] = self.ignores+ ["gem", "powder", "treasure"]
+        self.ignores: list[str] = self.ignores+ ["powder", "treasure"]
 
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)
 
-        self.special_items: dict[str:int] | None = {"dynamite": 12}  #2
+        self.special_items: dict[str:int] | None = {"dynamite": 2}
         self.ability_display: str = "Dynamite"
         self.ability_active: bool = False
 
@@ -731,7 +733,7 @@ class Hawkins(Player):
         1 max damage every level and 1 min damage every 2 levels
         + 0.05 in trap_spotting every 2 levels
         """
-        self._level_up_health(1)
+        self._level_up_health(2)
         self._level_up_strength((0, 1))
 
         if not value % 2 == 0:

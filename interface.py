@@ -11,7 +11,8 @@ class AbilityButton(ToggleButton):
     def condition_active(self):
         character = self.game.active_character
         # for the moment there is only one special item
-        return character.special_items[list(character.special_items.keys())[0]] > 0
+        return (character.special_items[list(character.special_items.keys())[0]] > 0
+                or self.game.active_character.ability_active)
 
     def on_state(self, instance, value):
 

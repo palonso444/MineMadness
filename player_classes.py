@@ -523,7 +523,7 @@ class Sawyer(Player):
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
 
-        self.special_items: dict[str:int] | None = {"powder": 5}
+        self.special_items: dict[str:int] | None = {"powder": 2}
         self.ability_display: str = "Hide"
         self.ability_active: bool = False
 

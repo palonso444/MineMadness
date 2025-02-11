@@ -345,6 +345,7 @@ class Tile(Button):
             path = monster_token.character.get_path_to_target(
                 monster_token.character.find_random_target(monster_token.character.stats.dodging_moves))
             if len(path) > 1 and monster_token.character.can_dodge:
+                monster_token.select_character()
                 monster_token.slide(path, on_complete=monster_token.on_dodge_completed)
             else:
                 self.dynamite_explode()

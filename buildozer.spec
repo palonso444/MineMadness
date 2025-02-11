@@ -47,7 +47,7 @@ requirements = python3,kivy,numpy
 # requirements.source.kivy = ../../kivy
 
 # (str) Presplash of the application
-presplash.filename = %(source.dir)s/tokens/weapontoken.png
+presplash.filename = %(source.dir)s/tokens/weapontoken_presplash.png
 
 # (str) Icon of the application
 icon.filename = %(source.dir)s/tokens/sawyertoken.png

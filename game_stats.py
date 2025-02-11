@@ -181,7 +181,7 @@ class ItemStats(SceneryStats, ABC):
     effect_size: float | None = None
     effect_duration: int | None = None
     use_time: int = 1
-    min_effect: int = 1
+    min_effect: int = 2
     max_effect: int | None = None
 
     @staticmethod
@@ -191,8 +191,6 @@ class ItemStats(SceneryStats, ABC):
         if randint(1,10) < 5:
             return 0
         frequency = uniform(0, seed * 0.2)
-        print("ITEM FREQUENCY")
-        print(frequency)
         return frequency if frequency < 0.05 else 0.05
 
 
@@ -200,28 +198,28 @@ class ItemStats(SceneryStats, ABC):
 class JerkyStats(ItemStats):  # BALANCED
     char: str = "j"
     effect_size: float = 0.3  # percentage of increase respect character stats
-    min_effect: int = 2
+    min_effect: int = 3
 
 
 @dataclass
 class CoffeeStats(ItemStats):  # BALANCED
     char: str = "c"
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 4
+    effect_duration: int = 6
 
 
 @dataclass
 class TobaccoStats(ItemStats):  # BALANCED
     char: str = "l"
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 4
+    effect_duration: int = 6
 
 
 @dataclass
 class WhiskyStats(ItemStats):  # BALANCED
     char: str = "w"
     effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 4
+    effect_duration: int = 6
 
 
 @dataclass
@@ -234,11 +232,11 @@ class TalismanStats(ItemStats): # BALANCED
         # are dead
         from player_classes import Player
 
-        if randint(1, 10) < 6 or seed < 6:
+        if randint(1, 10) < 5 or seed < 5:
             return 0
         else:
             dead_char = len(Player.dead_data)  # higher frequency if some players dead
-            return uniform(0, 0.02 + (dead_char * 0.01))
+            return uniform(0, 0.025 + (dead_char * 0.02))
 
 
 @dataclass
@@ -306,7 +304,7 @@ class CrusherJaneStats(PlayerStats):  # BALANCED
     weapons: int = 4
     health: int = 10
     strength: list[int] = field(default_factory=lambda: [2,5])
-    advantage_strength_incr: int = 1
+    advantage_strength_incr: int = 2
     moves: int = 3
     trap_spotting_chance: float = 0.1
     trap_disarming_chance: float = 0.0
@@ -435,8 +433,8 @@ class CaveHoundStats(MonsterStats):  # BALANCED
 @dataclass
 class GrowlStats(MonsterStats):  # BALANCED
     char: str = "G"
-    health: int = 10
-    strength: list[int] = field(default_factory=lambda: [4,8])
+    health: int = 60
+    strength: list[int] = field(default_factory=lambda: [8,12])
     moves: int = 5
     random_motility: float = 0.5
     dodging_ability: int = 5
@@ -464,11 +462,11 @@ class GrowlStats(MonsterStats):  # BALANCED
 @dataclass
 class RockGolemStats(MonsterStats):  # BALANCED
     char: str = "R"
-    health: int = 75
+    health: int = 160
     strength: list[int] = field(default_factory=lambda: [8,15])
     moves: int = 3
     dodging_ability: int = 0
-    experience_when_killed: int = 65
+    experience_when_killed: int = 85
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -519,9 +517,9 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
 class NightmareStats(MonsterStats): # BALANCED
     char: str = "N"
     health: int = 15
-    strength: list[int] = field(default_factory=lambda: [5,10])
+    strength: list[int] = field(default_factory=lambda: [3,8])
     random_motility: float = 0.2
-    moves: int = 8
+    moves: int = 9
     dodging_ability: int = 10
     experience_when_killed: int = 35
 
@@ -544,11 +542,11 @@ class NightmareStats(MonsterStats): # BALANCED
 @dataclass
 class LindWormStats(MonsterStats):  # BALANCED
     char: str = "Y"
-    health: int = 130
-    strength: list[int] = field(default_factory=lambda: [25,35])
+    health: int = 230
+    strength: list[int] = field(default_factory=lambda: [15,25])
     moves: int = 7
     dodging_ability: int = 4
-    experience_when_killed: int = 100
+    experience_when_killed: int = 150
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -624,8 +622,8 @@ class DepthsWispStats(MonsterStats):  # BALANCED
 @dataclass
 class MountainDjinnStats(MonsterStats):  # BALANCED
     char: str = "D"
-    health: int = 30
-    strength: list[int] = field(default_factory=lambda: [12,20])
+    health: int = 65
+    strength: list[int] = field(default_factory=lambda: [10,15])
     moves: int = 7
     dodging_ability: int = 1.0
     experience_when_killed: int = 50
@@ -729,7 +727,7 @@ class PenumbraStats(MonsterStats):
 class ClawJawStats(MonsterStats):
     char: str = "C"
     health: int = 45
-    strength: list[int] = field(default_factory=lambda: [8,12])
+    strength: list[int] = field(default_factory=lambda: [4,8])
     moves: int = 7
     random_motility: float = 0.7
     dodging_ability: int = 5

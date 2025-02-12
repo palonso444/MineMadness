@@ -197,28 +197,27 @@ class ItemStats(SceneryStats, ABC):
 @dataclass
 class JerkyStats(ItemStats):  # BALANCED
     char: str = "j"
-    effect_size: float = 0.3  # percentage of increase respect character stats
-    min_effect: int = 3
+    effect_size: float = uniform(0.2, 0.3)  # percentage of increase respect character stats
 
 
 @dataclass
 class CoffeeStats(ItemStats):  # BALANCED
     char: str = "c"
-    effect_size: float = 0.3  # percentage of increase respect character stats
+    effect_size: float = uniform(0.2, 0.3)  # percentage of increase respect character stats
     effect_duration: int = 6
 
 
 @dataclass
 class TobaccoStats(ItemStats):  # BALANCED
     char: str = "l"
-    effect_size: float = 0.3  # percentage of increase respect character stats
+    effect_size: float = uniform(0.2, 0.3)  # percentage of increase respect character stats
     effect_duration: int = 6
 
 
 @dataclass
 class WhiskyStats(ItemStats):  # BALANCED
     char: str = "w"
-    effect_size: float = 0.3  # percentage of increase respect character stats
+    effect_size: float = uniform(0.2, 0.3)  # percentage of increase respect character stats
     effect_duration: int = 6
 
 

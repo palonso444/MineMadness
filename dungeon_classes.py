@@ -291,8 +291,8 @@ class DungeonLayout(GridLayout):
         for item, frequency in self.stats.level_progression().items():
            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
-        blueprint.purge_blueprint(max_total_frequency=0.65,
-                                  protected={" ", "o", "&", "%", "?", "o", "#", "{", "*", "!", "t"})
+        blueprint.purge_blueprint(max_total_frequency=0.55,
+                                  protected={" ", "o", "&", "%", "?", "o", "#", "{", "*", "!"})
         #blueprint.print_map()
         return blueprint
 

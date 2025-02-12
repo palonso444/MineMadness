@@ -65,9 +65,9 @@ class Trap:
 @dataclass
 class TrapStats:
     char: str = "!"
-    base_damage: list[int] = field(default_factory=lambda: [1, 7])
-    base_experience_when_disarmed: int = 12
-    experience_when_found: int = 5
+    base_damage: list[int] = field(default_factory=lambda: [2, 5])
+    base_experience_when_disarmed: int = 9
+    experience_when_found: int = 10
 
     @staticmethod
     def calculate_frequency(seed: int) -> float: # seed is level

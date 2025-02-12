@@ -551,12 +551,12 @@ class Sawyer(Player):
         Sawyer increases 1 movement every 2 levels,
         1 health per level,
         1 recovery_end_of_level per level,
-        1 advantage_strength_increase per level
+        2 advantage_strength_increase per level
         1 max damage every 2 levels
         +0.05 in trap spotting chance every 3 levels
         """
         self._level_up_health(2)
-        self.stats.advantage_strength_incr += 1
+        self.stats.advantage_strength_incr += 2
         self.stats.recovery_end_of_level += 1
 
         if not value % 2 == 0:
@@ -644,14 +644,14 @@ class CrusherJane(Player):
         2 health every level,
         (+1, +2) strength per level,
         1 recovery_end_of_level per level
-        1 adv. strength every 2 levels.
+        1 adv. strength every level.
         """
         self._level_up_health(3)
         self._level_up_strength((1, 2))
+        self.stats.advantage_strength_incr += 1
 
         if not value % 2 == 0:
             self.stats.recovery_end_of_level += 1
-            self.stats.advantage_strength_incr += 1
 
         if value % 4 == 0:
             self._level_up_moves(1)

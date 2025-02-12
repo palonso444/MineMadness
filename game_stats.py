@@ -725,12 +725,12 @@ class PenumbraStats(MonsterStats):
 @dataclass
 class ClawJawStats(MonsterStats):
     char: str = "C"
-    health: int = 45
-    strength: list[int] = field(default_factory=lambda: [4,8])
+    health: int = 38
+    strength: list[int] = field(default_factory=lambda: [3,6])
     moves: int = 7
     random_motility: float = 0.7
     dodging_ability: int = 5
-    experience_when_killed: int = 40
+    experience_when_killed: int = 35
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -739,9 +739,9 @@ class ClawJawStats(MonsterStats):
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # ClawJaw can show up at any level from a certain level
-        if seed < 5:
+        if seed < 10:
             return 0
-        elif seed < 10:
-            return uniform(0.0, 0.025)
+        elif seed < 15:
+            return uniform(0, 0.05)
         else:
-            return uniform(0,0.1)
+            return uniform(0, 0.08)

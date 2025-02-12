@@ -197,27 +197,27 @@ class ItemStats(SceneryStats, ABC):
 @dataclass
 class JerkyStats(ItemStats):  # BALANCED
     char: str = "j"
-    effect_size: float = uniform(0.2, 0.3)  # percentage of increase respect character stats
+    effect_size: float = 0.25  # percentage of increase respect character stats
 
 
 @dataclass
 class CoffeeStats(ItemStats):  # BALANCED
     char: str = "c"
-    effect_size: float = uniform(0.2, 0.3)  # percentage of increase respect character stats
+    effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 6
 
 
 @dataclass
 class TobaccoStats(ItemStats):  # BALANCED
     char: str = "l"
-    effect_size: float = uniform(0.2, 0.3)  # percentage of increase respect character stats
+    effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 6
 
 
 @dataclass
 class WhiskyStats(ItemStats):  # BALANCED
     char: str = "w"
-    effect_size: float = uniform(0.2, 0.3)  # percentage of increase respect character stats
+    effect_size: float = 0.3  # percentage of increase respect character stats
     effect_duration: int = 6
 
 
@@ -434,10 +434,10 @@ class GrowlStats(MonsterStats):  # BALANCED
     char: str = "G"
     health: int = 60
     strength: list[int] = field(default_factory=lambda: [8,12])
-    moves: int = 5
+    moves: int = 6
     random_motility: float = 0.5
     dodging_ability: int = 5
-    experience_when_killed: int = 30
+    experience_when_killed: int = 35
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -462,7 +462,7 @@ class GrowlStats(MonsterStats):  # BALANCED
 class RockGolemStats(MonsterStats):  # BALANCED
     char: str = "R"
     health: int = 160
-    strength: list[int] = field(default_factory=lambda: [8,15])
+    strength: list[int] = field(default_factory=lambda: [12,20])
     moves: int = 3
     dodging_ability: int = 0
     experience_when_killed: int = 85
@@ -489,7 +489,7 @@ class RockGolemStats(MonsterStats):  # BALANCED
 class DarkGnomeStats(MonsterStats):  # BALANCED
     char: str = "O"
     health: int = 3
-    strength: list[int] = field(default_factory=lambda: [1,2])
+    strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 5
     random_motility: float = 0.5
     dodging_ability: int = 10
@@ -542,7 +542,7 @@ class NightmareStats(MonsterStats): # BALANCED
 class LindWormStats(MonsterStats):  # BALANCED
     char: str = "Y"
     health: int = 230
-    strength: list[int] = field(default_factory=lambda: [15,25])
+    strength: list[int] = field(default_factory=lambda: [20,30])
     moves: int = 7
     dodging_ability: int = 4
     experience_when_killed: int = 150
@@ -697,7 +697,7 @@ class RattleSnakeStats(MonsterStats):
 class PenumbraStats(MonsterStats):
     char: str = "A"
     health: int = 8
-    strength: list[int] = field(default_factory=lambda: [2,6])
+    strength: list[int] = field(default_factory=lambda: [3,7])
     moves: int = 12 # do not go below 7 or will not move due to max_attack and retreat moves
     max_attacks: int = 3
     random_motility: float = 0.4

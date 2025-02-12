@@ -235,7 +235,7 @@ class TalismanStats(ItemStats): # BALANCED
             return 0
         else:
             dead_char = len(Player.dead_data)  # higher frequency if some players dead
-            return uniform(0, 0.025 + (dead_char * 0.02))
+            return uniform(0, 0.02 + (dead_char * 0.017))
 
 
 @dataclass

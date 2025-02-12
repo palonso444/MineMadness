@@ -196,6 +196,6 @@ class TalismanButton(Interfacebutton):
         else:
             player = choice(Player.dead_data)
             player.resurrect(character.get_dungeon())
-            character.token.show_effect_token("resurrect")
+            player.token.show_effect_token("resurrect")
 
         self.apply_cost("talisman")

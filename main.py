@@ -73,7 +73,7 @@ class MineMadnessApp(App):
         self.sm: ScreenManager | None = None
 
     def build(self) -> ScreenManager:
-        Builder.load_file("how_to_play.kv")
+        Builder.load_file(get_resource_path("./how_to_play.kv"))
         self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
         self.sm.add_widget(MainMenu(name="main_menu"))
         self.sm.add_widget(HowToPlay(name="how_to_play"))

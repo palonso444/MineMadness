@@ -90,9 +90,10 @@ class ExplosionToken(FadingToken):
 
     def __init__(self, pos: tuple[float,float], size: tuple[float,float], **kwargs):
         super().__init__(**kwargs)
+        from main import get_resource_path
         self.final_opacity = 0.7
         self.duration = 0.2
-        self.source = "./fadingtokens/explosion_token.png"
+        self.source = get_resource_path("./fadingtokens/explosion_token.png")
 
         with self.canvas:
             self.color = Color(1, 1, 1, 1)
@@ -108,6 +109,7 @@ class EffectToken(FadingToken):
     def __init__(self, pos: tuple[float,float], size: tuple[float,float], effect: str,
                  character_token: CharacterToken, effect_ends: bool, **kwargs):
         super().__init__(**kwargs)
+        from main import get_resource_path
         self.final_opacity = 1
         self.duration = 0.6
         self.effect = effect
@@ -115,9 +117,9 @@ class EffectToken(FadingToken):
         self.effect_ends: bool = effect_ends  # determines if effect start or ends
 
         if effect_ends:
-            self.source = f"./fadingtokens/{self.effect}_effect_red_token.png"
+            self.source = get_resource_path(f"./fadingtokens/{self.effect}_effect_red_token.png")
         else:
-            self.source = f"./fadingtokens/{self.effect}_effect_green_token.png"
+            self.source = get_resource_path(f"./fadingtokens/{self.effect}_effect_green_token.png")
 
         with self.canvas:
             self.color = Color(1, 1, 1, 1)

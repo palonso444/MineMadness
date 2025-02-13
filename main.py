@@ -6,9 +6,11 @@ from kivy.core.text import LabelBase
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
 from kivy.core.audio import SoundLoader
+from kivy.core.window import Window
 from json import dump, load
-from os.path import exists
+from os.path import exists, abspath, join
 from os import remove
+import sys
 
 from dungeon_blueprint import Blueprint
 from player_classes import Player, Sawyer, Hawkins, CrusherJane  # players needed for globals()
@@ -16,8 +18,34 @@ import monster_classes as monsters
 from dungeon_classes import DungeonLayout
 from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig
 
-LabelBase.register(name = 'duality', fn_regular= 'fonts/duality.otf')
-LabelBase.register(name = 'edmunds', fn_regular= 'fonts/edmunds_distressed.otf')
+def get_resource_path(relative_path: str) -> str:
+    """
+    This function is needed when compiling the game using Pyinstaller. It allows
+    the executable to find the resource files
+    :param relative_path: initial path of a resource files
+    :return: modified path of a resource file
+    """
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = abspath(".")
+
+    return join(base_path, relative_path)
+
+def setup_window_size_if_desktop(width: int, height: int) -> None:
+    """
+    Sets up the size of the window in case the game is running on desktop
+    :param width: width in pixels of the window
+    :param height: height in pixels of the window
+    :return: None
+    """
+    if getattr(sys, 'frozen', False):
+        Window.size = (width, height)  # width, height in pixels
+
+
+LabelBase.register(name = 'duality', fn_regular= get_resource_path('fonts/duality.otf'))
+LabelBase.register(name = 'edmunds', fn_regular= get_resource_path('fonts/edmunds_distressed.otf'))
+setup_window_size_if_desktop(500, 800)
 
 class MineMadnessApp(App):
 
@@ -35,7 +63,7 @@ class MineMadnessApp(App):
         self.saved_game_file: str = "saved_game.json"
         self.saved_game: bool = exists("saved_game.json")
 
-        self.music = SoundLoader.load("./music/stocktune_celestial_dreams_unveiled.ogg")
+        self.music = SoundLoader.load(get_resource_path("./music/stocktune_celestial_dreams_unveiled.ogg"))
         self.music.loop = True
         self.music_on: bool = True
 

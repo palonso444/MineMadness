@@ -28,6 +28,7 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
                  character: Character, dungeon_instance: DungeonLayout,
                  size_modifier: float, pos_modifier: tuple[int,int],
                  bright_radius: float, bright_int: float, gradient: tuple[float,float], **kwargs):
+        from main import get_resource_path
         super().__init__(**kwargs)
 
         self.kind: str = kind
@@ -35,7 +36,7 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.position: tuple [int:int] = position
         self.character: Character = character
         self.dungeon: DungeonLayout = dungeon_instance
-        self.source: str = "./tokens/" + self.species + "token.png"
+        self.source: str = get_resource_path("./tokens/" + self.species + "token.png")
 
         if kind in ["wall", "light"]:
             self.canvas_context = self.dungeon.canvas.after

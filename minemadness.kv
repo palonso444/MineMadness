@@ -4,6 +4,7 @@
 #: import TobaccoStats game_stats.TobaccoStats
 #: import WhiskyStats game_stats.WhiskyStats
 #: import TalismanStats game_stats.TalismanStats
+#: import get_resource_path main.get_resource_path
 
 <DungeonLayout>:
     size_hint: None, None
@@ -84,7 +85,7 @@
         Rectangle:  # draws the floor
             pos: self.pos
             size: self.size
-            source: "./backgrounds/" + self.kind + "background.png" if self.kind else None
+            source: get_resource_path("./backgrounds/" + self.kind + "background.png") if self.kind else None
 
 <ProgressBar>:
     padding: "40dp"

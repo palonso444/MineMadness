@@ -976,8 +976,8 @@ class ClawJaw(Monster):
         self.char: str = "C"
         self.name: str = "Claw Jaw"
         self.species: str = "clawjaw"
-        self.blocked_by: list | None = None  # values vary in _set_possible_targets() and self.move()
-        self.cannot_share_tile_with: list[str] | None = None  # values vary in _set_possible_targets() and self.move()
+        # values of self.blocked_by vary in _set_possible_targets() and self.move() and self._move_across walls
+        # values self.cannot_share_tile_with vary in _set_possible_targets() and self.move() self._move_across walls
         self.step_transition: str = "linear"  # gliding
         self.step_duration: float = 0.4
         self.stats = stats.ClawJawStats()
@@ -988,6 +988,14 @@ class ClawJaw(Monster):
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
+
+    def restore_cannot_share_tile_with_and_blocked_by(self) -> None:
+        """
+        Resets default values for these attributes as they may change when moving
+        :return: None
+        """
+        self.blocked_by = ["wall", "player"]
+        self.cannot_share_tile_with = ["wall", "monster", "player"]
 
     def can_dig(self, token_species: str) -> bool:
         """
@@ -1008,7 +1016,7 @@ class ClawJaw(Monster):
 
     def act_on_tile(self, tile: Tile) -> None:
         """
-        Digs walls, if required. Afterwards acts just as any other monster
+        Digs walls, if required. Afterward acts just as any other monster
         :param tile: Tile on which to act
         :return: None
         """
@@ -1019,6 +1027,7 @@ class ClawJaw(Monster):
                 self.dig(tile_to_dig)
                 self.acted_on_tile = True
 
+        self.restore_cannot_share_tile_with_and_blocked_by()
         super().act_on_tile(tile)
 
     def stop_upon_wall(self, path: list[tuple]) -> tuple[list, tuple | None]:
@@ -1095,10 +1104,9 @@ class ClawJaw(Monster):
         else:
             self.blocked_by, self.cannot_share_tile_with = ["wall", "player"], ["wall", "monster", "player"]
             path: list[tuple] = self._select_path_to_target(self._find_closest_accesses(target_path))
+
             # if path too long, will go across walls
             if len(path) * self.dig_factor > self.get_dungeon().get_distance(self.get_position(), target_dist):
-            # if (len(path) == 1 or
-                # len(path) > self.get_dungeon().get_distance(self.get_position(), target_dist) * 2.5):
                 self._move_across_walls(target_dist)
             else:
                 super().move_token_or_act_on_tile(path)

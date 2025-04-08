@@ -329,7 +329,10 @@ class DungeonLayout(GridLayout):
 
     def _generate_darkness_layer(self, alpha_intensity: int) -> Rectangle:
         """
+        **********************************************************************************
         THIS FUNCTION HAS BEEN CYTHONIZED -- SEE cythonized_lights.pyx
+        **********************************************************************************
+
         Generates a darkness layer with optional illuminated areas
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
         :return: darkness layer to be displayed on the canvas

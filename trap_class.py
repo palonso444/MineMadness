@@ -65,7 +65,7 @@ class Trap:
 @dataclass
 class TrapStats:
     char: str = "!"
-    base_damage: list[int] = field(default_factory=lambda: [2, 5])
+    base_damage: list[int] = field(default_factory=lambda: [1, 3])
     base_experience_when_disarmed: int = 9
     experience_when_found: int = 10
 
@@ -91,7 +91,7 @@ class TrapStats:
         :param dungeon_level: current level of the dungeon
         :return: damage dealt by the trap
         """
-        level: int = dungeon_level // 3
+        level: int = dungeon_level // 4
         level = 1 if level < 1 else level
         return randint(self.base_damage[0], self.base_damage[1]) * level
 

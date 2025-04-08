@@ -231,11 +231,15 @@ class TalismanStats(ItemStats): # BALANCED
         # are dead
         from player_classes import Player
 
-        if randint(1, 10) < 5 or seed < 5:
-            return 0
-        else:
-            dead_char = len(Player.dead_data)  # higher frequency if some players dead
-            return uniform(0, 0.02 + (dead_char * 0.017))
+        dead_char = len(Player.dead_data)
+
+        if dead_char == 0:
+            if randint(1, 10) < 6 or seed < 5:
+                return 0
+            else:
+                return uniform(0, 0.03)
+        else:  # higher frequency if some players dead
+            return uniform(0.02, 0.02 + (dead_char * 0.015))
 
 
 @dataclass

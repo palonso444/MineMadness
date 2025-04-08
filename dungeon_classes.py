@@ -287,12 +287,17 @@ class DungeonLayout(GridLayout):
         blueprint.place_items_as_group(players.Player.get_surviving_players(), min_dist=1)
         blueprint.place_items(" ", 1)
         blueprint.place_items("o", self.stats.gem_number)
+        blueprint.place_items("C", self.stats.gem_number)
+        blueprint.place_items("C", self.stats.gem_number)
+        blueprint.place_items("#", 10)
 
-        for item, frequency in self.stats.level_progression().items():
-           blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
+
+        #for item, frequency in self.stats.level_progression().items():
+           #blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
         blueprint.purge_blueprint(max_total_frequency=0.55,
                                   protected={" ", "o", "&", "%", "?", "o", "#", "{", "*", "!"})
+
         #blueprint.print_map()
         return blueprint
 

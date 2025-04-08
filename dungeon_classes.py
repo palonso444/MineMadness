@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from kivy.graphics import Rectangle, Color
 from kivy.properties import NumericProperty, ListProperty
-from kivy.uix.gridlayout import GridLayout  # type: ignore
+from kivy.uix.gridlayout import GridLayout
 from kivy.graphics.texture import Texture
 from kivy.clock import Clock
 from kivy.app import App
@@ -19,6 +19,7 @@ from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
 from tokens_solid import CharacterToken
 
+import cythonized_lights as cl
 
 class DungeonLayout(GridLayout):
     """
@@ -323,10 +324,12 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         with self.canvas.after:
-            self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
+            self.darkness = cl.generate_darkness_layer(self, alpha_intensity)
+            #self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
 
     def _generate_darkness_layer(self, alpha_intensity: int) -> Rectangle:
         """
+        THIS FUNCTION HAS BEEN CYTHONIZED -- SEE cythonized_lights.pyx
         Generates a darkness layer with optional illuminated areas
         :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
         :return: darkness layer to be displayed on the canvas

@@ -181,7 +181,7 @@ class ItemStats(SceneryStats, ABC):
     effect_size: float | None = None
     effect_duration: int | None = None
     use_time: int = 1
-    min_effect: int = 2
+    min_effect: int = 3
     max_effect: int | None = None
 
     @staticmethod
@@ -197,28 +197,28 @@ class ItemStats(SceneryStats, ABC):
 @dataclass
 class JerkyStats(ItemStats):  # BALANCED
     char: str = "j"
-    effect_size: float = 0.25  # percentage of increase respect character stats
+    effect_size: float = 0.3  # percentage of increase respect character stats
 
 
 @dataclass
 class CoffeeStats(ItemStats):  # BALANCED
     char: str = "c"
-    effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 6
+    effect_size: float = 0.4  # percentage of increase respect character stats
+    effect_duration: int = 7
 
 
 @dataclass
 class TobaccoStats(ItemStats):  # BALANCED
     char: str = "l"
-    effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 6
+    effect_size: float = 0.4  # percentage of increase respect character stats
+    effect_duration: int = 7
 
 
 @dataclass
 class WhiskyStats(ItemStats):  # BALANCED
     char: str = "w"
-    effect_size: float = 0.3  # percentage of increase respect character stats
-    effect_duration: int = 6
+    effect_size: float = 0.4  # percentage of increase respect character stats
+    effect_duration: int = 7
 
 
 @dataclass
@@ -437,7 +437,7 @@ class CaveHoundStats(MonsterStats):  # BALANCED
 class GrowlStats(MonsterStats):  # BALANCED
     char: str = "G"
     health: int = 60
-    strength: list[int] = field(default_factory=lambda: [8,12])
+    strength: list[int] = field(default_factory=lambda: [4,8])
     moves: int = 6
     random_motility: float = 0.5
     dodging_ability: int = 5
@@ -520,7 +520,7 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
 class NightmareStats(MonsterStats): # BALANCED
     char: str = "N"
     health: int = 15
-    strength: list[int] = field(default_factory=lambda: [3,8])
+    strength: list[int] = field(default_factory=lambda: [2,5])
     random_motility: float = 0.2
     moves: int = 9
     dodging_ability: int = 10
@@ -575,7 +575,7 @@ class LindWormStats(MonsterStats):  # BALANCED
 class WanderingShadowStats(MonsterStats):  # BALANCED
     char: str = "S"
     health: int = 4
-    strength: list[int] = field(default_factory=lambda: [2,6])
+    strength: list[int] = field(default_factory=lambda: [1,4])
     moves: int = 7
     random_motility: float = 1.0
     dodging_ability: int = 14
@@ -626,7 +626,7 @@ class DepthsWispStats(MonsterStats):  # BALANCED
 class MountainDjinnStats(MonsterStats):  # BALANCED
     char: str = "D"
     health: int = 65
-    strength: list[int] = field(default_factory=lambda: [10,15])
+    strength: list[int] = field(default_factory=lambda: [7,12])
     moves: int = 7
     dodging_ability: int = 1.0
     experience_when_killed: int = 50
@@ -676,7 +676,7 @@ class RattleSnakeStats(MonsterStats):
     char: str = "V"
     health: int = 5
     strength: list[int] = field(default_factory=lambda: [2,10])
-    moves: int = 10
+    moves: int = 8
     max_attacks: int = 1
     random_motility: float = 0.2
     dodging_ability: int = 5
@@ -729,8 +729,8 @@ class PenumbraStats(MonsterStats):
 @dataclass
 class ClawJawStats(MonsterStats):
     char: str = "C"
-    health: int = 38
-    strength: list[int] = field(default_factory=lambda: [3,6])
+    health: int = 22
+    strength: list[int] = field(default_factory=lambda: [2,5])
     moves: int = 7
     random_motility: float = 0.7
     dodging_ability: int = 5

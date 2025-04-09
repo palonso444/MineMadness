@@ -68,7 +68,7 @@ class DungeonStats:
                 else:
                     if trigger == 10 and dynamites < 5:  # jackpot
                         return 2
-                    if trigger < 4 or trigger < dynamites * 2:
+                    if trigger < 4 or trigger < dynamites * 2 or dynamites > 6:
                         return 0
                     else:
                         return 1
@@ -97,9 +97,9 @@ class DungeonStats:
                     else:
                         return 2
                 else:
-                    if trigger == 10 and powders < 5:  # jackpot
+                    if trigger == 10 and powders < 6:  # jackpot
                         return 2
-                    if trigger < 4 or trigger < powders * 2:
+                    if trigger < 4 or trigger < powders * 2 or powders > 8:
                         return 0
                     else:
                         return 1

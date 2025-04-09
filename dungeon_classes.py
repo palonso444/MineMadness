@@ -119,8 +119,8 @@ class DungeonLayout(GridLayout):
             # if dungeon.bright_spots does not change its values, darkness must be cast manually
             if len(dungeon.bright_spots) == 0:
                 with dungeon.canvas.after:
-                    dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.alpha_intensity)
-                    # dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.alpha_intensity)
+                    dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
+                    # dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.darkness_intensity)
 
     def update_bright_spots(self) -> None:
         """
@@ -293,12 +293,16 @@ class DungeonLayout(GridLayout):
         blueprint.place_items_as_group(players.Player.get_surviving_players(), min_dist=1)
         blueprint.place_items(" ", 1)
         blueprint.place_items("o", self.stats.gem_number)
+        blueprint.place_items("t", self.stats.talisman_number)
+        blueprint.place_items("d", self.stats.dynamite_number)
+        blueprint.place_items("h", self.stats.powder_number)
+
 
         for item, frequency in self.stats.level_progression().items():
            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
-        blueprint.purge_blueprint(max_total_frequency=0.55,
-                                  protected={" ", "o", "&", "%", "?", "o", "#", "{", "*", "!"})
+        blueprint.purge_blueprint(max_total_frequency=0.65,
+                                  protected={" ", "o", "&", "%", "?", "t", "d", "h"})
 
         #blueprint.print_map()
         return blueprint

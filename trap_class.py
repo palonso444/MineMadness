@@ -69,20 +69,24 @@ class TrapStats:
     base_experience_when_disarmed: int = 9
     experience_when_found: int = 10
 
+    group: str = "trap"
+    min_group_freq: float = 0.0
+    max_group_freq: float = 0.12
+
     @staticmethod
     def calculate_frequency(seed: int) -> float: # seed is level
         # Traps start showing late and increase frequency with increasing level
         if seed < 5:
             return 0
         trigger = randint(1,10)
-        if seed < 10 and trigger > 4:
+        if seed < 10 and trigger > 5:
             return uniform(0, 0.05)
         if seed < 15 and trigger > 4:
             return uniform(0, 0.08)
         if seed < 20 and trigger > 3:
-            return uniform(0, 0.12)
+            return uniform(0, 0.10)
         if seed >= 20 and trigger > 2:
-            return uniform(0, 0.18)
+            return uniform(0, 0.12)
         return 0
 
     def calculate_damage(self, dungeon_level: int) -> int:

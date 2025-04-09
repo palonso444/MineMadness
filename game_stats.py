@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from abc import ABC
 from random import randint, uniform
@@ -22,6 +24,85 @@ class DungeonStats:
         gem_number = int(self.stats_level * 0.1)
         gem_number = 1 if gem_number < 1 else gem_number
         return gem_number
+
+    @property
+    def talisman_number(self) -> int:
+        # Talisman does not appear in very first levels. In other levels has low frequency, ges higher when characters
+        # are dead
+        from player_classes import Player
+
+        dead_char: int = len(Player.dead_data)
+        trigger: int = randint(1, 10)
+
+        if dead_char == 0:
+            if trigger < 7 or self.stats_level < 4:
+                return 0
+            return 1
+        else:
+            if trigger < 3:
+                return 0
+            if trigger < 9:
+                return 1
+            return 2
+
+    @property
+    def dynamite_number(self) -> int:
+        # dynamites are rare unless Hawkins has run out of dynamites
+        if self.stats_level < 3:
+            return 0
+
+        from player_classes import Player
+
+        for player in Player.exited:
+            if player.species == "hawkins":
+                dynamites: int = player.special_items["dynamite"]
+                trigger = randint(1, 10)
+
+                if dynamites == 0:
+                    if trigger < 4:
+                        return 0
+                    if trigger < 9:
+                        return 1
+                    else:
+                        return 2
+                else:
+                    if trigger == 10 and dynamites < 5:  # jackpot
+                        return 2
+                    if trigger < 4 or trigger < dynamites * 2:
+                        return 0
+                    else:
+                        return 1
+
+        # if hawkins not it players exited (dead)
+        return 0
+
+    @property
+    def powder_number(self) -> int:
+        # powder are rare unless Sawyer has run out of powders
+        if self.stats_level < 3:
+            return 0
+
+        from player_classes import Player
+
+        for player in Player.exited:
+            if player.species == "sawyer":
+                powders: int = player.special_items["powder"]
+                trigger = randint(1, 10)
+
+                if powders == 0:
+                    if trigger < 4:
+                        return 0
+                    if trigger < 9:
+                        return 1
+                    else:
+                        return 2
+                else:
+                    if trigger == 10 and powders < 5:  # jackpot
+                        return 2
+                    if trigger < 4 or trigger < powders * 2:
+                        return 0
+                    else:
+                        return 1
 
     @property
     def torch_number(self) -> int:
@@ -69,9 +150,6 @@ class DungeonStats:
             CoffeeStats.char: CoffeeStats.calculate_frequency(total_monster_frequency),
             WhiskyStats.char: WhiskyStats.calculate_frequency(total_monster_frequency),
             TobaccoStats.char: TobaccoStats.calculate_frequency(total_monster_frequency),
-            TalismanStats.char: TalismanStats.calculate_frequency(self.stats_level),
-            PowderStats.char: PowderStats.calculate_frequency(self.stats_level),
-            DynamiteStats.char: DynamiteStats.calculate_frequency(self.stats_level)
         }
 
         all_frequencies = {**item_frequencies, **monster_frequencies}
@@ -79,29 +157,66 @@ class DungeonStats:
         return all_frequencies
 
 @dataclass
-class SceneryStats(ABC):
+class WallStats(ABC):
     char: str | None = None
+    group: str = "wall"
+    min_group_freq: float = 0.2
+    max_group_freq: float = 0.5
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
         pass
 
 
-class RockWallStats(SceneryStats): # BALANCED
+@dataclass
+class WeaponShovelStats(ABC):
+    char: str | None = None
+    group: str = "weapon_shovel"
+    min_group_freq: float = 0.05
+    max_group_freq: float = 0.25
+
+    @staticmethod
+    def calculate_frequency(seed: int | float) -> float:
+        pass
+
+
+@dataclass
+class ItemStats(WallStats, ABC):
+    effect_size: float | None = None
+    effect_duration: int | None = None
+    use_time: int = 1
+    min_effect: int = 3
+    max_effect: int | None = None
+
+    group: str = "item"
+    min_group_freq: float = 0.0
+    max_group_freq: float = 0.15
+
+    @staticmethod
+    def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
+        # Items depend on pooled monster frequency. They have 40% change to get a frequency.
+        # They tend to lower frequencies.
+        if randint(1,10) < 5:
+            return 0
+        frequency = uniform(0, seed * 0.2)
+        return frequency if frequency < 0.05 else 0.05
+
+
+class RockWallStats(WallStats): # BALANCED
     char: str = "#"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is level
         # RockWalls are common at early levels. Later they may be rare or (50% chance) or from rare to common
         if seed < 10:
-            return  uniform(0.2, 0.45)
+            return  uniform(0.2, 0.5)
         if randint(1, 10) < 5:
-            return uniform(0, 0.2)
-        else:
             return uniform(0, 0.3)
+        else:
+            return uniform(0, 0.2)
 
 
-class GraniteWallStats(SceneryStats): # BALANCED
+class GraniteWallStats(WallStats): # BALANCED
     char: str = "{"
 
     @staticmethod
@@ -112,10 +227,10 @@ class GraniteWallStats(SceneryStats): # BALANCED
         if randint(1, 10) < 5:
             return uniform(0, 0.2)
         else:
-            return uniform(0.05,0.3)
+            return uniform(0.05,0.35)
 
 
-class QuartzWallStats(SceneryStats): # BALANCED
+class QuartzWallStats(WallStats): # BALANCED
     char: str = "*"
 
     @staticmethod
@@ -129,7 +244,7 @@ class QuartzWallStats(SceneryStats): # BALANCED
             return uniform(0.05, 0.25)
 
 
-class ShovelStats(SceneryStats): # BALANCED
+class ShovelStats(WeaponShovelStats): # BALANCED
     char: str = "p"
 
     @staticmethod
@@ -140,7 +255,7 @@ class ShovelStats(SceneryStats): # BALANCED
         return frequency if frequency < 0.1 else 0.1
 
 
-class WeaponStats(SceneryStats): # BALANCED
+class WeaponStats(WeaponShovelStats): # BALANCED
     char: str = "x"
 
     @staticmethod
@@ -151,47 +266,28 @@ class WeaponStats(SceneryStats): # BALANCED
         return frequency if frequency < 0.15 else 0.15
 
 
-class PowderStats(SceneryStats): # BALANCED
+class PowderStats: # BALANCED
     char: str = "h"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is level
-        # Powder may not appear at very first levels. It tends to lower frequencies depending on level.
-        if randint(1, 10) < 4 or seed < 3:
-            return 0
-        else:
-            return uniform(0, 0.05)
+    def calculate_frequency() -> None:
+        """
+        Powders are not handled by frequencies. See @property DungeonStats.powder_number
+        :return: None
+        """
+        pass
 
 
-class DynamiteStats(SceneryStats): # BALANCED
+class DynamiteStats: # BALANCED
     char: str = "d"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is level
-        # Dynamite may not appear at very first levels. It tends to lower frequencies depending on level.
-        if randint(1, 10) < 4 or seed < 3:
-            return 0
-        else:
-            return uniform(0, 0.05)
-
-
-
-@dataclass
-class ItemStats(SceneryStats, ABC):
-    effect_size: float | None = None
-    effect_duration: int | None = None
-    use_time: int = 1
-    min_effect: int = 3
-    max_effect: int | None = None
-
-    @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
-        # Items depend on pooled monster frequency. They have 40% change to get a frequency.
-        # They tend to lower frequencies.
-        if randint(1,10) < 5:
-            return 0
-        frequency = uniform(0, seed * 0.2)
-        return frequency if frequency < 0.05 else 0.05
+    def calculate_frequency() -> None:
+        """
+        Dynamites are not handled by frequencies. See @property DungeonStats.dynamite_number
+        :return: None
+        """
+        pass
 
 
 @dataclass
@@ -222,24 +318,16 @@ class WhiskyStats(ItemStats):  # BALANCED
 
 
 @dataclass
-class TalismanStats(ItemStats): # BALANCED
+class TalismanStats: # BALANCED
     char: str = "t"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is level
-        # Talisman does not appear in very first levels. In other levels has low frequency, ges higher when characters
-        # are dead
-        from player_classes import Player
-
-        dead_char = len(Player.dead_data)
-
-        if dead_char == 0:
-            if randint(1, 10) < 6 or seed < 5:
-                return 0
-            else:
-                return uniform(0, 0.03)
-        else:  # higher frequency if some players dead
-            return uniform(0.02, 0.02 + (dead_char * 0.015))
+    def calculate_frequency() -> None: # seed is level
+        """
+        Talismans are not handled by frequencies. See @property DungeonStats.talisman_number
+        :return:
+        """
+        pass
 
 
 @dataclass
@@ -322,6 +410,10 @@ class MonsterStats(CharacterStats, ABC):
     dodging_moves: int = 1
     max_attacks: int | None = None
     remaining_attacks: int | None = None
+
+    group: str = "monster"
+    min_group_freq: float = 0.1
+    max_group_freq: float = 0.25
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:

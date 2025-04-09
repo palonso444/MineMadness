@@ -989,13 +989,13 @@ class ClawJaw(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def restore_cannot_share_tile_with_and_blocked_by(self) -> None:
+    def restore_cannot_share_blocked_by(self) -> None:
         """
-        Resets default values for these attributes as they may change when moving
+        Resets default values for Monster.cannot_share_tile_with and Monster.blocked_by
         :return: None
         """
-        self.blocked_by = ["wall", "player"]
-        self.cannot_share_tile_with = ["wall", "monster", "player"]
+        self.blocked_by = super().blocked_by
+        self.cannot_share_tile_with = super().cannot_share_tile_with
 
     def can_dig(self, token_species: str) -> bool:
         """
@@ -1027,7 +1027,7 @@ class ClawJaw(Monster):
                 self.dig(tile_to_dig)
                 self.acted_on_tile = True
 
-        self.restore_cannot_share_tile_with_and_blocked_by()
+        self.restore_cannot_share_blocked_by()
         super().act_on_tile(tile)
 
     def stop_upon_wall(self, path: list[tuple]) -> tuple[list, tuple | None]:

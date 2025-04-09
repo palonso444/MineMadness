@@ -118,7 +118,9 @@ class DungeonLayout(GridLayout):
 
             # if dungeon.bright_spots does not change its values, darkness must be cast manually
             if len(dungeon.bright_spots) == 0:
-                dungeon.cast_darkness(alpha_intensity=dungeon.darkness_intensity)
+                with dungeon.canvas.after:
+                    dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.alpha_intensity)
+                    # dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.alpha_intensity)
 
     def update_bright_spots(self) -> None:
         """
@@ -168,7 +170,10 @@ class DungeonLayout(GridLayout):
             # if last bright spot is removed, cast static darkness
             if dungeon.darkness in dungeon.canvas.after.children:
                 dungeon.canvas.after.remove(dungeon.darkness)
-            dungeon.cast_darkness(alpha_intensity=dungeon.darkness_intensity)
+
+            with dungeon.canvas.after:
+                dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
+                # dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.alpha_intensity)
 
     def hide_penumbras(self) -> None:
         """
@@ -315,17 +320,10 @@ class DungeonLayout(GridLayout):
         if self.darkness in self.canvas.after.children:
             self.canvas.after.remove(self.darkness)
 
-        self.cast_darkness(alpha_intensity=alpha_intensity)
-
-    def cast_darkness(self, alpha_intensity: int) -> None:
-        """
-        Wrapper method to cast a darkness layer on DungeonLayout.canvas
-        :param alpha_intensity: alpha intensity of the darkness layer
-        :return: None
-        """
         with self.canvas.after:
             self.darkness = cl.generate_darkness_layer(self, alpha_intensity)
             #self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
+
 
     def _generate_darkness_layer(self, alpha_intensity: int) -> Rectangle:
         """

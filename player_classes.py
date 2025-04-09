@@ -438,7 +438,7 @@ class Player(Character, ABC, EventDispatcher):
         self.unbind(player_level=self.on_player_level)
 
         Player.dead_data.remove(self)
-        self.player_level = self.player_level - 2 if self.player_level > 2 else 1
+        self.player_level = self.player_level - 1 if self.player_level > 1 else 1
         for key, value in self.level_track[self.player_level].items():
             self.stats.__setattr__(key, value)
 

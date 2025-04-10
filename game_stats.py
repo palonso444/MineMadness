@@ -235,9 +235,10 @@ class ItemStats(ABC):
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
         # Items depend on pooled monster frequency. They have 40% change to get a frequency.
-        if randint(1,10) < 4:
+        trigger: int = randint(1,10)
+        if trigger < 4:
             return 0
-        if randint(1, 10) < 9:
+        if trigger < 9:
             frequency = uniform(0, seed * 0.2)
             return frequency if frequency < 0.075 else 0.075
         else:

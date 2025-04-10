@@ -230,7 +230,7 @@ class ItemStats(ABC):
     max_effect: int | None = None
 
     min_group_freq: ClassVar[float] = 0.0
-    max_group_freq: ClassVar[float] = 0.15
+    max_group_freq: ClassVar[float] = 0.18
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is monster frequency

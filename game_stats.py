@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from abc import ABC
 from random import randint, uniform
-from trap_class import TrapStats
+from typing import ClassVar
 
 
 class DungeonStats:
@@ -13,6 +13,7 @@ class DungeonStats:
     """
     def __init__(self, dungeon_level: int):
         self.stats_level = dungeon_level
+        self.max_total_freq: float = 0.65  # max total frequency of all items placed
 
     @property
     def size(self) -> int:
@@ -114,54 +115,92 @@ class DungeonStats:
         Organizes in a dictionary the frequency of items in the level
         :return: dictionary with item.char as key and item frequency as value
         """
-        monster_frequencies = {
-            KoboldStats.char: KoboldStats.calculate_frequency(self.stats_level),
-            BlindLizardStats.char: BlindLizardStats.calculate_frequency(self.stats_level),
-            BlackDeathStats.char: BlackDeathStats.calculate_frequency(self.stats_level),
-            CaveHoundStats.char: CaveHoundStats.calculate_frequency(self.stats_level),
-            GrowlStats.char: GrowlStats.calculate_frequency(self.stats_level),
-            RockGolemStats.char: RockGolemStats.calculate_frequency(self.stats_level),
-            DarkGnomeStats.char: DarkGnomeStats.calculate_frequency(self.stats_level),
-            NightmareStats.char: NightmareStats.calculate_frequency(self.stats_level),
-            LindWormStats.char: LindWormStats.calculate_frequency(self.stats_level),
-            WanderingShadowStats.char: WanderingShadowStats.calculate_frequency(self.stats_level),
-            DepthsWispStats.char: DepthsWispStats.calculate_frequency(self.stats_level),
-            MountainDjinnStats.char: MountainDjinnStats.calculate_frequency(self.stats_level),
-            PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
-            RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
-            PenumbraStats.char: PenumbraStats.calculate_frequency(self.stats_level),
-            ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level),
-            TrapStats.char: TrapStats.calculate_frequency(self.stats_level)
-        }
+        total_freq: float | None = None
+        while total_freq is None or not total_freq > self.max_total_freq:
 
-        total_monster_frequency = sum(monster_frequencies.values())
+            total_monster_freq: float | None = None
+            while (total_monster_freq is None or
+                   not MonsterStats.min_group_freq <= total_monster_freq <= MonsterStats.max_group_freq):
+                monster_frequencies = {
+                    KoboldStats.char: KoboldStats.calculate_frequency(self.stats_level),
+                    BlindLizardStats.char: BlindLizardStats.calculate_frequency(self.stats_level),
+                    BlackDeathStats.char: BlackDeathStats.calculate_frequency(self.stats_level),
+                    CaveHoundStats.char: CaveHoundStats.calculate_frequency(self.stats_level),
+                    GrowlStats.char: GrowlStats.calculate_frequency(self.stats_level),
+                    RockGolemStats.char: RockGolemStats.calculate_frequency(self.stats_level),
+                    DarkGnomeStats.char: DarkGnomeStats.calculate_frequency(self.stats_level),
+                    NightmareStats.char: NightmareStats.calculate_frequency(self.stats_level),
+                    LindWormStats.char: LindWormStats.calculate_frequency(self.stats_level),
+                    WanderingShadowStats.char: WanderingShadowStats.calculate_frequency(self.stats_level),
+                    DepthsWispStats.char: DepthsWispStats.calculate_frequency(self.stats_level),
+                    MountainDjinnStats.char: MountainDjinnStats.calculate_frequency(self.stats_level),
+                    PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
+                    RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
+                    PenumbraStats.char: PenumbraStats.calculate_frequency(self.stats_level),
+                    ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level),
+                }
+                total_monster_freq = sum(monster_frequencies.values())
 
-        rock_wall_frequency = RockWallStats.calculate_frequency(self.stats_level)
-        granite_wall_frequency = GraniteWallStats.calculate_frequency(self.stats_level)
-        diggable_wall_frequency = rock_wall_frequency + granite_wall_frequency
+            total_wall_freq: float | None = None
+            while (total_wall_freq is None or
+                   not WallStats.min_group_freq <= total_wall_freq <= WallStats.max_group_freq):
+                wall_frequencies = {
+                    RockWallStats.char: RockWallStats.calculate_frequency(self.stats_level),
+                    GraniteWallStats.char: GraniteWallStats.calculate_frequency(self.stats_level),
+                    QuartzWallStats.char: QuartzWallStats.calculate_frequency(self.stats_level)
+                }
+                total_wall_freq = sum(wall_frequencies.values())
 
-        item_frequencies = {
-            RockWallStats.char: rock_wall_frequency,
-            GraniteWallStats.char: granite_wall_frequency,
-            QuartzWallStats.char: QuartzWallStats.calculate_frequency(self.stats_level),
-            ShovelStats.char: ShovelStats.calculate_frequency(diggable_wall_frequency),
-            WeaponStats.char: WeaponStats.calculate_frequency(total_monster_frequency),
-            JerkyStats.char: JerkyStats.calculate_frequency(total_monster_frequency),
-            CoffeeStats.char: CoffeeStats.calculate_frequency(total_monster_frequency),
-            WhiskyStats.char: WhiskyStats.calculate_frequency(total_monster_frequency),
-            TobaccoStats.char: TobaccoStats.calculate_frequency(total_monster_frequency),
-        }
+            total_weapon_shovel_freq: float | None = None
+            while (total_weapon_shovel_freq is None or
+                   not WeaponShovelStats.min_group_freq <= total_weapon_shovel_freq <= WeaponShovelStats.max_group_freq):
+                diggable_wall_frequency = wall_frequencies[RockWallStats.char] + wall_frequencies[GraniteWallStats.char]
+                weapon_shovel_frequencies = {
+                    ShovelStats.char: ShovelStats.calculate_frequency(diggable_wall_frequency),
+                    WeaponStats.char: WeaponStats.calculate_frequency(total_monster_freq)
+                }
+                total_weapon_shovel_freq = sum(weapon_shovel_frequencies.values())
 
-        all_frequencies = {**item_frequencies, **monster_frequencies}
-        del monster_frequencies, item_frequencies
+            total_item_freq: float | None = None
+            while (total_item_freq is None or
+                   not ItemStats.min_group_freq <= total_item_freq <= ItemStats.max_group_freq):
+                item_frequencies = {
+                    JerkyStats.char: JerkyStats.calculate_frequency(total_monster_freq),
+                    CoffeeStats.char: CoffeeStats.calculate_frequency(total_monster_freq),
+                    WhiskyStats.char: WhiskyStats.calculate_frequency(total_monster_freq),
+                    TobaccoStats.char: TobaccoStats.calculate_frequency(total_monster_freq),
+                }
+                total_item_freq = sum(item_frequencies.values())
+
+            total_trap_freq: float | None = None
+            while (total_trap_freq is None or
+                   not TrapStats.min_group_freq <= total_trap_freq <= TrapStats.max_group_freq):
+                trap_frequency = {
+                    TrapStats.char: TrapStats.calculate_frequency(self.stats_level)
+                }
+                total_trap_freq = sum(trap_frequency.values())
+
+            total_freq: float = (total_monster_freq +
+                                 total_wall_freq +
+                                 total_weapon_shovel_freq +
+                                 total_item_freq +
+                                 total_trap_freq)
+
+        all_frequencies = {**monster_frequencies,
+                           **wall_frequencies,
+                           **weapon_shovel_frequencies,
+                           **item_frequencies,
+                           **trap_frequency}
+
+        del monster_frequencies, wall_frequencies, weapon_shovel_frequencies, item_frequencies, trap_frequency
         return all_frequencies
 
 @dataclass
 class WallStats(ABC):
     char: str | None = None
-    group: str = "wall"
-    min_group_freq: float = 0.2
-    max_group_freq: float = 0.5
+
+    min_group_freq: ClassVar[float] = 0.2
+    max_group_freq: ClassVar[float] = 0.5
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
@@ -171,9 +210,9 @@ class WallStats(ABC):
 @dataclass
 class WeaponShovelStats(ABC):
     char: str | None = None
-    group: str = "weapon_shovel"
-    min_group_freq: float = 0.05
-    max_group_freq: float = 0.25
+
+    min_group_freq: ClassVar[float] = 0.05
+    max_group_freq: ClassVar[float] = 0.25
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
@@ -181,16 +220,17 @@ class WeaponShovelStats(ABC):
 
 
 @dataclass
-class ItemStats(WallStats, ABC):
+class ItemStats(ABC):
+    char: str | None = None
     effect_size: float | None = None
     effect_duration: int | None = None
     use_time: int = 1
+
     min_effect: int = 3
     max_effect: int | None = None
 
-    group: str = "item"
-    min_group_freq: float = 0.0
-    max_group_freq: float = 0.15
+    min_group_freq: ClassVar[float] = 0.0
+    max_group_freq: ClassVar[float] = 0.15
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
@@ -320,6 +360,7 @@ class WhiskyStats(ItemStats):  # BALANCED
 @dataclass
 class TalismanStats: # BALANCED
     char: str = "t"
+    use_time: int = 1
 
     @staticmethod
     def calculate_frequency() -> None: # seed is level
@@ -411,9 +452,8 @@ class MonsterStats(CharacterStats, ABC):
     max_attacks: int | None = None
     remaining_attacks: int | None = None
 
-    group: str = "monster"
-    min_group_freq: float = 0.1
-    max_group_freq: float = 0.25
+    min_group_freq: ClassVar[float] = 0.1
+    max_group_freq: ClassVar[float] = 0.25
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:
@@ -841,3 +881,49 @@ class ClawJawStats(MonsterStats):
             return uniform(0, 0.05)
         else:
             return uniform(0, 0.08)
+
+@dataclass
+class TrapStats:
+    char: str = "!"
+    base_damage: list[int] = field(default_factory=lambda: [1, 3])
+    base_experience_when_disarmed: int = 9
+    experience_when_found: int = 10
+
+    min_group_freq: ClassVar[float] = 0.0
+    max_group_freq: ClassVar[float] = 0.12
+
+    @staticmethod
+    def calculate_frequency(seed: int) -> float: # seed is level
+        # Traps start showing late and increase frequency with increasing level
+        if seed < 5:
+            return 0
+        trigger = randint(1,10)
+        if seed < 10 and trigger > 5:
+            return uniform(0, 0.05)
+        if seed < 15 and trigger > 4:
+            return uniform(0, 0.08)
+        if seed < 20 and trigger > 3:
+            return uniform(0, 0.10)
+        if seed >= 20 and trigger > 2:
+            return uniform(0, 0.12)
+        return 0
+
+    def calculate_damage(self, dungeon_level: int) -> int:
+        """
+        Damage dealt by traps increases with dungeon level
+        :param dungeon_level: current level of the dungeon
+        :return: damage dealt by the trap
+        """
+        level: int = dungeon_level // 4
+        level = 1 if level < 1 else level
+        return randint(self.base_damage[0], self.base_damage[1]) * level
+
+    def calculate_experience(self, dungeon_level: int) -> int:
+        """
+        Experience granted by traps disarming increases with dungeon level
+        :param dungeon_level: current level of the dungeon
+        :return: experience rewarded by the trap
+        """
+        level: int = dungeon_level // 3
+        level = 1 if level < 1 else level
+        return self.base_experience_when_disarmed * level

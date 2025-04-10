@@ -297,14 +297,9 @@ class DungeonLayout(GridLayout):
         blueprint.place_items("d", self.stats.dynamite_number)
         blueprint.place_items("h", self.stats.powder_number)
 
-
         for item, frequency in self.stats.level_progression().items():
            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
-        blueprint.purge_blueprint(max_total_frequency=0.65,
-                                  protected={" ", "o", "&", "%", "?", "t", "d", "h"})
-
-        #blueprint.print_map()
         return blueprint
 
     def darkness_flicker(self, alpha_intensity: int, dt: float) -> None:

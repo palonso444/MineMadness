@@ -156,30 +156,6 @@ class Blueprint:
                     placed_positions.add(cand_position)
                     self.place_single_item(items.popleft(), position=cand_position)
 
-    def purge_blueprint(self, max_total_frequency:float, protected: set | None = None) -> None:
-        """
-        Cleans the blueprint until the max_frequency is reached to avoid overcrowding
-        :param max_total_frequency: max sum frequencies of all items allowed
-        :param protected: items that must be kept
-        :return: None
-        """
-        if protected is None:
-            protected = {"."}
-        else:
-            protected.add(".")
-
-        max_occupied_tiles = self.area * max_total_frequency
-        current_occupied_tiles = sum(len([item for item in row if item != "."]) for row in self.layout)
-
-        while current_occupied_tiles > max_occupied_tiles:
-            if all(item in protected for row in self.layout for item in row):
-                break
-            position = self.random_location()
-            if self.get_position(position) not in protected:
-                self.place_single_item(".", position)
-                current_occupied_tiles = sum(len([item for item in row if item != "."]) for row in self.layout)
-
-
 if __name__ == "__main__":
 
     test = Blueprint(10,10)

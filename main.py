@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from kivy.app import App  # type: ignore
+from kivy.app import App
 from kivy.lang import Builder
 from kivy.core.text import LabelBase
-from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty  # type: ignore
+from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
 from kivy.core.audio import SoundLoader
 from kivy.core.window import Window

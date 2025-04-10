@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, ABCMeta
-from kivy.graphics import Ellipse, Rectangle, Color, Line  # type: ignore
+from kivy.graphics import Ellipse, Rectangle, Color, Line
 from kivy.animation import Animation
 from kivy.uix.widget import Widget
 

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from kivy.uix.button import Button  # type: ignore
+from kivy.uix.button import Button
 from kivy.clock import Clock
-from kivy.app import App  # type: ignore
+from kivy.app import App
 
 from monster_classes import Monster
 from tokens_solid import SceneryToken, PlayerToken, MonsterToken

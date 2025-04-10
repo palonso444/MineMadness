@@ -19,17 +19,17 @@ source.include_exts = py,png,kv,ogg,otf,so
 #source.include_patterns = assets/*,images/*.png
 
 # (list) Source files to exclude (let empty to not exclude anything)
-source.exclude_exts = spec
+source.exclude_exts = spec,pyx,txt,md
 
 # (list) List of directory to exclude (let empty to not exclude anything)
-source.exclude_dirs = tests, bin, venv, __pycache__
+source.exclude_dirs = tests, bin, venv, __pycache__, trash, build
 
 # (list) List of exclusions using pattern matching
 # Do not prefix with './'
-#source.exclude_patterns = license,images/*/*.jpg
+source.exclude_patterns = setup.py
 
 # (str) Application versioning (method 1)
-version = 1.2
+version = 1.3
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]

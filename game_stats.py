@@ -13,7 +13,7 @@ class DungeonStats:
     """
     def __init__(self, dungeon_level: int):
         self.stats_level = dungeon_level
-        self.max_total_freq: float = 0.65  # max total frequency of all items placed
+        self.max_total_freq: float = 0.8  # max total frequency of all items placed
 
     @property
     def size(self) -> int:
@@ -116,7 +116,7 @@ class DungeonStats:
         :return: dictionary with item.char as key and item frequency as value
         """
         total_freq: float | None = None
-        while total_freq is None or not total_freq > self.max_total_freq:
+        while total_freq is None or total_freq > self.max_total_freq:
 
             total_monster_freq: float | None = None
             while (total_monster_freq is None or
@@ -199,7 +199,7 @@ class DungeonStats:
 class WallStats(ABC):
     char: str | None = None
 
-    min_group_freq: ClassVar[float] = 0.2
+    min_group_freq: ClassVar[float] = 0.15
     max_group_freq: ClassVar[float] = 0.5
 
     @staticmethod
@@ -235,11 +235,13 @@ class ItemStats(ABC):
     @staticmethod
     def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
         # Items depend on pooled monster frequency. They have 40% change to get a frequency.
-        # They tend to lower frequencies.
         if randint(1,10) < 4:
             return 0
-        frequency = uniform(0, seed * 0.2)
-        return frequency if frequency < 0.05 else 0.05
+        if randint(1, 10) < 8:
+            frequency = uniform(0, seed * 0.2)
+            return frequency if frequency < 0.075 else 0.075
+        else:
+            return 0.05
 
 
 class RockWallStats(WallStats): # BALANCED
@@ -249,7 +251,7 @@ class RockWallStats(WallStats): # BALANCED
     def calculate_frequency(seed: int | float) -> float:  # seed is level
         # RockWalls are common at early levels. Later they may be rare or (50% chance) or from rare to common
         if seed < 10:
-            return  uniform(0.2, 0.5)
+            return  uniform(0.15, 0.5)
         if randint(1, 10) < 5:
             return uniform(0, 0.3)
         else:
@@ -289,10 +291,13 @@ class ShovelStats(WeaponShovelStats): # BALANCED
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is diggable wall frequency
-        # Shovels depend on RockWalls + QuartzWalls frequency.
-        upper_limit = seed * 0.35
+        if randint(1, 10) < 7:
+            # Shovels depend on RockWalls + QuartzWalls frequency.
+            upper_limit = seed * 0.35
+        else:
+            upper_limit = 0.12
         frequency =  uniform(0, upper_limit)
-        return frequency if frequency < 0.1 else 0.1
+        return frequency if frequency < 0.12 else 0.12
 
 
 class WeaponStats(WeaponShovelStats): # BALANCED
@@ -300,8 +305,11 @@ class WeaponStats(WeaponShovelStats): # BALANCED
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
-        # Weapons depend on pooled monster frequency.
-        upper_limit = seed * 0.7
+        if randint(1, 10) < 7:
+            # Weapons depend on pooled monster frequency.
+            upper_limit = seed * 0.7
+        else:
+            upper_limit = 0.15
         frequency =  uniform(0, upper_limit)
         return frequency if frequency < 0.15 else 0.15
 
@@ -452,8 +460,8 @@ class MonsterStats(CharacterStats, ABC):
     max_attacks: int | None = None
     remaining_attacks: int | None = None
 
-    min_group_freq: ClassVar[float] = 0.1
-    max_group_freq: ClassVar[float] = 0.25
+    min_group_freq: ClassVar[float] = 0.075
+    max_group_freq: ClassVar[float] = 0.3
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:

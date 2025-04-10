@@ -471,7 +471,7 @@ class KoboldStats(MonsterStats): # BALANCED
     moves: int = 5
     random_motility: float = 1.0
     dodging_ability: int = 7
-    experience_when_killed: int = 7
+    experience_when_killed: int = 6
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -496,7 +496,7 @@ class BlindLizardStats(MonsterStats):  # BALANCED
     moves: int = 4
     random_motility: float = 1.0
     dodging_ability: int = 3
-    experience_when_killed: int = 20
+    experience_when_killed: int = 18
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -518,7 +518,7 @@ class BlackDeathStats(MonsterStats):  # BALANCED
     moves: int = 7
     random_motility: float = 1.0
     dodging_ability: int = 12
-    experience_when_killed: int = 25
+    experience_when_killed: int = 22
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -546,7 +546,7 @@ class CaveHoundStats(MonsterStats):  # BALANCED
     moves: int = 6
     random_motility: float = 1.0
     dodging_ability: int = 9
-    experience_when_killed: int = 14
+    experience_when_killed: int = 12
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -573,7 +573,7 @@ class GrowlStats(MonsterStats):  # BALANCED
     moves: int = 6
     random_motility: float = 0.5
     dodging_ability: int = 5
-    experience_when_killed: int = 35
+    experience_when_killed: int = 30
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -597,11 +597,11 @@ class GrowlStats(MonsterStats):  # BALANCED
 @dataclass
 class RockGolemStats(MonsterStats):  # BALANCED
     char: str = "R"
-    health: int = 160
+    health: int = 140
     strength: list[int] = field(default_factory=lambda: [12,20])
     moves: int = 3
     dodging_ability: int = 0
-    experience_when_killed: int = 85
+    experience_when_killed: int = 75
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -629,7 +629,7 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
     moves: int = 5
     random_motility: float = 0.5
     dodging_ability: int = 10
-    experience_when_killed: int = 7
+    experience_when_killed: int = 6
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -656,7 +656,7 @@ class NightmareStats(MonsterStats): # BALANCED
     random_motility: float = 0.2
     moves: int = 9
     dodging_ability: int = 10
-    experience_when_killed: int = 35
+    experience_when_killed: int = 30
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -711,7 +711,7 @@ class WanderingShadowStats(MonsterStats):  # BALANCED
     moves: int = 7
     random_motility: float = 1.0
     dodging_ability: int = 14
-    experience_when_killed: int = 25
+    experience_when_killed: int = 22
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -735,7 +735,7 @@ class DepthsWispStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [1,1])
     moves: int = 4
     dodging_ability: int = 1.0
-    experience_when_killed: int = 4
+    experience_when_killed: int = 3
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -761,7 +761,7 @@ class MountainDjinnStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [7,12])
     moves: int = 7
     dodging_ability: int = 1.0
-    experience_when_killed: int = 50
+    experience_when_killed: int = 40
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -789,7 +789,7 @@ class PixieStats(MonsterStats):  # BALANCED
     moves: int = 4
     random_motility: float = 1.0
     dodging_ability: int = 14
-    experience_when_killed: int = 7
+    experience_when_killed: int = 6
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -812,7 +812,7 @@ class RattleSnakeStats(MonsterStats):
     max_attacks: int = 1
     random_motility: float = 0.2
     dodging_ability: int = 5
-    experience_when_killed: int = 30
+    experience_when_killed: int = 27
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -838,7 +838,7 @@ class PenumbraStats(MonsterStats):
     max_attacks: int = 3
     random_motility: float = 0.4
     dodging_ability: int = 13
-    experience_when_killed: int = 45
+    experience_when_killed: int = 42
 
     # exclusive of penumbra. Minimum distance of retreat from player
     min_retreat_dist = 1  #3
@@ -866,7 +866,7 @@ class ClawJawStats(MonsterStats):
     moves: int = 7
     random_motility: float = 0.7
     dodging_ability: int = 5
-    experience_when_killed: int = 35
+    experience_when_killed: int = 32
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -885,8 +885,8 @@ class ClawJawStats(MonsterStats):
 @dataclass
 class TrapStats:
     char: str = "!"
-    base_damage: list[int] = field(default_factory=lambda: [1, 3])
-    base_experience_when_disarmed: int = 9
+    base_damage: list[int] = field(default_factory=lambda: [2, 4])
+    base_experience_when_disarmed: int = 8
     experience_when_found: int = 10
 
     min_group_freq: ClassVar[float] = 0.0

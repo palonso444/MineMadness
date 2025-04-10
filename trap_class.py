@@ -1,7 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from random import uniform, randint
-
+from game_stats import TrapStats
 
 class Trap:
 
@@ -60,47 +58,3 @@ class Trap:
 
         if player.stats.health <= 0:
             player.kill_character(self.token.get_current_tile())
-
-
-@dataclass
-class TrapStats:
-    char: str = "!"
-    base_damage: list[int] = field(default_factory=lambda: [1, 3])
-    base_experience_when_disarmed: int = 9
-    experience_when_found: int = 10
-
-    @staticmethod
-    def calculate_frequency(seed: int) -> float: # seed is level
-        # Traps start showing late and increase frequency with increasing level
-        if seed < 5:
-            return 0
-        trigger = randint(1,10)
-        if seed < 10 and trigger > 4:
-            return uniform(0, 0.05)
-        if seed < 15 and trigger > 4:
-            return uniform(0, 0.08)
-        if seed < 20 and trigger > 3:
-            return uniform(0, 0.12)
-        if seed >= 20 and trigger > 2:
-            return uniform(0, 0.18)
-        return 0
-
-    def calculate_damage(self, dungeon_level: int) -> int:
-        """
-        Damage dealt by traps increases with dungeon level
-        :param dungeon_level: current level of the dungeon
-        :return: damage dealt by the trap
-        """
-        level: int = dungeon_level // 4
-        level = 1 if level < 1 else level
-        return randint(self.base_damage[0], self.base_damage[1]) * level
-
-    def calculate_experience(self, dungeon_level: int) -> int:
-        """
-        Experience granted by traps disarming increases with dungeon level
-        :param dungeon_level: current level of the dungeon
-        :return: experience rewarded by the trap
-        """
-        level: int = dungeon_level // 3
-        level = 1 if level < 1 else level
-        return self.base_experience_when_disarmed * level

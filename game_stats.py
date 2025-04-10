@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from abc import ABC
 from random import randint, uniform
-from trap_class import TrapStats
+from typing import ClassVar
 
 
 class DungeonStats:
@@ -11,6 +13,7 @@ class DungeonStats:
     """
     def __init__(self, dungeon_level: int):
         self.stats_level = dungeon_level
+        self.max_total_freq: float = 0.65  # max total frequency of all items placed
 
     @property
     def size(self) -> int:
@@ -24,6 +27,85 @@ class DungeonStats:
         return gem_number
 
     @property
+    def talisman_number(self) -> int:
+        # Talisman does not appear in very first levels. In other levels has low frequency, ges higher when characters
+        # are dead
+        from player_classes import Player
+
+        dead_char: int = len(Player.dead_data)
+        trigger: int = randint(1, 10)
+
+        if dead_char == 0:
+            if trigger < 7 or self.stats_level < 4:
+                return 0
+            return 1
+        else:
+            if trigger < 3:
+                return 0
+            if trigger < 9:
+                return 1
+            return 2
+
+    @property
+    def dynamite_number(self) -> int:
+        # dynamites are rare unless Hawkins has run out of dynamites
+        if self.stats_level < 3:
+            return 0
+
+        from player_classes import Player
+
+        for player in Player.exited:
+            if player.species == "hawkins":
+                dynamites: int = player.special_items["dynamite"]
+                trigger = randint(1, 10)
+
+                if dynamites == 0:
+                    if trigger < 4:
+                        return 0
+                    if trigger < 9:
+                        return 1
+                    else:
+                        return 2
+                else:
+                    if trigger == 10 and dynamites < 5:  # jackpot
+                        return 2
+                    if trigger < 4 or trigger < dynamites * 2 or dynamites > 6:
+                        return 0
+                    else:
+                        return 1
+
+        # if hawkins not it players exited (dead)
+        return 0
+
+    @property
+    def powder_number(self) -> int:
+        # powder are rare unless Sawyer has run out of powders
+        if self.stats_level < 3:
+            return 0
+
+        from player_classes import Player
+
+        for player in Player.exited:
+            if player.species == "sawyer":
+                powders: int = player.special_items["powder"]
+                trigger = randint(1, 10)
+
+                if powders == 0:
+                    if trigger < 4:
+                        return 0
+                    if trigger < 9:
+                        return 1
+                    else:
+                        return 2
+                else:
+                    if trigger == 10 and powders < 6:  # jackpot
+                        return 2
+                    if trigger < 4 or trigger < powders * 2 or powders > 8:
+                        return 0
+                    else:
+                        return 1
+
+    @property
     def torch_number(self) -> int:
         torches = randint(1,self.size)
         return torches if torches < 5 else 5
@@ -33,75 +115,148 @@ class DungeonStats:
         Organizes in a dictionary the frequency of items in the level
         :return: dictionary with item.char as key and item frequency as value
         """
-        monster_frequencies = {
-            KoboldStats.char: KoboldStats.calculate_frequency(self.stats_level),
-            BlindLizardStats.char: BlindLizardStats.calculate_frequency(self.stats_level),
-            BlackDeathStats.char: BlackDeathStats.calculate_frequency(self.stats_level),
-            CaveHoundStats.char: CaveHoundStats.calculate_frequency(self.stats_level),
-            GrowlStats.char: GrowlStats.calculate_frequency(self.stats_level),
-            RockGolemStats.char: RockGolemStats.calculate_frequency(self.stats_level),
-            DarkGnomeStats.char: DarkGnomeStats.calculate_frequency(self.stats_level),
-            NightmareStats.char: NightmareStats.calculate_frequency(self.stats_level),
-            LindWormStats.char: LindWormStats.calculate_frequency(self.stats_level),
-            WanderingShadowStats.char: WanderingShadowStats.calculate_frequency(self.stats_level),
-            DepthsWispStats.char: DepthsWispStats.calculate_frequency(self.stats_level),
-            MountainDjinnStats.char: MountainDjinnStats.calculate_frequency(self.stats_level),
-            PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
-            RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
-            PenumbraStats.char: PenumbraStats.calculate_frequency(self.stats_level),
-            ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level),
-            TrapStats.char: TrapStats.calculate_frequency(self.stats_level)
-        }
+        total_freq: float | None = None
+        while total_freq is None or not total_freq > self.max_total_freq:
 
-        total_monster_frequency = sum(monster_frequencies.values())
+            total_monster_freq: float | None = None
+            while (total_monster_freq is None or
+                   not MonsterStats.min_group_freq <= total_monster_freq <= MonsterStats.max_group_freq):
+                monster_frequencies = {
+                    KoboldStats.char: KoboldStats.calculate_frequency(self.stats_level),
+                    BlindLizardStats.char: BlindLizardStats.calculate_frequency(self.stats_level),
+                    BlackDeathStats.char: BlackDeathStats.calculate_frequency(self.stats_level),
+                    CaveHoundStats.char: CaveHoundStats.calculate_frequency(self.stats_level),
+                    GrowlStats.char: GrowlStats.calculate_frequency(self.stats_level),
+                    RockGolemStats.char: RockGolemStats.calculate_frequency(self.stats_level),
+                    DarkGnomeStats.char: DarkGnomeStats.calculate_frequency(self.stats_level),
+                    NightmareStats.char: NightmareStats.calculate_frequency(self.stats_level),
+                    LindWormStats.char: LindWormStats.calculate_frequency(self.stats_level),
+                    WanderingShadowStats.char: WanderingShadowStats.calculate_frequency(self.stats_level),
+                    DepthsWispStats.char: DepthsWispStats.calculate_frequency(self.stats_level),
+                    MountainDjinnStats.char: MountainDjinnStats.calculate_frequency(self.stats_level),
+                    PixieStats.char: PixieStats.calculate_frequency(self.stats_level),
+                    RattleSnakeStats.char: RattleSnakeStats.calculate_frequency(self.stats_level),
+                    PenumbraStats.char: PenumbraStats.calculate_frequency(self.stats_level),
+                    ClawJawStats.char: ClawJawStats.calculate_frequency(self.stats_level),
+                }
+                total_monster_freq = sum(monster_frequencies.values())
 
-        rock_wall_frequency = RockWallStats.calculate_frequency(self.stats_level)
-        granite_wall_frequency = GraniteWallStats.calculate_frequency(self.stats_level)
-        diggable_wall_frequency = rock_wall_frequency + granite_wall_frequency
+            total_wall_freq: float | None = None
+            while (total_wall_freq is None or
+                   not WallStats.min_group_freq <= total_wall_freq <= WallStats.max_group_freq):
+                wall_frequencies = {
+                    RockWallStats.char: RockWallStats.calculate_frequency(self.stats_level),
+                    GraniteWallStats.char: GraniteWallStats.calculate_frequency(self.stats_level),
+                    QuartzWallStats.char: QuartzWallStats.calculate_frequency(self.stats_level)
+                }
+                total_wall_freq = sum(wall_frequencies.values())
 
-        item_frequencies = {
-            RockWallStats.char: rock_wall_frequency,
-            GraniteWallStats.char: granite_wall_frequency,
-            QuartzWallStats.char: QuartzWallStats.calculate_frequency(self.stats_level),
-            ShovelStats.char: ShovelStats.calculate_frequency(diggable_wall_frequency),
-            WeaponStats.char: WeaponStats.calculate_frequency(total_monster_frequency),
-            JerkyStats.char: JerkyStats.calculate_frequency(total_monster_frequency),
-            CoffeeStats.char: CoffeeStats.calculate_frequency(total_monster_frequency),
-            WhiskyStats.char: WhiskyStats.calculate_frequency(total_monster_frequency),
-            TobaccoStats.char: TobaccoStats.calculate_frequency(total_monster_frequency),
-            TalismanStats.char: TalismanStats.calculate_frequency(self.stats_level),
-            PowderStats.char: PowderStats.calculate_frequency(self.stats_level),
-            DynamiteStats.char: DynamiteStats.calculate_frequency(self.stats_level)
-        }
+            total_weapon_shovel_freq: float | None = None
+            while (total_weapon_shovel_freq is None or
+                   not WeaponShovelStats.min_group_freq <= total_weapon_shovel_freq <= WeaponShovelStats.max_group_freq):
+                diggable_wall_frequency = wall_frequencies[RockWallStats.char] + wall_frequencies[GraniteWallStats.char]
+                weapon_shovel_frequencies = {
+                    ShovelStats.char: ShovelStats.calculate_frequency(diggable_wall_frequency),
+                    WeaponStats.char: WeaponStats.calculate_frequency(total_monster_freq)
+                }
+                total_weapon_shovel_freq = sum(weapon_shovel_frequencies.values())
 
-        all_frequencies = {**item_frequencies, **monster_frequencies}
-        del monster_frequencies, item_frequencies
+            total_item_freq: float | None = None
+            while (total_item_freq is None or
+                   not ItemStats.min_group_freq <= total_item_freq <= ItemStats.max_group_freq):
+                item_frequencies = {
+                    JerkyStats.char: JerkyStats.calculate_frequency(total_monster_freq),
+                    CoffeeStats.char: CoffeeStats.calculate_frequency(total_monster_freq),
+                    WhiskyStats.char: WhiskyStats.calculate_frequency(total_monster_freq),
+                    TobaccoStats.char: TobaccoStats.calculate_frequency(total_monster_freq),
+                }
+                total_item_freq = sum(item_frequencies.values())
+
+            total_trap_freq: float | None = None
+            while (total_trap_freq is None or
+                   not TrapStats.min_group_freq <= total_trap_freq <= TrapStats.max_group_freq):
+                trap_frequency = {
+                    TrapStats.char: TrapStats.calculate_frequency(self.stats_level)
+                }
+                total_trap_freq = sum(trap_frequency.values())
+
+            total_freq: float = (total_monster_freq +
+                                 total_wall_freq +
+                                 total_weapon_shovel_freq +
+                                 total_item_freq +
+                                 total_trap_freq)
+
+        all_frequencies = {**monster_frequencies,
+                           **wall_frequencies,
+                           **weapon_shovel_frequencies,
+                           **item_frequencies,
+                           **trap_frequency}
+
+        del monster_frequencies, wall_frequencies, weapon_shovel_frequencies, item_frequencies, trap_frequency
         return all_frequencies
 
 @dataclass
-class SceneryStats(ABC):
+class WallStats(ABC):
     char: str | None = None
+
+    min_group_freq: ClassVar[float] = 0.2
+    max_group_freq: ClassVar[float] = 0.5
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:
         pass
 
 
-class RockWallStats(SceneryStats): # BALANCED
+@dataclass
+class WeaponShovelStats(ABC):
+    char: str | None = None
+
+    min_group_freq: ClassVar[float] = 0.05
+    max_group_freq: ClassVar[float] = 0.25
+
+    @staticmethod
+    def calculate_frequency(seed: int | float) -> float:
+        pass
+
+
+@dataclass
+class ItemStats(ABC):
+    char: str | None = None
+    effect_size: float | None = None
+    effect_duration: int | None = None
+    use_time: int = 1
+
+    min_effect: int = 3
+    max_effect: int | None = None
+
+    min_group_freq: ClassVar[float] = 0.0
+    max_group_freq: ClassVar[float] = 0.15
+
+    @staticmethod
+    def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
+        # Items depend on pooled monster frequency. They have 40% change to get a frequency.
+        # They tend to lower frequencies.
+        if randint(1,10) < 5:
+            return 0
+        frequency = uniform(0, seed * 0.2)
+        return frequency if frequency < 0.05 else 0.05
+
+
+class RockWallStats(WallStats): # BALANCED
     char: str = "#"
 
     @staticmethod
     def calculate_frequency(seed: int | float) -> float:  # seed is level
         # RockWalls are common at early levels. Later they may be rare or (50% chance) or from rare to common
         if seed < 10:
-            return  uniform(0.2, 0.45)
+            return  uniform(0.2, 0.5)
         if randint(1, 10) < 5:
-            return uniform(0, 0.2)
-        else:
             return uniform(0, 0.3)
+        else:
+            return uniform(0, 0.2)
 
 
-class GraniteWallStats(SceneryStats): # BALANCED
+class GraniteWallStats(WallStats): # BALANCED
     char: str = "{"
 
     @staticmethod
@@ -112,10 +267,10 @@ class GraniteWallStats(SceneryStats): # BALANCED
         if randint(1, 10) < 5:
             return uniform(0, 0.2)
         else:
-            return uniform(0.05,0.3)
+            return uniform(0.05,0.35)
 
 
-class QuartzWallStats(SceneryStats): # BALANCED
+class QuartzWallStats(WallStats): # BALANCED
     char: str = "*"
 
     @staticmethod
@@ -129,7 +284,7 @@ class QuartzWallStats(SceneryStats): # BALANCED
             return uniform(0.05, 0.25)
 
 
-class ShovelStats(SceneryStats): # BALANCED
+class ShovelStats(WeaponShovelStats): # BALANCED
     char: str = "p"
 
     @staticmethod
@@ -140,7 +295,7 @@ class ShovelStats(SceneryStats): # BALANCED
         return frequency if frequency < 0.1 else 0.1
 
 
-class WeaponStats(SceneryStats): # BALANCED
+class WeaponStats(WeaponShovelStats): # BALANCED
     char: str = "x"
 
     @staticmethod
@@ -151,47 +306,28 @@ class WeaponStats(SceneryStats): # BALANCED
         return frequency if frequency < 0.15 else 0.15
 
 
-class PowderStats(SceneryStats): # BALANCED
+class PowderStats: # BALANCED
     char: str = "h"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is level
-        # Powder may not appear at very first levels. It tends to lower frequencies depending on level.
-        if randint(1, 10) < 4 or seed < 3:
-            return 0
-        else:
-            return uniform(0, 0.05)
+    def calculate_frequency() -> None:
+        """
+        Powders are not handled by frequencies. See @property DungeonStats.powder_number
+        :return: None
+        """
+        pass
 
 
-class DynamiteStats(SceneryStats): # BALANCED
+class DynamiteStats: # BALANCED
     char: str = "d"
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is level
-        # Dynamite may not appear at very first levels. It tends to lower frequencies depending on level.
-        if randint(1, 10) < 4 or seed < 3:
-            return 0
-        else:
-            return uniform(0, 0.05)
-
-
-
-@dataclass
-class ItemStats(SceneryStats, ABC):
-    effect_size: float | None = None
-    effect_duration: int | None = None
-    use_time: int = 1
-    min_effect: int = 3
-    max_effect: int | None = None
-
-    @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is monster frequency
-        # Items depend on pooled monster frequency. They have 40% change to get a frequency.
-        # They tend to lower frequencies.
-        if randint(1,10) < 5:
-            return 0
-        frequency = uniform(0, seed * 0.2)
-        return frequency if frequency < 0.05 else 0.05
+    def calculate_frequency() -> None:
+        """
+        Dynamites are not handled by frequencies. See @property DungeonStats.dynamite_number
+        :return: None
+        """
+        pass
 
 
 @dataclass
@@ -222,24 +358,17 @@ class WhiskyStats(ItemStats):  # BALANCED
 
 
 @dataclass
-class TalismanStats(ItemStats): # BALANCED
+class TalismanStats: # BALANCED
     char: str = "t"
+    use_time: int = 1
 
     @staticmethod
-    def calculate_frequency(seed: int | float) -> float: # seed is level
-        # Talisman does not appear in very first levels. In other levels has low frequency, ges higher when characters
-        # are dead
-        from player_classes import Player
-
-        dead_char = len(Player.dead_data)
-
-        if dead_char == 0:
-            if randint(1, 10) < 6 or seed < 5:
-                return 0
-            else:
-                return uniform(0, 0.03)
-        else:  # higher frequency if some players dead
-            return uniform(0.02, 0.02 + (dead_char * 0.015))
+    def calculate_frequency() -> None: # seed is level
+        """
+        Talismans are not handled by frequencies. See @property DungeonStats.talisman_number
+        :return:
+        """
+        pass
 
 
 @dataclass
@@ -323,6 +452,9 @@ class MonsterStats(CharacterStats, ABC):
     max_attacks: int | None = None
     remaining_attacks: int | None = None
 
+    min_group_freq: ClassVar[float] = 0.1
+    max_group_freq: ClassVar[float] = 0.25
+
     @staticmethod
     def calculate_frequency(seed: int) -> float:
         pass
@@ -339,7 +471,7 @@ class KoboldStats(MonsterStats): # BALANCED
     moves: int = 5
     random_motility: float = 1.0
     dodging_ability: int = 7
-    experience_when_killed: int = 7
+    experience_when_killed: int = 6
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -364,7 +496,7 @@ class BlindLizardStats(MonsterStats):  # BALANCED
     moves: int = 4
     random_motility: float = 1.0
     dodging_ability: int = 3
-    experience_when_killed: int = 20
+    experience_when_killed: int = 18
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -386,7 +518,7 @@ class BlackDeathStats(MonsterStats):  # BALANCED
     moves: int = 7
     random_motility: float = 1.0
     dodging_ability: int = 12
-    experience_when_killed: int = 25
+    experience_when_killed: int = 22
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -414,7 +546,7 @@ class CaveHoundStats(MonsterStats):  # BALANCED
     moves: int = 6
     random_motility: float = 1.0
     dodging_ability: int = 9
-    experience_when_killed: int = 14
+    experience_when_killed: int = 12
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -441,7 +573,7 @@ class GrowlStats(MonsterStats):  # BALANCED
     moves: int = 6
     random_motility: float = 0.5
     dodging_ability: int = 5
-    experience_when_killed: int = 35
+    experience_when_killed: int = 30
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -465,11 +597,11 @@ class GrowlStats(MonsterStats):  # BALANCED
 @dataclass
 class RockGolemStats(MonsterStats):  # BALANCED
     char: str = "R"
-    health: int = 160
+    health: int = 140
     strength: list[int] = field(default_factory=lambda: [12,20])
     moves: int = 3
     dodging_ability: int = 0
-    experience_when_killed: int = 85
+    experience_when_killed: int = 75
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -497,7 +629,7 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
     moves: int = 5
     random_motility: float = 0.5
     dodging_ability: int = 10
-    experience_when_killed: int = 7
+    experience_when_killed: int = 6
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -524,7 +656,7 @@ class NightmareStats(MonsterStats): # BALANCED
     random_motility: float = 0.2
     moves: int = 9
     dodging_ability: int = 10
-    experience_when_killed: int = 35
+    experience_when_killed: int = 30
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -579,7 +711,7 @@ class WanderingShadowStats(MonsterStats):  # BALANCED
     moves: int = 7
     random_motility: float = 1.0
     dodging_ability: int = 14
-    experience_when_killed: int = 25
+    experience_when_killed: int = 22
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -603,7 +735,7 @@ class DepthsWispStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [1,1])
     moves: int = 4
     dodging_ability: int = 1.0
-    experience_when_killed: int = 4
+    experience_when_killed: int = 3
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -629,7 +761,7 @@ class MountainDjinnStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [7,12])
     moves: int = 7
     dodging_ability: int = 1.0
-    experience_when_killed: int = 50
+    experience_when_killed: int = 40
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -657,7 +789,7 @@ class PixieStats(MonsterStats):  # BALANCED
     moves: int = 4
     random_motility: float = 1.0
     dodging_ability: int = 14
-    experience_when_killed: int = 7
+    experience_when_killed: int = 6
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -680,7 +812,7 @@ class RattleSnakeStats(MonsterStats):
     max_attacks: int = 1
     random_motility: float = 0.2
     dodging_ability: int = 5
-    experience_when_killed: int = 30
+    experience_when_killed: int = 27
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -706,7 +838,7 @@ class PenumbraStats(MonsterStats):
     max_attacks: int = 3
     random_motility: float = 0.4
     dodging_ability: int = 13
-    experience_when_killed: int = 45
+    experience_when_killed: int = 42
 
     # exclusive of penumbra. Minimum distance of retreat from player
     min_retreat_dist = 1  #3
@@ -734,7 +866,7 @@ class ClawJawStats(MonsterStats):
     moves: int = 7
     random_motility: float = 0.7
     dodging_ability: int = 5
-    experience_when_killed: int = 35
+    experience_when_killed: int = 32
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -749,3 +881,49 @@ class ClawJawStats(MonsterStats):
             return uniform(0, 0.05)
         else:
             return uniform(0, 0.08)
+
+@dataclass
+class TrapStats:
+    char: str = "!"
+    base_damage: list[int] = field(default_factory=lambda: [2, 4])
+    base_experience_when_disarmed: int = 8
+    experience_when_found: int = 10
+
+    min_group_freq: ClassVar[float] = 0.0
+    max_group_freq: ClassVar[float] = 0.12
+
+    @staticmethod
+    def calculate_frequency(seed: int) -> float: # seed is level
+        # Traps start showing late and increase frequency with increasing level
+        if seed < 5:
+            return 0
+        trigger = randint(1,10)
+        if seed < 10 and trigger > 5:
+            return uniform(0, 0.05)
+        if seed < 15 and trigger > 4:
+            return uniform(0, 0.08)
+        if seed < 20 and trigger > 3:
+            return uniform(0, 0.10)
+        if seed >= 20 and trigger > 2:
+            return uniform(0, 0.12)
+        return 0
+
+    def calculate_damage(self, dungeon_level: int) -> int:
+        """
+        Damage dealt by traps increases with dungeon level
+        :param dungeon_level: current level of the dungeon
+        :return: damage dealt by the trap
+        """
+        level: int = dungeon_level // 4
+        level = 1 if level < 1 else level
+        return randint(self.base_damage[0], self.base_damage[1]) * level
+
+    def calculate_experience(self, dungeon_level: int) -> int:
+        """
+        Experience granted by traps disarming increases with dungeon level
+        :param dungeon_level: current level of the dungeon
+        :return: experience rewarded by the trap
+        """
+        level: int = dungeon_level // 3
+        level = 1 if level < 1 else level
+        return self.base_experience_when_disarmed * level

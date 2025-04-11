@@ -550,7 +550,7 @@ class BlackDeathStats(MonsterStats):  # BALANCED
 @dataclass
 class CaveHoundStats(MonsterStats):  # BALANCED
     char: str = "H"
-    health: int = 10
+    health: int = 12
     strength: list[int] = field(default_factory=lambda: [2,4])
     moves: int = 6
     random_motility: float = 1.0
@@ -633,7 +633,7 @@ class RockGolemStats(MonsterStats):  # BALANCED
 @dataclass
 class DarkGnomeStats(MonsterStats):  # BALANCED
     char: str = "O"
-    health: int = 5
+    health: int = 8
     strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 5
     random_motility: float = 0.5
@@ -660,7 +660,7 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
 @dataclass
 class NightmareStats(MonsterStats): # BALANCED
     char: str = "N"
-    health: int = 20
+    health: int = 25
     strength: list[int] = field(default_factory=lambda: [2,6])
     random_motility: float = 0.2
     moves: int = 9
@@ -732,7 +732,7 @@ class WanderingShadowStats(MonsterStats):  # BALANCED
         if seed < 6:
             return 0
         if seed < 20:
-            return uniform(0.025,0.075)
+            return uniform(0.025,0.1)
         else:
             return 0
 
@@ -815,7 +815,7 @@ class PixieStats(MonsterStats):  # BALANCED
 @dataclass
 class RattleSnakeStats(MonsterStats):
     char: str = "V"
-    health: int = 6
+    health: int = 7
     strength: list[int] = field(default_factory=lambda: [2,10])
     moves: int = 8
     max_attacks: int = 1
@@ -841,7 +841,7 @@ class RattleSnakeStats(MonsterStats):
 @dataclass
 class PenumbraStats(MonsterStats):
     char: str = "A"
-    health: int = 8
+    health: int = 10
     strength: list[int] = field(default_factory=lambda: [3,7])
     moves: int = 12 # do not go below 7 or will not move due to max_attack and retreat moves
     max_attacks: int = 3
@@ -870,7 +870,7 @@ class PenumbraStats(MonsterStats):
 @dataclass
 class ClawJawStats(MonsterStats):
     char: str = "C"
-    health: int = 25
+    health: int = 30
     strength: list[int] = field(default_factory=lambda: [2,6])
     moves: int = 7
     random_motility: float = 0.7
@@ -884,12 +884,12 @@ class ClawJawStats(MonsterStats):
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # ClawJaw can show up at any level from a certain level
-        if seed < 10:
+        if seed < 12:
             return 0
-        elif seed < 15:
+        elif seed < 16:
             return uniform(0, 0.05)
         else:
-            return uniform(0, 0.08)
+            return uniform(0, 0.1)
 
 @dataclass
 class TrapStats:

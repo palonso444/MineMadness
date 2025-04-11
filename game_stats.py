@@ -607,7 +607,7 @@ class GrowlStats(MonsterStats):  # BALANCED
 class RockGolemStats(MonsterStats):  # BALANCED
     char: str = "R"
     health: int = 140
-    strength: list[int] = field(default_factory=lambda: [12,20])
+    strength: list[int] = field(default_factory=lambda: [12,22])
     moves: int = 3
     dodging_ability: int = 0
     experience_when_killed: int = 75
@@ -661,7 +661,7 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
 class NightmareStats(MonsterStats): # BALANCED
     char: str = "N"
     health: int = 15
-    strength: list[int] = field(default_factory=lambda: [2,5])
+    strength: list[int] = field(default_factory=lambda: [2,6])
     random_motility: float = 0.2
     moves: int = 9
     dodging_ability: int = 10
@@ -717,7 +717,7 @@ class WanderingShadowStats(MonsterStats):  # BALANCED
     char: str = "S"
     health: int = 4
     strength: list[int] = field(default_factory=lambda: [1,4])
-    moves: int = 7
+    moves: int = 6
     random_motility: float = 1.0
     dodging_ability: int = 14
     experience_when_killed: int = 22
@@ -871,7 +871,7 @@ class PenumbraStats(MonsterStats):
 class ClawJawStats(MonsterStats):
     char: str = "C"
     health: int = 22
-    strength: list[int] = field(default_factory=lambda: [2,5])
+    strength: list[int] = field(default_factory=lambda: [2,6])
     moves: int = 7
     random_motility: float = 0.7
     dodging_ability: int = 5

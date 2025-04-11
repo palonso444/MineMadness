@@ -500,7 +500,7 @@ class KoboldStats(MonsterStats): # BALANCED
 @dataclass
 class BlindLizardStats(MonsterStats):  # BALANCED
     char: str = "L"
-    health: int = 6
+    health: int = 14
     strength: list[int] = field(default_factory=lambda: [2,6])
     moves: int = 4
     random_motility: float = 1.0
@@ -550,7 +550,7 @@ class BlackDeathStats(MonsterStats):  # BALANCED
 @dataclass
 class CaveHoundStats(MonsterStats):  # BALANCED
     char: str = "H"
-    health: int = 4
+    health: int = 10
     strength: list[int] = field(default_factory=lambda: [2,4])
     moves: int = 6
     random_motility: float = 1.0
@@ -633,7 +633,7 @@ class RockGolemStats(MonsterStats):  # BALANCED
 @dataclass
 class DarkGnomeStats(MonsterStats):  # BALANCED
     char: str = "O"
-    health: int = 3
+    health: int = 5
     strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 5
     random_motility: float = 0.5
@@ -660,7 +660,7 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
 @dataclass
 class NightmareStats(MonsterStats): # BALANCED
     char: str = "N"
-    health: int = 15
+    health: int = 20
     strength: list[int] = field(default_factory=lambda: [2,6])
     random_motility: float = 0.2
     moves: int = 9
@@ -715,7 +715,7 @@ class LindWormStats(MonsterStats):  # BALANCED
 @dataclass
 class WanderingShadowStats(MonsterStats):  # BALANCED
     char: str = "S"
-    health: int = 4
+    health: int = 5
     strength: list[int] = field(default_factory=lambda: [1,4])
     moves: int = 6
     random_motility: float = 1.0
@@ -815,7 +815,7 @@ class PixieStats(MonsterStats):  # BALANCED
 @dataclass
 class RattleSnakeStats(MonsterStats):
     char: str = "V"
-    health: int = 5
+    health: int = 6
     strength: list[int] = field(default_factory=lambda: [2,10])
     moves: int = 8
     max_attacks: int = 1
@@ -870,7 +870,7 @@ class PenumbraStats(MonsterStats):
 @dataclass
 class ClawJawStats(MonsterStats):
     char: str = "C"
-    health: int = 22
+    health: int = 25
     strength: list[int] = field(default_factory=lambda: [2,6])
     moves: int = 7
     random_motility: float = 0.7

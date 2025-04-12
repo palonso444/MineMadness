@@ -994,8 +994,8 @@ class ClawJaw(Monster):
         Resets default values for Monster.cannot_share_tile_with and Monster.blocked_by
         :return: None
         """
-        self.blocked_by = super().blocked_by
-        self.cannot_share_tile_with = super().cannot_share_tile_with
+        self.blocked_by = ["wall", "player"]
+        self.cannot_share_tile_with = ["wall", "monster", "player"]
 
     def can_dig(self, token_species: str) -> bool:
         """

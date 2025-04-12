@@ -38,6 +38,7 @@ class DungeonLayout(GridLayout):
 
         self.game: MineMadnessGame = game
         self.dungeon_level: int = game.level
+        self.advanced_start: bool = False  # for testing, set to True and change MineMadnessGame.level attribute
         self.stats: DungeonStats = DungeonStats(self.dungeon_level)
         self.rows: int = self.stats.size
         self.cols: int = self.stats.size
@@ -441,7 +442,7 @@ class DungeonLayout(GridLayout):
             match self.blueprint.get_position(tile_position):
 
                 case "%":
-                    if self.dungeon_level == 1:
+                    if self.dungeon_level == 1 or self.advanced_start:
                         character = players.Sawyer()
                     else:
                         character = players.Player.transfer_player("sawyer")
@@ -449,7 +450,7 @@ class DungeonLayout(GridLayout):
                     token_species = "sawyer"
 
                 case "?":
-                    if self.dungeon_level == 1:
+                    if self.dungeon_level == 1 or self.advanced_start:
                         character = players.Hawkins()
                     else:
                         character = players.Player.transfer_player("hawkins")
@@ -457,7 +458,7 @@ class DungeonLayout(GridLayout):
                     token_species = "hawkins"
 
                 case "&":
-                    if self.dungeon_level == 1:
+                    if self.dungeon_level == 1 or self.advanced_start:
                         character = players.CrusherJane()
                     else:
                         character = players.Player.transfer_player("crusherjane")

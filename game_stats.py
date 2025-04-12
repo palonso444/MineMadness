@@ -17,12 +17,12 @@ class DungeonStats:
 
     @property
     def size(self) -> int:
-        return 6 + int(self.stats_level * 0.2)
+        return 6 + int(self.stats_level * 0.25)
 
     @property
     def gem_number(self) -> int:
 
-        gem_number = int(self.stats_level * 0.1)
+        gem_number = int(self.stats_level * 0.15)
         gem_number = 1 if gem_number < 1 else gem_number
         return gem_number
 
@@ -104,6 +104,9 @@ class DungeonStats:
                         return 0
                     else:
                         return 1
+
+        # if self.dungeon.advanced_start, Sawyer is not in Players.exited
+        return 0
 
     @property
     def torch_number(self) -> int:
@@ -493,8 +496,8 @@ class KoboldStats(MonsterStats): # BALANCED
             return uniform (0.05, 0.2)
         elif seed < 8:
             return uniform(0, 0.075)
-        else:
-            return 0
+
+        return 0
 
 
 @dataclass
@@ -538,10 +541,13 @@ class BlackDeathStats(MonsterStats):  # BALANCED
         # Blackdeath can show up at any level except the first
         if seed == 1:
             return 0
-        if randint(1, 10) == 10:
-            return uniform(0.05, 0.1)
+        if seed < 16:
+            if randint(1, 10) == 10:
+                return uniform(0.05, 0.1)
+            else:
+                return uniform(0, 0.05)
         else:
-            return uniform(0, 0.05)
+            return uniform(0, 0.015)
 
 
 # DIRECT MOVEMENT MONSTERS
@@ -570,8 +576,8 @@ class CaveHoundStats(MonsterStats):  # BALANCED
             return uniform(0, 0.05)
         if seed < 14:
             return uniform(0.05, 0.15)
-        else:
-            return 0
+
+        return 0
 
 
 @dataclass
@@ -597,10 +603,8 @@ class GrowlStats(MonsterStats):  # BALANCED
             return uniform(0,0.075)
         elif seed < 24:
             return uniform (0.025, 0.05)
-        elif seed < 28:
-            return uniform(0,0.05)
-        else:
-            return 0
+
+        return 0
 
 
 @dataclass
@@ -622,7 +626,7 @@ class RockGolemStats(MonsterStats):  # BALANCED
         if seed < 16:
             return 0
         if seed < 25:
-            return uniform(0,0.1)
+            return uniform(0,0.025)
         else:
             return uniform(0, 0.05)
 
@@ -653,8 +657,8 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
             return uniform(0, 0.05)
         if seed < 11:
             return uniform(0.05, 0.1)
-        else:
-            return 0
+
+        return 0
 
 
 @dataclass
@@ -677,10 +681,12 @@ class NightmareStats(MonsterStats): # BALANCED
         # still appear
         if seed < 15:
             return 0
-        if seed < 23:
+        if seed < 20:
             return uniform(0.025, 0.1)
-        else:
+        if seed < 25:
             return uniform(0, 0.05)
+
+        return 0
 
 
 @dataclass
@@ -706,7 +712,7 @@ class LindWormStats(MonsterStats):  # BALANCED
         elif seed < 30:
             return uniform(0, 0.05)
         else:
-            return uniform(0.05, 0.1)
+            return uniform(0.01, 0.075)
 
 
 # GHOSTS
@@ -733,8 +739,8 @@ class WanderingShadowStats(MonsterStats):  # BALANCED
             return 0
         if seed < 20:
             return uniform(0.025,0.1)
-        else:
-            return 0
+
+        return 0
 
 
 @dataclass
@@ -759,8 +765,8 @@ class DepthsWispStats(MonsterStats):  # BALANCED
             return uniform(0, 0.05)
         if seed < 10:
             return uniform(0, 0.1)
-        else:
-            return 0
+
+        return 0
 
 
 @dataclass
@@ -783,8 +789,8 @@ class MountainDjinnStats(MonsterStats):  # BALANCED
             return 0
         if seed < 30:
             return uniform(0,0.075)
-        else:
-            return uniform(0.05, 0.1)
+
+        return 0
 
 
 # SPECIAL MONSTERS
@@ -807,10 +813,13 @@ class PixieStats(MonsterStats):  # BALANCED
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # Pixie can show up at any level
-        if randint(1,10) > 8:
-            return uniform(0.025, 0.1)
+        if seed < 20:
+            if randint(1,10) > 8:
+                return uniform(0.025, 0.1)
+            else:
+                return uniform(0,0.05)
         else:
-            return uniform(0,0.05)
+            return uniform(0, 0.025)
 
 @dataclass
 class RattleSnakeStats(MonsterStats):
@@ -830,12 +839,14 @@ class RattleSnakeStats(MonsterStats):
     @staticmethod
     def calculate_frequency(seed: int) -> float:  # seed is level
         # RattleSnake can show up at any level in a range of levels
-        if seed < 5 or seed >= 20:
+        if seed < 5:
             return 0
-        elif seed < 10:
+        if seed < 10:
             return uniform(0.0, 0.025)
-        else:
+        if seed < 18:
             return uniform(0,0.1)
+        else:
+            return uniform(0.0, 0.025)
 
 
 @dataclass
@@ -861,10 +872,12 @@ class PenumbraStats(MonsterStats):
         # Penumbra can show up at any starting at level 15
         if seed < 15:
             return 0
-        elif seed < 20:
+        if seed < 20:
             return uniform(0.0, 0.075)
-        else:
+        if seed < 25:
             return uniform(0,0.1)
+        else:
+            return uniform(0, 0.025)
 
 
 @dataclass
@@ -886,10 +899,12 @@ class ClawJawStats(MonsterStats):
         # ClawJaw can show up at any level from a certain level
         if seed < 12:
             return 0
-        elif seed < 16:
-            return uniform(0, 0.05)
-        else:
-            return uniform(0, 0.1)
+        if seed < 16:
+            return uniform(0, 0.035)
+        if seed < 22:
+            return uniform(0, 0.075)
+
+        return 0
 
 @dataclass
 class TrapStats:

@@ -273,7 +273,7 @@ class GraniteWallStats(WallStats): # BALANCED
         if randint(1, 10) < 5:
             return uniform(0, 0.2)
         else:
-            return uniform(0.05,0.35)
+            return uniform(0.05,0.4)
 
 
 class QuartzWallStats(WallStats): # BALANCED
@@ -287,7 +287,7 @@ class QuartzWallStats(WallStats): # BALANCED
         if randint(1, 10) < 7:
             return uniform(0, 0.15)
         else:
-            return uniform(0.05, 0.25)
+            return uniform(0.1, 0.3)
 
 
 class ShovelStats(WeaponShovelStats): # BALANCED

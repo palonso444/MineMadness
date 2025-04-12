@@ -22,7 +22,7 @@ class DungeonStats:
     @property
     def gem_number(self) -> int:
 
-        gem_number = int(self.stats_level * 0.15)
+        gem_number = int(self.stats_level * 0.2)
         gem_number = 1 if gem_number < 1 else gem_number
         return gem_number
 

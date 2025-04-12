@@ -189,6 +189,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         super().__init__(kind, species, position, character, dungeon_instance,
                          size_modifier, pos_modifier, bright_radius, bright_int, gradient, **kwargs)
 
+        self.animation: Animation | None = None
         self.start_position: tuple[int,int] | None = None
         self.path: list[tuple[int,int]] | None = None
         self.color: tuple[int,int,int,int]| None = None
@@ -249,9 +250,11 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         """
         tile.set_token(self)
         self.position = tile.position
-        self.pos: tuple[int, int] = self.shape.pos
-        self.path: list[tuple[int, int]] | None = None
-        self.start_position: tuple [int,int] | None = None
+        self.pos = self.shape.pos
+        self.dungeon.moving_token = None
+        self.animation = None
+        self.path = None
+        self.start_position = None
 
     def slide(self, path: list [tuple[int,int]],
                     on_complete: Callable[[Animation, Ellipse, Tile, Callable], None]) -> None:
@@ -262,12 +265,12 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :param on_complete: callback to be triggered once the path is completed or the character runs out of moves
         :return: None
         """
-        self.start_position = path[0]
         self.path = path[1:]
         next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
 
         # this check must be done here and also at the end of each move (CharacterToken.on_move_complete()
         if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
+            self.path = None
             #one attack
             next_tile.get_token("monster").character.fight_on_tile(self.get_current_tile())
             if self.character.is_dead:
@@ -276,6 +279,8 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
                 self.dungeon.game.update_switch("character_done")
 
         else:
+            self.dungeon.moving_token = self
+            self.start_position = path[0]
             self.get_current_tile().remove_token(self)
             self.dungeon.disable_all_tiles()
             self._slide_one_step(next_tile, on_complete)
@@ -287,16 +292,15 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :param on_complete: callback to be triggered once the path is completed or the character runs out of moves
         :return: None
         """
-        animation = Animation(pos=next_tile.pos, duration=self.character.step_duration,
+        self.animation = Animation(pos=next_tile.pos, duration=self.character.step_duration,
                               transition=self.character.step_transition)
-
-        animation.bind(on_complete=lambda animation_obj, token_shape: on_complete(animation_obj,
+        self.animation.bind(on_complete=lambda animation_obj, token_shape: on_complete(animation_obj,
                                                                                token_shape,
                                                                                next_tile,
                                                                                on_complete))
-        animation.bind(on_progress=self._move_selection_circle)
-        animation.bind(on_progress=self._move_health_bar)
-        animation.start(self)
+        self.animation.bind(on_progress=self._move_selection_circle)
+        self.animation.bind(on_progress=self._move_health_bar)
+        self.animation.start(self)
 
     def on_move_completed(self, animation_obj: Animation,
                            token_shape: Ellipse,

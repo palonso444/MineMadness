@@ -110,8 +110,9 @@ class DungeonStats:
 
     @property
     def torch_number(self) -> int:
-        torches = randint(1,self.size)
-        return torches if torches < 5 else 5
+        area: int = self.size ** 2
+        torches = randint(area // 25, area // 12)
+        return torches if torches < 8 else 8
 
     def level_progression(self) -> dict[str:float]:
         """
@@ -694,7 +695,7 @@ class LindWormStats(MonsterStats):  # BALANCED
     char: str = "Y"
     health: int = 230
     strength: list[int] = field(default_factory=lambda: [20,30])
-    moves: int = 7
+    moves: int = 9
     dodging_ability: int = 4
     experience_when_killed: int = 150
 

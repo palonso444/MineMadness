@@ -601,7 +601,7 @@ class LindWorm(Monster):
         self.name: str = "Lindworm"
         self.species: str = "lindworm"
         self.step_transition: str = "in_out_elastic"  # stomping
-        self.step_duration: float = 0.7
+        self.step_duration: float = 0.55
         self.stats = stats.LindWormStats()
 
         if attributes_dict is not None:

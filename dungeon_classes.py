@@ -48,6 +48,7 @@ class DungeonLayout(GridLayout):
             self.blueprint = blueprint
 
         self.tiles_dict: dict[tuple: Tile] | None = None
+        self.moving_token: CharacterToken | None = None  # CharacterTokens are not associated to any Tile while sliding
 
         self.torches_dict: dict[tuple:list] | None = torches_dict
         self.darkness: Rectangle | None = None
@@ -101,6 +102,11 @@ class DungeonLayout(GridLayout):
                 token = tile.get_token("player")
             if token is not None:
                 token.effect_queue.clear()
+            if self.moving_token is not None:
+                self.moving_token.effect_queue.clear()
+                self.moving_token.animation.cancel(self.moving_token)
+                self.moving_token.animation = None
+                self.moving_token = None
 
     @staticmethod
     def on_positions_to_update(dungeon: DungeonLayout, positions_to_update: list) -> None:

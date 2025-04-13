@@ -923,13 +923,13 @@ class TrapStats:
         if seed < 5:
             return 0
         trigger = randint(1,10)
-        if seed < 10 and trigger > 5:
+        if seed < 10 and trigger > 6:
             return uniform(0, 0.04)
-        if seed < 15 and trigger > 4:
+        if seed < 15 and trigger > 5:
             return uniform(0, 0.05)
-        if seed < 20 and trigger > 3:
+        if seed < 20 and trigger > 4:
             return uniform(0, 0.06)
-        if seed >= 20 and trigger > 2:
+        if seed >= 20 and trigger > 3:
             return uniform(0, 0.07)
         return 0
 

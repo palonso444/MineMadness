@@ -665,7 +665,7 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
 @dataclass
 class NightmareStats(MonsterStats): # BALANCED
     char: str = "N"
-    health: int = 25
+    health: int = 35
     strength: list[int] = field(default_factory=lambda: [2,6])
     random_motility: float = 0.2
     moves: int = 9
@@ -722,7 +722,7 @@ class LindWormStats(MonsterStats):  # BALANCED
 @dataclass
 class WanderingShadowStats(MonsterStats):  # BALANCED
     char: str = "S"
-    health: int = 5
+    health: int = 7
     strength: list[int] = field(default_factory=lambda: [1,4])
     moves: int = 6
     random_motility: float = 1.0
@@ -825,7 +825,7 @@ class PixieStats(MonsterStats):  # BALANCED
 @dataclass
 class RattleSnakeStats(MonsterStats):
     char: str = "V"
-    health: int = 7
+    health: int = 9
     strength: list[int] = field(default_factory=lambda: [2,10])
     moves: int = 8
     max_attacks: int = 1
@@ -853,16 +853,16 @@ class RattleSnakeStats(MonsterStats):
 @dataclass
 class PenumbraStats(MonsterStats):
     char: str = "A"
-    health: int = 10
+    health: int = 15
     strength: list[int] = field(default_factory=lambda: [3,7])
-    moves: int = 12 # do not go below 7 or will not move due to max_attack and retreat moves
+    moves: int = 12  # do not go below 7 or will not move due to max_attack and retreat moves
     max_attacks: int = 3
     random_motility: float = 0.4
     dodging_ability: int = 13
-    experience_when_killed: int = 42
+    experience_when_killed: int = 50
 
     # exclusive of penumbra. Minimum distance of retreat from player
-    min_retreat_dist = 1  #3
+    min_retreat_dist = 3
 
     def __post_init__(self):
         if self.max_attacks is None:
@@ -874,9 +874,9 @@ class PenumbraStats(MonsterStats):
         if seed < 15:
             return 0
         if seed < 20:
-            return uniform(0.0, 0.075)
+            return uniform(0.0, 0.035)
         if seed < 25:
-            return uniform(0,0.1)
+            return uniform(0,0.055)
         else:
             return uniform(0, 0.025)
 
@@ -884,7 +884,7 @@ class PenumbraStats(MonsterStats):
 @dataclass
 class ClawJawStats(MonsterStats):
     char: str = "C"
-    health: int = 30
+    health: int = 42
     strength: list[int] = field(default_factory=lambda: [2,6])
     moves: int = 7
     random_motility: float = 0.7
@@ -924,13 +924,13 @@ class TrapStats:
             return 0
         trigger = randint(1,10)
         if seed < 10 and trigger > 5:
-            return uniform(0, 0.05)
+            return uniform(0, 0.04)
         if seed < 15 and trigger > 4:
-            return uniform(0, 0.08)
+            return uniform(0, 0.05)
         if seed < 20 and trigger > 3:
-            return uniform(0, 0.10)
+            return uniform(0, 0.06)
         if seed >= 20 and trigger > 2:
-            return uniform(0, 0.12)
+            return uniform(0, 0.07)
         return 0
 
     def calculate_damage(self, dungeon_level: int) -> int:

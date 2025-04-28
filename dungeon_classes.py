@@ -182,7 +182,7 @@ class DungeonLayout(GridLayout):
             with dungeon.canvas.after:
                 # uncomment this to run the cythonized version
                 # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
-                dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.alpha_intensity)
+                dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.darkness_intensity)
 
     def hide_penumbras(self) -> None:
         """

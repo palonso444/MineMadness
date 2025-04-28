@@ -13,13 +13,13 @@ package.domain = com.appsbrivalles
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,kv,ogg,otf,so
+source.include_exts = py,png,kv,ogg,otf
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
 
 # (list) Source files to exclude (let empty to not exclude anything)
-source.exclude_exts = spec,pyx,txt,md
+source.exclude_exts = spec,pyx,txt,md,so
 
 # (list) List of directory to exclude (let empty to not exclude anything)
 source.exclude_dirs = tests, bin, venv, __pycache__, trash, build
@@ -29,7 +29,7 @@ source.exclude_dirs = tests, bin, venv, __pycache__, trash, build
 source.exclude_patterns = setup.py
 
 # (str) Application versioning (method 1)
-version = 1.3
+version = 2.1
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]

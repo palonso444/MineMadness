@@ -19,7 +19,7 @@ from game_stats import DungeonStats
 from dungeon_blueprint import Blueprint
 from tokens_solid import CharacterToken
 
-import cythonized_lights as cl
+# import cythonized_lights as cl
 
 class DungeonLayout(GridLayout):
     """

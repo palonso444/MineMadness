@@ -126,8 +126,9 @@ class DungeonLayout(GridLayout):
             # if dungeon.bright_spots does not change its values, darkness must be cast manually
             if len(dungeon.bright_spots) == 0:
                 with dungeon.canvas.after:
-                    dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
-                    # dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.darkness_intensity)
+                    # uncomment this to run the cythonized version
+                    # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
+                    dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.darkness_intensity)
 
     def update_bright_spots(self) -> None:
         """
@@ -179,8 +180,9 @@ class DungeonLayout(GridLayout):
                 dungeon.canvas.after.remove(dungeon.darkness)
 
             with dungeon.canvas.after:
-                dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
-                # dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.alpha_intensity)
+                # uncomment this to run the cythonized version
+                # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
+                dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.alpha_intensity)
 
     def hide_penumbras(self) -> None:
         """
@@ -327,8 +329,9 @@ class DungeonLayout(GridLayout):
             self.canvas.after.remove(self.darkness)
 
         with self.canvas.after:
-            self.darkness = cl.generate_darkness_layer(self, alpha_intensity)
-            #self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
+            # uncomment this to run the cythonized version
+            # self.darkness = cl.generate_darkness_layer(self, alpha_intensity)
+            self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
 
 
     def _generate_darkness_layer(self, alpha_intensity: int) -> Rectangle:

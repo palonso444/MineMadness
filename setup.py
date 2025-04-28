@@ -1,3 +1,5 @@
+# This is the setup file necessary to build the cythonised_lights module
+
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 import numpy

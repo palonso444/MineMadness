@@ -593,7 +593,7 @@ class Sawyer(Player):
         self.ignores.remove("pickable")
         self.ignores.remove("treasure")
         self.ability_active = False
-        self.get_dungeon().game.update_switch("ability_button")  # in case gets attacked must update button
+        self.get_dungeon().game.update_switch("ability_button")  # must be here. If attacked must update button a well
 
     def enhance_damage(self, damage) -> int:
         if self.ability_active:

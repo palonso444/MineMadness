@@ -47,6 +47,7 @@ class AbilityButton(ToggleButton):
 
                     case "sawyer":
                         character.unhide()
+                        self.game.activate_accessible_tiles(character.stats.remaining_moves)  # can dig again
 
                     case "hawkins":
                         character.ability_active = False

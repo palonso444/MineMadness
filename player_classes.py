@@ -551,12 +551,10 @@ class Sawyer(Player):
         Sawyer increases 1 movement every 2 levels,
         1 health per level,
         1 recovery_end_of_level per level,
-        2 advantage_strength_increase per level
         1 max damage every 2 levels
         +0.05 in trap spotting chance every 3 levels
         """
         self._level_up_health(2)
-        self.stats.advantage_strength_incr += 2
         self.stats.recovery_end_of_level += 1
 
         if not value % 2 == 0:
@@ -599,7 +597,7 @@ class Sawyer(Player):
 
     def enhance_damage(self, damage) -> int:
         if self.ability_active:
-            damage += self.stats.advantage_strength_incr
+            damage *= self.stats.advantage_strength_incr
         return damage
 
 class CrusherJane(Player):
@@ -644,11 +642,9 @@ class CrusherJane(Player):
         2 health every level,
         (+1, +2) strength per level,
         1 recovery_end_of_level per level
-        1 adv. strength every level.
         """
         self._level_up_health(3)
         self._level_up_strength((1, 2))
-        self.stats.advantage_strength_incr += 1
 
         if not value % 2 == 0:
             self.stats.recovery_end_of_level += 1
@@ -672,7 +668,7 @@ class CrusherJane(Player):
 
     def enhance_damage(self, damage: int) -> int:
         if self.ability_active:
-            damage += self.stats.advantage_strength_incr
+            damage *= self.stats.advantage_strength_incr
         return damage
 
 

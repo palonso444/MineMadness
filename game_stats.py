@@ -69,7 +69,7 @@ class DungeonStats:
                 else:
                     if trigger == 10 and dynamites < 5:  # jackpot
                         return 2
-                    if trigger < 4 or trigger < dynamites * 2 or dynamites > 6:
+                    if trigger < 5 or trigger < dynamites * 2:
                         return 0
                     else:
                         return 1
@@ -298,11 +298,11 @@ class ShovelStats(WeaponShovelStats): # BALANCED
     def calculate_frequency(seed: int | float) -> float:  # seed is diggable wall frequency
         if randint(1, 10) < 7:
             # Shovels depend on RockWalls + QuartzWalls frequency.
-            upper_limit = seed * 0.35
+            upper_limit = seed * 0.3
         else:
-            upper_limit = 0.12
+            upper_limit = 0.1
         frequency =  uniform(0, upper_limit)
-        return frequency if frequency < 0.12 else 0.12
+        return frequency if frequency < 0.1 else 0.1
 
 
 class WeaponStats(WeaponShovelStats): # BALANCED
@@ -312,11 +312,11 @@ class WeaponStats(WeaponShovelStats): # BALANCED
     def calculate_frequency(seed: int | float) -> float:  # seed is monster frequency
         if randint(1, 10) < 7:
             # Weapons depend on pooled monster frequency.
-            upper_limit = seed * 0.7
+            upper_limit = seed * 0.75
         else:
-            upper_limit = 0.15
+            upper_limit = 0.2
         frequency =  uniform(0, upper_limit)
-        return frequency if frequency < 0.15 else 0.15
+        return frequency if frequency < 0.2 else 0.2
 
 
 class PowderStats: # BALANCED
@@ -427,7 +427,7 @@ class PlayerStats(CharacterStats, ABC):
 class SawyerStats(PlayerStats): # BALANCED
     health: int = 5
     strength: list[int] = field(default_factory=lambda: [1,3])
-    advantage_strength_incr: int = 4
+    advantage_strength_incr: int = 5
     moves: int = 4
     digging_moves: int = 3
     trap_spotting_chance: float = 0.2
@@ -483,7 +483,6 @@ class KoboldStats(MonsterStats): # BALANCED
     strength: list[int] = field(default_factory=lambda: [1,2])
     moves: int = 5
     random_motility: float = 1.0
-    dodging_ability: int = 7
     experience_when_killed: int = 6
 
     def __post_init__(self):
@@ -508,7 +507,6 @@ class BlindLizardStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [2,6])
     moves: int = 4
     random_motility: float = 1.0
-    dodging_ability: int = 3
     experience_when_killed: int = 18
 
     def __post_init__(self):
@@ -530,7 +528,7 @@ class BlackDeathStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [3,50])
     moves: int = 7
     random_motility: float = 1.0
-    dodging_ability: int = 12
+    dodging_ability: int = 8
     experience_when_killed: int = 22
 
     def __post_init__(self):
@@ -561,7 +559,6 @@ class CaveHoundStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [2,4])
     moves: int = 6
     random_motility: float = 1.0
-    dodging_ability: int = 9
     experience_when_killed: int = 12
 
     def __post_init__(self):
@@ -588,7 +585,6 @@ class GrowlStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [4,8])
     moves: int = 6
     random_motility: float = 0.5
-    dodging_ability: int = 5
     experience_when_killed: int = 30
 
     def __post_init__(self):
@@ -614,7 +610,6 @@ class RockGolemStats(MonsterStats):  # BALANCED
     health: int = 140
     strength: list[int] = field(default_factory=lambda: [12,22])
     moves: int = 3
-    dodging_ability: int = 0
     experience_when_killed: int = 75
 
     def __post_init__(self):
@@ -642,7 +637,6 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [1,3])
     moves: int = 5
     random_motility: float = 0.5
-    dodging_ability: int = 10
     experience_when_killed: int = 6
 
     def __post_init__(self):
@@ -669,7 +663,6 @@ class NightmareStats(MonsterStats): # BALANCED
     strength: list[int] = field(default_factory=lambda: [2,6])
     random_motility: float = 0.2
     moves: int = 9
-    dodging_ability: int = 10
     experience_when_killed: int = 30
 
     def __post_init__(self):
@@ -696,7 +689,6 @@ class LindWormStats(MonsterStats):  # BALANCED
     health: int = 230
     strength: list[int] = field(default_factory=lambda: [20,30])
     moves: int = 9
-    dodging_ability: int = 4
     experience_when_killed: int = 150
 
     def __post_init__(self):
@@ -750,7 +742,7 @@ class DepthsWispStats(MonsterStats):  # BALANCED
     health: int = 1
     strength: list[int] = field(default_factory=lambda: [1,1])
     moves: int = 4
-    dodging_ability: int = 1.0
+    dodging_ability: int = 14
     experience_when_killed: int = 3
 
     def __post_init__(self):
@@ -776,7 +768,7 @@ class MountainDjinnStats(MonsterStats):  # BALANCED
     health: int = 65
     strength: list[int] = field(default_factory=lambda: [7,12])
     moves: int = 7
-    dodging_ability: int = 1.0
+    dodging_ability: int = 14
     experience_when_killed: int = 40
 
     def __post_init__(self):
@@ -804,7 +796,7 @@ class PixieStats(MonsterStats):  # BALANCED
     strength: list[int] = field(default_factory=lambda: [1,1])
     moves: int = 4
     random_motility: float = 1.0
-    dodging_ability: int = 14
+    dodging_ability: int = 10
     experience_when_killed: int = 6
 
     def __post_init__(self):
@@ -830,7 +822,6 @@ class RattleSnakeStats(MonsterStats):
     moves: int = 8
     max_attacks: int = 1
     random_motility: float = 0.2
-    dodging_ability: int = 5
     experience_when_killed: int = 27
 
     def __post_init__(self):
@@ -858,7 +849,6 @@ class PenumbraStats(MonsterStats):
     moves: int = 12  # do not go below 7 or will not move due to max_attack and retreat moves
     max_attacks: int = 3
     random_motility: float = 0.4
-    dodging_ability: int = 13
     experience_when_killed: int = 50
 
     # exclusive of penumbra. Minimum distance of retreat from player
@@ -888,7 +878,6 @@ class ClawJawStats(MonsterStats):
     strength: list[int] = field(default_factory=lambda: [2,6])
     moves: int = 7
     random_motility: float = 0.7
-    dodging_ability: int = 5
     experience_when_killed: int = 32
 
     def __post_init__(self):

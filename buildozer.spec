@@ -26,10 +26,10 @@ source.exclude_dirs = tests, bin, venv, __pycache__, trash, build
 
 # (list) List of exclusions using pattern matching
 # Do not prefix with './'
-source.exclude_patterns = setup.py
+source.exclude_patterns = setup.py,saved_game.json
 
 # (str) Application versioning (method 1)
-version = 2.8
+version = 2.9
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]

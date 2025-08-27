@@ -76,21 +76,15 @@ class MineMadnessApp(App):
     def build(self) -> ScreenManager:
         Builder.load_file(get_resource_path("./how_to_play.kv"))
         self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
-        self.sm.add_widget(MainMenu(name="main_menu"))
-        self.sm.add_widget(HowToPlay(name="how_to_play"))
-        self.sm.add_widget(GameOver(name="game_over"))
-        self.sm.add_widget(OutGameOptions(name="out_game_options"))
-        self.sm.add_widget(InGameOptions(name="in_game_options"))
-        self.sm.add_widget(NewGameConfig(name="new_game_config"))
         return self.sm
 
     def on_start(self) -> None:
         """
-        Schedules app launch in 1 second to avoid black screen issue during app launching on Android.
+        Schedules app launch in 8 seconds to avoid black screen issue during app launching on Android.
         See the following GitHub issue for more info: https://github.com/kivy/python-for-android/issues/2720
         :return: None
         """
-        Clock.schedule_once(self._launch_app, 1)
+        Clock.schedule_once(self._launch_app, 8)
 
     def _launch_app(self, dt) -> None:
         """
@@ -98,6 +92,12 @@ class MineMadnessApp(App):
         :param dt: delta time
         :return: None
         """
+        self.sm.add_widget(MainMenu(name="main_menu"))  # this widget must be added first for a smooth start
+        self.sm.add_widget(HowToPlay(name="how_to_play"))
+        self.sm.add_widget(GameOver(name="game_over"))
+        self.sm.add_widget(OutGameOptions(name="out_game_options"))
+        self.sm.add_widget(InGameOptions(name="in_game_options"))
+        self.sm.add_widget(NewGameConfig(name="new_game_config"))
         self.sm.current = "main_menu"
 
     def add_dungeon_to_game(self, dungeon: DungeonLayout | None = None) -> None:

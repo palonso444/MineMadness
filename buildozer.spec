@@ -29,7 +29,7 @@ source.exclude_dirs = tests, bin, venv, __pycache__, trash, build
 source.exclude_patterns = setup.py
 
 # (str) Application versioning (method 1)
-version = 2.7
+version = 2.8
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -104,7 +104,7 @@ fullscreen = 1
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
-android.api = 34
+android.api = 36
 
 # (int) Minimum API your APK / AAB will support.
 android.minapi = 24

@@ -163,42 +163,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         game.ability_button_active = True
 
-    @staticmethod
-    def on_character_done(game: MineMadnessGame, value: bool) -> None:
-        """
-        Checks what to do when a character finishes a movement, but it may still have movements left
-        :param game: current instance of MineMadnessGame
-        :param value: current boolean value of the switch
-        :return: None
-        """
-        game.check_if_all_players_exited()
-        # call game.check_if_game_over() if game over for lack of shovels is implemented
-
-        if game.turn is not None:
-
-            if monsters.Monster.all_dead_or_out() and game.active_character.stats.remaining_moves == 0:
-                game.active_character.stats.remaining_moves = game.active_character.stats.moves
-                game.active_character.remove_effects_if_over(game.turn)
-                if game.active_character.token is not None:  # dead characters have no Token
-                    game.active_character.token.unselect_token()
-                game.update_switch("turn")
-
-            elif game.active_character.stats.remaining_moves > 0:
-                if game.active_character.kind == "player":
-                    game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
-                elif game.active_character.kind == "monster":
-                    if game.active_character.has_acted:
-                        game.active_character.acted_on_tile = False
-                        game.active_character.move()
-                    else:
-                        game.next_character()
-
-            else:
-                if game.active_character.kind == "player":
-                    game.active_character.remove_effects_if_over(game.turn)
-                    if game.active_character.token is not None:  # dead characters have no Token
-                        game.active_character.token.unselect_token()
-                game.next_character()
+    ####### THE FOLLOWING GROUP OF FUNCTIONS MANAGE THE TURN SEQUENCE  ###########
 
     @staticmethod
     def on_turn(game: MineMadnessGame, turn: int | None) -> None:
@@ -253,6 +218,56 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.active_character.move()
 
     @staticmethod
+    def on_character_done(game: MineMadnessGame, value: bool) -> None:
+        """
+        Checks what to do when a character finishes a movement, but it may still have movements left
+        :param game: current instance of MineMadnessGame
+        :param value: current boolean value of the switch
+        :return: None
+        """
+        game.check_if_all_players_exited()
+        # call game.check_if_game_over() if game over for lack of shovels is implemented
+
+        if game.turn is not None:
+
+            if monsters.Monster.all_dead_or_out() and game.active_character.stats.remaining_moves == 0:
+                game.active_character.stats.remaining_moves = game.active_character.stats.moves
+                game.active_character.remove_effects_if_over(game.turn)
+                if game.active_character.token is not None:  # dead characters have no Token
+                    game.active_character.token.unselect_token()
+                game.update_switch("turn")
+
+            elif game.active_character.stats.remaining_moves > 0:
+                if game.active_character.kind == "player":
+                    game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
+                elif game.active_character.kind == "monster":
+                    if game.active_character.has_acted:
+                        game.active_character.acted_on_tile = False
+                        game.active_character.move()
+                    else:
+                        game.next_character()
+
+            else:
+                if game.active_character.kind == "player":
+                    game.active_character.remove_effects_if_over(game.turn)
+                    if game.active_character.token is not None:  # dead characters have no Token
+                        game.active_character.token.unselect_token()
+                game.next_character()
+
+    def next_character(self) -> None:
+        """
+        Increases MineMadnessGame.active_character.id by 1 or switch turn if all characters have been already activated
+        :return: None
+        """
+        if self.active_character.id < len(self.active_character.__class__.data) - 1:
+            self.active_character_id += 1  # next character on list moves
+
+        else:  # if end of characters list reached (all have moved)
+            self.update_switch("turn")
+
+    ####### END OF FUNCTIONS MANAGING THE TURN SEQUENCE  ##################
+
+    @staticmethod
     def on_player_exited(game: MineMadnessGame, value: bool) -> None:
         """
         Handles the change of level or turn when the active character exits the level
@@ -266,13 +281,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
             game.update_switch("turn")
         else:
             game.update_switch("active_character_id")
-
-    def next_character(self) -> None:
-        if self.active_character.id < len(self.active_character.__class__.data) - 1:
-            self.active_character_id += 1  # next character on list moves
-
-        else:  # if end of characters list reached (all have moved)
-            self.update_switch("turn")
 
     def activate_accessible_tiles(self, steps: int) -> None:
         """

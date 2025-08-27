@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.core.text import LabelBase
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty
@@ -81,8 +82,23 @@ class MineMadnessApp(App):
         self.sm.add_widget(OutGameOptions(name="out_game_options"))
         self.sm.add_widget(InGameOptions(name="in_game_options"))
         self.sm.add_widget(NewGameConfig(name="new_game_config"))
-        self.sm.current = "main_menu"
         return self.sm
+
+    def on_start(self) -> None:
+        """
+        Schedules app launch in 1 second to avoid black screen issue during app launching on Android.
+        See the following GitHub issue for more info: https://github.com/kivy/python-for-android/issues/2720
+        :return: None
+        """
+        Clock.schedule_once(self._launch_app, 1)
+
+    def _launch_app(self, dt) -> None:
+        """
+        This delayed start ensures no frozen black screen when launching the app
+        :param dt: delta time
+        :return: None
+        """
+        self.sm.current = "main_menu"
 
     def add_dungeon_to_game(self, dungeon: DungeonLayout | None = None) -> None:
         """

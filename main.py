@@ -84,7 +84,9 @@ class MineMadnessApp(App):
         See the following GitHub issue for more info: https://github.com/kivy/python-for-android/issues/2720
         :return: None
         """
-        Clock.schedule_once(self._launch_app, 8)
+        self.sm.add_widget(MainMenu(name="main_menu"))
+        self.sm.current = "main_menu"
+        Clock.schedule_once(self._launch_app, 5)
 
     def _launch_app(self, dt) -> None:
         """
@@ -92,13 +94,32 @@ class MineMadnessApp(App):
         :param dt: delta time
         :return: None
         """
-        self.sm.add_widget(MainMenu(name="main_menu"))  # this widget must be added first for a smooth start
-        self.sm.add_widget(HowToPlay(name="how_to_play"))
-        self.sm.add_widget(GameOver(name="game_over"))
-        self.sm.add_widget(OutGameOptions(name="out_game_options"))
-        self.sm.add_widget(InGameOptions(name="in_game_options"))
-        self.sm.add_widget(NewGameConfig(name="new_game_config"))
-        self.sm.current = "main_menu"
+        print("APP LAUNCHED")
+        screen = self.sm.get_screen("main_menu")
+        screen.canvas.ask_update()
+        # Clock.scheudle_once(lambda dt: Window.canvas.ask_update(), 3)
+
+    def generate_and_show_screen(self, name: str) -> None:
+        """
+        Generates the Screen if it does not exist and adds them to the ScreenManager
+        :param name: name of the Screen to add
+        :return: None
+        """
+        if not self.sm.has_screen(name):
+            self.sm.add_widget(self._instantiate_screen(name))
+        self.sm.current = name
+
+    @staticmethod
+    def _instantiate_screen(name: str) -> Screen:
+        """
+        Instantiates and returns the correct Screen according to the name argument. Name argument must be passed in
+        snake_case, and Screen instantiated will be PascalCase.
+        Example: main_menu instantiates MainMenu(name=main_menu)
+        :return: Screen instance
+        """
+        class_name: str = ''.join(word.capitalize() for word in name.split('_'))
+        cls = globals()[class_name]
+        return cls(name=name)
 
     def add_dungeon_to_game(self, dungeon: DungeonLayout | None = None) -> None:
         """
@@ -188,7 +209,8 @@ class MineMadnessApp(App):
         if self.ongoing_game:
             # resumes the flickering of lights
             self.game.dungeon.on_bright_spots(self.game.dungeon, self.game.dungeon.bright_spots)
-            self.sm.current = "game_screen"
+            self.generate_and_show_screen("game_screen")
+            # self.sm.current = "game_screen"
         else:
             self.load_game()
 
@@ -257,7 +279,8 @@ class MineMadnessApp(App):
             self.saved_game = False
         self.sm.transition.duration = 1.5
         self.game_over_message = message
-        self.sm.current = "game_over"
+        self.generate_and_show_screen("game_over")
+        # self.sm.current = "game_over"
         self.ongoing_game = False
         self._clean_previous_game()
         self.sm.transition.duration = 0.3

@@ -39,7 +39,7 @@
     on_release:
         # unschedules flickering of lights and other events
         app.game.dungeon.unschedule_all_events() if app.ongoing_game else None
-        app.root.current = "main_menu"
+        app.generate_and_show_screen("main_menu")
 
 <MusicButton@Button>
     text: "Music OFF" if app.music_on else "Music ON"
@@ -55,7 +55,7 @@
     text: "Options"
     on_release:
         app.game.dungeon.unschedule_all_events() if app.ongoing_game else None
-        app.root.current = "in_game_options" if app.ongoing_game else "out_game_options"
+        app.generate_and_show_screen("in_game_options") if app.ongoing_game else app.generate_and_show_screen("out_game_options")
 
 
 <ContinueOrLoadButton@Button>
@@ -286,14 +286,14 @@
                 text: "New game"
                 font_size: "30sp"
                 on_release:
-                    app.root.current = "new_game_config"
+                    app.generate_and_show_screen("new_game_config")
             ContinueOrLoadButton:
                 font_size: "30sp"
             Button:
                 text: "How to play"
                 font_size: "30sp"
                 on_release:
-                    app.root.current = "how_to_play"
+                    app.generate_and_show_screen("how_to_play")
             OptionsButton:
                 font_size: "30sp"
             Button:

@@ -84,7 +84,7 @@ class MineMadnessApp(App):
         See the following GitHub issue for more info: https://github.com/kivy/python-for-android/issues/2720
         :return: None
         """
-        Clock.schedule_once(self._launch_app, 8)
+        Clock.schedule_once(self._launch_app, 10)
 
     def _launch_app(self, dt) -> None:
         """

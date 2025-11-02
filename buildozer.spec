@@ -22,7 +22,7 @@ source.include_exts = py,png,kv,ogg,otf
 source.exclude_exts = spec,pyx,txt,md,so
 
 # (list) List of directory to exclude (let empty to not exclude anything)
-source.exclude_dirs = tests,bin,venv,__pycache__,trash,build,prototype
+source.exclude_dirs = tests,bin,venv,__pycache__,trash,build
 
 # (list) List of exclusions using pattern matching
 # Do not prefix with './'

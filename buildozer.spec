@@ -16,7 +16,7 @@ source.dir = .
 source.include_exts = py,png,kv,ogg,otf
 
 # (list) List of inclusions using pattern matching
-#source.include_patterns = assets/*,images/*.png
+# source.include_patterns = assets/*,images/*.png
 
 # (list) Source files to exclude (let empty to not exclude anything)
 source.exclude_exts = spec,pyx,txt,md,so
@@ -32,8 +32,8 @@ source.exclude_patterns = setup.py,saved_game.json
 version = 2.9
 
 # (str) Application versioning (method 2)
-# version.regex = __version__ = ['"](.*)['"]
-# version.filename = %(source.dir)s/main.py
+#version.regex = __version__ = ['"](.*)['"]
+#version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
@@ -44,7 +44,7 @@ requirements = python3,kivy,numpy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
-# requirements.source.kivy = ../../kivy
+#requirements.source.kivy = ../../kivy
 
 # (str) Presplash of the application
 presplash.filename = %(source.dir)s/weapon_presplash.png
@@ -107,16 +107,16 @@ fullscreen = 1
 android.api = 36
 
 # (int) Minimum API your APK / AAB will support.
-android.minapi = 24
+#android.minapi = 24
 
 # (int) Android SDK version to use
 #android.sdk = 20
 
 # (str) Android NDK version to use
-android.ndk = 25b
+#android.ndk = 25b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
-android.ndk_api = 24
+#android.ndk_api = 24
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
 #android.private_storage = True
@@ -133,13 +133,13 @@ android.ndk_api = 24
 # (bool) If True, then skip trying to update the Android sdk
 # This can be useful to avoid excess Internet downloads or save time
 # when an update is due and you just want to test/build your package
-# android.skip_update = False
+#android.skip_update = False
 
 # (bool) If True, then automatically accept SDK license
 # agreements. This is intended for automation only. If set to False,
 # the default, you will be shown the license when first running
 # buildozer.
-# android.accept_sdk_license = False
+#android.accept_sdk_license = False
 
 # (str) Android entry point, default is ok for Kivy-based app
 #android.entrypoint = org.kivy.android.PythonActivity
@@ -161,7 +161,7 @@ android.ndk_api = 24
 #android.service_class_name = org.kivy.android.PythonService
 
 # (str) Android app theme, default is ok for Kivy-based app
-# android.apptheme = "@android:style/Theme.NoTitleBar"
+#android.apptheme = "@android:style/Theme.NoTitleBar"
 
 # (list) Pattern to whitelist for the whole project
 #android.whitelist =
@@ -214,7 +214,7 @@ android.ndk_api = 24
 # (list) add java compile options
 # this can for example be necessary when importing certain java libraries using the 'android.gradle_dependencies' option
 # see https://developer.android.com/studio/write/java8-support for further information
-# android.add_compile_options = "sourceCompatibility = 1.8", "targetCompatibility = 1.8"
+#android.add_compile_options = "sourceCompatibility = 1.8", "targetCompatibility = 1.8"
 
 # (list) Gradle repositories to add {can be necessary for some android.gradle_dependencies}
 # please enclose in double quotes 
@@ -290,22 +290,22 @@ android.archs = arm64-v8a
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing
-# android.numeric_version = 1
+#android.numeric_version = 1
 
 # (bool) enables Android auto backup feature (Android API >=23)
 android.allow_backup = True
 
 # (str) XML file for custom backup rules (see official auto backup documentation)
-# android.backup_rules =
+#android.backup_rules =
 
 # (str) If you need to insert variables into your AndroidManifest.xml file,
 # you can do so with the manifestPlaceholders property.
 # This property takes a map of key-value pairs. (via a string)
 # Usage example : android.manifest_placeholders = [myCustomUrl:\"org.kivy.customurl\"]
-# android.manifest_placeholders = [:]
+#android.manifest_placeholders = [:]
 
 # (bool) Skip byte compile for .py files
-# android.no-byte-compile-python = False
+#android.no-byte-compile-python = False
 
 # (str) The format used to package the app for release mode (aab or apk or aar).
 android.release_artifact = aab
@@ -324,7 +324,7 @@ android.debug_artifact = apk
 #p4a.fork = kivy
 
 # (str) python-for-android branch to use, defaults to master
-p4a.branch = develop
+#p4a.branch = develop
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = HEAD
@@ -339,7 +339,7 @@ p4a.branch = develop
 #p4a.hook =
 
 # (str) Bootstrap to use for android builds
-# p4a.bootstrap = sdl2
+#p4a.bootstrap = sdl2
 
 # (int) port number to specify an explicit --port= p4a argument (eg for bootstrap flask)
 #p4a.port =
@@ -411,10 +411,10 @@ log_level = 2
 warn_on_root = 1
 
 # (str) Path to build artifact storage, absolute or relative to spec file
-# build_dir = ./.buildozer
+#build_dir = ./.buildozer
 
 # (str) Path to build output (i.e. .apk, .aab, .ipa) storage
-# bin_dir = ./bin
+#bin_dir = ./bin
 
 #    -----------------------------------------------------------------------------
 #    List as sections

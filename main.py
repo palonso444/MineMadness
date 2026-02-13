@@ -95,12 +95,20 @@ class MineMadnessApp(App):
         See the following GitHub issue for more info: https://github.com/kivy/python-for-android/issues/2720
         :return: None
         """
+        Clock.schedule_once(self._show_loading_screen, 2)
+
+    def _show_loading_screen(self, dt) -> None:
+        """
+        This delayed start ensures no frozen black screen when launching the app
+        :param dt: delta time
+        :return: None
+        """
         self.show_loading_screen()
-        Clock.schedule_once(self._launch_app, 2)
+        Clock.schedule_once(self._launch_app, 0)  # heavy music and screen loading scheduled to next frame
 
     def _launch_app(self, dt) -> None:
         """
-        This delayed start ensures no frozen black screen when launching the app
+        Loads the music and sets up all screens
         :param dt: delta time
         :return: None
         """

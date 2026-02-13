@@ -1,12 +1,13 @@
 from __future__ import annotations
+from typing import Optional
 
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.core.text import LabelBase
-from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty
+from kivy.properties import NumericProperty, BooleanProperty, StringProperty
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
-from kivy.core.audio import SoundLoader
+from kivy.core.audio import SoundLoader, Sound
 from kivy.core.window import Window
 from json import dump, load
 from os.path import exists, abspath, join
@@ -17,7 +18,9 @@ from dungeon_blueprint import Blueprint
 from player_classes import Player, Sawyer, Hawkins, CrusherJane  # players needed for globals()
 import monster_classes as monsters
 from dungeon_classes import DungeonLayout
-from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig
+from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, \
+    NewGameConfig, LoadingScreen
+
 
 def get_resource_path(relative_path: str) -> str:
     """
@@ -63,10 +66,10 @@ class MineMadnessApp(App):
         self.game_mode_normal: bool = True
         self.saved_game_file: str = "saved_game.json"
         self.saved_game: bool = exists("saved_game.json")
+        self.music_file: str = "stocktune_celestial_dreams_unveiled.ogg"  # must be in music/ directory
 
-        self.music = SoundLoader.load(get_resource_path("./music/stocktune_celestial_dreams_unveiled.ogg"))
-        self.music.loop = True
-        self.music_on: bool = True
+        self.music: Optional[Sound] = None
+        self.music_on: Optional[bool] = None
 
         self.flickering_torches_on: bool = True
 
@@ -78,13 +81,22 @@ class MineMadnessApp(App):
         self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
         return self.sm
 
+    def show_loading_screen(self) -> None:
+        """
+        Shows a loading screen
+        :return: None
+        """
+        self.sm.add_widget(LoadingScreen(name="loading_screen"))
+        self.sm.current = "loading_screen"
+
     def on_start(self) -> None:
         """
-        Schedules app launch in 8 seconds to avoid black screen issue during app launching on Android.
+        Schedules app launch some time ahead to avoid black screen issue during app launching on Android.
         See the following GitHub issue for more info: https://github.com/kivy/python-for-android/issues/2720
         :return: None
         """
-        Clock.schedule_once(self._launch_app, 10)
+        self.show_loading_screen()
+        Clock.schedule_once(self._launch_app, 2)
 
     def _launch_app(self, dt) -> None:
         """
@@ -92,6 +104,7 @@ class MineMadnessApp(App):
         :param dt: delta time
         :return: None
         """
+        self._load_music()
         self.sm.add_widget(MainMenu(name="main_menu"))  # this widget must be added first for a smooth start
         self.sm.add_widget(HowToPlay(name="how_to_play"))
         self.sm.add_widget(GameOver(name="game_over"))
@@ -99,6 +112,15 @@ class MineMadnessApp(App):
         self.sm.add_widget(InGameOptions(name="in_game_options"))
         self.sm.add_widget(NewGameConfig(name="new_game_config"))
         self.sm.current = "main_menu"
+
+    def _load_music(self)-> None:
+        """
+        Loads the music
+        :return: None
+        """
+        self.music = SoundLoader.load(get_resource_path(f"./music/{self.music_file}"))
+        self.music.loop = True
+        self.music_on: bool = True
 
     def add_dungeon_to_game(self, dungeon: DungeonLayout | None = None) -> None:
         """
@@ -156,6 +178,10 @@ class MineMadnessApp(App):
         self.sm.current = "game_screen"
 
     def save_game(self) -> None:
+        """
+        Saves the game
+        :return: None
+        """
         with open(self.saved_game_file, "w") as f:
             dump(self._get_game_state(), f, indent=4)
         self.saved_game = True

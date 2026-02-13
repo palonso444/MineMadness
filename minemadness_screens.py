@@ -28,6 +28,9 @@ class NewGameConfig(Screen):
 class GameOver(Screen):
     pass
 
+class LoadingScreen(Screen):
+    pass
+
 class MineMadnessGame(Screen):  # initialized in kv file
 
     # GENERAL PROPERTIES

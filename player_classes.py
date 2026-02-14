@@ -45,15 +45,17 @@ class Player(Character, ABC, EventDispatcher):
         cls.rearrange_ids()
 
     @classmethod
-    def swap_characters(cls, index_char_1: int, index_char_2: int) -> None:
+    def find_next_player_with_remaining_moves(cls, starting_index: int) -> Player:
         """
-        Swaps the order of 2 characters in cls.data
-        :param index_char_1: index of a character
-        :param index_char_2: index of another character
-        :return: None
+        Finds the next player than can still move
+        :param starting_index: index to start the search in Player.data
+        :return: the Player with remaining moves
         """
-        cls.data[index_char_2], cls.data[index_char_1] = cls.data[index_char_1], cls.data[index_char_2]
-        cls.rearrange_ids()
+        n = len(cls.data)
+        for i in range(1, n + 1):
+            next_index = (starting_index + i) % n
+            if cls.data[next_index].stats.remaining_moves > 0:
+                return cls.data[next_index]
 
     @classmethod
     def all_players_alive(cls):
@@ -131,20 +133,38 @@ class Player(Character, ABC, EventDispatcher):
 
 
     @abstractmethod
-    def on_player_level(self, instance, value):
+    def on_player_level(self, instance: Player, value: int) -> None:
+        """
+        Logic of levelling up
+        :param instance: instance of the player
+        :param value: new level
+        :return: None
+        """
         pass
 
     @abstractmethod
     def enhance_damage(self, damage: int) -> int:
+        """
+        Placeholder needed for fight method
+        :param damage: damage
+        :return: enhanced damage
+        """
         pass
-
 
     @property
     def has_all_gems(self) -> bool:
+        """
+        Checks if players have all gems
+        :return: True if players have all gems, False otherwise
+        """
         return Player.gems == self.get_dungeon().game.total_gems
 
-    # used, do not delete
     def has_item(self, item: str) -> bool:
+        """
+        Checks if a Player has an item
+        :param item: item name to check
+        :return: True if has the item, False otherwise
+        """
         return self.inventory[item] > 0
 
     @property
@@ -218,6 +238,10 @@ class Player(Character, ABC, EventDispatcher):
                 self.special_items[key] = 0
 
     def subtract_weapon(self) -> None:
+        """
+        Substracts the weapon used
+        :return: None
+        """
         game=self.get_dungeon().game
         self.stats.weapons -= 1
         game.update_switch("weapons")
@@ -328,19 +352,27 @@ class Player(Character, ABC, EventDispatcher):
                 self._pick_object(tile)
             if (tile.has_token("treasure") and "treasure" not in self.ignores
                     and tile.get_token("treasure").species not in self.ignores):
-                self._pick_treasure(tile)
+                self._pick_gem(tile)
             if tile.kind == "exit" and self.has_all_gems:
                 self._exit_level()
                 tile.dungeon.game.update_switch("player_exited")
 
     def _exit_level(self) -> None:
+        """
+        Takes a Player out of a level
+        :return: None
+        """
         Player.exited.add(self)
         Player.data.remove(self)
         self.rearrange_ids()
         self.token.delete_token(self.token.get_current_tile())
 
     def _pick_object(self, tile: Tile) -> None:
-
+        """
+        Handles the logic of picking up objects
+        :param tile: Tile where the object is
+        :return: None
+        """
         game = self.get_dungeon().game
         object_name = tile.get_token("pickable").species
 
@@ -362,17 +394,32 @@ class Player(Character, ABC, EventDispatcher):
 
         tile.get_token("pickable").delete_token(tile)
 
-    def _pick_treasure(self, tile:Tile)-> None:
+    def _pick_gem(self, tile:Tile)-> None:
+        """
+        Handles the logic of picking gems
+        :param tile: Tile where the gem is
+        :return: None
+        """
         game=self.get_dungeon().game
         Player.gems += 1
         game.update_switch("gems")
         tile.get_token("treasure").delete_token(tile)
 
     def fall_in_trap(self, tile:Tile) ->None:
+        """
+        Handles the logic of falling on traps
+        :param tile: Tile where the trap is
+        :return: None
+        """
         tile.get_token("trap").character.show_and_damage(self)
         self.stats.remaining_moves = 0
 
     def _disarm_trap(self, tile:Tile) -> None:
+        """
+        Handles the logic of disarming traps
+        :param tile: Tile where the trap is
+        :return: None
+        """
         self.stats.remaining_moves -= 1
         trap_token = tile.get_token("trap")
         trap_token.show_effect_token(effect="trap_out")
@@ -380,9 +427,12 @@ class Player(Character, ABC, EventDispatcher):
         self.get_dungeon().game.ids.experience_bar.value = self.experience
         trap_token.delete_token(tile)
 
-
     def _dig(self, wall_tile: Tile) -> None:
-
+        """
+        Handles the logic of digging
+        :param wall_tile: Tile where the wall to dig is
+        :return: None
+        """
         game = self.get_dungeon().game
 
         if wall_tile.has_token("wall", "granite"):
@@ -405,6 +455,11 @@ class Player(Character, ABC, EventDispatcher):
             self.get_dungeon().update_bright_spots()
 
     def fight_on_tile(self, opponent_tile: Tile) -> None:
+        """
+        Handles the logic of fighting for Players
+        :param opponent_tile: Tile where the opponent is
+        :return: None
+        """
         opponent = opponent_tile.get_token("monster").character
         opponent = self.fight_opponent(opponent)
         self.subtract_weapon()
@@ -416,14 +471,24 @@ class Player(Character, ABC, EventDispatcher):
             self.get_dungeon().game.ids.experience_bar.value = self.experience
 
 
-    def heal(self, extra_points: int):
+    def heal(self, extra_points: int) -> None:
+        """
+        Handles the logic of healing
+        :param extra_points: points to add to the Player.stats.health
+        :return: None
+        """
         self.stats.health = (
             self.stats.health + extra_points
             if self.stats.health + extra_points <= self.stats.natural_health
             else self.stats.natural_health
         )
 
-    def kill_character(self, tile):
+    def kill_character(self, tile) -> None:
+        """
+        Kills a Player
+        :param tile: Tile where the Player is
+        :return: None
+        """
         super().kill_character(tile)
         self.remove_all_effects()
         self.dead_data.append(self)
@@ -456,26 +521,36 @@ class Player(Character, ABC, EventDispatcher):
         self.bind(player_level=self.on_player_level)
 
     def apply_toughness(self, damage):
-
+        """
+        Applies the Player.toughness to mitigate damage
+        :param damage: damage to mitigate
+        :return: mitigated damage
+        """
         for effect in self.effects["toughness"]:
             effect["size"] -= damage
-
             if effect["size"] <= 0:
                 damage = abs(effect["size"])
                 self.effects["toughness"].remove(effect)
                 continue
-
             elif effect["size"] > 0:
                 damage = 0
                 break
-
         return damage
 
-    def check_if_overdose(self, item):
+    def check_if_overdose(self, item) -> bool:
+        """
+        I don't know if this will be ever used. Check if a Player consumed too many items
+        :param item: item to check
+        :return: True if overdosed
+        """
         pass
 
     def _update_level_track(self, level: int) -> None:
-
+        """
+        Adds a new level to the level track
+        :param level: level to add
+        :return: None
+        """
         self.level_track[level] = {
             "health": self.stats.natural_health,
             "moves": self.stats.natural_moves,
@@ -483,19 +558,31 @@ class Player(Character, ABC, EventDispatcher):
         }
 
     def _level_up_health(self, increase: int) -> None:
-
+        """
+        Levels up Player.stats.health
+        :param increase: value to increase
+        :return: None
+        """
         self.stats.natural_health += increase
         self.stats.health += increase
 
     def _level_up_moves(self, increase: int) -> None:
-
+        """
+        Levels up Player.stats.moves
+        :param increase: value to increase
+        :return: None
+        """
         self.stats.natural_moves += increase
         self.stats.moves += increase
         self.stats.remaining_moves += increase
         self.get_dungeon().game.activate_accessible_tiles(self.stats.remaining_moves)
 
     def _level_up_strength(self, increase: tuple[int, int]) -> None:
-
+        """
+        Levels up Player.stats.strength
+        :param increase: value to increase
+        :return: None
+        """
         self.stats.natural_strength[0] += increase[0]
         self.stats.natural_strength[1] += increase[1]
         self.stats.strength[0] += increase[0]
@@ -542,6 +629,11 @@ class Sawyer(Player):
         raise ValueError(f"Invalid token_species {token_species}")
 
     def can_fight(self, token_species: str) -> bool:
+        """
+        Checks if Sawyer can fight a certain monster
+        :param token_species: MonsterToken.species to fight
+        :return: True if the Sawyer can fight, False otherwise
+        """
         return self.stats.weapons > 0
 
     def on_player_level(self, instance, value):
@@ -567,11 +659,6 @@ class Sawyer(Player):
 
         self._update_level_track(value)
 
-        #print("SAWYER NEW LEVEL")
-        #print(value)
-        #print(self.level_track)
-        #print(self.stats)
-
     def perform_passive_action(self) -> None:
         """
         Placeholder, for the moment all passive actions are the same (finding traps) and defined within the superclass
@@ -579,23 +666,34 @@ class Sawyer(Player):
         """
         super().perform_passive_action()
 
-    def hide(self):
+    def hide(self) -> None:
+        """
+        Hides Sawyer
+        :return: None
+        """
         self.stats.remaining_moves -= 1
         self.special_items["powder"] -= 1
         self.ignores += ["pickable", "treasure"]
         self.token.color.a = 0.6  # changes transparency
-        #self.get_dungeon().restore_canvas_color("canvas")  # restores alpha
-        #self.get_dungeon().restore_canvas_color("after")
         self.ability_active = True
 
-    def unhide(self):
+    def unhide(self) -> None:
+        """
+        Reverts hiding
+        :return: None
+        """
         self.token.color.a = 1  # changes transparency
         self.ignores.remove("pickable")
         self.ignores.remove("treasure")
         self.ability_active = False
         self.get_dungeon().game.update_switch("ability_button")  # must be here. If attacked must update button a well
 
-    def enhance_damage(self, damage) -> int:
+    def enhance_damage(self, damage: int) -> int:
+        """
+        Enhances attack damage
+        :param damage: damage to enhance
+        :return: enhanced damage
+        """
         if self.ability_active:
             damage *= self.stats.advantage_strength_incr
         return damage
@@ -633,6 +731,11 @@ class CrusherJane(Player):
         raise ValueError(f"Invalid token_species {token_species}")
 
     def can_fight(self, token_species: str) -> bool:
+        """
+        Crusher Jane can always fight
+        :param token_species: MonsterToken.species to fight
+        :return: True, always
+        """
         return True
 
     def on_player_level(self, instance, value):
@@ -645,19 +748,11 @@ class CrusherJane(Player):
         """
         self._level_up_health(3)
         self._level_up_strength((1, 2))
-
         if not value % 2 == 0:
             self.stats.recovery_end_of_level += 1
-
         if value % 4 == 0:
             self._level_up_moves(1)
-
         self._update_level_track(value)
-
-        #print("CRUSHER JANE NEW LEVEL")
-        #print(value)
-        #print(self.level_track)
-        #print(self.stats)
 
     def perform_passive_action(self) -> None:
         """
@@ -667,13 +762,20 @@ class CrusherJane(Player):
         super().perform_passive_action()
 
     def enhance_damage(self, damage: int) -> int:
+        """
+        Enhances attack damage
+        :param damage: damage to enhance
+        :return: enhanced damage
+        """
         if self.ability_active:
             damage *= self.stats.advantage_strength_incr
         return damage
 
-
     def subtract_weapon(self) -> None:
-
+        """
+        Manages what happens with the ability button when the weapon is substracted
+        :return: None
+        """
         if self.ability_active:
             super().subtract_weapon()
             if self.stats.weapons == 0:
@@ -707,16 +809,26 @@ class Hawkins(Player):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def can_dig(self, token_species: str) -> bool:
-        if token_species == "rock":
+    def can_dig(self, wall_token_species: str) -> bool:
+        """
+        Checks if Hawkins can dig
+        :param wall_token_species: wall to dig
+        :return: True if can dig, False otherwise
+        """
+        if wall_token_species == "rock":
             return True
-        if token_species == "granite":
+        if wall_token_species == "granite":
             return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
-        if token_species == "quartz":
+        if wall_token_species == "quartz":
             return False
-        raise ValueError(f"Invalid token_species {token_species}")
+        raise ValueError(f"Invalid token_species {wall_token_species}")
 
     def can_fight(self, token_species: str) -> bool:
+        """
+        Checks if Hawkins can fight
+        :param token_species: MonsterToken.species to fight
+        :return: True if Hawkins can fight, False otherwise
+        """
         return self.stats.weapons > 0
 
     def on_player_level(self, instance, value):
@@ -730,24 +842,15 @@ class Hawkins(Player):
         """
         self._level_up_health(2)
         self._level_up_strength((0, 1))
-
         if not value % 2 == 0:
             self._level_up_strength((1, 0))
-
         if value % 3 == 0:
             self._level_up_moves(1)
             self.stats.recovery_end_of_level += 1
-
         if value % 2 == 0:
             self.stats.trap_spotting_chance += 0.05 \
                 if self.stats.trap_spotting_chance < 1.0 else self.stats.trap_spotting_chance
-
         self._update_level_track(value)
-
-        #print("HAWKINS NEW LEVEL")
-        #print(value)
-        #print(self.level_track)
-        #print(self.stats)
 
     def perform_passive_action(self) -> None:
         """
@@ -758,9 +861,18 @@ class Hawkins(Player):
 
     @property
     def using_dynamite(self):
+        """
+        Checks if Hawkins is using dynamite
+        :return: True if using, False otherwise
+        """
         return self.ability_active
 
-    def throw_dynamite(self, tile: Tile):
+    def throw_dynamite(self, tile: Tile) -> None:
+        """
+        Throws dynamite
+        :param tile: Tile where dynamite lands
+        :return: None
+        """
         self.special_items["dynamite"] -= 1
         self.stats.remaining_moves -= 1
         self.ability_active = False
@@ -768,5 +880,10 @@ class Hawkins(Player):
         tile.dynamite_fall()
 
     def enhance_damage(self, damage: int) -> int:
+        """
+        Placeholder. Hawkins cannot enhance damage
+        :param damage: damage to enhance
+        :return: same damage
+        """
         return damage
 

@@ -724,6 +724,11 @@ class CrusherJane(Player):
             self.overwrite_attributes(attributes_dict)
 
     def can_dig(self, token_species: str) -> bool:
+        """
+        Checks if CrusherJane can dig
+        :param token_species: WallToken species to dig
+        :return: True if can dig, False otherwise
+        """
         if token_species == "rock":
             return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
         if token_species in ["granite", "quartz"]:
@@ -809,19 +814,19 @@ class Hawkins(Player):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def can_dig(self, wall_token_species: str) -> bool:
+    def can_dig(self, token_species: str) -> bool:
         """
         Checks if Hawkins can dig
-        :param wall_token_species: wall to dig
+        :param token_species: wall to dig
         :return: True if can dig, False otherwise
         """
-        if wall_token_species == "rock":
+        if token_species == "rock":
             return True
-        if wall_token_species == "granite":
+        if token_species == "granite":
             return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
-        if wall_token_species == "quartz":
+        if token_species == "quartz":
             return False
-        raise ValueError(f"Invalid token_species {wall_token_species}")
+        raise ValueError(f"Invalid token_species {token_species}")
 
     def can_fight(self, token_species: str) -> bool:
         """

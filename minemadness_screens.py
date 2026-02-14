@@ -6,6 +6,7 @@ from kivy.uix.screenmanager import Screen
 import player_classes as players
 import monster_classes as monsters
 from interface import Interfacebutton
+from monster_classes import Monster
 from player_classes import Player
 from tokens_fading import DamageToken
 
@@ -118,7 +119,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def update_switch(self, switch_name) -> None:
         """
-        Updates the value of a switch (Property) to activate it
+        Updates the value of a switch (Property) to activate it.
         :param switch_name: switch to activate
         :return: None
         """
@@ -127,7 +128,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             switch_value = not switch_value
         elif switch_name == "turn":
             switch_value += 1
-        elif switch_name == "active_character_id":
+        elif switch_name == "active_character_id":  # ensures event is triggered even if property value did not change
             switch_value = self.active_character_id
             setattr(self, switch_name, None)
 
@@ -205,7 +206,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             if game.turn % 2 == 0 or monsters.Monster.all_dead_or_out():
                 game.active_character = players.Player.data[character_id]
 
-                if game.active_character.has_moved and not monsters.Monster.all_dead_or_out():
+                if game.active_character.stats.remaining_moves == 0 and not monsters.Monster.all_dead_or_out():
                     game.next_character()
 
                 else:
@@ -233,6 +234,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         if game.turn is not None:
 
+            # no monsters, endless turn
             if monsters.Monster.all_dead_or_out() and game.active_character.stats.remaining_moves == 0:
                 game.active_character.stats.remaining_moves = game.active_character.stats.moves
                 game.active_character.remove_effects_if_over(game.turn)
@@ -240,6 +242,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
                     game.active_character.token.unselect_token()
                 game.update_switch("turn")
 
+            # turn continues
             elif game.active_character.stats.remaining_moves > 0:
                 if game.active_character.kind == "player":
                     game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
@@ -250,6 +253,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
                     else:
                         game.next_character()
 
+            # end turn
             else:
                 if game.active_character.kind == "player":
                     game.active_character.remove_effects_if_over(game.turn)
@@ -262,10 +266,16 @@ class MineMadnessGame(Screen):  # initialized in kv file
         Increases MineMadnessGame.active_character.id by 1 or switch turn if all characters have been already activated
         :return: None
         """
-        if self.active_character.id < len(self.active_character.__class__.data) - 1:
-            self.active_character_id += 1  # next character on list moves
+        if (self.active_character.kind == "monster" and
+                self.active_character.id < len(Monster.data) - 1):
+            self.active_character_id += 1  # next monster on list moves
 
-        else:  # if end of characters list reached (all have moved)
+        elif (self.active_character.kind == "player" and
+              any(character.stats.remaining_moves > 0 for character in Player.data)):
+            next_player = Player.find_next_player_with_remaining_moves(starting_index=self.active_character_id)
+            self.active_character_id = next_player.id
+
+        else:  # end of monster list reached (all have moved)
             self.update_switch("turn")
 
     ####### END OF FUNCTIONS MANAGING THE TURN SEQUENCE  ##################
@@ -301,7 +311,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             players_not_yet_active = {
                 player.token.position
                 for player in players.Player.data
-                if not player.has_moved
+                if not player.stats.remaining_moves == 0
             }
 
         self.dungeon.disable_all_tiles()
@@ -315,11 +325,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param new_active_character: character to be activated.
         :return: None
         """
-        players.Player.swap_characters(new_active_character.id, self.active_character.id)
-
         self.active_character.token.unselect_token()
         self.active_character = new_active_character
-        self.update_switch("active_character_id")
+        self.active_character_id = new_active_character.id
 
     @staticmethod
     def on_inv_object(game: MineMadnessGame, inv_object: str | None) -> None:

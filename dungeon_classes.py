@@ -195,7 +195,6 @@ class DungeonLayout(GridLayout):
                 character = tile.get_token("monster").character
                 character.hide_if_player_in_range(character.stats.moves)  # remaining moves not yet established
 
-
     def restore_canvas_color(self, canvas: str) -> None:
         """
         Restores the canvas Color to the original state
@@ -214,7 +213,6 @@ class DungeonLayout(GridLayout):
 
         with canvas_context:
             Color (1,1,1,1)
-
 
     @staticmethod
     def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
@@ -245,11 +243,7 @@ class DungeonLayout(GridLayout):
         :return: True if they are nearby, False otherwise
         """
         directions = (-1, 0), (1, 0), (0, -1), (0, 1)
-
-        return any(
-            (position_1[0] + dx, position_1[1] + dy) == position_2
-            for dx, dy in directions
-        )
+        return any((position_1[0] + dx, position_1[1] + dy) == position_2 for dx, dy in directions)
 
     def check_if_connexion(self, position_1: tuple[int, int], position_2: tuple[int, int],
                            obstacles_kinds: list[str], num_of_steps: int) -> bool:
@@ -395,17 +389,13 @@ class DungeonLayout(GridLayout):
                 for relative_position in self.torches_dict[tile_position]:
                     match relative_position:  # relative positions (y, x), pos_modifiers (x, y)
                         case (-1, 0):
-                            pos_modifier = (tile_side / 2 - torch_side / 2,
-                                            -tile_side + torch_side)  # upper
+                            pos_modifier = (tile_side / 2 - torch_side / 2, -tile_side + torch_side)  # upper
                         case (1, 0):
-                            pos_modifier = (tile_side / 2 - torch_side / 2,
-                                            0)  # lower
+                            pos_modifier = (tile_side / 2 - torch_side / 2, 0)  # lower
                         case (0, 1):
-                            pos_modifier = (tile_side - torch_side,
-                                            -tile_side / 2 + torch_side / 2)  # right
+                            pos_modifier = (tile_side - torch_side, -tile_side / 2 + torch_side / 2)  # right
                         case (0, -1):
-                            pos_modifier = (0,
-                                            -tile_side / 2 + torch_side / 2)  # left
+                            pos_modifier = (0, -tile_side / 2 + torch_side / 2)  # left
 
                     self._add_position_to_update(tile_position)
                     tile = self.get_tile(tile_position)
@@ -422,20 +412,16 @@ class DungeonLayout(GridLayout):
         for tile in self.children:
             for token in tile.tokens["light"]:
                 # pos_modifiers (x, y)
-                if token.pos_modifier == (tile.width / 2 - token.size[0] / 2,
-                                          -tile.width + token.size[0]):  # upper
+                if token.pos_modifier == (tile.width / 2 - token.size[0] / 2, -tile.width + token.size[0]):  # upper
                     token.rotate_token(degrees=180, axis=token.center)
 
-                elif token.pos_modifier == (tile.width / 2 - token.size[0] / 2,
-                                            0):  # lower
+                elif token.pos_modifier == (tile.width / 2 - token.size[0] / 2, 0):  # lower
                     pass
 
-                elif token.pos_modifier == (tile.width - token.size[0],
-                                            -tile.width / 2 + token.size[0] / 2):  # right
+                elif token.pos_modifier == (tile.width - token.size[0], -tile.width / 2 + token.size[0] / 2):  # right
                     token.rotate_token(degrees=90, axis=token.center)
 
-                elif token.pos_modifier == (0,
-                                            -tile.width / 2 + token.size[0] / 2):  # left
+                elif token.pos_modifier == (0, -tile.width / 2 + token.size[0] / 2):  # left
                     token.rotate_token(degrees=270, axis=token.center)
 
     def match_blueprint(self) -> None:

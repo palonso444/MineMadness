@@ -355,19 +355,47 @@ class Monster(Character, ABC):
 
         return path
 
+    #######################################################################################################
+    ##                                   PRE-DEFINED MONSTER MOVEMENT PATTERNS                           ##
+    #######################################################################################################
 
+    def move_randomly(self) -> None:
+        """
+        Moves randomly, does not chase anything
+        :return: None
+        """
+        self.move_token_or_act_on_tile(self.get_path_to_target(
+            self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
+    def chase(self, smart: bool) -> None:
+        """
+        Chases whatever Token.kind has in Monster.chases
+        :param smart: if True, it goes around obstacles in a smart way. Otherwise it nevers moves away from target,
+        so it gets blocked by walls if cannot move forward
+        :return: None
+        """
+        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
 
+        if target is not None:
+            if self.get_dungeon().are_nearby(self.get_position(), target):
+                self.move_token_or_act_on_tile([self.get_position()])
+            else:
+                accesses = self._find_closest_accesses(target)
+                if smart:
+                    self.move_token_or_act_on_tile(self._select_path_to_target(accesses))
+                else:
+                    self.move_token_or_act_on_tile(self._select_path_to_target(accesses, direct_to_target=target))
+        else:
+            self.move_token_or_act_on_tile(self.get_path_to_target(
+                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
 
 # RANDOM MOVEMENT MONSTERS
-
 
 class Kobold(Monster):
     """
     HIGH movement
     LOW strength
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "K"
@@ -380,9 +408,8 @@ class Kobold(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-        super().move_token_or_act_on_tile(self.get_path_to_target(
-            self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+    def move(self) -> None:
+        super().move_randomly()
 
 
 class BlindLizard(Monster):
@@ -390,7 +417,6 @@ class BlindLizard(Monster):
     MEDIUM movement
     MEDIUM strength
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "L"
@@ -403,9 +429,8 @@ class BlindLizard(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-        super().move_token_or_act_on_tile(self.get_path_to_target(
-            self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+    def move(self) -> None:
+        super().move_randomly()
 
 
 class BlackDeath(Monster):
@@ -413,7 +438,6 @@ class BlackDeath(Monster):
     VERY HIGH  movement
     VERY HIGH strength
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "B"
@@ -426,13 +450,10 @@ class BlackDeath(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-        super().move_token_or_act_on_tile(self.get_path_to_target(
-            self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
-
+    def move(self) -> None:
+        super().move_randomly()
 
 # DIRECT MOVEMENT MONSTERS
-
 
 class CaveHound(Monster):
 
@@ -448,19 +469,8 @@ class CaveHound(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-
-        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
-
-        if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_act_on_tile([self.get_position()])
-            else:
-                accesses = self._find_closest_accesses(target)
-                super().move_token_or_act_on_tile(self._select_path_to_target(accesses, direct_to_target=target))
-        else:
-            super().move_token_or_act_on_tile(self.get_path_to_target(
-                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+    def move(self) -> None:
+        super().chase(smart=False)
 
 
 class Growl(Monster):
@@ -468,7 +478,6 @@ class Growl(Monster):
     MEDIUM movement
     HIGH strength
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "G"
@@ -481,19 +490,8 @@ class Growl(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-
-        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
-
-        if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_act_on_tile([self.get_position()])
-            else:
-                accesses = self._find_closest_accesses(target)
-                super().move_token_or_act_on_tile(self._select_path_to_target(accesses, direct_to_target=target))
-        else:
-            super().move_token_or_act_on_tile(self.get_path_to_target(
-                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+    def move(self) -> None:
+        super().chase(smart=False)
 
 
 class RockGolem(Monster):
@@ -501,7 +499,6 @@ class RockGolem(Monster):
     LOW movement
     VERY HIGH strength
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "R"
@@ -514,29 +511,16 @@ class RockGolem(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-
-        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
-
-        if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_act_on_tile([self.get_position()])
-            else:
-                accesses = self._find_closest_accesses(target)
-                super().move_token_or_act_on_tile(self._select_path_to_target(accesses, direct_to_target=target))
-        else:
-            self.get_dungeon().game.next_character()
-
+    def move(self) -> None:
+        super().chase(smart=False)
 
 # SMART MOVEMENT MONSTERS
-
 
 class DarkGnome(Monster):
     """
     LOW strength
     MEDIUM movement
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "O"
@@ -549,19 +533,8 @@ class DarkGnome(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-
-        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
-
-        if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_act_on_tile([self.get_position()])
-            else:
-                accesses = self._find_closest_accesses(target)
-                super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
-        else:
-            super().move_token_or_act_on_tile(self.get_path_to_target(
-                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+    def move(self) -> None:
+        super().chase(smart=True)
 
 
 class NightMare(Monster):
@@ -578,19 +551,8 @@ class NightMare(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-
-        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
-
-        if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_act_on_tile([self.get_position()])
-            else:
-                accesses = self._find_closest_accesses(target)
-                super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
-        else:
-            super().move_token_or_act_on_tile(self.get_path_to_target(
-                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+    def move(self) -> None:
+        super().chase(smart=True)
 
 
 class LindWorm(Monster):
@@ -607,22 +569,10 @@ class LindWorm(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-
-        target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
-
-        if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_act_on_tile([self.get_position()])
-            else:
-                accesses = self._find_closest_accesses(target)
-                super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
-        else:
-            self.get_dungeon().game.next_character()
-
+    def move(self) -> None:
+        super().chase(smart=True)
 
 # GHOSTS
-
 
 class WanderingShadow(Monster):
     """
@@ -645,9 +595,8 @@ class WanderingShadow(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-        super().move_token_or_act_on_tile(self.get_path_to_target(
-            self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+    def move(self) -> None:
+        super().move_randomly()
 
 
 class DepthsWisp(Monster):
@@ -655,7 +604,6 @@ class DepthsWisp(Monster):
     DIRECT MEDIUM movement
     LOW strength
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "W"
@@ -672,18 +620,8 @@ class DepthsWisp(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-
-        target: tuple[int,int] | None = self._find_target_by_distance(self._find_possible_targets(free=False))
-
-        if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_act_on_tile([self.get_position()])
-            else:
-                accesses = self._find_closest_accesses(target)
-                super().move_token_or_act_on_tile(self._select_path_to_target(accesses, direct_to_target=target))
-        else:
-            self.get_dungeon().game.next_character()
+    def move(self) -> None:
+        super().chase(smart=False)
 
 
 class MountainDjinn(Monster):
@@ -691,7 +629,6 @@ class MountainDjinn(Monster):
     DIRECT MEDIUM movement
     HIGH strength
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "D"
@@ -708,22 +645,10 @@ class MountainDjinn(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-    def move(self):
-
-        target: tuple[int,int] | None = self._find_target_by_distance(self._find_possible_targets(free=False))
-
-        if target is not None:
-            if self.get_dungeon().are_nearby(self.get_position(), target):
-                super().move_token_or_act_on_tile([self.get_position()])
-            else:
-                accesses = self._find_closest_accesses(target)
-                super().move_token_or_act_on_tile(self._select_path_to_target(accesses, direct_to_target=target))
-        else:
-            self.get_dungeon().game.next_character()
-
+    def move(self) -> None:
+        super().chase(smart=False)
 
 # SPECIAL MONSTERS
-
 
 class Pixie(Monster):
     """
@@ -732,7 +657,6 @@ class Pixie(Monster):
     DOES NOT attack player
     Chases pickables and makes them disappear
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "P"
@@ -758,22 +682,23 @@ class Pixie(Monster):
             self.acted_on_tile = True
         super().act_on_tile(tile)
 
-    def move(self):
-
+    def move(self) -> None:
+        """
+        Special method for picking up objects, if no object left, move randomly
+        :return:
+        """
         targets: set[tuple[int, int]] = self._find_possible_targets(free=True)
 
         if len(targets) > 0:
             super().move_token_or_act_on_tile(self._select_path_to_target(targets))
         else:
-            super().move_token_or_act_on_tile(self.get_path_to_target(
-                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+            super().move_randomly()
 
 class RattleSnake(Monster):
     """
     HIGH movement
     Attacks player once and tries to escape
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "V"
@@ -786,7 +711,6 @@ class RattleSnake(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-
     @property
     def can_retreat(self) -> bool:
         """
@@ -794,7 +718,6 @@ class RattleSnake(Monster):
         :return: True if character can retreat after attack, False otherwise
         """
         return self.has_acted and self.stats.remaining_moves > 0
-
 
     def attack_players(self) -> None:
         """
@@ -809,9 +732,11 @@ class RattleSnake(Monster):
         else:  # if it cannot retreat will stay in place
             self.stats.remaining_moves = 0
 
-
-    def move(self):
-
+    def move(self) -> None:
+        """
+        Special method for attack only if enough movements left to retreat
+        :return: None
+        """
         target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
 
         if target is not None:
@@ -830,8 +755,7 @@ class RattleSnake(Monster):
                 else:
                     super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
         else:
-            super().move_token_or_act_on_tile(self.get_path_to_target(
-                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+            super().move_randomly()
 
 
 class Penumbra(Monster):
@@ -839,7 +763,6 @@ class Penumbra(Monster):
     HIGH movement
     Attacks player once and tries to escape
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "A"
@@ -856,7 +779,6 @@ class Penumbra(Monster):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
-
     @property
     def can_retreat(self) -> bool:
         """
@@ -865,7 +787,6 @@ class Penumbra(Monster):
         :return: True if character can retreat after attack, False otherwise
         """
         return self.has_acted and self.stats.remaining_moves > 0
-
 
     @property
     def is_hidden(self) -> bool:
@@ -897,8 +818,6 @@ class Penumbra(Monster):
         :return: None
         """
         self.token.color.a = 0  # changes transparency
-        #self.get_dungeon().restore_canvas_color("canvas")  # restores alpha
-        #self.get_dungeon().restore_canvas_color("after")
         self.ability_active = True
 
     def unhide_if_all_players_unreachable(self) -> None:
@@ -939,11 +858,12 @@ class Penumbra(Monster):
         else:  # if it cannot retreat will stay in place
             self.stats.remaining_moves = 0
 
-
     def move(self):
-
+        """
+        Special method for hiding and attacking
+        :return: None
+        """
         self.unhide_if_all_players_unreachable()
-
         target: tuple[int, int] | None = self._find_target_by_path(self._find_possible_targets(free=False))
 
         if target is not None:
@@ -963,14 +883,13 @@ class Penumbra(Monster):
                 super().move_token_or_act_on_tile(path)
 
         else:
-            super().move_token_or_act_on_tile(self.get_path_to_target(
-                self.find_random_target(int(self.stats.remaining_moves * self.stats.random_motility))))
+            super().move_randomly()
+
 
 class ClawJaw(Monster):
     """
     Chases players and destroys walls if any on the way.
     """
-
     def __init__(self, attributes_dict: dict | None = None):
         super().__init__()
         self.char: str = "C"
@@ -1041,7 +960,6 @@ class ClawJaw(Monster):
                 return path[:idx], path[idx]
         return path, None
 
-
     def dig(self, wall_tile: Tile) -> None:
         """
         Digging method for Claw Jaw
@@ -1091,8 +1009,11 @@ class ClawJaw(Monster):
 
         return target_dist, target_path
 
-    def move(self):
-
+    def move(self) -> None:
+        """
+        Special method for moving across walls
+        :return: None
+        """
         target_dist, target_path = self._set_possible_targets()
 
         if target_path is None and target_dist is None:

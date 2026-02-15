@@ -9,6 +9,7 @@ from interface import Interfacebutton
 from monster_classes import Monster
 from player_classes import Player
 from tokens_fading import DamageToken
+from dungeon_classes import DungeonLayout
 
 
 class MineMadnessGame(Screen):  # initialized in kv file
@@ -145,6 +146,35 @@ class MineMadnessGame(Screen):  # initialized in kv file
             game.ids.ability_button.state = "down" if game.active_character.ability_active else "normal"
 
         game.ability_button_active = True
+
+    def add_dungeon_to_game(self, dungeon: DungeonLayout | None = None) -> None:
+        """
+        Adds a dungeon to the game
+        :param dungeon: DungeonLayout to add. If None, a random one according to MineMadnessApp.game.level is generated
+        :return: None
+        """
+        scrollview = self.children[0].children[1]
+        if dungeon is None:
+            scrollview.add_widget(DungeonLayout(game=self))
+        else:
+            scrollview.add_widget(dungeon)
+
+    def remove_dungeon_from_game(self) -> None:
+        """
+        Removes the dungeon from the game
+        :return: None
+        """
+        scrollview = self.children[0].children[1]
+        scrollview.remove_widget(self.dungeon)
+
+    def clean_previous_game(self) -> None:
+        """
+        Cleans the data from the previous game
+        :return: None
+        """
+        Player.clear_character_data()
+        monsters.Monster.clear_character_data()
+        self.dungeon.unschedule_all_events()
 
     ####### THE FOLLOWING GROUP OF FUNCTIONS MANAGE THE TURN SEQUENCE  ###########
 
@@ -357,12 +387,12 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def finish_level(self) -> None:
         """
-        Finishes the level and notified MineMadnessApp to provide a new level
+        Finishes the level and provides a new one
         :return: None
         """
         monsters.Monster.data.clear()
         self.dungeon.unschedule_all_events()
         self.level += 1
-        App.get_running_app().remove_dungeon_from_game()
-        App.get_running_app().add_dungeon_to_game()
+        self.remove_dungeon_from_game()
+        self.add_dungeon_to_game()
         self.turn = None  # needed to abort of MineMadnessGame.on_character_done()

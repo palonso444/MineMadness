@@ -16,7 +16,6 @@ import sys
 
 from dungeon_blueprint import Blueprint
 from player_classes import Player, Sawyer, Hawkins, CrusherJane  # players needed for globals()
-import monster_classes as monsters
 from dungeon_classes import DungeonLayout
 from minemadness_game import MineMadnessGame
 from game_add_screens import MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig, LoadingScreen
@@ -130,34 +129,12 @@ class MineMadnessApp(App):
         self.music.loop = True
         self.music_on: bool = True
 
-    def add_dungeon_to_game(self, dungeon: DungeonLayout | None = None) -> None:
-        """
-        Adds a dungeon to MineMadnessGame
-        :param dungeon: DungeonLayout to add. If None, a random one according to MineMadnessApp.game.level is generated
-        :return: None
-        """
-        scrollview = self.game.children[0].children[1]
-        if dungeon is None:
-            scrollview.add_widget(DungeonLayout(game=self.game))
-        else:
-            scrollview.add_widget(dungeon)
-
-    def remove_dungeon_from_game(self) -> None:
-        """
-        Removes the dungeon from MineMadnessGame
-        :return: None
-        """
-        scrollview = self.game.children[0].children[1]
-        scrollview.remove_widget(self.game.dungeon)
-
     def _clean_previous_game(self) -> None:
         """
-        Cleans the data from the previous MineMadnessGame and removes it from the ScreenManager
+        Cleans the data from the previous game and removes it from the ScreenManager
         :return: None
         """
-        Player.clear_character_data()
-        monsters.Monster.clear_character_data()
-        self.game.dungeon.unschedule_all_events()
+        self.game.clean_previous_game()
         self.sm.remove_widget(self.sm.get_screen("game_screen"))
         self.game = None
 
@@ -181,7 +158,7 @@ class MineMadnessApp(App):
         :param dungeon: dungeon to add. If None, a random one is added
         :return: None
         """
-        self.add_dungeon_to_game(dungeon)
+        self.game.add_dungeon_to_game(dungeon)
         self.sm.add_widget(self.game)
         self.sm.current = "game_screen"
 

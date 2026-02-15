@@ -182,6 +182,14 @@ class Character(ABC):
         return False
 
     @property
+    def has_moves_left(self) -> bool:
+        """
+        Checks if has moves left
+        :return: True if character has moves left, False otherwise
+        """
+        return self.stats.remaining_moves > 0
+
+    @property
     def has_moved(self) -> bool:
         """
         Checks if the character has moved this turn

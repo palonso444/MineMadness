@@ -11,27 +11,6 @@ from player_classes import Player
 from tokens_fading import DamageToken
 
 
-class MainMenu(Screen):
-    pass
-
-class HowToPlay(Screen):
-    pass
-
-class OutGameOptions(Screen):
-    pass
-
-class InGameOptions(Screen):
-    pass
-
-class NewGameConfig(Screen):
-    pass
-
-class GameOver(Screen):
-    pass
-
-class LoadingScreen(Screen):
-    pass
-
 class MineMadnessGame(Screen):  # initialized in kv file
 
     # GENERAL PROPERTIES
@@ -206,7 +185,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             if game.turn % 2 == 0 or monsters.Monster.all_dead_or_out():
                 game.active_character = players.Player.data[character_id]
 
-                if game.active_character.stats.remaining_moves == 0 and not monsters.Monster.all_dead_or_out():
+                if not game.active_character.has_moves_left and not monsters.Monster.all_dead_or_out():
                     game.next_character()
 
                 else:
@@ -235,7 +214,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if game.turn is not None:
 
             # no monsters, endless turn
-            if monsters.Monster.all_dead_or_out() and game.active_character.stats.remaining_moves == 0:
+            if monsters.Monster.all_dead_or_out() and not game.active_character.has_moves_left:
                 game.active_character.stats.remaining_moves = game.active_character.stats.moves
                 game.active_character.remove_effects_if_over(game.turn)
                 if game.active_character.token is not None:  # dead characters have no Token
@@ -243,7 +222,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.update_switch("turn")
 
             # turn continues
-            elif game.active_character.stats.remaining_moves > 0:
+            elif game.active_character.has_moves_left:
                 if game.active_character.kind == "player":
                     game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
                 elif game.active_character.kind == "monster":
@@ -271,7 +250,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.active_character_id += 1  # next monster on list moves
 
         elif (self.active_character.kind == "player" and
-              any(character.stats.remaining_moves > 0 for character in Player.data)):
+              any(character.has_moves_left for character in Player.data)):
             next_player = Player.find_next_player_with_remaining_moves(starting_index=self.active_character_id)
             self.active_character_id = next_player.id
 
@@ -297,26 +276,14 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def activate_accessible_tiles(self, steps: int) -> None:
         """
-        Gets the total range of activable tiles (player movement range and other player positions if player.
-        did not move if monsters are present, otherwise all other players positions).
+        Gets the total range of activable tiles (player movement range and other player positions) and calls the
+        activation check for all of them
         :param steps: number of steps within which accessible Tiles must be activated
         :return: None
         """
-
-        if monsters.Monster.all_dead_or_out():
-            players_not_yet_active = {
-                player.token.position for player in players.Player.data
-            }
-        else:
-            players_not_yet_active = {
-                player.token.position
-                for player in players.Player.data
-                if not player.stats.remaining_moves == 0
-            }
-
         self.dungeon.disable_all_tiles()
         player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
-        positions_in_range = players_not_yet_active.union(player_movement_range)
+        positions_in_range = player_movement_range.union({player.get_position() for player in players.Player.data})
         self.dungeon.enable_tiles(positions_in_range, self.active_character)
 
     def switch_character(self, new_active_character: Character) -> None:

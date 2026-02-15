@@ -18,8 +18,8 @@ from dungeon_blueprint import Blueprint
 from player_classes import Player, Sawyer, Hawkins, CrusherJane  # players needed for globals()
 import monster_classes as monsters
 from dungeon_classes import DungeonLayout
-from minemadness_screens import MineMadnessGame, MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, \
-    NewGameConfig, LoadingScreen
+from minemadness_game import MineMadnessGame
+from game_add_screens import MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig, LoadingScreen
 
 
 def get_resource_path(relative_path: str) -> str:
@@ -270,7 +270,6 @@ class MineMadnessApp(App):
             new_dict[new_key] = self._convert_all_digit_keys_to_int(value) if isinstance(value, dict) else value
 
         return new_dict
-
 
     @staticmethod
     def on_music_on(app, music_on):

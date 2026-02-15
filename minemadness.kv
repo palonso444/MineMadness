@@ -202,11 +202,10 @@
         TitleLabel:
             font_name: "duality"
             font_size: "50sp"
-            text: f"You have reached a depth of {str(app.level * 30)} feet" if app.level is not None else ""
+            text: f"You have reached a depth of {str(app.game_over_level * 30)} feet" if app.game_over_level is not None else ""
             size_hint: 1, 0.4
         MainMenuButton:
             size_hint: 1, 0.1
-
 
 <OutGameOptions>
     MenuLayout:
@@ -304,7 +303,6 @@
             Label:
                 text: "(c) AppsBrivalles 2025"
                 halign: "center"
-
 
 <LoadingScreen>
     Label:

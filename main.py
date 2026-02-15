@@ -56,9 +56,9 @@ class MineMadnessApp(App):
     flickering_torches_on = BooleanProperty(None)
     game_mode_normal = BooleanProperty(None)
     ongoing_game = BooleanProperty(False)
-    level = NumericProperty(None)
     saved_game = BooleanProperty(False)
     game_over_message = StringProperty(None)
+    game_over_level = NumericProperty(None)
 
     def __init__(self):
         super().__init__()
@@ -267,9 +267,10 @@ class MineMadnessApp(App):
             self.saved_game = False
         self.sm.transition.duration = 1.5
         self.game_over_message = message
+        self.game_over_level = self.game.level
         self.sm.current = "game_over"
-        self.ongoing_game = False
         self._clean_previous_game()
+        self.ongoing_game = False
         self.sm.transition.duration = 0.3
 
 

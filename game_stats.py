@@ -391,7 +391,6 @@ class CharacterStats(ABC):
     health: int | None = None
     strength: list[int] | None = None
     moves: int | None = None
-    remaining_moves: int | None = None
 
     # needed for players in fight_on_tile()
     experience_when_killed: int | None = None

@@ -26,32 +26,27 @@ class AbilityButton(ToggleButton):
 
                     case "sawyer":
                         character.hide()
-                        self.game.activate_accessible_tiles(character.stats.remaining_moves)
-                        self.game.update_switch("character_done")
 
                     case "hawkins":
                         character.token.show_effect_token("dynamite")
                         character.ability_active = True
                         self.game.activate_accessible_tiles(character.stats.shooting_range)
-                        # self.game.update_switch("character_done") must not be activated here
 
                     case "crusherjane":
-                        character.stats.remaining_moves -= 1
                         character.token.show_effect_token("armed")
                         character.ability_active = True
-                        self.game.activate_accessible_tiles(character.stats.remaining_moves)
-                        self.game.update_switch("character_done")
+                        character.remaining_moves -= 1
 
             elif value == "normal":
                 match character.species:
 
                     case "sawyer":
                         character.unhide()
-                        self.game.activate_accessible_tiles(character.stats.remaining_moves)  # can dig again
+                        self.game.activate_accessible_tiles(character.remaining_moves)  # can dig again
 
                     case "hawkins":
                         character.ability_active = False
-                        self.game.activate_accessible_tiles(character.stats.remaining_moves)
+                        self.game.activate_accessible_tiles(character.remaining_moves)
 
                     case "crusherjane":
                         character.token.show_effect_token("armed", effect_ends=True)
@@ -68,13 +63,10 @@ class Interfacebutton(Button):
         character.inventory[item] -= 1
         self.game.inv_object = item  # this disables the button, if necessary
 
-        character.stats.remaining_moves -= self.stats.use_time
-        self.game.activate_accessible_tiles(character.stats.remaining_moves)
+        character.remaining_moves -= self.stats.use_time
+        self.game.activate_accessible_tiles(character.remaining_moves)
 
         character.check_if_overdose(item)
-
-        if character.stats.remaining_moves == 0:
-            self.game.update_switch("character_done")
 
     def get_effect_size(self, character, attribute: str):
 
@@ -119,7 +111,7 @@ class CoffeeButton(Interfacebutton):
         character = self.game.active_character
         effect_size = self.get_effect_size(character, "natural_moves")
         character.stats.moves += effect_size
-        character.stats.remaining_moves += effect_size
+        character.remaining_moves += effect_size
         character.effects["moves"].append(
             {
                 "size": effect_size,

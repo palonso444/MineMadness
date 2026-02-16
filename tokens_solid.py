@@ -190,10 +190,12 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
                          size_modifier, pos_modifier, bright_radius, bright_int, gradient, **kwargs)
 
         self.animation: Animation | None = None
-        self.start_position: tuple[int,int] | None = None
-        self.path: list[tuple[int,int]] | None = None
         self.color: tuple[int,int,int,int]| None = None
         self._display_in_canvas()
+
+        self.start_position: tuple[int,int] | None = None
+        self.path: list[tuple[int,int]] | None = None
+        self.steps: int = 0  # keeps track of steps moved during sliding
 
     def _display_in_canvas(self) -> None:
         """
@@ -275,8 +277,6 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             next_tile.get_token("monster").character.fight_on_tile(self.get_current_tile())
             if self.character.is_dead:
                 self.dungeon.game.next_character()
-            else:
-                self.dungeon.game.update_switch("character_done")
 
         else:
             self.dungeon.moving_token = self
@@ -315,7 +315,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :param on_complete: callback to be triggered once the path is completed or the character runs out of moves
         :return: None
         """
-        self.character.stats.remaining_moves -= 1
+        self.steps += 1
 
         # invisible MonsterTokens hide while moving
         if self.character.invisible and not self.character.is_hidden:
@@ -324,7 +324,6 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         if self.character.kind == "player" and current_tile.has_token("trap"):
             self.update_token_on_tile(current_tile)
             self.character.fall_in_trap(current_tile)
-            self.dungeon.game.update_switch("character_done")
 
         elif len(self.path) > 0:
             next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))
@@ -334,16 +333,14 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
                 next_tile.get_token("monster").character.fight_on_tile(current_tile)
                 if self.character.is_dead:
                     self.dungeon.game.next_character()
-                else:
-                    self.dungeon.game.update_switch("character_done")
             else:
                 self._slide_one_step(next_tile, on_complete)
 
         else:
             self.update_token_on_tile(current_tile)
             self.character.act_on_tile(current_tile)
-            if not self.character.can_retreat and not self.character.is_exited:
-                self.dungeon.game.update_switch("character_done")
+            self.character.remaining_moves -= self.steps
+            self.steps = 0
 
     def show_damage(self) -> None:
         """
@@ -561,12 +558,10 @@ class MonsterToken(CharacterToken):
         :param on_complete: callback to be triggered once the path is completed or the monster runs out of moves
         :return: None
         """
-        self.character.stats.remaining_moves -= 1
         if self.character.invisible and not self.character.is_hidden:
             self.character.hide()
         if len(self.path) > 0:
             self._slide_one_step(self.dungeon.get_tile(self.path.pop(0)), on_complete)
         else:
-            self.character.stats.remaining_moves = 0  # after retreat, monster cannot do anything else
             self.update_token_on_tile(current_tile)
-            self.dungeon.game.update_switch("character_done")
+            self.character.remaining_moves = 0  # after retreat, monster cannot do anything else

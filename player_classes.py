@@ -54,7 +54,7 @@ class Player(Character, ABC, EventDispatcher):
         n = len(cls.data)
         for i in range(1, n + 1):
             next_index = (starting_index + i) % n
-            if cls.data[next_index].stats.remaining_moves > 0:
+            if cls.data[next_index].remaining_moves > 0:
                 return cls.data[next_index]
 
     @classmethod
@@ -311,7 +311,7 @@ class Player(Character, ABC, EventDispatcher):
         """
         dungeon: DungeonLayout = self.get_dungeon()
         hidden_traps_in_range: set[tuple[int,int]] = {position for position in dungeon.get_range(self.get_position(),
-                                                                            self.stats.remaining_moves)
+                                                                            self.remaining_moves)
                                                 if dungeon.get_tile(position).has_token("trap")
                                                 and dungeon.get_tile(position).get_token("trap").character.is_hidden}
 
@@ -321,7 +321,7 @@ class Player(Character, ABC, EventDispatcher):
                                                      position,
                                                      [token_kind for token_kind in self.blocked_by
                                                       if token_kind != "trap"],
-                                                     self.stats.remaining_moves) and self.can_find_trap:
+                                                     self.remaining_moves) and self.can_find_trap:
 
                 trap_token = dungeon.get_tile(position).get_token("trap")
                 trap_token.character.unhide()
@@ -329,7 +329,7 @@ class Player(Character, ABC, EventDispatcher):
                 self.experience += trap_token.character.stats.experience_when_found
                 self.get_dungeon().game.ids.experience_bar.value = self.experience
 
-        self.stats.remaining_moves = 0  # one passive action per turn
+        self.remaining_moves = 0  # one passive action per turn
 
     def act_on_tile(self, tile:Tile) -> None:
         """
@@ -412,7 +412,7 @@ class Player(Character, ABC, EventDispatcher):
         :return: None
         """
         tile.get_token("trap").character.show_and_damage(self)
-        self.stats.remaining_moves = 0
+        self.remaining_moves = 0
 
     def _disarm_trap(self, tile:Tile) -> None:
         """
@@ -420,12 +420,12 @@ class Player(Character, ABC, EventDispatcher):
         :param tile: Tile where the trap is
         :return: None
         """
-        self.stats.remaining_moves -= 1
         trap_token = tile.get_token("trap")
         trap_token.show_effect_token(effect="trap_out")
         self.experience += trap_token.character.stats.calculate_experience(self.get_dungeon().dungeon_level)
         self.get_dungeon().game.ids.experience_bar.value = self.experience
         trap_token.delete_token(tile)
+        self.remaining_moves -= 1
 
     def _dig(self, wall_tile: Tile) -> None:
         """
@@ -444,7 +444,7 @@ class Player(Character, ABC, EventDispatcher):
                 self.stats.shovels -= 1
                 game.update_switch("shovels")
 
-        self.stats.remaining_moves -= self.stats.digging_moves
+        self.remaining_moves -= self.stats.digging_moves
 
         wall_tile.get_token("wall").show_digging()
         wall_tile.get_token("wall").delete_token(wall_tile)
@@ -463,13 +463,12 @@ class Player(Character, ABC, EventDispatcher):
         opponent = opponent_tile.get_token("monster").character
         opponent = self.fight_opponent(opponent)
         self.subtract_weapon()
-        self.stats.remaining_moves -= 1
+        self.remaining_moves -= 1
 
         if opponent.stats.health <= 0:
             opponent.kill_character(opponent_tile)
             self.experience += opponent.stats.experience_when_killed
             self.get_dungeon().game.ids.experience_bar.value = self.experience
-
 
     def heal(self, extra_points: int) -> None:
         """
@@ -574,8 +573,8 @@ class Player(Character, ABC, EventDispatcher):
         """
         self.stats.natural_moves += increase
         self.stats.moves += increase
-        self.stats.remaining_moves += increase
-        self.get_dungeon().game.activate_accessible_tiles(self.stats.remaining_moves)
+        self.remaining_moves += increase
+        self.get_dungeon().game.activate_accessible_tiles(self.remaining_moves)
 
     def _level_up_strength(self, increase: tuple[int, int]) -> None:
         """
@@ -623,7 +622,7 @@ class Sawyer(Player):
         :return: True if can dig, False otherwise
         """
         if token_species == "rock":
-            return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
+            return self.stats.shovels > 0 and self.remaining_moves >= self.stats.digging_moves
         if token_species in ["granite", "quartz"]:
             return False
         raise ValueError(f"Invalid token_species {token_species}")
@@ -671,11 +670,11 @@ class Sawyer(Player):
         Hides Sawyer
         :return: None
         """
-        self.stats.remaining_moves -= 1
         self.special_items["powder"] -= 1
         self.ignores += ["pickable", "treasure"]
         self.token.color.a = 0.6  # changes transparency
         self.ability_active = True
+        self.remaining_moves -= 1
 
     def unhide(self) -> None:
         """
@@ -730,7 +729,7 @@ class CrusherJane(Player):
         :return: True if can dig, False otherwise
         """
         if token_species == "rock":
-            return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
+            return self.stats.shovels > 0 and self.remaining_moves >= self.stats.digging_moves
         if token_species in ["granite", "quartz"]:
             return False
         raise ValueError(f"Invalid token_species {token_species}")
@@ -823,7 +822,7 @@ class Hawkins(Player):
         if token_species == "rock":
             return True
         if token_species == "granite":
-            return self.stats.shovels > 0 and self.stats.remaining_moves >= self.stats.digging_moves
+            return self.stats.shovels > 0 and self.remaining_moves >= self.stats.digging_moves
         if token_species == "quartz":
             return False
         raise ValueError(f"Invalid token_species {token_species}")
@@ -879,10 +878,10 @@ class Hawkins(Player):
         :return: None
         """
         self.special_items["dynamite"] -= 1
-        self.stats.remaining_moves -= 1
         self.ability_active = False
         self.token.dungeon.game.update_switch("ability_button")
         tile.dynamite_fall()
+        self.remaining_moves -= 1
 
     def enhance_damage(self, damage: int) -> int:
         """

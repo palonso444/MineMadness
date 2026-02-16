@@ -19,7 +19,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
     dungeon = ObjectProperty(None)
     turn = NumericProperty(None, allownone=True)
     active_character_id = NumericProperty(None, allownone=True)
-    character_done = BooleanProperty(False)
     player_exited = BooleanProperty(False)
 
     # ABILITY PROPERTIES
@@ -214,14 +213,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
             # if player turn or no monsters
             if game.turn % 2 == 0 or monsters.Monster.all_dead_or_out():
                 game.active_character = players.Player.data[character_id]
-
-                if not game.active_character.has_moves_left and not monsters.Monster.all_dead_or_out():
-                    game.next_character()
-
-                else:
-                    game.active_character.token.select_character()
-                    game.update_interface()
-                    game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
+                game.active_character.token.select_character()
+                game.update_interface()
+                game.activate_accessible_tiles(game.active_character.remaining_moves)
 
             else:  # if monsters turn and monsters in the game
                 game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
@@ -230,45 +224,43 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.active_character.token.select_character()
                 game.active_character.move()
 
-    @staticmethod
-    def on_character_done(game: MineMadnessGame, value: bool) -> None:
+
+    def character_moved(self) -> None:
         """
         Checks what to do when a character finishes a movement, but it may still have movements left
-        :param game: current instance of MineMadnessGame
-        :param value: current boolean value of the switch
         :return: None
         """
-        game.check_if_all_players_exited()
+        self.check_if_all_players_exited()
         # call game.check_if_game_over() if game over for lack of shovels is implemented
 
-        if game.turn is not None:
+        if self.turn is not None:
 
             # no monsters, endless turn
-            if monsters.Monster.all_dead_or_out() and not game.active_character.has_moves_left:
-                game.active_character.stats.remaining_moves = game.active_character.stats.moves
-                game.active_character.remove_effects_if_over(game.turn)
-                if game.active_character.token is not None:  # dead characters have no Token
-                    game.active_character.token.unselect_token()
-                game.update_switch("turn")
+            if monsters.Monster.all_dead_or_out() and not self.active_character.has_moves_left:
+                self.active_character.remaining_moves = self.active_character.stats.moves
+                self.active_character.remove_effects_if_over(self.turn)
+                if self.active_character.token is not None:  # dead characters have no Token
+                    self.active_character.token.unselect_token()
+                self.update_switch("turn")
 
             # turn continues
-            elif game.active_character.has_moves_left:
-                if game.active_character.kind == "player":
-                    game.activate_accessible_tiles(game.active_character.stats.remaining_moves)
-                elif game.active_character.kind == "monster":
-                    if game.active_character.has_acted:
-                        game.active_character.acted_on_tile = False
-                        game.active_character.move()
+            elif self.active_character.has_moves_left:
+                if self.active_character.kind == "player":
+                    self.activate_accessible_tiles(self.active_character.remaining_moves)
+                elif self.active_character.kind == "monster":
+                    if self.active_character.has_acted:
+                        self.active_character.acted_on_tile = False
+                        self.active_character.move()
                     else:
-                        game.next_character()
+                        self.next_character()
 
             # end turn
             else:
-                if game.active_character.kind == "player":
-                    game.active_character.remove_effects_if_over(game.turn)
-                    if game.active_character.token is not None:  # dead characters have no Token
-                        game.active_character.token.unselect_token()
-                game.next_character()
+                if self.active_character.kind == "player":
+                    self.active_character.remove_effects_if_over(self.turn)
+                    if self.active_character.token is not None:  # dead characters have no Token
+                        self.active_character.token.unselect_token()
+                self.next_character()
 
     def next_character(self) -> None:
         """

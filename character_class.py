@@ -2,10 +2,14 @@ from __future__ import annotations
 from random import randint
 from abc import ABC, abstractmethod
 
+from kivy.event import EventDispatcher
+from kivy.properties import NumericProperty
 
-class Character(ABC):
+
+class Character(ABC, EventDispatcher):
 
     data: list[Character] | None = None
+    remaining_moves = NumericProperty(None)
 
     @classmethod
     def clear_character_data(cls) -> None:
@@ -31,8 +35,7 @@ class Character(ABC):
         :return: None
         """
         for character in cls.data:
-            character.stats.remaining_moves = character.stats.moves
-
+            character.remaining_moves = character.stats.moves
 
     @classmethod
     def all_dead_or_out(cls) -> bool:
@@ -43,7 +46,7 @@ class Character(ABC):
         return len(cls.data) == 0
 
 
-    def __init__(self):
+    def __init__(self, **kwargs):
 
         """
         Those are common attributes to all characters (Players and Monsters).
@@ -51,6 +54,7 @@ class Character(ABC):
         id, position, token and dungeon, initialized in DungeonLayout.place_item()
         Exclusive attributes of each class are added within corresponding classes.
         """
+        super().__init__(**kwargs)
         self.char: str | None = None
         self.name: str | None = None
         self.id: int | None = None   # initialized in DungeonLayout.place_item()
@@ -65,6 +69,14 @@ class Character(ABC):
         self.step_transition: str | None = None  # defines kind of movement (walk, stomp, glide...)
         self.step_duration: float | None = None  # defines speed of movement, from 0 to 1
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
+
+    def on_remaining_moves(self, character: Character, value: int) -> None:
+        """
+        Notifies the game when the character moves
+        :return: None
+        """
+        if character.has_moved:
+            self.get_dungeon().game.character_moved()
 
     def to_dict(self):
         """
@@ -187,7 +199,7 @@ class Character(ABC):
         Checks if has moves left
         :return: True if character has moves left, False otherwise
         """
-        return self.stats.remaining_moves > 0
+        return self.remaining_moves > 0
 
     @property
     def has_moved(self) -> bool:
@@ -195,7 +207,7 @@ class Character(ABC):
         Checks if the character has moved this turn
         :return: True if character has moved, False otherwise
         """
-        return self.stats.remaining_moves < self.stats.moves
+        return self.remaining_moves < self.stats.moves
 
     def hide(self) -> None:
         """

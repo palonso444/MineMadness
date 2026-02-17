@@ -1,15 +1,4 @@
-This is a experimental branch. uses events instead of manually triggering switches. it has several bugs:
-
-Character order is not preseved when exiting. to solve it:
-
-player.exited and player.in_game and player_dead store only ids to relate to player.data. A dictionary relating ids to character player.Data must be created storing the whole data. this dict of player data is immutable.
-
-Monsters have only in_game data and dead.data. they have a dict Mobster.data created in each dungeon
-
-Some monsters move simultaneously sometimes. usually when a character exits. not clear why
-
-when killing last monster of dungeon, program breaks.
-
+Experimental branch. it hsd bugs, see below:
 
 
 ![mine_madness](https://github.com/user-attachments/assets/f7495fcb-5e02-406b-9c3b-5f7fd324362c)
@@ -45,12 +34,15 @@ https://palonso444.itch.io/minemadness
 
 Developer notes
 ---------------
-This branch contains the game itself with all the interfaces.
 
-Monster and player attributes are already balanced.
+This is a experimental branch. It uses events instead of manually triggering switches. It has several bugs:
 
-Monster frequencies per level are already balanced.
+1. Character order is not preseved when exiting. to solve it:
 
-Player leveling up is already balanced.
+Player.exited and player.in_game and player_dead store only ids to relate to player.data. A list player Data must be created storing the whole data. This list of player data is immutable. Their index on the list are their immutable ids.
 
-Game mechanics like applying toughness, leveling up, increasing attributes when consuming an item... should work, but they are not properly unit-tested.
+Monsters have only in_game.data and dead.data. the list Monster.data is created newly in each dungeon
+
+2. Some monsters move simultaneously sometimes. usually when a character exits. not clear why
+
+3. When killing last monster of dungeon, program breaks

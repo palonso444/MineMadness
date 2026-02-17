@@ -407,9 +407,9 @@ class CharacterStats(ABC):
 @dataclass
 class PlayerStats(CharacterStats, ABC):
 
-    shovels: int = 3
+    initial_shovels: int = 3
     digging_moves: int = 1
-    weapons: int = 3
+    initial_weapons: int = 3
     advantage_strength_incr: int | None = None
     shooting_range: int | None = None
     recovery_end_of_level: int = 0  # health points players heal at end of level
@@ -445,7 +445,7 @@ class HawkinsStats(PlayerStats):  # BALANCED
 
 @dataclass
 class CrusherJaneStats(PlayerStats):  # BALANCED
-    weapons: int = 4
+    initial_weapons: int = 4
     health: int = 10
     strength: list[int] = field(default_factory=lambda: [2,5])
     advantage_strength_incr: int = 2

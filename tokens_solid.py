@@ -244,6 +244,13 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         """
         pass
 
+    def skip_moves(self) -> None:
+        """
+        Skips the rest of the moves (if any)
+        :return: None
+        """
+        self.character.remaining_moves = 0
+
     def update_token_on_tile(self, tile : Tile) -> None:
         """
         Updates all necessary parameters when a CharacterToken lands on a new Tile
@@ -276,7 +283,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             #one attack
             next_tile.get_token("monster").character.fight_on_tile(self.get_current_tile())
             if self.character.is_dead:
-                self.dungeon.game.next_character()
+                self.dungeon.game.activate_next_character()
 
         else:
             self.dungeon.moving_token = self
@@ -316,7 +323,6 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         self.steps += 1
-
         # invisible MonsterTokens hide while moving
         if self.character.invisible and not self.character.is_hidden:
             self.character.hide_if_player_in_range(self.character.stats.moves, position=current_tile.position)
@@ -332,7 +338,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
                 self.update_token_on_tile(current_tile)
                 next_tile.get_token("monster").character.fight_on_tile(current_tile)
                 if self.character.is_dead:
-                    self.dungeon.game.next_character()
+                    self.dungeon.game.activate_next_character()
             else:
                 self._slide_one_step(next_tile, on_complete)
 
@@ -564,4 +570,4 @@ class MonsterToken(CharacterToken):
             self._slide_one_step(self.dungeon.get_tile(self.path.pop(0)), on_complete)
         else:
             self.update_token_on_tile(current_tile)
-            self.character.remaining_moves = 0  # after retreat, monster cannot do anything else
+            self.skip_moves()  # after retreat, monster cannot do anything else

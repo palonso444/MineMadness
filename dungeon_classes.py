@@ -598,7 +598,7 @@ class DungeonLayout(GridLayout):
                     character = traps.Trap()
 
             if character is not None:
-                character.setup_character()
+                character.setup_character(game=self.game)
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:

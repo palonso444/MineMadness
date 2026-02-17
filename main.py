@@ -187,8 +187,11 @@ class MineMadnessApp(App):
         game_state["torches_dict"] = {str(key): value for key,value in self.game.dungeon.torches_dict.items()}\
                                         if self.game.dungeon.torches_dict is not None else None
 
-        game_state["players_alive"] = {player.__class__.__name__: player.to_dict() for player in Player.data}
-        game_state["players_dead"] = {player.__class__.__name__: player.to_dict() for player in Player.dead_data}
+        # game is not JSON serializable
+        game_state["players_alive"] = {player.__class__.__name__: {k: v for k, v in player.to_dict().items() if k != "game"}
+                                       for player in Player.data}
+        game_state["players_dead"] = {player.__class__.__name__: {k: v for k, v in player.to_dict().items() if k != "game"}
+                                      for player in Player.dead_data}
         return game_state
 
     def continue_game_or_load(self) -> None:
@@ -229,6 +232,12 @@ class MineMadnessApp(App):
                                    for key in data["players_alive"].keys()]
             Player.dead_data = [globals()[key](attributes_dict=data["players_dead"][key])
                                    for key in data["players_dead"].keys()]
+
+        for player in Player.dead_data:
+            player.game = self.game
+        for player in Player.data:
+            player.game = self.game
+
         self.ongoing_game = True
         self._setup_dungeon_screen(DungeonLayout(game=self.game,
                                                  blueprint = Blueprint(layout=data["blueprint"]["layout"]),

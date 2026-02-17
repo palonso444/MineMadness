@@ -266,7 +266,7 @@ class Tile(Button):
             return False
         if self.get_token("player").character == active_player:
             return True
-        if not self.get_token("player").character.has_moves_left and not Monster.all_dead_or_out():
+        if not self.get_token("player").character.has_moves_left and not Monster.all_out():
             return False
 
         return True

@@ -74,7 +74,6 @@ class Monster(Character, ABC):
         """
         return False
 
-
     @property
     def can_dodge(self) -> bool:
         """
@@ -103,6 +102,7 @@ class Monster(Character, ABC):
         """
         if len(path) == 1:
             self.act_on_tile(self.token.get_current_tile())
+            self.token.skip_moves()  # if monster is blocked, this triggers next monster
         else:
             self.token.slide(path, self.token.on_move_completed)
 
@@ -137,8 +137,7 @@ class Monster(Character, ABC):
                 break
             self.fight_on_tile(choice(surrounding_player_tiles))
             self.stats.remaining_attacks -= 1
-            self.remaining_moves -= 1
-
+            self.token.steps += 1
 
     def fight_on_tile(self, opponent_tile: Tile) -> None:
         """
@@ -728,7 +727,8 @@ class RattleSnake(Monster):
         if len(path) > 1:  # if all players dead, no path
             self.token.slide(path, self.token.on_retreat_completed)
         else:  # if it cannot retreat will stay in place
-            self.remaining_moves = 0
+            # self.remaining_moves = 0
+            self.token.steps = self.remaining_moves
 
     def move(self) -> None:
         """
@@ -749,7 +749,7 @@ class RattleSnake(Monster):
                                  (self.get_position(), access,
                                   self.blocked_by, self.remaining_moves // randint(2,4))}
                 if len(accesses) == 0:
-                    self.get_dungeon().game.next_character()
+                    self.get_dungeon().game.activate_next_character()
                 else:
                     super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
         else:
@@ -854,7 +854,8 @@ class Penumbra(Monster):
         if len(path) > 1:
             self.token.slide(path, self.token.on_retreat_completed)
         else:  # if it cannot retreat will stay in place
-            self.remaining_moves = 0
+            #self.remaining_moves = 0
+            self.token.steps = self.remaining_moves
 
     def move(self):
         """
@@ -966,11 +967,14 @@ class ClawJaw(Monster):
         """
         match wall_tile.get_token("wall").species:
             case "rock":
-                self.remaining_moves -= 1
+                # self.remaining_moves -= 1
+                self.token.steps += 1
             case "granite":
-                self.remaining_moves -= 3
+                # self.remaining_moves -= 3
+                self.token.steps += 3
             case "quartz":
-                self.remaining_moves = 0
+                # self.remaining_moves = 0
+                self.token.steps = self.remaining_moves
 
         wall_tile.get_token("wall").show_digging()
         wall_tile.get_token("wall").delete_token(wall_tile)
@@ -1015,7 +1019,7 @@ class ClawJaw(Monster):
         target_dist, target_path = self._set_possible_targets()
 
         if target_path is None and target_dist is None:
-            self.get_dungeon().game.next_character()
+            self.get_dungeon().game.activate_next_character()
         elif self.get_dungeon().are_nearby(self.get_position(), target_dist):
             super().move_token_or_act_on_tile([self.get_position()])
         elif target_path is None:

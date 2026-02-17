@@ -19,7 +19,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
     dungeon = ObjectProperty(None)
     turn = NumericProperty(None, allownone=True)
     active_character_id = NumericProperty(None, allownone=True)
-    player_exited = BooleanProperty(False)
 
     # ABILITY PROPERTIES
     ability_button = BooleanProperty(False)
@@ -29,8 +28,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     # INTERFACE LABELS PROPERTIES
     # callbacks are defined in the kv file
-    shovels = BooleanProperty(None)
-    weapons = BooleanProperty(None)
     gems = BooleanProperty(None)
 
     def __init__(self, **kwargs):
@@ -65,9 +62,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def initialize_switches(self) -> None:
         self.turn = 0  # even for players, odd for monsters. Player starts
-
-        self.shovels = False
-        self.weapons = False
         self.gems = False
 
         self.ability_button_active = True  # TODO: when button unbinding in self.on_ability_button() works this has to go
@@ -83,10 +77,16 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.ids.level_label.text = "Depth: " + str(self.level * 30) + " ft." \
             if self.active_character.kind == "player" else ""
 
-        self.update_switch("shovels")
-        self.update_switch("weapons")
-        self.update_switch("gems")
-        self.update_switch("ability_button")
+        if self.active_character.kind == "player":
+            self.update_label("shovels_label", self.active_character.shovels)
+            self.update_label("weapons_label", self.active_character.weapons)
+        else:
+            self.update_label("shovels_label", None)
+            self.update_label("weapons_label", None)
+
+
+        self.force_update("gems")
+        self.force_update("ability_button")
 
         self.ids.jerky_button.text = "Jerky" if self.active_character.kind == "player" else ""
         self.ids.coffee_button.text = "Coffee" if self.active_character.kind == "player" else ""
@@ -96,22 +96,34 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         self.update_experience_bar()
 
-    def update_switch(self, switch_name) -> None:
+    def force_update(self, switch_name) -> None:
         """
-        Updates the value of a switch (Property) to activate it.
-        :param switch_name: switch to activate
+        Forces updating a property value even if the value does not change
+        :param switch_name: property name to force update
         :return: None
         """
         switch_value = getattr(self, switch_name)
         if isinstance(switch_value, bool):
             switch_value = not switch_value
         elif switch_name == "turn":
-            switch_value += 1
-        elif switch_name == "active_character_id":  # ensures event is triggered even if property value did not change
+            raise NotImplementedError("Deprecated! Use self.turn += 1 instead")
+        elif switch_name == "active_character_id":
             switch_value = self.active_character_id
             setattr(self, switch_name, None)
 
         setattr(self, switch_name, switch_value)
+
+    def update_label(self, label_id: str, value: int | None) -> None:
+        """
+        Updates an interface label
+        :param label_id: id of the label
+        :param value: value to update
+        :returns: None
+        """
+        if value is not None:
+            self.ids[label_id].text = f"{label_id.split('_')[0].capitalize()}: {str(value)}"
+        else:
+            self.ids[label_id].text = ""
 
     def update_experience_bar(self) -> None:
         """
@@ -187,20 +199,20 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
         if turn is not None:
-            if turn % 2 == 0 or monsters.Monster.all_dead_or_out():
+            if turn % 2 == 0 or monsters.Monster.all_out():
                 players.Player.initialize_moves_attacks()
             else:
                 monsters.Monster.initialize_moves_attacks()
 
             if game.active_character_id == 0:
-                game.update_switch("active_character_id")
+                game.force_update("active_character_id")
             else:
                 game.active_character_id = 0
 
     @staticmethod
     def on_active_character_id(game: MineMadnessGame, character_id: int | None) -> None:
         """
-        Checks what to do when the active character changes.
+        Checks what to do when the active character changes
         :param game: current instance of MineMadnessGame
         :param character_id: id of the new active character
         :return: None
@@ -209,9 +221,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
         game.dungeon.restore_canvas_color("canvas")
         game.dungeon.restore_canvas_color("after")
 
-        if character_id is not None and not Player.all_dead_or_out():
+        if character_id is not None and not Player.all_out():
             # if player turn or no monsters
-            if game.turn % 2 == 0 or monsters.Monster.all_dead_or_out():
+            if game.turn % 2 == 0 or monsters.Monster.all_out():
                 game.active_character = players.Player.data[character_id]
                 game.active_character.token.select_character()
                 game.update_interface()
@@ -224,24 +236,22 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 game.active_character.token.select_character()
                 game.active_character.move()
 
-
     def character_moved(self) -> None:
         """
         Checks what to do when a character finishes a movement, but it may still have movements left
         :return: None
         """
-        self.check_if_all_players_exited()
-        # call game.check_if_game_over() if game over for lack of shovels is implemented
-
         if self.turn is not None:
+            #self.check_if_all_players_exited()
+            # call game.check_if_game_over() if game over for lack of shovels is implemented
 
             # no monsters, endless turn
-            if monsters.Monster.all_dead_or_out() and not self.active_character.has_moves_left:
+            if monsters.Monster.all_out() and not self.active_character.has_moves_left:
                 self.active_character.remaining_moves = self.active_character.stats.moves
                 self.active_character.remove_effects_if_over(self.turn)
                 if self.active_character.token is not None:  # dead characters have no Token
                     self.active_character.token.unselect_token()
-                self.update_switch("turn")
+                self.turn += 1
 
             # turn continues
             elif self.active_character.has_moves_left:
@@ -252,7 +262,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
                         self.active_character.acted_on_tile = False
                         self.active_character.move()
                     else:
-                        self.next_character()
+                        self.activate_next_character()
 
             # end turn
             else:
@@ -260,9 +270,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
                     self.active_character.remove_effects_if_over(self.turn)
                     if self.active_character.token is not None:  # dead characters have no Token
                         self.active_character.token.unselect_token()
-                self.next_character()
+                self.activate_next_character()
 
-    def next_character(self) -> None:
+    def activate_next_character(self) -> None:
         """
         Increases MineMadnessGame.active_character.id by 1 or switch turn if all characters have been already activated
         :return: None
@@ -277,24 +287,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.active_character_id = next_player.id
 
         else:  # end of monster list reached (all have moved)
-            self.update_switch("turn")
+            self.turn += 1
 
     ####### END OF FUNCTIONS MANAGING THE TURN SEQUENCE  ##################
-
-    @staticmethod
-    def on_player_exited(game: MineMadnessGame, value: bool) -> None:
-        """
-        Handles the change of level or turn when the active character exits the level
-        :param game: current instance of MineMadnessGame
-        :param value: current boolean value of the switch
-        :return: None
-        """
-        if players.Player.all_dead_or_out():
-            game.finish_level()
-        elif game.active_character_id == len(players.Player.data):
-            game.update_switch("turn")
-        else:
-            game.update_switch("active_character_id")
 
     def activate_accessible_tiles(self, steps: int) -> None:
         """
@@ -342,8 +337,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
         # players may not be all dead and game will be over (in case Sawyer is killed)
-        if players.Player.all_dead_or_out() and not players.Player.all_players_dead() and not self.game_already_over:
-            self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+        if players.Player.all_out() and not players.Player.all_players_dead() and not self.game_already_over:
+            #self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             self.finish_level()
 
     @staticmethod
@@ -387,4 +382,4 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.level += 1
         self.remove_dungeon_from_game()
         self.add_dungeon_to_game()
-        self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
+        self.turn = None

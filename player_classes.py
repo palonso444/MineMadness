@@ -3,17 +3,18 @@ from abc import ABC, abstractmethod
 from random import random
 
 from kivy.properties import NumericProperty
-from kivy.event import EventDispatcher
 
 from character_class import Character
 import game_stats as stats
 from dungeon_classes import DungeonLayout
 
 
-class Player(Character, ABC, EventDispatcher):
+class Player(Character, ABC):
 
     experience = NumericProperty(0)
     player_level = NumericProperty(1)
+    shovels = NumericProperty(0)
+    weapons = NumericProperty(0)
 
     # this is the starting order as defined by Player.set_starting_player_order()
     player_chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
@@ -104,6 +105,18 @@ class Player(Character, ABC, EventDispatcher):
                 if player.species == species:
                     return player
 
+    @classmethod
+    def check_if_all_players_out(cls, game) -> None:
+        """
+        Checks if all players out and acts consequently
+        :return: None
+        """
+        if cls.all_out():
+            game.finish_level()
+        else:
+            cls.rearrange_ids()
+            game.activate_next_character()
+
 
     def __init__(self):
         super().__init__()
@@ -131,6 +144,33 @@ class Player(Character, ABC, EventDispatcher):
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
 
+    def setup_character(self, game: MineMadnessGame):
+        """
+        Sets up the character when its CharacterToken is placed onto the tile
+        :return: None
+        """
+        super().setup_character(game=game)
+        self.shovels = self.stats.initial_shovels
+        self.weapons = self.stats.initial_weapons
+
+
+    def on_shovels(self, instance: Player, value: int):
+        """
+        Notifies the game when a shovel is used or picked up
+        :param instance: instance of the Player
+        :param value: new shovels value
+        :return: None
+        """
+        self.game.update_label("shovels_label", value)
+
+    def on_weapons(self, instance: Player, value: int):
+        """
+        Notifies the game when a weapon is used or picked up
+        :param instance: instance of the Player
+        :param value: new weapon value
+        :return: None
+        """
+        self.game.update_label("weapons_label", value)
 
     @abstractmethod
     def on_player_level(self, instance: Player, value: int) -> None:
@@ -181,6 +221,7 @@ class Player(Character, ABC, EventDispatcher):
         :return: True if character is hidden, False otherwise
         """
         return self in Player.exited
+
 
     @abstractmethod
     def can_fight(self, token_species: str) -> bool:
@@ -239,12 +280,10 @@ class Player(Character, ABC, EventDispatcher):
 
     def subtract_weapon(self) -> None:
         """
-        Substracts the weapon used
+        Subtracts the weapon used
         :return: None
         """
-        game=self.get_dungeon().game
-        self.stats.weapons -= 1
-        game.update_switch("weapons")
+        self.weapons -= 1
 
     @staticmethod
     def on_experience(player, exp_value) -> None:
@@ -266,7 +305,7 @@ class Player(Character, ABC, EventDispatcher):
             player.get_dungeon().game.ids.experience_bar.max = player.stats.exp_to_next_level
             player.experience = exp_value
             player.token.effect_queue = [{"level_up": False} for _ in range(player.player_level - start_level)]
-            # experience bar updated by Cragpeongame.update_interface()
+            # experience bar updated by MineMadnessgame.update_interface()
 
     def remove_all_effects(self, turn: int = 0) -> None:
         """
@@ -355,7 +394,7 @@ class Player(Character, ABC, EventDispatcher):
                 self._pick_gem(tile)
             if tile.kind == "exit" and self.has_all_gems:
                 self._exit_level()
-                tile.dungeon.game.update_switch("player_exited")
+                Player.check_if_all_players_out(self.game)
 
     def _exit_level(self) -> None:
         """
@@ -364,7 +403,6 @@ class Player(Character, ABC, EventDispatcher):
         """
         Player.exited.add(self)
         Player.data.remove(self)
-        self.rearrange_ids()
         self.token.delete_token(self.token.get_current_tile())
 
     def _pick_object(self, tile: Tile) -> None:
@@ -378,7 +416,7 @@ class Player(Character, ABC, EventDispatcher):
 
         if object_name in self.special_items:
             self.special_items[object_name] += 1
-            game.update_switch("ability_button")
+            game.force_update("ability_button")
 
         elif object_name in self.inventory.keys():
             self.inventory[object_name] += 1
@@ -386,11 +424,10 @@ class Player(Character, ABC, EventDispatcher):
 
         # weapons and shovels
         else:
-            character_attribute = getattr(self.stats, f"{object_name}s")
+            character_attribute = getattr(self, f"{object_name}s")
             character_attribute += 1
-            setattr(self.stats, f"{object_name}s", character_attribute)
-            game.update_switch(f"{object_name}s")
-            game.update_switch("ability_button")  # for Crusher Jane
+            setattr(self, f"{object_name}s", character_attribute)
+            game.force_update("ability_button")  # for Crusher Jane
 
         tile.get_token("pickable").delete_token(tile)
 
@@ -400,9 +437,9 @@ class Player(Character, ABC, EventDispatcher):
         :param tile: Tile where the gem is
         :return: None
         """
-        game=self.get_dungeon().game
+        game = self.get_dungeon().game
         Player.gems += 1
-        game.update_switch("gems")
+        game.force_update("gems")
         tile.get_token("treasure").delete_token(tile)
 
     def fall_in_trap(self, tile:Tile) ->None:
@@ -433,16 +470,12 @@ class Player(Character, ABC, EventDispatcher):
         :param wall_tile: Tile where the wall to dig is
         :return: None
         """
-        game = self.get_dungeon().game
-
         if wall_tile.has_token("wall", "granite"):
-            self.stats.shovels -= 1
-            game.update_switch("shovels")
+            self.shovels -= 1
 
         if wall_tile.has_token("wall", "rock"):
             if not self.species == "hawkins":
-                self.stats.shovels -= 1
-                game.update_switch("shovels")
+                self.shovels -= 1
 
         self.remaining_moves -= self.stats.digging_moves
 
@@ -622,7 +655,7 @@ class Sawyer(Player):
         :return: True if can dig, False otherwise
         """
         if token_species == "rock":
-            return self.stats.shovels > 0 and self.remaining_moves >= self.stats.digging_moves
+            return self.shovels > 0 and self.remaining_moves >= self.stats.digging_moves
         if token_species in ["granite", "quartz"]:
             return False
         raise ValueError(f"Invalid token_species {token_species}")
@@ -633,7 +666,7 @@ class Sawyer(Player):
         :param token_species: MonsterToken.species to fight
         :return: True if the Sawyer can fight, False otherwise
         """
-        return self.stats.weapons > 0
+        return self.weapons > 0
 
     def on_player_level(self, instance, value):
         """Sawyer is a young, inexperienced but cunning character. Is it not particularly strong
@@ -685,7 +718,7 @@ class Sawyer(Player):
         self.ignores.remove("pickable")
         self.ignores.remove("treasure")
         self.ability_active = False
-        self.get_dungeon().game.update_switch("ability_button")  # must be here. If attacked must update button a well
+        self.get_dungeon().game.force_update("ability_button")  # must be here. If attacked must update button a well
 
     def enhance_damage(self, damage: int) -> int:
         """
@@ -715,7 +748,7 @@ class CrusherJane(Player):
         self.stats = stats.CrusherJaneStats()
         self._update_level_track(self.player_level)
 
-        self.special_items: dict[str:int] = {"weapons": self.stats.weapons}
+        self.special_items: dict[str:int] = {"weapons": self.weapons}
         self.ability_display: str = "Weapons"
         self.ability_active: bool = False
 
@@ -729,7 +762,7 @@ class CrusherJane(Player):
         :return: True if can dig, False otherwise
         """
         if token_species == "rock":
-            return self.stats.shovels > 0 and self.remaining_moves >= self.stats.digging_moves
+            return self.shovels > 0 and self.remaining_moves >= self.stats.digging_moves
         if token_species in ["granite", "quartz"]:
             return False
         raise ValueError(f"Invalid token_species {token_species}")
@@ -782,10 +815,10 @@ class CrusherJane(Player):
         """
         if self.ability_active:
             super().subtract_weapon()
-            if self.stats.weapons == 0:
+            if self.weapons == 0:
                 game = self.get_dungeon().game
                 self.ability_active = False
-                game.update_switch("ability_button")
+                game.force_update("ability_button")
 
 class Hawkins(Player):
     """Can dig without shovels
@@ -822,7 +855,7 @@ class Hawkins(Player):
         if token_species == "rock":
             return True
         if token_species == "granite":
-            return self.stats.shovels > 0 and self.remaining_moves >= self.stats.digging_moves
+            return self.shovels > 0 and self.remaining_moves >= self.stats.digging_moves
         if token_species == "quartz":
             return False
         raise ValueError(f"Invalid token_species {token_species}")
@@ -833,7 +866,7 @@ class Hawkins(Player):
         :param token_species: MonsterToken.species to fight
         :return: True if Hawkins can fight, False otherwise
         """
-        return self.stats.weapons > 0
+        return self.weapons > 0
 
     def on_player_level(self, instance, value):
         """Hawkins is an old and wise man. It is trained by the most difficult situations of life, and it is strong
@@ -879,7 +912,7 @@ class Hawkins(Player):
         """
         self.special_items["dynamite"] -= 1
         self.ability_active = False
-        self.token.dungeon.game.update_switch("ability_button")
+        self.token.dungeon.game.force_update("ability_button")
         tile.dynamite_fall()
         self.remaining_moves -= 1
 

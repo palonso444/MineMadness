@@ -38,13 +38,12 @@ class Character(ABC, EventDispatcher):
             character.remaining_moves = character.stats.moves
 
     @classmethod
-    def all_dead_or_out(cls) -> bool:
+    def all_out(cls) -> bool:
         """
         Checks if all instances characters of the class are dead or out of game
         :return:: True if all are dead or out of game, False otherwise
         """
         return len(cls.data) == 0
-
 
     def __init__(self, **kwargs):
 
@@ -55,6 +54,7 @@ class Character(ABC, EventDispatcher):
         Exclusive attributes of each class are added within corresponding classes.
         """
         super().__init__(**kwargs)
+        self.game: MineMadnessGame | None = None  # needed to update for remaining_moves, weapons and shovels
         self.char: str | None = None
         self.name: str | None = None
         self.id: int | None = None   # initialized in DungeonLayout.place_item()
@@ -75,8 +75,8 @@ class Character(ABC, EventDispatcher):
         Notifies the game when the character moves
         :return: None
         """
-        if character.has_moved:
-            self.get_dungeon().game.character_moved()
+        if character.has_moved and not character.is_exited:
+            self.game.character_moved()
 
     def to_dict(self):
         """
@@ -102,11 +102,12 @@ class Character(ABC, EventDispatcher):
                 setattr(self, attribute, value)
 
 
-    def setup_character(self):
+    def setup_character(self, game: MineMadnessGame):
         """
         Sets up the character when its CharacterToken is placed onto the tile
         :return: None
         """
+        self.game = game
         self.id = len(self.__class__.data)
         self.__class__.data.append(self)
 
@@ -254,7 +255,6 @@ class Character(ABC, EventDispatcher):
         opponent.token.show_damage()
 
         return opponent
-
 
     def kill_character(self, tile: Tile) -> None:
         """

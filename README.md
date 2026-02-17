@@ -1,3 +1,17 @@
+This is a experimental branch. uses events instead of manually triggering switches. it has several bugs:
+
+Character order is not preseved when exiting. to solve it:
+
+player.exited and player.in_game and player_dead store only ids to relate to player.data. A dictionary relating ids to character player.Data must be created storing the whole data. this dict of player data is immutable.
+
+Monsters have only in_game data and dead.data. they have a dict Mobster.data created in each dungeon
+
+Some monsters move simultaneously sometimes. usually when a character exits. not clear why
+
+when killing last monster of dungeon, program breaks.
+
+
+
 ![mine_madness](https://github.com/user-attachments/assets/f7495fcb-5e02-406b-9c3b-5f7fd324362c)
 
 

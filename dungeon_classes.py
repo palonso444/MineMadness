@@ -55,6 +55,8 @@ class DungeonLayout(GridLayout):
         self.darkness_intensity: int = 150  # from 0 to 255
         self.flickering_torches: ClockEvent | None = None
 
+        self.bind(pos=self.setup_dungeon)
+
     def _setup_torches_dict(self) -> None:
         """
         Sets up the DungeonLayout.torches_dict. Keys are wall positions, values are list of pos_modifiers of all
@@ -261,10 +263,11 @@ class DungeonLayout(GridLayout):
         return 1 < len(path) <= num_of_steps + 1
 
     @staticmethod
-    def on_pos(dungeon: DungeonLayout, pos: list[int, int]) -> None:
+    def setup_dungeon(dungeon: DungeonLayout, pos: list[int, int]) -> None:
         """
         Triggered when the dungeon is positioned the beginning of each level
-        It initializes DungeonLayout.tiles.dict and prepares the floor of the dungeon, placing the exit
+        It initializes DungeonLayout.tiles.dict and prepares the floor of the dungeon, placing the exit and setting
+        up characters
         :param dungeon: Instance of the dungeon corresponding to the current level
         :param pos: position (actual position on the screen) of the dungeon instance
         :return: None
@@ -283,6 +286,12 @@ class DungeonLayout(GridLayout):
                 dungeon.add_widget(tile)
 
         dungeon.match_blueprint()
+
+        if dungeon.dungeon_level == 1 or dungeon.advanced_start:
+            players.Player.setup_player_data_and_ids()
+            for player in players.Player.data:
+                players.Player.in_game.append(player.id)
+
         dungeon.place_torches(size_modifier=0.5)
 
     def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
@@ -424,12 +433,14 @@ class DungeonLayout(GridLayout):
                 elif token.pos_modifier == (0, -tile.width / 2 + token.size[0] / 2):  # left
                     token.rotate_token(degrees=270, axis=token.center)
 
-    def match_blueprint(self) -> None:
+    def match_blueprint(self) -> Character | None:
         """
         Matches the symbols of the DungeonLayout.blueprint with the corresponding tokens and characters
-        :return: None
+        :return: the character ready to be set up for starting adventure, of None if there is no character
         """
+
         for tile in self.children:
+
             tile_position = (tile.row, tile.col)
             character = None
             token_kind = None
@@ -439,6 +450,7 @@ class DungeonLayout(GridLayout):
                 case "%":
                     if self.dungeon_level == 1 or self.advanced_start:
                         character = players.Sawyer()
+                        character.setup_character(game=self.game)
                     else:
                         character = players.Player.setup_for_new_level("sawyer")
                     token_kind = "player"
@@ -447,6 +459,7 @@ class DungeonLayout(GridLayout):
                 case "?":
                     if self.dungeon_level == 1 or self.advanced_start:
                         character = players.Hawkins()
+                        character.setup_character(game=self.game)
                     else:
                         character = players.Player.setup_for_new_level("hawkins")
                     token_kind = "player"
@@ -455,6 +468,7 @@ class DungeonLayout(GridLayout):
                 case "&":
                     if self.dungeon_level == 1 or self.advanced_start:
                         character = players.CrusherJane()
+                        character.setup_character(game=self.game)
                     else:
                         character = players.Player.setup_for_new_level("crusherjane")
                     token_kind = "player"
@@ -597,16 +611,15 @@ class DungeonLayout(GridLayout):
                     token_species = "trap"
                     character = traps.Trap()
 
-            if character is not None:
-                if isinstance(character, players.Player) and (self.dungeon_level == 1 or self.advanced_start):
-                    character.setup_character(game=self.game)
-                if isinstance(character, monsters.Monster):
-                    character.setup_character(game=self.game)
+            if isinstance(character, monsters.Monster):
+                character.setup_character(game=self.game)
+                character.in_game.append(character.id)  # Players are set up after matching blueprint
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
                 self._add_position_to_update(tile_position)
                 tile.place_item(token_kind, token_species, character)
+
 
     def get_tile(self, position: tuple[int,int]) -> Tile:
         """

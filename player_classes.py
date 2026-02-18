@@ -18,10 +18,10 @@ class Player(Character, ABC):
 
     # this is the starting order as defined by Player.set_starting_player_order()
     player_chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
-    data: list[Character] | None = None
-    in_game: list[int] | None = None
-    dead: list[int] | None = None
-    exited: list[int] | None = None
+    data: list[Character] = []
+    in_game: list[int] = []
+    dead: list[int] = []
+    exited: list[int] = []
     gems: int = 0
 
     @classmethod
@@ -35,12 +35,33 @@ class Player(Character, ABC):
         cls.exited.clear()
 
     @classmethod
-    def set_starting_player_order(cls) -> None:
+    def setup_player_data_and_ids(cls) -> None:
+        """
+        Sets up player data
+        :return: None
+        """
+        cls._set_player_order()
+        cls._set_ids()
+
+    @classmethod
+    def _set_ids(cls) -> None:
+        """
+        Sets the ids of the Players according to their index in Player.data
+        :return: None
+        """
+        for player in Player.data:
+            player.id = player.data.index(player)
+
+    @classmethod
+    def _set_player_order(cls) -> None:
         """
         Sets the starting player turn order: Sawyer, Hawkins, Crusher Jane
         :return: None
         """
-        cls.in_game.sort()
+        sawyer = next((player for player in Player.data if isinstance(player, Sawyer)), None)
+        hawkins = next((player for player in Player.data if isinstance(player, Hawkins)), None)
+        jane = next((player for player in Player.data if isinstance(player, CrusherJane)), None)
+        Player.data = [sawyer, hawkins, jane]
 
     @classmethod
     def find_next_player_with_remaining_moves(cls, starting_index: int) -> Player:
@@ -84,7 +105,7 @@ class Player(Character, ABC):
             return {player.char for player in cls.exited}
 
     @classmethod
-    def setup_for_new_level(cls, species: str) -> Player:
+    def setup_for_new_level(cls, species: str) -> Player | None:
         """
         Retrieves players from Players.exited or Players.data to transfer them to a dungeon level
         :param species: Player.species of the player to be retrieved
@@ -92,7 +113,7 @@ class Player(Character, ABC):
         """
         #if self.is_exited
         for player_id in cls.exited:
-            player: Player = Player.get_character_from_data(player_id)
+            player: Player = Player.get_from_data(player_id)
             if player.species == species:
                 player.heal(player.stats.recovery_end_of_level)
                 player.ability_active = False
@@ -150,11 +171,9 @@ class Player(Character, ABC):
         :return: None
         """
         self.game = game
-        self.id = len(self.__class__.in_game)
         self.__class__.data.append(self)
         self.shovels = self.stats.initial_shovels
         self.weapons = self.stats.initial_weapons
-        self.__class__.in_game.append(self.id)
 
     @staticmethod
     def on_shovels(player: Player, value: int) -> None:

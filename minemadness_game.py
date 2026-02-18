@@ -50,10 +50,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
         players.Player.gems = 0
         game.check_if_game_over(game=game)
         if not game.game_already_over:
-            players.Player.set_starting_player_order()
+            # players.Player._set_player_order() not needed, is immutable now
             for player_id in players.Player.in_game:
-                Player.get_character_from_data(player_id).remove_all_effects()  # 0 is the default turn argument
-            players.Player.exited.clear()
+                Player.get_from_data(player_id).remove_all_effects()  # 0 is the default turn argument
+            # players.Player.exited.clear() not needed
 
             App.get_running_app().save_game()
             App.get_running_app().level = game.level
@@ -224,14 +224,14 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if character_id is not None and not Player.all_out():
             # if player turn or no monsters
             if game.turn % 2 == 0 or monsters.Monster.all_out():
-                game.active_character = players.Player.in_game[character_id]
+                game.active_character = Player.get_from_data(character_id)
                 game.active_character.token.select_character()
                 game.update_interface()
                 game.activate_accessible_tiles(game.active_character.remaining_moves)
 
             else:  # if monsters turn and monsters in the game
                 game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
-                game.active_character = monsters.Monster.in_game[game.active_character_id]
+                game.active_character = Monster.get_from_data(character_id)
                 game.update_interface()
                 game.active_character.token.select_character()
                 game.active_character.move()
@@ -300,7 +300,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         self.dungeon.disable_all_tiles()
         player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
-        positions_in_range = player_movement_range.union({player.get_position() for player in players.Player.in_game})
+        positions_in_range = player_movement_range.union({Player.get_from_data(player_id).get_position() for player_id in players.Player.in_game})
         self.dungeon.enable_tiles(positions_in_range, self.active_character)
 
     def switch_character(self, new_active_character: Character) -> None:

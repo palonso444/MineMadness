@@ -20,7 +20,7 @@ class Character(ABC, EventDispatcher):
         pass
 
     @classmethod
-    def get_character_from_data(cls, character_id: int) -> Character:
+    def get_from_data(cls, character_id: int) -> Character:
         """
         Gets a character from data
         :return: the character
@@ -34,7 +34,7 @@ class Character(ABC, EventDispatcher):
         :return: None
         """
         for character_id in cls.in_game:
-            character = cls.get_character_from_data(character_id)
+            character = cls.get_from_data(character_id)
             character.remaining_moves = character.stats.moves
 
     @classmethod

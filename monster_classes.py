@@ -10,8 +10,8 @@ from character_class import Character
 
 class Monster(Character, ABC):
 
-    data: list[Character] | None = None
-    in_game: list[int] | None = None
+    data: list[Character] = []
+    in_game: list[int] = []
 
     @classmethod
     def clear_character_data(cls) -> None:
@@ -41,9 +41,8 @@ class Monster(Character, ABC):
         :return: None
         """
         self.game = game
-        self.id = len(self.__class__.in_game)
+        self.id = len(self.__class__.in_game)  # monsters can have any ids, not like players
         self.__class__.data.append(self)
-        self.__class__.in_game.append(self.id)
 
     @abstractmethod
     def move(self):

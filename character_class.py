@@ -28,15 +28,6 @@ class Character(ABC, EventDispatcher):
         return cls.data[character_id]
 
     @classmethod
-    def rearrange_ids(cls) -> None:
-        """
-        Rearranges characters ids to match their order in Character.data list
-        :return: None
-        """
-        for character in cls.in_game:
-            character.id = cls.in_game.index(character)
-
-    @classmethod
     def initialize_moves_attacks(cls) -> None:
         """
         Resets remaining moves of all characters of the class back to the maximum

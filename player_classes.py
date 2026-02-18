@@ -40,12 +40,7 @@ class Player(Character, ABC):
         Sets the starting player turn order: Sawyer, Hawkins, Crusher Jane
         :return: None
         """
-        # cls in game = cls.data
-        sawyer = next((player for player in cls.in_game if player.species == "sawyer"), None)
-        hawkins = next((player for player in cls.in_game if player.species == "hawkins"), None)
-        crusherjane = next((player for player in cls.in_game if player.species == "crusherjane"), None)
-        cls.in_game = [item for item in [sawyer, hawkins, crusherjane] if item is not None]
-        cls.rearrange_ids()
+        cls.in_game.sort()
 
     @classmethod
     def find_next_player_with_remaining_moves(cls, starting_index: int) -> Player:
@@ -115,7 +110,6 @@ class Player(Character, ABC):
         if cls.all_out():
             game.finish_level()
         else:
-            cls.rearrange_ids()
             game.activate_next_character()
 
 

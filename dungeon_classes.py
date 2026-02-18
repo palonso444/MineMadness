@@ -293,7 +293,7 @@ class DungeonLayout(GridLayout):
         :return: complete blueprint of the dungeon
         """
         blueprint = Blueprint(y_axis, x_axis)
-        blueprint.place_items_as_group(players.Player.get_surviving_players(), min_dist=1)
+        blueprint.place_items_as_group(players.Player.get_surviving_player_chars(), min_dist=1)
         blueprint.place_items(" ", 1)
         blueprint.place_items("o", self.stats.gem_number)
         blueprint.place_items("t", self.stats.talisman_number)

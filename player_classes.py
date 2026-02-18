@@ -19,18 +19,19 @@ class Player(Character, ABC):
     # this is the starting order as defined by Player.set_starting_player_order()
     player_chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
     data: list[Character] = list()
-    dead_data: list[Character] = list()
-    exited: set[Character] = set()
+    in_game: list[int] = list()
+    dead: list[int] = list()
+    exited: set[int] = set()
     gems: int = 0
 
     @classmethod
     def clear_character_data(cls) -> None:
         """
-        Removes all characters from the Player.data, Player.dead_data and Player.exited list and resets class attributes
+        Removes all characters from the game but keeps Player.data intact
         :return: None
         """
-        super().clear_character_data()
-        cls.dead_data.clear()
+        cls.in_game.clear()
+        cls.dead.clear()
         cls.exited.clear()
 
     @classmethod
@@ -39,10 +40,11 @@ class Player(Character, ABC):
         Sets the starting player turn order: Sawyer, Hawkins, Crusher Jane
         :return: None
         """
-        sawyer = next((player for player in cls.data if player.species == "sawyer"), None)
-        hawkins = next((player for player in cls.data if player.species == "hawkins"), None)
-        crusherjane = next((player for player in cls.data if player.species == "crusherjane"), None)
-        cls.data = [item for item in [sawyer, hawkins, crusherjane] if item is not None]
+        # cls in game = cls.data
+        sawyer = next((player for player in cls.in_game if player.species == "sawyer"), None)
+        hawkins = next((player for player in cls.in_game if player.species == "hawkins"), None)
+        crusherjane = next((player for player in cls.in_game if player.species == "crusherjane"), None)
+        cls.in_game = [item for item in [sawyer, hawkins, crusherjane] if item is not None]
         cls.rearrange_ids()
 
     @classmethod
@@ -52,19 +54,19 @@ class Player(Character, ABC):
         :param starting_index: index to start the search in Player.data
         :return: the Player with remaining moves
         """
-        n = len(cls.data)
+        n = len(cls.in_game)
         for i in range(1, n + 1):
             next_index = (starting_index + i) % n
-            if cls.data[next_index].remaining_moves > 0:
-                return cls.data[next_index]
+            if cls.in_game[next_index].remaining_moves > 0:
+                return cls.in_game[next_index]
 
     @classmethod
     def all_players_alive(cls):
-        return len(cls.data) == len(cls.player_chars)
+        return len(cls.in_game) == len(cls.data)
 
     @classmethod
     def all_players_dead(cls):
-        return len(cls.dead_data) == len(cls.player_chars)
+        return len(cls.dead) == len(cls.data)
 
     @classmethod
     def check_if_dead(cls, player_species: str) -> bool:
@@ -73,17 +75,16 @@ class Player(Character, ABC):
         :param player_species: Player.species of the player to check
         :return: True if dead, False otherwise
         """
-        return any(player.species == player_species for player in cls.dead_data)
+        return any(player.species == player_species for player in cls.dead)
 
     @classmethod
-    def get_surviving_players(cls) -> set[str] | tuple[str:str:str]:
+    def get_surviving_player_chars(cls) -> set[str] | tuple[str:str:str]:
         """
         Returns the players that survived the level
         :return: set or tuple containing the characters representing live players
         """
-        if len(Player.dead_data) == 0:  # cannot be done with all_players_alive()
+        if len(Player.dead) == 0:  # cannot be done with all_players_alive()
             return cls.player_chars
-            # return "&"
         else:
             return {player.char for player in cls.exited}
 
@@ -100,8 +101,8 @@ class Player(Character, ABC):
                     player.heal(player.stats.recovery_end_of_level)
                     player.ability_active = False
                     return player
-        elif len(cls.data) > 0:
-            for player in cls.data:
+        elif len(cls.in_game) > 0:
+            for player in cls.in_game:
                 if player.species == species:
                     return player
 
@@ -129,17 +130,17 @@ class Player(Character, ABC):
         self.step_duration: float = 0.35
 
         # attributes exclusive of Player class
-        self.inventory: dict[str:int] = {
+        self.inventory: dict[str,int] = {
             "jerky": 2,
             "coffee": 0,
             "tobacco": 0,
             "whisky": 0,
             "talisman": 0,
         }
-        self.effects: dict[str:list] = {"moves": [], "toughness": [], "strength": []}
+        self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
-        self.special_items: dict[str:int] | None = None
-        self.level_track: dict[int:dict] = dict()
+        self.special_items: dict[str,int] | None = None
+        self.level_track: dict[int,dict] = dict()
 
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
@@ -152,7 +153,6 @@ class Player(Character, ABC):
         super().setup_character(game=game)
         self.shovels = self.stats.initial_shovels
         self.weapons = self.stats.initial_weapons
-
 
     def on_shovels(self, instance: Player, value: int):
         """
@@ -212,7 +212,7 @@ class Player(Character, ABC):
         """
         Checks if the Player is dead
         """
-        return self in Player.dead_data
+        return self in Player.dead
 
     @property
     def is_exited(self) -> bool:
@@ -402,7 +402,7 @@ class Player(Character, ABC):
         :return: None
         """
         Player.exited.add(self)
-        Player.data.remove(self)
+        Player.in_game.remove(self)
         self.token.delete_token(self.token.get_current_tile())
 
     def _pick_object(self, tile: Tile) -> None:
@@ -523,7 +523,7 @@ class Player(Character, ABC):
         """
         super().kill_character(tile)
         self.remove_all_effects()
-        self.dead_data.append(self)
+        self.dead.append(self)
 
     def resurrect(self, dungeon: DungeonLayout) -> None:
         """
@@ -534,7 +534,7 @@ class Player(Character, ABC):
         self.unbind(experience=self.on_experience)
         self.unbind(player_level=self.on_player_level)
 
-        Player.dead_data.remove(self)
+        Player.dead.remove(self)
         self.player_level = self.player_level - 1 if self.player_level > 1 else 1
         for key, value in self.level_track[self.player_level].items():
             self.stats.__setattr__(key, value)

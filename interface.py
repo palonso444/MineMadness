@@ -187,7 +187,7 @@ class TalismanButton(Interfacebutton):
             character.token.show_effect_token("level_up")
 
         else:
-            player = choice(Player.dead_data)
+            player = choice(Player.dead)
             player.resurrect(character.get_dungeon())
             player.token.show_effect_token("resurrect")
 

@@ -189,9 +189,9 @@ class MineMadnessApp(App):
 
         # game is not JSON serializable
         game_state["players_alive"] = {player.__class__.__name__: {k: v for k, v in player.to_dict().items() if k != "game"}
-                                       for player in Player.data}
+                                       for player in Player.in_game}
         game_state["players_dead"] = {player.__class__.__name__: {k: v for k, v in player.to_dict().items() if k != "game"}
-                                      for player in Player.dead_data}
+                                      for player in Player.dead}
         return game_state
 
     def continue_game_or_load(self) -> None:
@@ -228,14 +228,14 @@ class MineMadnessApp(App):
         self.game.level = data["level"]
 
         if self.game.level > 1:
-            Player.data = [globals()[key](attributes_dict=data["players_alive"][key])
-                                   for key in data["players_alive"].keys()]
-            Player.dead_data = [globals()[key](attributes_dict=data["players_dead"][key])
-                                   for key in data["players_dead"].keys()]
+            Player.in_game = [globals()[key](attributes_dict=data["players_alive"][key])
+                              for key in data["players_alive"].keys()]
+            Player.dead = [globals()[key](attributes_dict=data["players_dead"][key])
+                           for key in data["players_dead"].keys()]
 
-        for player in Player.dead_data:
+        for player in Player.dead:
             player.game = self.game
-        for player in Player.data:
+        for player in Player.in_game:
             player.game = self.game
 
         self.ongoing_game = True

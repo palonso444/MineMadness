@@ -8,16 +8,24 @@ from kivy.properties import NumericProperty
 
 class Character(ABC, EventDispatcher):
 
-    data: list[Character] | None = None
     remaining_moves = NumericProperty(None)
 
     @classmethod
+    @abstractmethod
     def clear_character_data(cls) -> None:
         """
-        Removes all characters from the Character.data list
+        Placeholder. Implemented in Monster and Player classes
         :return: None
         """
-        cls.data.clear()
+        pass
+
+    @classmethod
+    def get_character_from_data(cls, character_id: int) -> Character:
+        """
+        Gets a character from data
+        :return: the character
+        """
+        return cls.data[character_id]
 
     @classmethod
     def rearrange_ids(cls) -> None:
@@ -25,8 +33,8 @@ class Character(ABC, EventDispatcher):
         Rearranges characters ids to match their order in Character.data list
         :return: None
         """
-        for character in cls.data:
-            character.id = cls.data.index(character)
+        for character in cls.in_game:
+            character.id = cls.in_game.index(character)
 
     @classmethod
     def initialize_moves_attacks(cls) -> None:
@@ -34,7 +42,7 @@ class Character(ABC, EventDispatcher):
         Resets remaining moves of all characters of the class back to the maximum
         :return: None
         """
-        for character in cls.data:
+        for character in cls.in_game:
             character.remaining_moves = character.stats.moves
 
     @classmethod
@@ -43,7 +51,7 @@ class Character(ABC, EventDispatcher):
         Checks if all instances characters of the class are dead or out of game
         :return:: True if all are dead or out of game, False otherwise
         """
-        return len(cls.data) == 0
+        return len(cls.in_game) == 0
 
     def __init__(self, **kwargs):
 
@@ -108,8 +116,9 @@ class Character(ABC, EventDispatcher):
         :return: None
         """
         self.game = game
-        self.id = len(self.__class__.data)
+        self.id = len(self.__class__.in_game)
         self.__class__.data.append(self)
+        self.__class__.in_game.append(self.id)
 
     def get_position(self) -> tuple[int,int]:
         """
@@ -262,6 +271,7 @@ class Character(ABC, EventDispatcher):
         :param tile:: tile in which the character to kill is located
         :return: None
         """
-        del self.__class__.data[self.id]
-        self.__class__.rearrange_ids()
+        for char_id in self.__class__.in_game:
+            if char_id == self.id:
+                self.in_game.remove(char_id)
         self.token.delete_token(tile)

@@ -11,6 +11,16 @@ from character_class import Character
 class Monster(Character, ABC):
 
     data: list[Character] = list()
+    in_game: list[int] = list()
+
+    @classmethod
+    def clear_character_data(cls) -> None:
+        """
+        Removes all characters from the game and Monster.data
+        :return: None
+        """
+        cls.data.clear()
+        cls.in_game.clear()
 
     def __init__(self):
         super().__init__()
@@ -90,7 +100,7 @@ class Monster(Character, ABC):
         :return: None
         """
         super().initialize_moves_attacks()
-        for character in cls.data:
+        for character in cls.in_game:
             character.stats.remaining_attacks = character.stats.max_attacks
             character.acted_on_tile = False
 

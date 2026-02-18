@@ -51,7 +51,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         game.check_if_game_over(game=game)
         if not game.game_already_over:
             players.Player.set_starting_player_order()
-            for player in players.Player.data:
+            for player in players.Player.in_game:
                 player.remove_all_effects()  # 0 is the default turn argument
             players.Player.exited.clear()
 
@@ -224,14 +224,14 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if character_id is not None and not Player.all_out():
             # if player turn or no monsters
             if game.turn % 2 == 0 or monsters.Monster.all_out():
-                game.active_character = players.Player.data[character_id]
+                game.active_character = players.Player.in_game[character_id]
                 game.active_character.token.select_character()
                 game.update_interface()
                 game.activate_accessible_tiles(game.active_character.remaining_moves)
 
             else:  # if monsters turn and monsters in the game
                 game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
-                game.active_character = monsters.Monster.data[game.active_character_id]
+                game.active_character = monsters.Monster.in_game[game.active_character_id]
                 game.update_interface()
                 game.active_character.token.select_character()
                 game.active_character.move()
@@ -278,11 +278,11 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
         if (self.active_character.kind == "monster" and
-                self.active_character.id < len(Monster.data) - 1):
+                self.active_character.id < len(Monster.in_game) - 1):
             self.active_character_id += 1  # next monster on list moves
 
         elif (self.active_character.kind == "player" and
-              any(character.has_moves_left for character in Player.data)):
+              any(character.has_moves_left for character in Player.in_game)):
             next_player = Player.find_next_player_with_remaining_moves(starting_index=self.active_character_id)
             self.active_character_id = next_player.id
 
@@ -300,7 +300,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         self.dungeon.disable_all_tiles()
         player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
-        positions_in_range = player_movement_range.union({player.get_position() for player in players.Player.data})
+        positions_in_range = player_movement_range.union({player.get_position() for player in players.Player.in_game})
         self.dungeon.enable_tiles(positions_in_range, self.active_character)
 
     def switch_character(self, new_active_character: Character) -> None:
@@ -367,7 +367,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             App.get_running_app().trigger_game_over("Monsters killed y'all!")
 
         elif (Player.check_if_dead("sawyer") and Player.gems < game.total_gems
-            and not any(player.has_item("talisman") for player in Player.data)):
+            and not any(player.has_item("talisman") for player in Player.in_game)):
             game.game_already_over = True
             game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             App.get_running_app().trigger_game_over("Only Sawyer could pick up gems...")
@@ -377,7 +377,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         Finishes the level and provides a new one
         :return: None
         """
-        monsters.Monster.data.clear()
+        monsters.Monster.in_game.clear()
         self.dungeon.unschedule_all_events()
         self.level += 1
         self.remove_dungeon_from_game()

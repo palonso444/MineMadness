@@ -440,7 +440,7 @@ class DungeonLayout(GridLayout):
                     if self.dungeon_level == 1 or self.advanced_start:
                         character = players.Sawyer()
                     else:
-                        character = players.Player.transfer_player("sawyer")
+                        character = players.Player.setup_for_new_level("sawyer")
                     token_kind = "player"
                     token_species = "sawyer"
 
@@ -448,7 +448,7 @@ class DungeonLayout(GridLayout):
                     if self.dungeon_level == 1 or self.advanced_start:
                         character = players.Hawkins()
                     else:
-                        character = players.Player.transfer_player("hawkins")
+                        character = players.Player.setup_for_new_level("hawkins")
                     token_kind = "player"
                     token_species = "hawkins"
 
@@ -456,7 +456,7 @@ class DungeonLayout(GridLayout):
                     if self.dungeon_level == 1 or self.advanced_start:
                         character = players.CrusherJane()
                     else:
-                        character = players.Player.transfer_player("crusherjane")
+                        character = players.Player.setup_for_new_level("crusherjane")
                     token_kind = "player"
                     token_species = "crusherjane"
 
@@ -598,14 +598,17 @@ class DungeonLayout(GridLayout):
                     character = traps.Trap()
 
             if character is not None:
-                character.setup_character(game=self.game)
+                if isinstance(character, players.Player) and (self.dungeon_level == 1 or self.advanced_start):
+                    character.setup_character(game=self.game)
+                if isinstance(character, monsters.Monster):
+                    character.setup_character(game=self.game)
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
                 self._add_position_to_update(tile_position)
                 tile.place_item(token_kind, token_species, character)
 
-    def get_tile(self, position: tuple[int:int]) -> Tile:
+    def get_tile(self, position: tuple[int,int]) -> Tile:
         """
         Returns the tile at the specified coordinates
         :param position: coordinates of the tile

@@ -18,10 +18,10 @@ class Player(Character, ABC):
 
     # this is the starting order as defined by Player.set_starting_player_order()
     player_chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
-    data: list[Character] = list()
-    in_game: list[int] = list()
-    dead: list[int] = list()
-    exited: set[int] = set()
+    data: list[Character] | None = None
+    in_game: list[int] | None = None
+    dead: list[int] | None = None
+    exited: list[int] | None = None
     gems: int = 0
 
     @classmethod
@@ -84,22 +84,27 @@ class Player(Character, ABC):
             return {player.char for player in cls.exited}
 
     @classmethod
-    def transfer_player(cls, species: str) -> Player:
+    def setup_for_new_level(cls, species: str) -> Player:
         """
         Retrieves players from Players.exited or Players.data to transfer them to a dungeon level
         :param species: Player.species of the player to be retrieved
         :return: the Player instance
         """
-        if len(cls.exited) > 0:
-            for player in cls.exited:
-                if player.species == species:
-                    player.heal(player.stats.recovery_end_of_level)
-                    player.ability_active = False
-                    return player
-        elif len(cls.in_game) > 0:
-            for player in cls.in_game:
-                if player.species == species:
-                    return player
+        #if self.is_exited
+        for player_id in cls.exited:
+            player: Player = Player.get_character_from_data(player_id)
+            if player.species == species:
+                player.heal(player.stats.recovery_end_of_level)
+                player.ability_active = False
+                cls.exited.remove(player_id)
+                cls.in_game.append(player_id)
+                return player
+        return None
+        #elif len(cls.in_game) > 0:
+            #for player_id in cls.in_game:
+                #player: Player = Player.get_character_from_data(player_id)
+                #if player.species == species:
+                    #return player
 
     @classmethod
     def check_if_all_players_out(cls, game) -> None:
@@ -139,32 +144,37 @@ class Player(Character, ABC):
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
 
-    def setup_character(self, game: MineMadnessGame):
+    def setup_character(self, game: MineMadnessGame) -> None:
         """
-        Sets up the character when its CharacterToken is placed onto the tile
+        Sets up the character when it first enters the game
         :return: None
         """
-        super().setup_character(game=game)
+        self.game = game
+        self.id = len(self.__class__.in_game)
+        self.__class__.data.append(self)
         self.shovels = self.stats.initial_shovels
         self.weapons = self.stats.initial_weapons
+        self.__class__.in_game.append(self.id)
 
-    def on_shovels(self, instance: Player, value: int):
+    @staticmethod
+    def on_shovels(player: Player, value: int) -> None:
         """
         Notifies the game when a shovel is used or picked up
-        :param instance: instance of the Player
+        :param player: instance of the Player
         :param value: new shovels value
         :return: None
         """
-        self.game.update_label("shovels_label", value)
+        player.game.update_label("shovels_label", value)
 
-    def on_weapons(self, instance: Player, value: int):
+    @staticmethod
+    def on_weapons(player: Player, value: int):
         """
         Notifies the game when a weapon is used or picked up
-        :param instance: instance of the Player
+        :param player: instance of the Player
         :param value: new weapon value
         :return: None
         """
-        self.game.update_label("weapons_label", value)
+        player.game.update_label("weapons_label", value)
 
     @abstractmethod
     def on_player_level(self, instance: Player, value: int) -> None:
@@ -395,8 +405,8 @@ class Player(Character, ABC):
         Takes a Player out of a level
         :return: None
         """
-        Player.exited.add(self)
-        Player.in_game.remove(self)
+        Player.exited.add(self.id)
+        Player.in_game.remove(self.id)
         self.token.delete_token(self.token.get_current_tile())
 
     def _pick_object(self, tile: Tile) -> None:

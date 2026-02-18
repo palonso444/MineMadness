@@ -51,8 +51,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         game.check_if_game_over(game=game)
         if not game.game_already_over:
             players.Player.set_starting_player_order()
-            for player in players.Player.in_game:
-                player.remove_all_effects()  # 0 is the default turn argument
+            for player_id in players.Player.in_game:
+                Player.get_character_from_data(player_id).remove_all_effects()  # 0 is the default turn argument
             players.Player.exited.clear()
 
             App.get_running_app().save_game()
@@ -377,7 +377,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         Finishes the level and provides a new one
         :return: None
         """
-        monsters.Monster.in_game.clear()
+        monsters.Monster.clear_character_data()
         self.dungeon.unschedule_all_events()
         self.level += 1
         self.remove_dungeon_from_game()

@@ -33,7 +33,8 @@ class Character(ABC, EventDispatcher):
         Resets remaining moves of all characters of the class back to the maximum
         :return: None
         """
-        for character in cls.in_game:
+        for character_id in cls.in_game:
+            character = cls.get_character_from_data(character_id)
             character.remaining_moves = character.stats.moves
 
     @classmethod
@@ -100,16 +101,13 @@ class Character(ABC, EventDispatcher):
             else:
                 setattr(self, attribute, value)
 
-
-    def setup_character(self, game: MineMadnessGame):
+    @abstractmethod
+    def setup_character(self, game: MineMadnessGame) -> None:
         """
         Sets up the character when its CharacterToken is placed onto the tile
         :return: None
         """
-        self.game = game
-        self.id = len(self.__class__.in_game)
-        self.__class__.data.append(self)
-        self.__class__.in_game.append(self.id)
+        pass
 
     def get_position(self) -> tuple[int,int]:
         """

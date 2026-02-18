@@ -188,10 +188,12 @@ class MineMadnessApp(App):
                                         if self.game.dungeon.torches_dict is not None else None
 
         # game is not JSON serializable
-        game_state["players_alive"] = {player.__class__.__name__: {k: v for k, v in player.to_dict().items() if k != "game"}
-                                       for player in Player.in_game}
-        game_state["players_dead"] = {player.__class__.__name__: {k: v for k, v in player.to_dict().items() if k != "game"}
-                                      for player in Player.dead}
+        game_state["players_alive"] = {Player.get_character_from_data(player_id).__class__.__name__:
+                                           {k: v for k, v in Player.get_character_from_data(player_id).to_dict().items() if k != "game"}
+                                       for player_id in Player.in_game}
+        game_state["players_dead"] = {Player.get_character_from_data(player_id).__class__.__name__:
+                                          {k: v for k, v in Player.get_character_from_data(player_id).to_dict().items() if k != "game"}
+                                      for player_id in Player.dead}
         return game_state
 
     def continue_game_or_load(self) -> None:

@@ -10,8 +10,8 @@ from character_class import Character
 
 class Monster(Character, ABC):
 
-    data: list[Character] = list()
-    in_game: list[int] = list()
+    data: list[Character] | None = None
+    in_game: list[int] | None = None
 
     @classmethod
     def clear_character_data(cls) -> None:
@@ -35,10 +35,19 @@ class Monster(Character, ABC):
         self.chases: str = "player"
         self.acted_on_tile: bool = False
 
+    def setup_character(self, game: MineMadnessGame) -> None:
+        """
+        Sets up the character when it first enters the game
+        :return: None
+        """
+        self.game = game
+        self.id = len(self.__class__.in_game)
+        self.__class__.data.append(self)
+        self.__class__.in_game.append(self.id)
+
     @abstractmethod
     def move(self):
         pass
-
 
     @property
     def has_all_gems(self) -> bool:

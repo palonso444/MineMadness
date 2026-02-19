@@ -84,13 +84,16 @@ class Character(ABC, EventDispatcher):
         self.step_duration: float | None = None  # defines speed of movement, from 0 to 1
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
 
-    def on_remaining_moves(self, character: Character, value: int) -> None:
+    @staticmethod
+    def on_remaining_moves(character: Character, remaining_moves: int) -> None:
         """
         Notifies the game when the character moves
+        :character: instance of the Character
+        :remaining_moves: value of new remaining moves
         :return: None
         """
         if character.has_moved and not character.is_exited:
-            self.game.character_moved()
+            character.game.character_moved()
 
     def to_dict(self):
         """

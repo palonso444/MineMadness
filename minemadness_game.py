@@ -203,11 +203,22 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 players.Player.initialize_moves_attacks()
             else:
                 monsters.Monster.initialize_moves_attacks()
-
-            if game.active_character_id == 0:
-                game.force_update("active_character_id")
-            else:
+            # start game
+            if game.active_character_id is None:
                 game.active_character_id = 0
+
+            # last character to move
+            #elif Player.in_game.index(game.active_character_id) == len(Player.in_game) - 1:
+                #if monsters.Monster.all_out():
+                    #game.force_update("active_character_id", Player.in_game[0])
+
+
+
+
+            #if game.active_character_id == 0:
+                #game.force_update("active_character_id")
+            #else:
+                #game.active_character_id = 0
 
     @staticmethod
     def on_active_character_id(game: MineMadnessGame, character_id: int | None) -> None:
@@ -221,7 +232,11 @@ class MineMadnessGame(Screen):  # initialized in kv file
         game.dungeon.restore_canvas_color("canvas")
         game.dungeon.restore_canvas_color("after")
 
-        if character_id is not None and not Player.all_out():
+        # if no monsters and no moves, a turn passes
+        if Monster.all_out() and not Player.get_from_data(character_id).has_moves_left:
+            game.turn += 1
+
+        elif character_id is not None and not Player.all_out():
             # if player turn or no monsters
             if game.turn % 2 == 0 or monsters.Monster.all_out():
                 game.active_character = Player.get_from_data(character_id)
@@ -247,11 +262,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
             # no monsters, endless turn
             if monsters.Monster.all_out() and not self.active_character.has_moves_left:
-                self.active_character.remaining_moves = self.active_character.stats.moves
                 self.active_character.remove_effects_if_over(self.turn)
                 if self.active_character.token is not None:  # dead characters have no Token
                     self.active_character.token.unselect_token()
-                self.turn += 1
+                self.activate_next_character()
 
             # turn continues
             elif self.active_character.has_moves_left:
@@ -280,16 +294,17 @@ class MineMadnessGame(Screen):  # initialized in kv file
         act_char_cls = self.active_character.__class__
 
         # players can move until they have no moves left
-        if self.active_character.kind == "player" and any(act_char_cls.get_from_data(character_id).has_moves_left
-                                                          and act_char_cls.get_from_data(character_id).is_in_game
-                                      for character_id in act_char_cls.in_game):
+        if (self.active_character.kind == "player"
+                and any(act_char_cls.get_from_data(character_id).has_moves_left
+                        and act_char_cls.get_from_data(character_id).is_in_game
+                                for character_id in act_char_cls.in_game)):
+
                 next_char = act_char_cls.find_next_char_in_game_with_remaining_moves(starting_index=self.active_character_id)
-                self.active_character = next_char
                 self.active_character_id = next_char.id
 
         # monsters move only once and in the order determined in in_game list
-        elif self.active_character.kind == "monster" != 0 and act_char_cls.in_game.index(self.active_character.id) < len(act_char_cls.in_game) - 1:  # monster
-            self.active_character = Monster.get_from_data(act_char_cls.in_game[act_char_cls.in_game.index(self.active_character.id) + 1])
+        elif (self.active_character.kind == "monster" != 0
+              and act_char_cls.in_game.index(self.active_character.id) < len(act_char_cls.in_game) - 1):  # monster
             self.active_character_id = act_char_cls.in_game[act_char_cls.in_game.index(self.active_character.id) + 1]
 
         else:
@@ -385,7 +400,15 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         monsters.Monster.clear_character_data()
         self.dungeon.unschedule_all_events()
+        self.turn = None
+        self.total_gems = None
+        self.active_character = None
+        self.active_character_id = None
         self.level += 1
         self.remove_dungeon_from_game()
         self.add_dungeon_to_game()
-        self.turn = None
+        #self.turn = None
+        #self.total_gems = None
+        #self.active_character = None
+        #self.active_character_id = None
+

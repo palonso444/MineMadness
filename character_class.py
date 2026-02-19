@@ -46,7 +46,7 @@ class Character(ABC, EventDispatcher):
         return len(cls.in_game) == 0
 
     @classmethod
-    def find_next_char_with_remaining_moves(cls, starting_index: int) -> Character | None:
+    def find_next_char_in_game_with_remaining_moves(cls, starting_index: int) -> Character | None:
         """
         Finds the next character than can still move
         :param starting_index: index to start the search in Player.data
@@ -55,7 +55,7 @@ class Character(ABC, EventDispatcher):
         n = len(cls.data)
         for i in range(1, n + 1):
             next_index = (starting_index + i) % n
-            if cls.data[next_index].remaining_moves > 0:
+            if cls.data[next_index].remaining_moves > 0 and cls.data[next_index].is_in_game:
                 return cls.data[next_index]
         return None  # should never happen
 
@@ -221,6 +221,14 @@ class Character(ABC, EventDispatcher):
         :return: True if character has moved, False otherwise
         """
         return self.remaining_moves < self.stats.moves
+
+    @property
+    def is_in_game(self) -> bool:
+        """
+        Checks if the Character is in game
+        :return:: True if the Character is in game, False otherwise
+        """
+        return self.id in self.__class__.in_game
 
     def hide(self) -> None:
         """

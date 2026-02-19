@@ -16,8 +16,9 @@ class Player(Character, ABC):
     shovels = NumericProperty(0)
     weapons = NumericProperty(0)
 
-    # this is the starting order as defined by Player.set_starting_player_order()
+    # this is the starting order
     chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
+    # those lists are initialized before kivy even starts
     data: list[Character] = []
     in_game: list[int] = []
     dead: list[int] = []
@@ -397,7 +398,7 @@ class Player(Character, ABC):
         Takes a Player out of a level
         :return: None
         """
-        Player.exited.add(self.id)
+        Player.exited.append(self.id)
         Player.in_game.remove(self.id)
         self.token.delete_token(self.token.get_current_tile())
 

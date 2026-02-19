@@ -10,6 +10,7 @@ from character_class import Character
 
 class Monster(Character, ABC):
 
+    # those lists are initialized before kivy even starts
     data: list[Character] = []
     in_game: list[int] = []
 

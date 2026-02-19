@@ -309,8 +309,8 @@ class DungeonLayout(GridLayout):
         blueprint.place_items("d", self.stats.dynamite_number)
         blueprint.place_items("h", self.stats.powder_number)
 
-        for item, frequency in self.stats.level_progression().items():
-           blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
+        #for item, frequency in self.stats.level_progression().items():
+           #blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
         return blueprint
 

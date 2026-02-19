@@ -278,10 +278,21 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
         act_char_cls = self.active_character.__class__
-        if any(act_char_cls.get_from_data(character_id).has_moves_left for character_id in act_char_cls.in_game):
-            next_char = act_char_cls.find_next_char_with_remaining_moves(starting_index=self.active_character_id)
-            self.active_character_id = next_char.id
-        else:  # no character with remaining moves
+
+        # players can move until they have no moves left
+        if self.active_character.kind == "player" and any(act_char_cls.get_from_data(character_id).has_moves_left
+                                                          and act_char_cls.get_from_data(character_id).is_in_game
+                                      for character_id in act_char_cls.in_game):
+                next_char = act_char_cls.find_next_char_in_game_with_remaining_moves(starting_index=self.active_character_id)
+                self.active_character = next_char
+                self.active_character_id = next_char.id
+
+        # monsters move only once and in the order determined in in_game list
+        elif self.active_character.kind == "monster" != 0 and act_char_cls.in_game.index(self.active_character.id) < len(act_char_cls.in_game) - 1:  # monster
+            self.active_character = Monster.get_from_data(act_char_cls.in_game[act_char_cls.in_game.index(self.active_character.id) + 1])
+            self.active_character_id = act_char_cls.in_game[act_char_cls.in_game.index(self.active_character.id) + 1]
+
+        else:
             self.turn += 1
 
     ####### END OF FUNCTIONS MANAGING THE TURN SEQUENCE  ##################

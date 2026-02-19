@@ -453,6 +453,8 @@ class DungeonLayout(GridLayout):
                         character.setup_character(game=self.game)
                     else:
                         character = players.Player.setup_for_new_level("sawyer")
+                        players.Player.exited.remove(character.id)
+                        players.Player.in_game.append(character.id)
                     token_kind = "player"
                     token_species = "sawyer"
 
@@ -462,6 +464,8 @@ class DungeonLayout(GridLayout):
                         character.setup_character(game=self.game)
                     else:
                         character = players.Player.setup_for_new_level("hawkins")
+                        players.Player.exited.remove(character.id)
+                        players.Player.in_game.append(character.id)
                     token_kind = "player"
                     token_species = "hawkins"
 
@@ -471,6 +475,8 @@ class DungeonLayout(GridLayout):
                         character.setup_character(game=self.game)
                     else:
                         character = players.Player.setup_for_new_level("crusherjane")
+                        players.Player.exited.remove(character.id)
+                        players.Player.in_game.append(character.id)
                     token_kind = "player"
                     token_species = "crusherjane"
 

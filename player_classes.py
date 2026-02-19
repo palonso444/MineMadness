@@ -17,7 +17,7 @@ class Player(Character, ABC):
     weapons = NumericProperty(0)
 
     # this is the starting order as defined by Player.set_starting_player_order()
-    player_chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
+    chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
     data: list[Character] = []
     in_game: list[int] = []
     dead: list[int] = []
@@ -64,19 +64,6 @@ class Player(Character, ABC):
         Player.data = [sawyer, hawkins, jane]
 
     @classmethod
-    def find_next_player_with_remaining_moves(cls, starting_index: int) -> Player:
-        """
-        Finds the next player than can still move
-        :param starting_index: index to start the search in Player.data
-        :return: the Player with remaining moves
-        """
-        n = len(cls.in_game)
-        for i in range(1, n + 1):
-            next_index = (starting_index + i) % n
-            if cls.in_game[next_index].remaining_moves > 0:
-                return cls.in_game[next_index]
-
-    @classmethod
     def all_players_alive(cls):
         return len(cls.in_game) == len(cls.data)
 
@@ -91,41 +78,18 @@ class Player(Character, ABC):
         :param player_species: Player.species of the player to check
         :return: True if dead, False otherwise
         """
-        return any(player.species == player_species for player in cls.dead)
+        return any(Player.get_from_data(player_id).species == player_species for player_id in cls.dead)
 
     @classmethod
-    def get_surviving_player_chars(cls) -> set[str] | tuple[str:str:str]:
+    def get_surviving_player_chars(cls) -> list[str]:
         """
         Returns the players that survived the level
         :return: set or tuple containing the characters representing live players
         """
-        if len(Player.dead) == 0:  # cannot be done with all_players_alive()
-            return cls.player_chars
+        if len(Player.exited) > 0:
+            return [Player.get_from_data(player_id).char for player_id in cls.exited]
         else:
-            return {player.char for player in cls.exited}
-
-    @classmethod
-    def setup_for_new_level(cls, species: str) -> Player | None:
-        """
-        Retrieves players from Players.exited or Players.data to transfer them to a dungeon level
-        :param species: Player.species of the player to be retrieved
-        :return: the Player instance
-        """
-        #if self.is_exited
-        for player_id in cls.exited:
-            player: Player = Player.get_from_data(player_id)
-            if player.species == species:
-                player.heal(player.stats.recovery_end_of_level)
-                player.ability_active = False
-                cls.exited.remove(player_id)
-                cls.in_game.append(player_id)
-                return player
-        return None
-        #elif len(cls.in_game) > 0:
-            #for player_id in cls.in_game:
-                #player: Player = Player.get_character_from_data(player_id)
-                #if player.species == species:
-                    #return player
+            return list(Player.chars)
 
     @classmethod
     def check_if_all_players_out(cls, game) -> None:
@@ -160,6 +124,7 @@ class Player(Character, ABC):
         self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
         self.special_items: dict[str,int] | None = None
+        self.ability_active: bool | None = None
         self.level_track: dict[int,dict] = dict()
 
         self.bind(experience=self.on_experience)
@@ -174,6 +139,14 @@ class Player(Character, ABC):
         self.__class__.data.append(self)
         self.shovels = self.stats.initial_shovels
         self.weapons = self.stats.initial_weapons
+
+    def setup_for_new_level(self) -> None:
+        """
+        Sets up the Player to start a new level (not level 1)
+        :return: None
+        """
+        self.heal(self.stats.recovery_end_of_level)
+        self.ability_active = False
 
     @staticmethod
     def on_shovels(player: Player, value: int) -> None:

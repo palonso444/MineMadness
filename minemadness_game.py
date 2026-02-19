@@ -5,6 +5,7 @@ from kivy.uix.screenmanager import Screen
 
 import player_classes as players
 import monster_classes as monsters
+from character_class import Character
 from interface import Interfacebutton
 from monster_classes import Monster
 from player_classes import Player
@@ -63,7 +64,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
     def initialize_switches(self) -> None:
         self.turn = 0  # even for players, odd for monsters. Player starts
         self.gems = False
-
         self.ability_button_active = True  # TODO: when button unbinding in self.on_ability_button() works this has to go
 
     def update_interface(self) -> None:
@@ -277,16 +277,11 @@ class MineMadnessGame(Screen):  # initialized in kv file
         Increases MineMadnessGame.active_character.id by 1 or switch turn if all characters have been already activated
         :return: None
         """
-        if (self.active_character.kind == "monster" and
-                self.active_character.id < len(Monster.in_game) - 1):
-            self.active_character_id += 1  # next monster on list moves
-
-        elif (self.active_character.kind == "player" and
-              any(character.has_moves_left for character in Player.in_game)):
-            next_player = Player.find_next_player_with_remaining_moves(starting_index=self.active_character_id)
-            self.active_character_id = next_player.id
-
-        else:  # end of monster list reached (all have moved)
+        act_char_cls = self.active_character.__class__
+        if any(act_char_cls.get_from_data(character_id).has_moves_left for character_id in act_char_cls.in_game):
+            next_char = act_char_cls.find_next_char_with_remaining_moves(starting_index=self.active_character_id)
+            self.active_character_id = next_char.id
+        else:  # no character with remaining moves
             self.turn += 1
 
     ####### END OF FUNCTIONS MANAGING THE TURN SEQUENCE  ##################

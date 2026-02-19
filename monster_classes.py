@@ -108,7 +108,8 @@ class Monster(Character, ABC):
         :return: None
         """
         super().initialize_moves_attacks()
-        for character in cls.in_game:
+        for character_id in cls.in_game:
+            character = cls.get_from_data(character_id)
             character.stats.remaining_attacks = character.stats.max_attacks
             character.acted_on_tile = False
 

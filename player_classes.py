@@ -36,6 +36,15 @@ class Player(Character, ABC):
         cls.exited.clear()
 
     @classmethod
+    def get_from_data_by_species(cls, player_species: str) -> Player:
+        """
+        Gets a Player from data according to its species (unique in Players)
+        :player_species: Player.species of the Player to retrieve
+        :return: the Player
+        """
+        return next((player for player in Player.data if player.species == player_species), None)
+
+    @classmethod
     def setup_player_data_and_ids(cls) -> None:
         """
         Sets up player data
@@ -79,7 +88,7 @@ class Player(Character, ABC):
         :param player_species: Player.species of the player to check
         :return: True if dead, False otherwise
         """
-        return any(Player.get_from_data(player_id).species == player_species for player_id in cls.dead)
+        return any(Player.get_from_data_by_id(player_id).species == player_species for player_id in cls.dead)
 
     @classmethod
     def get_surviving_player_chars(cls) -> list[str]:
@@ -88,7 +97,7 @@ class Player(Character, ABC):
         :return: set or tuple containing the characters representing live players
         """
         if len(Player.exited) > 0:
-            return [Player.get_from_data(player_id).char for player_id in cls.exited]
+            return [Player.get_from_data_by_id(player_id).char for player_id in cls.exited]
         else:
             return list(Player.chars)
 
@@ -445,7 +454,7 @@ class Player(Character, ABC):
         :return: None
         """
         tile.get_token("trap").character.show_and_damage(self)
-        self.remaining_moves = 0
+        self.remaining_moves = 0  # TODO: move this to token! Consider that may fall also when disarming traps
 
     def _disarm_trap(self, tile:Tile) -> None:
         """
@@ -473,8 +482,6 @@ class Player(Character, ABC):
             if not self.species == "hawkins":
                 self.shovels -= 1
 
-        self.remaining_moves -= self.stats.digging_moves
-
         wall_tile.get_token("wall").show_digging()
         wall_tile.get_token("wall").delete_token(wall_tile)
 
@@ -482,6 +489,8 @@ class Player(Character, ABC):
             while len(wall_tile.tokens["light"]) > 0:
                 wall_tile.get_token("light").delete_token(wall_tile)
             self.get_dungeon().update_bright_spots()
+
+        self.remaining_moves -= self.stats.digging_moves
 
     def fight_on_tile(self, opponent_tile: Tile) -> None:
         """
@@ -519,7 +528,7 @@ class Player(Character, ABC):
         """
         super().kill_character(tile)
         self.remove_all_effects()
-        self.dead.append(self)
+        self.__class__.dead.append(self.id)
 
     def resurrect(self, dungeon: DungeonLayout) -> None:
         """

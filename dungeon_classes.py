@@ -310,8 +310,8 @@ class DungeonLayout(GridLayout):
         blueprint.place_items("d", self.stats.dynamite_number)
         blueprint.place_items("h", self.stats.powder_number)
 
-        #for item, frequency in self.stats.level_progression().items():
-           #blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
+        for item, frequency in self.stats.level_progression().items():
+           blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
         return blueprint
 
@@ -439,7 +439,6 @@ class DungeonLayout(GridLayout):
         Matches the symbols of the DungeonLayout.blueprint with the corresponding tokens and characters
         :return: the character ready to be set up for starting adventure, of None if there is no character
         """
-
         for tile in self.children:
 
             tile_position = (tile.row, tile.col)
@@ -453,7 +452,8 @@ class DungeonLayout(GridLayout):
                         character = players.Sawyer()
                         character.setup_character(game=self.game)
                     else:
-                        character = players.Player.setup_for_new_level("sawyer")
+                        character: players.Player = players.Player.get_from_data_by_species("sawyer")
+                        character.setup_for_new_level()
                         players.Player.exited.remove(character.id)
                         players.Player.in_game.append(character.id)
                     token_kind = "player"
@@ -464,7 +464,8 @@ class DungeonLayout(GridLayout):
                         character = players.Hawkins()
                         character.setup_character(game=self.game)
                     else:
-                        character = players.Player.setup_for_new_level("hawkins")
+                        character: players.Player = players.Player.get_from_data_by_species("hawkins")
+                        character.setup_for_new_level()
                         players.Player.exited.remove(character.id)
                         players.Player.in_game.append(character.id)
                     token_kind = "player"
@@ -475,7 +476,8 @@ class DungeonLayout(GridLayout):
                         character = players.CrusherJane()
                         character.setup_character(game=self.game)
                     else:
-                        character = players.Player.setup_for_new_level("crusherjane")
+                        character: players.Player = players.Player.get_from_data_by_species("crusherjane")
+                        character.setup_for_new_level()
                         players.Player.exited.remove(character.id)
                         players.Player.in_game.append(character.id)
                     token_kind = "player"

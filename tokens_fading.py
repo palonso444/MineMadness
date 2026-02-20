@@ -45,7 +45,7 @@ class FadingToken(Widget, ABC, metaclass=WidgetABCMeta):
             fading_out.bind(on_complete=token.character_token.remove_effect_if_in_queue)
         # game_already_over avoids interferences of game_over screens if massive killing:
         elif isinstance(token, DamageToken) and not token.game.game_already_over:
-            fading_out.bind(on_complete=token.game.check_if_game_over)
+            fading_out.bind(on_complete=token.game.finish_game_if_over)
         fading_out.start(token)
 
 

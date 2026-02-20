@@ -330,6 +330,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         if self.character.kind == "player" and current_tile.has_token("trap"):
             self.update_token_on_tile(current_tile)
             self.character.fall_in_trap(current_tile)
+            self.skip_moves()
 
         elif len(self.path) > 0:
             next_tile: Tile = self.dungeon.get_tile(self.path.pop(0))

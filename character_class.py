@@ -20,10 +20,11 @@ class Character(ABC, EventDispatcher):
         pass
 
     @classmethod
-    def get_from_data(cls, character_id: int) -> Character:
+    def get_from_data_by_id(cls, character_id: int) -> Character:
         """
-        Gets a character from data
-        :return: the character
+        Gets a character from data according to its id
+        :character_id: the id of the Character to retrieve
+        :return: the Character
         """
         return cls.data[character_id]
 
@@ -34,7 +35,7 @@ class Character(ABC, EventDispatcher):
         :return: None
         """
         for character_id in cls.in_game:
-            character = cls.get_from_data(character_id)
+            character = cls.get_from_data_by_id(character_id)
             character.remaining_moves = character.stats.moves
 
     @classmethod
@@ -55,7 +56,7 @@ class Character(ABC, EventDispatcher):
         n = len(cls.in_game)
         for i in range(1, n + 1):
             next_index = (starting_index + i) % n
-            character = cls.get_from_data(cls.in_game[next_index])
+            character = cls.get_from_data_by_id(cls.in_game[next_index])
             if character.remaining_moves > 0:
                 return character
         return None
@@ -288,5 +289,5 @@ class Character(ABC, EventDispatcher):
         """
         for char_id in self.__class__.in_game:
             if char_id == self.id:
-                self.in_game.remove(char_id)
+                self.__class__.in_game.remove(char_id)
         self.token.delete_token(tile)

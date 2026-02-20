@@ -110,7 +110,7 @@ class Monster(Character, ABC):
         """
         super().initialize_moves_attacks()
         for character_id in cls.in_game:
-            character = cls.get_from_data(character_id)
+            character = cls.get_from_data_by_id(character_id)
             character.stats.remaining_attacks = character.stats.max_attacks
             character.acted_on_tile = False
 

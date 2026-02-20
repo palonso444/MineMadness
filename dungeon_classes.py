@@ -32,7 +32,7 @@ class DungeonLayout(GridLayout):
 
     def __init__(self, game: MineMadnessGame,
                  blueprint: Blueprint | None = None,
-                 torches_dict: dict[tuple:[list]] | None = None,
+                 torches_dict: dict[tuple, list] | None = None,
                  **kwargs):
         super().__init__(**kwargs)
 
@@ -47,10 +47,10 @@ class DungeonLayout(GridLayout):
         else:
             self.blueprint = blueprint
 
-        self.tiles_dict: dict[tuple: Tile] | None = None
+        self.tiles_dict: dict[tuple, Tile] | None = None
         self.moving_token: CharacterToken | None = None  # CharacterTokens are not associated to any Tile while sliding
 
-        self.torches_dict: dict[tuple:list] | None = torches_dict
+        self.torches_dict: dict[tuple, list] | None = torches_dict
         self.darkness: Rectangle | None = None
         self.darkness_intensity: int = 150  # from 0 to 255
         self.flickering_torches: ClockEvent | None = None
@@ -272,7 +272,7 @@ class DungeonLayout(GridLayout):
         :param pos: position (actual position on the screen) of the dungeon instance
         :return: None
         """
-        dungeon.tiles_dict = dict()
+        dungeon.tiles_dict = {}
 
         for y in range(dungeon.blueprint.y_axis):
             for x in range(dungeon.blueprint.x_axis):
@@ -291,6 +291,7 @@ class DungeonLayout(GridLayout):
             players.Player.setup_player_data_and_ids()
             for player in players.Player.data:
                 players.Player.in_game.append(player.id)
+        players.Player.in_game.sort()
 
         dungeon.place_torches(size_modifier=0.5)
 

@@ -345,7 +345,10 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         else:
             self.update_token_on_tile(current_tile)
             self.character.act_on_tile(current_tile)
-            self.character.remaining_moves -= self.steps
+            if self.character.kind == "monster":  # monsters move only once per turn
+                self.skip_moves()
+            else:
+                self.character.remaining_moves -= self.steps
             self.steps = 0
 
     def show_damage(self) -> None:

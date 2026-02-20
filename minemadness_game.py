@@ -51,10 +51,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         players.Player.gems = 0
         game.check_if_game_over(game=game)
         if not game.game_already_over:
-            # players.Player._set_player_order() not needed, is immutable now
             for player_id in players.Player.in_game:
                 Player.get_from_data(player_id).remove_all_effects()  # 0 is the default turn argument
-            # players.Player.exited.clear() not needed
 
             App.get_running_app().save_game()
             App.get_running_app().level = game.level
@@ -192,33 +190,20 @@ class MineMadnessGame(Screen):  # initialized in kv file
     @staticmethod
     def on_turn(game: MineMadnessGame, turn: int | None) -> None:
         """
-        On new turn, resets movements of the characters (monsters or players). Sets self.active_character_id to 0
-        and updates it if the value was already 0 (there is only one character left)
+        Resets movements of the characters (monsters or players) and sets active_character id to
+        the first id of the Character.in_game
         :param game: current instance of MineMadnessGame
         :param turn: turn number (even for players, odd for monsters)
         :return: None
         """
         if turn is not None:
+            game.active_character_id = None  # to ensure updating
             if turn % 2 == 0 or monsters.Monster.all_out():
                 players.Player.initialize_moves_attacks()
+                game.active_character_id = players.Player.in_game[0]
             else:
                 monsters.Monster.initialize_moves_attacks()
-            # start game
-            if game.active_character_id is None:
-                game.active_character_id = 0
-
-            # last character to move
-            #elif Player.in_game.index(game.active_character_id) == len(Player.in_game) - 1:
-                #if monsters.Monster.all_out():
-                    #game.force_update("active_character_id", Player.in_game[0])
-
-
-
-
-            #if game.active_character_id == 0:
-                #game.force_update("active_character_id")
-            #else:
-                #game.active_character_id = 0
+                game.active_character_id = monsters.Monster.in_game[0]
 
     @staticmethod
     def on_active_character_id(game: MineMadnessGame, character_id: int | None) -> None:
@@ -228,28 +213,29 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param character_id: id of the new active character
         :return: None
         """
-        # restores any color modifications from previous Characters (e.g. by hiding)
-        game.dungeon.restore_canvas_color("canvas")
-        game.dungeon.restore_canvas_color("after")
+        if character_id is not None:
+            # restores any color modifications from previous Characters (e.g. by hiding)
+            game.dungeon.restore_canvas_color("canvas")
+            game.dungeon.restore_canvas_color("after")
 
-        # if no monsters and no moves, a turn passes
-        if Monster.all_out() and not Player.get_from_data(character_id).has_moves_left:
-            game.turn += 1
+            # if no monsters and no moves, a turn passes
+            if Monster.all_out() and not Player.get_from_data(character_id).has_moves_left:
+                game.turn += 1
 
-        elif character_id is not None and not Player.all_out():
-            # if player turn or no monsters
-            if game.turn % 2 == 0 or monsters.Monster.all_out():
-                game.active_character = Player.get_from_data(character_id)
-                game.active_character.token.select_character()
-                game.update_interface()
-                game.activate_accessible_tiles(game.active_character.remaining_moves)
+            elif character_id is not None and not Player.all_out():
+                # if player turn or no monsters
+                if game.turn % 2 == 0 or monsters.Monster.all_out():
+                    game.active_character = Player.get_from_data(character_id)
+                    game.active_character.token.select_character()
+                    game.update_interface()
+                    game.activate_accessible_tiles(game.active_character.remaining_moves)
 
-            else:  # if monsters turn and monsters in the game
-                game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
-                game.active_character = Monster.get_from_data(character_id)
-                game.update_interface()
-                game.active_character.token.select_character()
-                game.active_character.move()
+                else:  # if monsters turn and monsters in the game
+                    game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
+                    game.active_character = Monster.get_from_data(character_id)
+                    game.update_interface()
+                    game.active_character.token.select_character()
+                    game.active_character.move()
 
     def character_moved(self) -> None:
         """
@@ -260,15 +246,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
             #self.check_if_all_players_exited()
             # call game.check_if_game_over() if game over for lack of shovels is implemented
 
-            # no monsters, endless turn
-            if monsters.Monster.all_out() and not self.active_character.has_moves_left:
-                self.active_character.remove_effects_if_over(self.turn)
-                if self.active_character.token is not None:  # dead characters have no Token
-                    self.active_character.token.unselect_token()
-                self.activate_next_character()
-
             # turn continues
-            elif self.active_character.has_moves_left:
+            if self.active_character.has_moves_left:
                 if self.active_character.kind == "player":
                     self.activate_accessible_tiles(self.active_character.remaining_moves)
                 elif self.active_character.kind == "monster":
@@ -293,20 +272,13 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         act_char_cls = self.active_character.__class__
 
-        # players can move until they have no moves left
-        if (self.active_character.kind == "player"
-                and any(act_char_cls.get_from_data(character_id).has_moves_left
-                        and act_char_cls.get_from_data(character_id).is_in_game
-                                for character_id in act_char_cls.in_game)):
-
-                next_char = act_char_cls.find_next_char_in_game_with_remaining_moves(starting_index=self.active_character_id)
+        # characters can move until they have no moves left.
+        # Monsters move only once (remaining_moves = 0 when finish first move)
+        if any(act_char_cls.get_from_data(character_id).has_moves_left
+               and act_char_cls.get_from_data(character_id).is_in_game
+                                for character_id in act_char_cls.in_game):
+                next_char = act_char_cls.find_next_char_in_game_with_moves(starting_index=self.active_character_id)
                 self.active_character_id = next_char.id
-
-        # monsters move only once and in the order determined in in_game list
-        elif (self.active_character.kind == "monster" != 0
-              and act_char_cls.in_game.index(self.active_character.id) < len(act_char_cls.in_game) - 1):  # monster
-            self.active_character_id = act_char_cls.in_game[act_char_cls.in_game.index(self.active_character.id) + 1]
-
         else:
             self.turn += 1
 

@@ -46,18 +46,19 @@ class Character(ABC, EventDispatcher):
         return len(cls.in_game) == 0
 
     @classmethod
-    def find_next_char_in_game_with_remaining_moves(cls, starting_index: int) -> Character | None:
+    def find_next_char_in_game_with_moves(cls, starting_index: int) -> Character | None:
         """
-        Finds the next character than can still move
+        Finds the next character than can still move. Returns None if no character can move.
         :param starting_index: index to start the search in Player.data
         :return: the Player with remaining moves
         """
-        n = len(cls.data)
+        n = len(cls.in_game)
         for i in range(1, n + 1):
             next_index = (starting_index + i) % n
-            if cls.data[next_index].remaining_moves > 0 and cls.data[next_index].is_in_game:
-                return cls.data[next_index]
-        return None  # should never happen
+            character = cls.get_from_data(cls.in_game[next_index])
+            if character.remaining_moves > 0:
+                return character
+        return None
 
     def __init__(self, **kwargs):
 

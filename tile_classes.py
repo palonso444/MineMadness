@@ -309,6 +309,7 @@ class Tile(Button):
                 if self.first_click_time and current_time - self.first_click_time < self.double_click_interval:
                     self.first_click_time = None
                     player.perform_passive_action()
+                    player.token.skip_moves()  # one passive action per turn
                 else:
                     self.first_click_time = Clock.get_time()
                     return

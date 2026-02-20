@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from typing import Optional
+
 from kivy.app import App
 from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty
 from kivy.uix.screenmanager import Screen
@@ -82,7 +85,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.update_label("shovels_label", None)
             self.update_label("weapons_label", None)
 
-
+        self.update_label("name_label", self.active_character.name.upper())
         self.force_update("gems")
         self.force_update("ability_button")
 
@@ -111,7 +114,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         setattr(self, switch_name, switch_value)
 
-    def update_label(self, label_id: str, value: int | None) -> None:
+    def update_label(self, label_id: str, value: int | str | None) -> None:
         """
         Updates an interface label
         :param label_id: id of the label
@@ -119,7 +122,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :returns: None
         """
         if value is not None:
-            self.ids[label_id].text = f"{label_id.split('_')[0].capitalize()}: {str(value)}"
+            if label_id == "name_label":
+                self.ids[label_id].text = value
+            else:
+                self.ids[label_id].text = f"{label_id.split('_')[0].capitalize()}: {str(value)}"
         else:
             self.ids[label_id].text = ""
 
@@ -265,9 +271,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
                         self.active_character.token.unselect_token()
                 self.activate_next_character()
 
-    def activate_next_character(self) -> None:
+    def activate_next_character(self, start_index_mod: int = 0) -> None:
         """
-        Increases MineMadnessGame.active_character.id by 1 or switch turn if all characters have been already activated
+        Increases MineMadnessGame.active_character_id by 1 or switch turn if all characters have been already activated
+        :start_index_mod: modifier of the index where starting the search of next character
         :return: None
         """
         act_char_cls = self.active_character.__class__
@@ -277,7 +284,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if any(act_char_cls.get_from_data(character_id).has_moves_left
                and act_char_cls.get_from_data(character_id).is_in_game
                                 for character_id in act_char_cls.in_game):
-                next_char = act_char_cls.find_next_char_in_game_with_moves(starting_index=self.active_character_id)
+                start_index: int = self.active_character_id + start_index_mod
+                next_char: Character = act_char_cls.find_next_char_in_game_with_moves(starting_index=start_index)
                 self.active_character_id = next_char.id
         else:
             self.turn += 1
@@ -379,8 +387,3 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.level += 1
         self.remove_dungeon_from_game()
         self.add_dungeon_to_game()
-        #self.turn = None
-        #self.total_gems = None
-        #self.active_character = None
-        #self.active_character_id = None
-

@@ -93,15 +93,16 @@ class Player(Character, ABC):
             return list(Player.chars)
 
     @classmethod
-    def check_if_all_players_out(cls, game) -> None:
+    def finish_if_all_players_out(cls, game) -> None:
         """
-        Checks if all players out and acts consequently
+        Finishes the level if all players out
         :return: None
         """
         if cls.all_out():
             game.finish_level()
         else:
-            game.activate_next_character()
+            # modify starting index because there is one less player in game
+            game.activate_next_character(start_index_mod=-1)
 
 
     def __init__(self):
@@ -365,8 +366,6 @@ class Player(Character, ABC):
                 self.experience += trap_token.character.stats.experience_when_found
                 self.get_dungeon().game.ids.experience_bar.value = self.experience
 
-        self.remaining_moves = 0  # one passive action per turn
-
     def act_on_tile(self, tile:Tile) -> None:
         """
         Handles the logic of PLayer behaviour depending on Tile.token
@@ -391,7 +390,7 @@ class Player(Character, ABC):
                 self._pick_gem(tile)
             if tile.kind == "exit" and self.has_all_gems:
                 self._exit_level()
-                Player.check_if_all_players_out(self.game)
+                Player.finish_if_all_players_out(self.game)
 
     def _exit_level(self) -> None:
         """

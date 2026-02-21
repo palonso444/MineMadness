@@ -1,4 +1,4 @@
-The purpose of this branch is to get rid of all unnecessary switches or minemadness_game (gems and all other in the method force_update method) and of the method force_update itself. Also, it may have some bugs, see below:
+The purpose of this branch is to get rid of all unnecessary switches or minemadness_game (gems and all other in the method force_update method) and of the method force_update itself. Also, it may have some bugs, see at the end of the file:
 
 
 ![mine_madness](https://github.com/user-attachments/assets/f7495fcb-5e02-406b-9c3b-5f7fd324362c)
@@ -37,12 +37,6 @@ Developer notes
 
 This is a experimental branch. It uses events instead of manually triggering switches. It has several bugs:
 
-1. Character order is not preseved when exiting. to solve it:
+1. Some monsters move simultaneously sometimes. usually when a character exits. not clear why
 
-Player.exited and player.in_game and player_dead store only ids to relate to player.data. A list player Data must be created storing the whole data. This list of player data is immutable. Their index on the list are their immutable ids.
-
-Monsters have only in_game.data and dead.data. the list Monster.data is created newly in each dungeon
-
-2. Some monsters move simultaneously sometimes. usually when a character exits. not clear why
-
-3. When killing last monster of dungeon, program breaks
+2. When killing last monster of dungeon, program breaks

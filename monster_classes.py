@@ -32,7 +32,7 @@ class Monster(Character, ABC):
         :return: None
         """
         super().setup_character(game)
-        self.id = len(self.__class__.data) - 1  # monsters have their index in data as id
+        self.id = self.__class__.data.index(self)
 
     @abstractmethod
     def move(self):

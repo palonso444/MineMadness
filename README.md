@@ -1,4 +1,4 @@
-Experimental branch. it hsd bugs, see below:
+The purpose of this branch is to get rid of all unnecessary switches or minemadness_game (gems and all other in the method force_update method) and of the method force_update itself. Also, it may have some bugs, see below:
 
 
 ![mine_madness](https://github.com/user-attachments/assets/f7495fcb-5e02-406b-9c3b-5f7fd324362c)

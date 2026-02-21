@@ -11,16 +11,7 @@ class Character(ABC, EventDispatcher):
     remaining_moves = NumericProperty(None)
 
     @classmethod
-    @abstractmethod
-    def clear_character_data(cls) -> None:
-        """
-        Placeholder. Implemented in Monster and Player classes
-        :return: None
-        """
-        pass
-
-    @classmethod
-    def get_from_data_by_id(cls, character_id: int) -> Character:
+    def get_data(cls, character_id: int) -> Character:
         """
         Gets a character from data according to its id
         :character_id: the id of the Character to retrieve
@@ -34,17 +25,17 @@ class Character(ABC, EventDispatcher):
         Resets remaining moves of all characters of the class back to the maximum
         :return: None
         """
-        for character_id in cls.in_game:
-            character = cls.get_from_data_by_id(character_id)
-            character.remaining_moves = character.stats.moves
+        for character in cls.data:
+            if character.state == "in_game":
+                character.remaining_moves = character.stats.moves
 
     @classmethod
-    def all_out(cls) -> bool:
+    def all_dead(cls) -> bool:
         """
-        Checks if all instances characters of the class are dead or out of game
-        :return:: True if all are dead or out of game, False otherwise
+        Checks if all instances characters of the class are dead
+        :return:: True if all are dead, False otherwise
         """
-        return len(cls.in_game) == 0
+        return all(character.state == "dead" for character in cls.data)
 
     @classmethod
     def find_next_char_in_game_with_moves(cls, starting_index: int) -> Character | None:
@@ -53,11 +44,11 @@ class Character(ABC, EventDispatcher):
         :param starting_index: index to start the search in Player.data
         :return: the Player with remaining moves
         """
-        n = len(cls.in_game)
+        n = len(cls.data)
         for i in range(1, n + 1):
             next_index = (starting_index + i) % n
-            character = cls.get_from_data_by_id(cls.in_game[next_index])
-            if character.remaining_moves > 0:
+            character = cls.get_data(next_index)
+            if character.state == "in_game" and character.remaining_moves > 0:
                 return character
         return None
 
@@ -73,6 +64,7 @@ class Character(ABC, EventDispatcher):
         self.game: MineMadnessGame | None = None  # needed to update for remaining_moves, weapons and shovels
         self.char: str | None = None
         self.name: str | None = None
+        self.state: str | None = None  # in_game, dead, exited
         self.id: int | None = None   # initialized in DungeonLayout.place_item()
         self.kind: str | None = None
         self.species: str | None = None
@@ -94,7 +86,7 @@ class Character(ABC, EventDispatcher):
         :remaining_moves: value of new remaining moves
         :return: None
         """
-        if character.has_moved and not character.is_exited:
+        if character.has_moved and character.state == "in_game":
             character.game.character_moved()
 
     def to_dict(self):
@@ -120,13 +112,14 @@ class Character(ABC, EventDispatcher):
             else:
                 setattr(self, attribute, value)
 
-    @abstractmethod
     def setup_character(self, game: MineMadnessGame) -> None:
         """
         Sets up the character when its CharacterToken is placed onto the tile
         :return: None
         """
-        pass
+        self.game = game
+        self.__class__.data.append(self)
+        self.state = "in_game"
 
     def get_position(self) -> tuple[int,int]:
         """
@@ -196,14 +189,6 @@ class Character(ABC, EventDispatcher):
         return False
 
     @property
-    def is_exited(self) -> bool:  # needed for everybody for self.fight_on_tile()
-        """
-        Checks if the character has exited the level
-        :return: True if character is hidden, False otherwise
-        """
-        return False
-
-    @property
     def using_dynamite(self) -> bool:  # needed for everybody for Token.on_slide_completed()
         """
         Checks if the character is using dynamite
@@ -228,12 +213,8 @@ class Character(ABC, EventDispatcher):
         return self.remaining_moves < self.stats.moves
 
     @property
-    def is_in_game(self) -> bool:
-        """
-        Checks if the Character is in game
-        :return:: True if the Character is in game, False otherwise
-        """
-        return self.id in self.__class__.in_game
+    def is_alive(self) -> bool:
+        return self.state != "dead"
 
     def hide(self) -> None:
         """
@@ -287,7 +268,5 @@ class Character(ABC, EventDispatcher):
         :param tile:: tile in which the character to kill is located
         :return: None
         """
-        for char_id in self.__class__.in_game:
-            if char_id == self.id:
-                self.__class__.in_game.remove(char_id)
         self.token.delete_token(tile)
+        self.state = "dead"

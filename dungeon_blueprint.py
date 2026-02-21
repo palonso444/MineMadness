@@ -115,7 +115,7 @@ class Blueprint:
                     self.place_single_item(item, position)
                     break
 
-    def place_items_as_group(self, items: tuple, min_dist: int, max_dist: int | None = None,
+    def place_items_as_group(self, items: list, min_dist: int, max_dist: int | None = None,
                              position: tuple[int, int] | None = None, scatter:bool = True) -> None:
         """
         Places items grouped between a minimum and maximum distance. Items not possible to place between specified

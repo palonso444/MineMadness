@@ -180,7 +180,7 @@ class TalismanButton(Interfacebutton):
     def on_release(self):
 
         character = self.game.active_character
-        if Player.all_players_alive():
+        if Player.all_alive():
             character = self.game.active_character
             character.experience = character.stats.exp_to_next_level
 

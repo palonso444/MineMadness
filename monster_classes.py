@@ -12,16 +12,6 @@ class Monster(Character, ABC):
 
     # those lists are initialized before kivy even starts
     data: list[Character] = []
-    in_game: list[int] = []
-
-    @classmethod
-    def clear_character_data(cls) -> None:
-        """
-        Removes all characters from the game and Monster.data
-        :return: None
-        """
-        cls.data.clear()
-        cls.in_game.clear()
 
     def __init__(self):
         super().__init__()
@@ -41,9 +31,8 @@ class Monster(Character, ABC):
         Sets up the character when it first enters the game
         :return: None
         """
-        self.game = game
-        self.id = len(self.__class__.in_game)  # monsters can have any ids, not like players
-        self.__class__.data.append(self)
+        super().setup_character(game)
+        self.id = len(self.__class__.data) - 1  # monsters have their index in data as id
 
     @abstractmethod
     def move(self):
@@ -109,10 +98,10 @@ class Monster(Character, ABC):
         :return: None
         """
         super().initialize_moves_attacks()
-        for character_id in cls.in_game:
-            character = cls.get_from_data_by_id(character_id)
-            character.stats.remaining_attacks = character.stats.max_attacks
-            character.acted_on_tile = False
+        for character in cls.data:
+            if character.state == "in_game":
+                character.stats.remaining_attacks = character.stats.max_attacks
+                character.acted_on_tile = False
 
     def move_token_or_act_on_tile(self, path: list[tuple]) -> None:
         """

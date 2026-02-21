@@ -282,7 +282,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             self.path = None
             #one attack
             next_tile.get_token("monster").character.fight_on_tile(self.get_current_tile())
-            if self.character.is_dead:
+            if self.character.state == "dead":
                 self.dungeon.game.activate_next_character()
 
         else:
@@ -338,7 +338,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             if self.character.kind == "player" and next_tile.has_token("monster"):  # monster is hidden here
                 self.update_token_on_tile(current_tile)
                 next_tile.get_token("monster").character.fight_on_tile(current_tile)
-                if self.character.is_dead:
+                if self.character.state == "dead":
                     self.dungeon.game.activate_next_character()
             else:
                 self._slide_one_step(next_tile, on_complete)

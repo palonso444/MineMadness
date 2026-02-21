@@ -54,8 +54,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
         players.Player.gems = 0
         game.finish_game_if_over(game=game)
         if not game.game_already_over:
-            for player_id in players.Player.in_game:
-                Player.get_from_data_by_id(player_id).remove_all_effects()  # 0 is the default turn argument
+            for player in players.Player.data:
+                if player.state == "in_game":
+                    player.remove_all_effects()
 
             App.get_running_app().save_game()
             App.get_running_app().level = game.level
@@ -187,8 +188,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         Cleans the data from the previous game
         :return: None
         """
-        Player.clear_character_data()
-        monsters.Monster.clear_character_data()
+        players.Player.data.clear()
+        monsters.Monster.data.clear()
         self.dungeon.unschedule_all_events()
 
     ####### THE FOLLOWING GROUP OF FUNCTIONS MANAGE THE TURN SEQUENCE  ###########
@@ -204,12 +205,12 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         if turn is not None:
             game.active_character_id = None  # to ensure updating
-            if turn % 2 == 0 or monsters.Monster.all_out():
+            if turn % 2 == 0 or monsters.Monster.all_dead():
                 players.Player.initialize_moves_attacks()
-                game.active_character_id = players.Player.in_game[0]
+                game.active_character_id = next(player.id for player in Player.data if player.state == "in_game")
             else:
                 monsters.Monster.initialize_moves_attacks()
-                game.active_character_id = monsters.Monster.in_game[0]
+                game.active_character_id = next(monster.id for monster in Monster.data if monster.state == "in_game")
 
     @staticmethod
     def on_active_character_id(game: MineMadnessGame, character_id: int | None) -> None:
@@ -225,20 +226,20 @@ class MineMadnessGame(Screen):  # initialized in kv file
             game.dungeon.restore_canvas_color("after")
 
             # if no monsters and no moves, a turn passes
-            if Monster.all_out() and not Player.get_from_data_by_id(character_id).has_moves_left:
+            if Monster.all_dead() and not Player.get_data(character_id).has_moves_left:
                 game.turn += 1
 
             elif character_id is not None and not Player.all_out():
                 # if player turn or no monsters
-                if game.turn % 2 == 0 or monsters.Monster.all_out():
-                    game.active_character = Player.get_from_data_by_id(character_id)
+                if game.turn % 2 == 0 or monsters.Monster.all_dead():
+                    game.active_character = Player.get_data(character_id)
                     game.active_character.token.select_character()
                     game.update_interface()
                     game.activate_accessible_tiles(game.active_character.remaining_moves)
 
                 else:  # if monsters turn and monsters in the game
                     game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
-                    game.active_character = Monster.get_from_data_by_id(character_id)
+                    game.active_character = Monster.get_data(character_id)
                     game.update_interface()
                     game.active_character.token.select_character()
                     game.active_character.move()
@@ -281,12 +282,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         # characters can move until they have no moves left.
         # Monsters move only once (remaining_moves = 0 when finish first move)
-        if any(act_char_cls.get_from_data_by_id(character_id).has_moves_left
-               and act_char_cls.get_from_data_by_id(character_id).is_in_game
-                                for character_id in act_char_cls.in_game):
-                start_index: int = self.active_character_id + start_index_mod
-                next_char: Character = act_char_cls.find_next_char_in_game_with_moves(starting_index=start_index)
-                self.active_character_id = next_char.id
+        if any(character.has_moves_left and character.state == "in_game" for character in act_char_cls.data):
+            start_index: int = self.active_character_id + start_index_mod
+            next_char: Character = act_char_cls.find_next_char_in_game_with_moves(starting_index=start_index)
+            self.active_character_id = next_char.id
         else:
             self.turn += 1
 
@@ -301,7 +300,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         self.dungeon.disable_all_tiles()
         player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
-        positions_in_range = player_movement_range.union({Player.get_from_data_by_id(player_id).get_position() for player_id in players.Player.in_game})
+        positions_in_range = player_movement_range.union({player.get_position() for player in Player.data if player.state == "in_game"})
         self.dungeon.enable_tiles(positions_in_range, self.active_character)
 
     def switch_character(self, new_active_character: Character) -> None:
@@ -362,13 +361,13 @@ class MineMadnessGame(Screen):  # initialized in kv file
         else:
             raise ValueError("Either game or damage_token must be not None")
 
-        if players.Player.all_players_dead():
+        if players.Player.all_dead():
             game.game_already_over = True
             game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             App.get_running_app().trigger_game_over("Monsters killed y'all!")
 
         elif (Player.check_if_dead("sawyer") and Player.gems < game.total_gems
-            and not any(Player.get_from_data_by_id(player_id).has_item("talisman") for player_id in Player.in_game)):
+            and not any(Player.get_data(player_id).has_item("talisman") for player_id in Player.in_game)):
             game.game_already_over = True
             game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             App.get_running_app().trigger_game_over("Only Sawyer could pick up gems...")
@@ -378,7 +377,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         Finishes the level and provides a new one
         :return: None
         """
-        monsters.Monster.clear_character_data()
+        monsters.Monster.data.clear()
         self.dungeon.unschedule_all_events()
         self.turn = None
         self.total_gems = None

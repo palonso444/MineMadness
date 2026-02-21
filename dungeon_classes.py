@@ -289,9 +289,6 @@ class DungeonLayout(GridLayout):
 
         if dungeon.dungeon_level == 1 or dungeon.advanced_start:
             players.Player.setup_player_data_and_ids()
-            for player in players.Player.data:
-                players.Player.in_game.append(player.id)
-        players.Player.in_game.sort()
 
         dungeon.place_torches(size_modifier=0.5)
 
@@ -303,7 +300,11 @@ class DungeonLayout(GridLayout):
         :return: complete blueprint of the dungeon
         """
         blueprint = Blueprint(y_axis, x_axis)
-        blueprint.place_items_as_group(players.Player.get_surviving_player_chars(), min_dist=1)
+        if self.dungeon_level == 1:
+            player_chars: list[str] = ["%", "?", "&"]
+        else:
+            player_chars: list[str] = players.Player.get_alive_player_chars()
+        blueprint.place_items_as_group(player_chars, min_dist=1)
         blueprint.place_items(" ", 1)
         blueprint.place_items("o", self.stats.gem_number)
         blueprint.place_items("t", self.stats.talisman_number)
@@ -452,10 +453,8 @@ class DungeonLayout(GridLayout):
                         character = players.Sawyer()
                         character.setup_character(game=self.game)
                     else:
-                        character: players.Player = players.Player.get_from_data_by_species("sawyer")
+                        character: players.Player = players.Player.get_data(0)
                         character.setup_for_new_level()
-                        players.Player.exited.remove(character.id)
-                        players.Player.in_game.append(character.id)
                     token_kind = "player"
                     token_species = "sawyer"
 
@@ -464,10 +463,8 @@ class DungeonLayout(GridLayout):
                         character = players.Hawkins()
                         character.setup_character(game=self.game)
                     else:
-                        character: players.Player = players.Player.get_from_data_by_species("hawkins")
+                        character: players.Player = players.Player.get_data(1)
                         character.setup_for_new_level()
-                        players.Player.exited.remove(character.id)
-                        players.Player.in_game.append(character.id)
                     token_kind = "player"
                     token_species = "hawkins"
 
@@ -476,10 +473,8 @@ class DungeonLayout(GridLayout):
                         character = players.CrusherJane()
                         character.setup_character(game=self.game)
                     else:
-                        character: players.Player = players.Player.get_from_data_by_species("crusherjane")
+                        character: players.Player = players.Player.get_data(2)
                         character.setup_for_new_level()
-                        players.Player.exited.remove(character.id)
-                        players.Player.in_game.append(character.id)
                     token_kind = "player"
                     token_species = "crusherjane"
 
@@ -621,8 +616,7 @@ class DungeonLayout(GridLayout):
                     character = traps.Trap()
 
             if isinstance(character, monsters.Monster):
-                character.setup_character(game=self.game)
-                character.in_game.append(character.id)  # Players are set up after matching blueprint
+                character.setup_character(game=self.game)  # Players are set up after matching blueprint
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:

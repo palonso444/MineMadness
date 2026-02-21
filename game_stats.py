@@ -32,7 +32,7 @@ class DungeonStats:
         # are dead
         from player_classes import Player
 
-        dead_char: int = len(Player.dead)
+        dead_char: int = len([player for player in Player.data if player.state == "dead"])
         trigger: int = randint(1, 10)
 
         if dead_char == 0:
@@ -54,7 +54,7 @@ class DungeonStats:
 
         from player_classes import Player
 
-        for player in Player.exited:
+        for player in [player for player in Player.data if player.state == "exited"]:
             if player.species == "hawkins":
                 dynamites: int = player.special_items["dynamite"]
                 trigger = randint(1, 10)

@@ -16,33 +16,8 @@ class Player(Character, ABC):
     shovels = NumericProperty(0)
     weapons = NumericProperty(0)
 
-    # this is the starting order
-    chars: tuple[str,str,str] = ("%", "?", "&")  # % sawyer, ? hawkins, & crusher jane
-    # those lists are initialized before kivy even starts
     data: list[Character] = []
-    in_game: list[int] = []
-    dead: list[int] = []
-    exited: list[int] = []
     gems: int = 0
-
-    @classmethod
-    def clear_character_data(cls) -> None:
-        """
-        Removes all characters from the game but keeps Player.data intact
-        :return: None
-        """
-        cls.in_game.clear()
-        cls.dead.clear()
-        cls.exited.clear()
-
-    @classmethod
-    def get_from_data_by_species(cls, player_species: str) -> Player:
-        """
-        Gets a Player from data according to its species (unique in Players)
-        :player_species: Player.species of the Player to retrieve
-        :return: the Player
-        """
-        return next((player for player in Player.data if player.species == player_species), None)
 
     @classmethod
     def setup_player_data_and_ids(cls) -> None:
@@ -71,15 +46,15 @@ class Player(Character, ABC):
         sawyer = next((player for player in Player.data if isinstance(player, Sawyer)), None)
         hawkins = next((player for player in Player.data if isinstance(player, Hawkins)), None)
         jane = next((player for player in Player.data if isinstance(player, CrusherJane)), None)
-        Player.data = [sawyer, hawkins, jane]
+        Player.data[0], Player.data[1], Player.data[2] = sawyer, hawkins, jane
 
     @classmethod
-    def all_players_alive(cls):
-        return len(cls.in_game) == len(cls.data)
+    def all_alive(cls):
+        return all(player.state == "in_game" or player.state == "exited" for player in cls.data)
 
     @classmethod
-    def all_players_dead(cls):
-        return len(cls.dead) == len(cls.data)
+    def all_out(cls):
+        return all(player.state == "dead" or player.state == "exited" for player in cls.data)
 
     @classmethod
     def check_if_dead(cls, player_species: str) -> bool:
@@ -88,18 +63,15 @@ class Player(Character, ABC):
         :param player_species: Player.species of the player to check
         :return: True if dead, False otherwise
         """
-        return any(Player.get_from_data_by_id(player_id).species == player_species for player_id in cls.dead)
+        return any(player.species == player_species and player.state == "dead" for player in cls.data)
 
     @classmethod
-    def get_surviving_player_chars(cls) -> list[str]:
+    def get_alive_player_chars(cls) -> list[str]:
         """
         Returns the players that survived the level
         :return: set or tuple containing the characters representing live players
         """
-        if len(Player.exited) > 0:
-            return [Player.get_from_data_by_id(player_id).char for player_id in cls.exited]
-        else:
-            return list(Player.chars)
+        return [player.char for player in cls.data if player.is_alive]
 
     @classmethod
     def finish_if_all_players_out(cls, game) -> None:
@@ -146,10 +118,10 @@ class Player(Character, ABC):
         Sets up the character when it first enters the game
         :return: None
         """
-        self.game = game
-        self.__class__.data.append(self)
+        super().setup_character(game)
         self.shovels = self.stats.initial_shovels
         self.weapons = self.stats.initial_weapons
+
 
     def setup_for_new_level(self) -> None:
         """
@@ -158,6 +130,7 @@ class Player(Character, ABC):
         """
         self.heal(self.stats.recovery_end_of_level)
         self.ability_active = False
+        self.state = "in_game"
 
     @staticmethod
     def on_shovels(player: Player, value: int) -> None:
@@ -213,22 +186,6 @@ class Player(Character, ABC):
         :return: True if has the item, False otherwise
         """
         return self.inventory[item] > 0
-
-    @property
-    def is_dead(self) -> bool:
-        """
-        Checks if the Player is dead
-        """
-        return self in Player.dead
-
-    @property
-    def is_exited(self) -> bool:
-        """
-        Checks if the Player has exited the level
-        :return: True if character is hidden, False otherwise
-        """
-        return self in Player.exited
-
 
     @abstractmethod
     def can_fight(self, token_species: str) -> bool:
@@ -406,8 +363,7 @@ class Player(Character, ABC):
         Takes a Player out of a level
         :return: None
         """
-        Player.exited.append(self.id)
-        Player.in_game.remove(self.id)
+        self.state = "exited"
         self.token.delete_token(self.token.get_current_tile())
 
     def _pick_object(self, tile: Tile) -> None:
@@ -528,7 +484,6 @@ class Player(Character, ABC):
         """
         super().kill_character(tile)
         self.remove_all_effects()
-        self.__class__.dead.append(self.id)
 
     def resurrect(self, dungeon: DungeonLayout) -> None:
         """
@@ -552,7 +507,7 @@ class Player(Character, ABC):
 
         location: Tile = dungeon.get_random_tile(free=True)
         location.place_item(self.kind, self.species, character=self)
-        self.setup_character()
+        self.state = "in_game"
 
         self.bind(experience=self.on_experience)
         self.bind(player_level=self.on_player_level)
@@ -646,7 +601,7 @@ class Sawyer(Player):
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
 
-        self.special_items: dict[str:int] | None = {"powder": 2}
+        self.special_items: dict[str, int] | None = {"powder": 2}
         self.ability_display: str = "Hide"
         self.ability_active: bool = False
 
@@ -928,4 +883,3 @@ class Hawkins(Player):
         :return: same damage
         """
         return damage
-

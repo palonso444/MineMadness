@@ -131,7 +131,7 @@ class MineMadnessApp(App):
 
     def _clean_previous_game(self) -> None:
         """
-        Cleans the data from the previous game and removes it from the ScreenManager
+        Cleans the data from the previous game and removes it from the ScreenManager. Erases everything
         :return: None
         """
         self.game.clean_previous_game()
@@ -188,12 +188,12 @@ class MineMadnessApp(App):
                                         if self.game.dungeon.torches_dict is not None else None
 
         # game is not JSON serializable
-        game_state["players_alive"] = {Player.get_from_data_by_id(player_id).__class__.__name__:
-                                           {k: v for k, v in Player.get_from_data_by_id(player_id).to_dict().items() if k != "game"}
-                                       for player_id in Player.in_game}
-        game_state["players_dead"] = {Player.get_from_data_by_id(player_id).__class__.__name__:
-                                          {k: v for k, v in Player.get_from_data_by_id(player_id).to_dict().items() if k != "game"}
-                                      for player_id in Player.dead}
+        game_state["players_alive"] = {player.__class__.__name__:
+                                           {k: v for k, v in player.to_dict().items() if k != "game"}
+                                       for player in Player.data if player.state == "in_game"}
+        game_state["players_dead"] = {Player.__class__.__name__:
+                                          {k: v for k, v in player.to_dict().items() if k != "game"}
+                                      for player in Player.data if player.state == "dead"}
         return game_state
 
     def continue_game_or_load(self) -> None:

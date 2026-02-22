@@ -22,7 +22,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
     level = NumericProperty(None)
     dungeon = ObjectProperty(None)
     turn = NumericProperty(None, allownone=True)
-    active_character_id = NumericProperty(None, allownone=True)
+    active_character = ObjectProperty(None, allownone=True)
 
     # ABILITY PROPERTIES
     ability_button = BooleanProperty(False)
@@ -37,7 +37,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.level: int = 1
-        self.active_character: Character | None = None  # defined by MineMadnessGame.on_active_character_id()
         self.total_gems: int | None = None  # defined by MineMadnessGame.DungeonLayout.on_pos()
         self.ability_button_active: bool | None = None  # activated and deactivates button (no effect if pressed)
         self.game_already_over: bool = False  # to avoid interferences of game_over screens if massive killing
@@ -109,9 +108,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
             switch_value = not switch_value
         elif switch_name == "turn":
             raise NotImplementedError("Deprecated! Use self.turn += 1 instead")
-        elif switch_name == "active_character_id":
-            switch_value = self.active_character_id
-            setattr(self, switch_name, None)
 
         setattr(self, switch_name, switch_value)
 
@@ -197,49 +193,47 @@ class MineMadnessGame(Screen):  # initialized in kv file
     @staticmethod
     def on_turn(game: MineMadnessGame, turn: int | None) -> None:
         """
-        Resets movements of the characters (monsters or players) and sets active_character id to
-        the first id of the Character.in_game
+        Resets movements of the characters (monsters or players) and sets the active_character to
+        the first Character with state in_game
         :param game: current instance of MineMadnessGame
         :param turn: turn number (even for players, odd for monsters)
         :return: None
         """
         if turn is not None:
-            game.active_character_id = None  # to ensure updating
+            game.active_character = None  # to ensure updating
             if turn % 2 == 0 or monsters.Monster.all_dead():
                 players.Player.initialize_moves_attacks()
-                game.active_character_id = next(player.id for player in Player.data if player.state == "in_game")
+                game.active_character = next(player for player in Player.data if player.state == "in_game")
             else:
                 monsters.Monster.initialize_moves_attacks()
-                game.active_character_id = next(monster.id for monster in Monster.data if monster.state == "in_game")
+                game.active_character = next(monster for monster in Monster.data if monster.state == "in_game")
 
     @staticmethod
-    def on_active_character_id(game: MineMadnessGame, character_id: int | None) -> None:
+    def on_active_character(game: MineMadnessGame, character: Character | None) -> None:
         """
         Checks what to do when the active character changes
         :param game: current instance of MineMadnessGame
-        :param character_id: id of the new active character
+        :param character: new active character
         :return: None
         """
-        if character_id is not None:
+        if character is not None:
             # restores any color modifications from previous Characters (e.g. by hiding)
             game.dungeon.restore_canvas_color("canvas")
             game.dungeon.restore_canvas_color("after")
 
             # if no monsters and no moves, a turn passes
-            if Monster.all_dead() and not Player.get_data(character_id).has_moves_left:
+            if Monster.all_dead() and not character.has_moves_left:
                 game.turn += 1
 
-            elif character_id is not None and not Player.all_out():
+            elif character is not None and not Player.all_out():
                 # if player turn or no monsters
                 if game.turn % 2 == 0 or monsters.Monster.all_dead():
-                    game.active_character = Player.get_data(character_id)
                     game.active_character.token.select_character()
                     game.update_interface()
                     game.activate_accessible_tiles(game.active_character.remaining_moves)
 
                 else:  # if monsters turn and monsters in the game
                     game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
-                    game.active_character = Monster.get_data(character_id)
                     game.update_interface()
                     game.active_character.token.select_character()
                     game.active_character.move()
@@ -274,7 +268,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def activate_next_character(self, start_index_mod: int = 0) -> None:
         """
-        Increases MineMadnessGame.active_character_id by 1 or switch turn if all characters have been already activated
+        Activates next active character or switch turn if all characters have been already activated
         :start_index_mod: modifier of the index where starting the search of next character
         :return: None
         """
@@ -283,9 +277,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         # characters can move until they have no moves left.
         # Monsters move only once (remaining_moves = 0 when finish first move)
         if any(character.has_moves_left and character.state == "in_game" for character in act_char_cls.data):
-            start_index: int = self.active_character_id + start_index_mod
-            next_char: Character = act_char_cls.find_next_char_in_game_with_moves(starting_index=start_index)
-            self.active_character_id = next_char.id
+            start_index: int = act_char_cls.data.index(self.active_character) + start_index_mod
+            self.active_character: Character = act_char_cls.find_next_char_in_game_with_moves(starting_index=start_index)
         else:
             self.turn += 1
 
@@ -311,7 +304,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         self.active_character.token.unselect_token()
         self.active_character = new_active_character
-        self.active_character_id = new_active_character.id
 
     @staticmethod
     def on_inv_object(game: MineMadnessGame, inv_object: str | None) -> None:
@@ -382,7 +374,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.turn = None
         self.total_gems = None
         self.active_character = None
-        self.active_character_id = None
         self.level += 1
         self.remove_dungeon_from_game()
         self.add_dungeon_to_game()

@@ -288,7 +288,7 @@ class DungeonLayout(GridLayout):
         dungeon.match_blueprint()
 
         if dungeon.dungeon_level == 1 or dungeon.advanced_start:
-            players.Player.setup_player_data_and_ids()
+            players.Player.set_player_order()
 
         dungeon.place_torches(size_modifier=0.5)
 

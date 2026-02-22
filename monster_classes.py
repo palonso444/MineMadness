@@ -26,14 +26,6 @@ class Monster(Character, ABC):
         self.chases: str = "player"
         self.acted_on_tile: bool = False
 
-    def setup_character(self, game: MineMadnessGame) -> None:
-        """
-        Sets up the character when it first enters the game
-        :return: None
-        """
-        super().setup_character(game)
-        self.id = self.__class__.data.index(self)
-
     @abstractmethod
     def move(self):
         pass

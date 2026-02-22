@@ -20,32 +20,14 @@ class Player(Character, ABC):
     gems: int = 0
 
     @classmethod
-    def setup_player_data_and_ids(cls) -> None:
+    def set_player_order(cls) -> None:
         """
-        Sets up player data
+        Sets the player turn order: Sawyer, Hawkins, Crusher Jane
         :return: None
         """
-        cls._set_player_order()
-        cls._set_ids()
-
-    @classmethod
-    def _set_ids(cls) -> None:
-        """
-        Sets the ids of the Players according to their index in Player.data
-        :return: None
-        """
-        for player in Player.data:
-            player.id = player.data.index(player)
-
-    @classmethod
-    def _set_player_order(cls) -> None:
-        """
-        Sets the starting player turn order: Sawyer, Hawkins, Crusher Jane
-        :return: None
-        """
-        sawyer = next((player for player in Player.data if isinstance(player, Sawyer)), None)
-        hawkins = next((player for player in Player.data if isinstance(player, Hawkins)), None)
-        jane = next((player for player in Player.data if isinstance(player, CrusherJane)), None)
+        sawyer = next(player for player in Player.data if player.species == "sawyer")
+        hawkins = next(player for player in Player.data if player.species == "hawkins")
+        jane = next(player for player in Player.data if player.species == "crusherjane")
         Player.data[0], Player.data[1], Player.data[2] = sawyer, hawkins, jane
 
     @classmethod
@@ -121,7 +103,6 @@ class Player(Character, ABC):
         super().setup_character(game)
         self.shovels = self.stats.initial_shovels
         self.weapons = self.stats.initial_weapons
-
 
     def setup_for_new_level(self) -> None:
         """

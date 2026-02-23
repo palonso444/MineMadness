@@ -11,15 +11,6 @@ class Character(ABC, EventDispatcher):
     remaining_moves = NumericProperty(None)
 
     @classmethod
-    def get_data(cls, character_id: int) -> Character:
-        """
-        Gets a character from data according to its id
-        :character_id: the id of the Character to retrieve
-        :return: the Character
-        """
-        return cls.data[character_id]
-
-    @classmethod
     def initialize_moves_attacks(cls) -> None:
         """
         Resets remaining moves of all characters of the class back to the maximum
@@ -36,6 +27,17 @@ class Character(ABC, EventDispatcher):
         :return:: True if all are dead, False otherwise
         """
         return all(character.state == "dead" for character in cls.data)
+
+    @classmethod
+    def find_all_chars_with_state(cls, state: str) -> list[Character]:
+        """
+        Returns all characters from data with a given state (in_game, dead or exited)
+        :param state: state of the character
+        :return: list of characters
+        """
+        if state == "is_alive":
+            return [character for character in cls.data if character.is_alive]
+        return [character for character in cls.data if character.state == state]
 
     @classmethod
     def find_next_char_in_game_with_moves(cls, starting_index: int) -> Character | None:
@@ -65,7 +67,6 @@ class Character(ABC, EventDispatcher):
         self.char: str | None = None
         self.name: str | None = None
         self.state: str | None = None  # in_game, dead, exited
-        self.id: int | None = None   # initialized in DungeonLayout.place_item()
         self.kind: str | None = None
         self.species: str | None = None
         self.token: Token | None = None  # initialized in DungeonLayout.place_item()

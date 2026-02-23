@@ -371,7 +371,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             App.get_running_app().trigger_game_over("Monsters killed y'all!")
 
         elif (Player.check_if_dead("sawyer") and Player.gems < game.dungeon.total_gems
-            and not any(Player.get_data(player_id).has_item("talisman") for player_id in Player.in_game)):
+            and not any(player.has_item("talisman") for player in Player.find_all_chars_with_state("is_alive"))):
             game.game_already_over = True
             game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             App.get_running_app().trigger_game_over("Only Sawyer could pick up gems...")

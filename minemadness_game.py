@@ -46,12 +46,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         if dungeon is not None:
 
+            dungeon.build_level()
+
             #if not game.game_already_over:
                 #game.finish_game_if_over(game=game)  # TODO: this must be out of here
-
-            dungeon.set_tiles()
-            dungeon.match_blueprint()
-            dungeon.place_torches(size_modifier=0.5)
 
             players.Player.gems = 0
             if game.level == 1 or game.advanced_start:

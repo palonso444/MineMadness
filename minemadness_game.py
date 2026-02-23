@@ -67,28 +67,31 @@ class MineMadnessGame(Screen):  # initialized in kv file
         for button_type in Interfacebutton.types:
             self.inv_object = button_type
 
-        self.ids.level_label.text = "Depth: " + str(self.level * 30) + " ft." \
-            if self.active_character.kind == "player" else ""
+        self.update_label("name_label", self.active_character.name.upper())
+        self.update_experience_bar()
 
         if self.active_character.kind == "player":
+            self.update_label("level_label", self.level * 30)
             self.update_label("shovels_label", self.active_character.shovels)
             self.update_label("weapons_label", self.active_character.weapons)
             self.update_label("gems_label", Player.gems)
+            self.update_label("jerky_button", "Jerky")
+            self.update_label("coffee_button", "Coffee")
+            self.update_label("tobacco_button", "Tobacco")
+            self.update_label("whisky_button", "Whisky")
+            self.update_label("talisman_button", "Talisman")
         else:
+            self.update_label("level_label", None)
             self.update_label("shovels_label", None)
             self.update_label("weapons_label", None)
             self.update_label("gems_label", None)
+            self.update_label("jerky_button", None)
+            self.update_label("coffee_button", None)
+            self.update_label("tobacco_button", None)
+            self.update_label("whisky_button", None)
+            self.update_label("talisman_button", None)
 
-        self.update_label("name_label", self.active_character.name.upper())
         self.force_update("ability_button")
-
-        self.ids.jerky_button.text = "Jerky" if self.active_character.kind == "player" else ""
-        self.ids.coffee_button.text = "Coffee" if self.active_character.kind == "player" else ""
-        self.ids.tobacco_button.text = "Tobacco" if self.active_character.kind == "player" else ""
-        self.ids.whisky_button.text = "Whisky" if self.active_character.kind == "player" else ""
-        self.ids.talisman_button.text = "Talisman" if self.active_character.kind == "player" else ""
-
-        self.update_experience_bar()
 
     def force_update(self, switch_name) -> None:
         """
@@ -112,13 +115,16 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :returns: None
         """
         if value is not None:
-            match label_id:
-                case "name_label":
-                    self.ids[label_id].text = value
-                case "gems_label":
-                    self.ids[label_id].text = f"Gems: {value}/{self.total_gems}"
-                case _:
-                    self.ids[label_id].text = f"{label_id.split('_')[0].capitalize()}: {value}"
+            if label_id.endswith("button"):
+                self.ids[label_id].text = value
+            elif label_id == "level_label":
+                self.ids[label_id].text = f"Depth: {value} ft."
+            elif label_id == "name_label":
+                self.ids[label_id].text = value
+            elif label_id == "gems_label":
+                self.ids[label_id].text = f"Gems: {value}/{self.total_gems}"
+            else:
+                self.ids[label_id].text = f"{label_id.split('_')[0].capitalize()}: {value}"
         else:
             self.ids[label_id].text = ""
 

@@ -18,21 +18,14 @@ from dungeon_classes import DungeonLayout
 
 class MineMadnessGame(Screen):  # initialized in kv file
 
-    # GENERAL PROPERTIES
     level = NumericProperty(None)
     dungeon = ObjectProperty(None)
     turn = NumericProperty(None, allownone=True)
     active_character = ObjectProperty(None, allownone=True)
 
-    # ABILITY PROPERTIES
     ability_button = BooleanProperty(False)
 
-    # INVENTORY PROPERTIES
     inv_object = StringProperty(None, allownone=True)
-
-    # INTERFACE LABELS PROPERTIES
-    # callbacks are defined in the kv file
-    gems = BooleanProperty(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -64,7 +57,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def initialize_switches(self) -> None:
         self.turn = 0  # even for players, odd for monsters. Player starts
-        self.gems = False
         self.ability_button_active = True  # TODO: when button unbinding in self.on_ability_button() works this has to go
 
     def update_interface(self) -> None:
@@ -81,12 +73,13 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if self.active_character.kind == "player":
             self.update_label("shovels_label", self.active_character.shovels)
             self.update_label("weapons_label", self.active_character.weapons)
+            self.update_label("gems_label", Player.gems)
         else:
             self.update_label("shovels_label", None)
             self.update_label("weapons_label", None)
+            self.update_label("gems_label", None)
 
         self.update_label("name_label", self.active_character.name.upper())
-        self.force_update("gems")
         self.force_update("ability_button")
 
         self.ids.jerky_button.text = "Jerky" if self.active_character.kind == "player" else ""
@@ -119,10 +112,13 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :returns: None
         """
         if value is not None:
-            if label_id == "name_label":
-                self.ids[label_id].text = value
-            else:
-                self.ids[label_id].text = f"{label_id.split('_')[0].capitalize()}: {str(value)}"
+            match label_id:
+                case "name_label":
+                    self.ids[label_id].text = value
+                case "gems_label":
+                    self.ids[label_id].text = f"Gems: {value}/{self.total_gems}"
+                case _:
+                    self.ids[label_id].text = f"{label_id.split('_')[0].capitalize()}: {value}"
         else:
             self.ids[label_id].text = ""
 
@@ -221,22 +217,23 @@ class MineMadnessGame(Screen):  # initialized in kv file
             game.dungeon.restore_canvas_color("canvas")
             game.dungeon.restore_canvas_color("after")
 
-            # if no monsters and no moves, a turn passes
+            # if no monsters and character is selected again after moves run out, a turn passes
             if Monster.all_dead() and not character.has_moves_left:
                 game.turn += 1
 
-            elif character is not None and not Player.all_out():
-                # if player turn or no monsters
-                if game.turn % 2 == 0 or monsters.Monster.all_dead():
-                    game.active_character.token.select_character()
-                    game.update_interface()
-                    game.activate_accessible_tiles(game.active_character.remaining_moves)
+            #if not Player.all_out():
+            # player turn
+            elif game.turn % 2 == 0 or monsters.Monster.all_dead():
+                game.active_character.token.select_character()
+                game.update_interface()
+                game.activate_accessible_tiles(game.active_character.remaining_moves)
 
-                else:  # if monsters turn and monsters in the game
-                    game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
-                    game.update_interface()
-                    game.active_character.token.select_character()
-                    game.active_character.move()
+            # monsters turn
+            else:
+                game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
+                game.update_interface()
+                game.active_character.token.select_character()
+                game.active_character.move()
 
     def character_moved(self) -> None:
         """

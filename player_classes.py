@@ -381,7 +381,7 @@ class Player(Character, ABC):
         """
         game = self.get_dungeon().game
         Player.gems += 1
-        game.force_update("gems")
+        game.update_label("gems_label", Player.gems)
         tile.get_token("treasure").delete_token(tile)
 
     def fall_in_trap(self, tile:Tile) ->None:

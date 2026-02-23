@@ -384,7 +384,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
         monsters.Monster.data.clear()
         self.dungeon.unschedule_all_events()
         self.turn = None
-        self.total_gems = None
         self.active_character = None
         self.level += 1
         self.remove_dungeon_from_game()

@@ -158,7 +158,7 @@ class Player(Character, ABC):
         Checks if players have all gems
         :return: True if players have all gems, False otherwise
         """
-        return Player.gems == self.get_dungeon().game.total_gems
+        return Player.gems == self.get_dungeon().total_gems
 
     def has_item(self, item: str) -> bool:
         """

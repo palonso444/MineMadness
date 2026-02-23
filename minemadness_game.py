@@ -30,29 +30,38 @@ class MineMadnessGame(Screen):  # initialized in kv file
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.level: int = 1
-        self.total_gems: int | None = None  # defined by MineMadnessGame.DungeonLayout.on_pos()
+        self.advanced_start: bool = False  # for testing, set to True and change level attribute
         self.ability_button_active: bool | None = None  # activated and deactivates button (no effect if pressed)
         self.game_already_over: bool = False  # to avoid interferences of game_over screens if massive killing
 
+        self.bind(dungeon=self.start_level)
+
     @staticmethod
-    def on_dungeon(game: MineMadnessGame, dungeon: DungeonLayout) -> None:
+    def start_level(game: MineMadnessGame, dungeon: DungeonLayout) -> None:
         """
-        Triggered when dungeon is ready and assigned to MineMadnessGame.dungeon attribute.
+        Triggered when dungeon assigned to self.dungeon. Triggers the setup of the level
         :param game: instance of MineMadnessGame
         :param dungeon: assigned dungeon instance
         :return: None
         """
-        game.total_gems = game.dungeon.stats.gem_number  # self.game defined in kv file
-        players.Player.gems = 0
-        game.finish_game_if_over(game=game)
-        if not game.game_already_over:
-            for player in players.Player.data:
-                if player.state == "in_game":
-                    player.remove_all_effects()
+        if dungeon is not None:
+
+            #if not game.game_already_over:
+                #game.finish_game_if_over(game=game)  # TODO: this must be out of here
+
+            dungeon.set_tiles()
+            dungeon.match_blueprint()
+            dungeon.place_torches(size_modifier=0.5)
+
+            players.Player.gems = 0
+            if game.level == 1 or game.advanced_start:
+                players.Player.set_player_order()
+            else:
+                for player in players.Player.data:
+                    if player.state == "in_game":
+                        player.remove_all_effects()
 
             App.get_running_app().save_game()
-            App.get_running_app().level = game.level
-
             game.initialize_switches()  # this starts the game
 
     def initialize_switches(self) -> None:
@@ -122,7 +131,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             elif label_id == "name_label":
                 self.ids[label_id].text = value
             elif label_id == "gems_label":
-                self.ids[label_id].text = f"Gems: {value}/{self.total_gems}"
+                self.ids[label_id].text = f"Gems: {value}/{self.dungeon.total_gems}"
             else:
                 self.ids[label_id].text = f"{label_id.split('_')[0].capitalize()}: {value}"
         else:
@@ -169,9 +178,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         scrollview = self.children[0].children[1]
         if dungeon is None:
-            scrollview.add_widget(DungeonLayout(game=self))
-        else:
-            scrollview.add_widget(dungeon)
+            dungeon = DungeonLayout(game=self)
+        self.dungeon = dungeon
+        scrollview.add_widget(dungeon)
 
     def remove_dungeon_from_game(self) -> None:
         """
@@ -180,6 +189,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         scrollview = self.children[0].children[1]
         scrollview.remove_widget(self.dungeon)
+        self.dungeon = None
 
     def clean_previous_game(self) -> None:
         """
@@ -227,7 +237,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
             if Monster.all_dead() and not character.has_moves_left:
                 game.turn += 1
 
-            #if not Player.all_out():
             # player turn
             elif game.turn % 2 == 0 or monsters.Monster.all_dead():
                 game.active_character.token.select_character()
@@ -361,7 +370,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             game.turn = None  # needed to abort of MineMadnessGame.on_character_done()
             App.get_running_app().trigger_game_over("Monsters killed y'all!")
 
-        elif (Player.check_if_dead("sawyer") and Player.gems < game.total_gems
+        elif (Player.check_if_dead("sawyer") and Player.gems < game.dungeon.total_gems
             and not any(Player.get_data(player_id).has_item("talisman") for player_id in Player.in_game)):
             game.game_already_over = True
             game.turn = None  # needed to abort of MineMadnessGame.on_character_done()

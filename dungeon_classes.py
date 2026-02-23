@@ -37,14 +37,14 @@ class DungeonLayout(GridLayout):
         super().__init__(**kwargs)
 
         self.game: MineMadnessGame = game
-        self.dungeon_level: int = game.level
-        self.advanced_start: bool = False  # for testing, set to True and change MineMadnessGame.level attribute
-        self.stats: DungeonStats = DungeonStats(self.dungeon_level)
+        self.stats: DungeonStats = DungeonStats(self.game.level)
         self.rows: int = self.stats.size
         self.cols: int = self.stats.size
+        self.total_gems: int = self.stats.gem_number
+
         if blueprint is None:
-            self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
-        else:
+            self.blueprint: Blueprint = self._generate_blueprint(self.rows, self.cols)
+        else:  # if game is loaded, blueprint is passed as argument
             self.blueprint = blueprint
 
         self.tiles_dict: dict[tuple, Tile] | None = None
@@ -54,8 +54,6 @@ class DungeonLayout(GridLayout):
         self.darkness: Rectangle | None = None
         self.darkness_intensity: int = 150  # from 0 to 255
         self.flickering_torches: ClockEvent | None = None
-
-        self.bind(pos=self.setup_dungeon)
 
     def _setup_torches_dict(self) -> None:
         """
@@ -148,9 +146,7 @@ class DungeonLayout(GridLayout):
                               for tile in self.children
                               for token_list in tile.tokens.values()
                               for token in token_list if token.bright_int > 0]
-
                              +
-
                              [bright_spot for bright_spot in current_bright_spots if
                               bright_spot["max_timeout"] is not None])
 
@@ -262,37 +258,26 @@ class DungeonLayout(GridLayout):
         # +1 added to steps as first position of the path is position_1, does not count
         return 1 < len(path) <= num_of_steps + 1
 
-    @staticmethod
-    def setup_dungeon(dungeon: DungeonLayout, pos: list[int, int]) -> None:
+    def set_tiles(self) -> None:
         """
-        Triggered when the dungeon is positioned the beginning of each level
-        It initializes DungeonLayout.tiles.dict and prepares the floor of the dungeon, placing the exit and setting
+        Initializes DungeonLayout.tiles.dict and prepares the floor of the dungeon, placing the exit and setting
         up characters
-        :param dungeon: Instance of the dungeon corresponding to the current level
-        :param pos: position (actual position on the screen) of the dungeon instance
         :return: None
         """
-        dungeon.tiles_dict = {}
+        self.tiles_dict = {}
 
-        for y in range(dungeon.blueprint.y_axis):
-            for x in range(dungeon.blueprint.x_axis):
+        for y in range(self.blueprint.y_axis):
+            for x in range(self.blueprint.x_axis):
 
-                if dungeon.blueprint.get_position((y, x)) == " ":
-                    tile: Tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=dungeon)
+                if self.blueprint.get_position((y, x)) == " ":
+                    tile: Tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=self)
                 else:
-                    tile: Tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=dungeon)
+                    tile: Tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
 
-                dungeon.tiles_dict[tile.position] = tile
-                dungeon.add_widget(tile)
+                self.tiles_dict[tile.position] = tile
+                self.add_widget(tile)
 
-        dungeon.match_blueprint()
-
-        if dungeon.dungeon_level == 1 or dungeon.advanced_start:
-            players.Player.set_player_order()
-
-        dungeon.place_torches(size_modifier=0.5)
-
-    def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
+    def _generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """
         Places items on DungeonLayout.blueprint depending on DungeonLayout.stats
         :param y_axis: length of y_axis of the blueprint
@@ -300,7 +285,7 @@ class DungeonLayout(GridLayout):
         :return: complete blueprint of the dungeon
         """
         blueprint = Blueprint(y_axis, x_axis)
-        if self.dungeon_level == 1:
+        if self.game.level == 1:
             player_chars: list[str] = ["%", "?", "&"]
         else:
             player_chars: list[str] = players.Player.get_alive_player_chars()
@@ -449,7 +434,7 @@ class DungeonLayout(GridLayout):
             match self.blueprint.get_position(tile_position):
 
                 case "%":
-                    if self.dungeon_level == 1 or self.advanced_start:
+                    if self.game.level == 1 or self.game.advanced_start:
                         character = players.Sawyer()
                         character.setup_character(game=self.game)
                     else:
@@ -459,7 +444,7 @@ class DungeonLayout(GridLayout):
                     token_species = "sawyer"
 
                 case "?":
-                    if self.dungeon_level == 1 or self.advanced_start:
+                    if self.game.level == 1 or self.game.advanced_start:
                         character = players.Hawkins()
                         character.setup_character(game=self.game)
                     else:
@@ -469,7 +454,7 @@ class DungeonLayout(GridLayout):
                     token_species = "hawkins"
 
                 case "&":
-                    if self.dungeon_level == 1 or self.advanced_start:
+                    if self.game.level == 1 or self.game.advanced_start:
                         character = players.CrusherJane()
                         character.setup_character(game=self.game)
                     else:

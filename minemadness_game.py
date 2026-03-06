@@ -210,10 +210,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if turn is not None:
             game.active_character = None  # to ensure updating
             if turn % 2 == 0 or monsters.Monster.all_dead():
-                players.Player.initialize_moves_attacks()
+                players.Player.reset_moves()
                 game.active_character = next(player for player in Player.data if player.state == "in_game")
             else:
-                monsters.Monster.initialize_moves_attacks()
+                monsters.Monster.reset_moves()
                 game.active_character = next(monster for monster in Monster.data if monster.state == "in_game")
 
     @staticmethod

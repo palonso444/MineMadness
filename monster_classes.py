@@ -84,12 +84,12 @@ class Monster(Character, ABC):
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
     @classmethod
-    def initialize_moves_attacks(cls) -> None:
+    def reset_moves(cls) -> None:
         """
         Resets remaining moves and attacks of all Monsters of the class back to the maximum
         :return: None
         """
-        super().initialize_moves_attacks()
+        super().reset_moves()
         for character in cls.data:
             if character.state == "in_game":
                 character.stats.remaining_attacks = character.stats.max_attacks

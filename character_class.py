@@ -11,7 +11,7 @@ class Character(ABC, EventDispatcher):
     remaining_moves = NumericProperty(None)
 
     @classmethod
-    def initialize_moves_attacks(cls) -> None:
+    def reset_moves(cls) -> None:
         """
         Resets remaining moves of all characters of the class back to the maximum
         :return: None

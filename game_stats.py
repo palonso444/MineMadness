@@ -48,7 +48,7 @@ class DungeonStats:
 
     @property
     def dynamite_number(self) -> int:
-        # dynamites are rare unless Hawkins has run out of dynamites
+        # dynamites are rare unless Hawkins runs out of dynamites
         if self.stats_level < 3:
             return 0
 

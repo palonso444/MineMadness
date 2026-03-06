@@ -49,7 +49,7 @@ class Character(ABC, EventDispatcher):
         n = len(cls.data)
         for i in range(1, n + 1):
             next_index = (starting_index + i) % n
-            character = cls.get_data(next_index)
+            character = cls.data[next_index]
             if character.state == "in_game" and character.remaining_moves > 0:
                 return character
         return None

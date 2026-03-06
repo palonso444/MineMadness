@@ -29,6 +29,7 @@ class DungeonLayout(GridLayout):
 
     positions_to_update = NumericProperty(0)
     bright_spots = ListProperty([])
+    damage_tokens = ListProperty([])  # list of currenly acting DamageTokens in the whole dungeon
 
     def __init__(self, game: MineMadnessGame,
                  blueprint: Blueprint | None = None,
@@ -55,6 +56,15 @@ class DungeonLayout(GridLayout):
         self.darkness_intensity: int = 150  # from 0 to 255
         self.flickering_torches: ClockEvent | None = None
 
+    @staticmethod
+    def on_damage_tokens(dungeon, damage_tokens) -> None:
+        """
+        When all DamageTokens in the dungeon are out, check if game over
+        :return: None
+        """
+        if len(damage_tokens) == 0:
+            dungeon.game.finish_game_if_over()
+
     def _generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """
         Places items on DungeonLayout.blueprint depending on DungeonLayout.stats
@@ -73,6 +83,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_items("t", self.stats.talisman_number)
         blueprint.place_items("d", self.stats.dynamite_number)
         blueprint.place_items("h", self.stats.powder_number)
+        blueprint.place_items("N", 2)
 
         for item, frequency in self.stats.level_progression().items():
            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))

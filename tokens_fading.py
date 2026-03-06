@@ -40,12 +40,6 @@ class FadingToken(Widget, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         fading_out = Animation(opacity=0, duration=token.duration)
-        if isinstance(token, EffectToken):
-            # token.character_token is the CharacterToken upon which FadingToken acts
-            fading_out.bind(on_complete=token.character_token.remove_effect_if_in_queue)
-        # game_already_over avoids interferences of game_over screens if massive killing:
-        elif isinstance(token, DamageToken) and not token.game.game_already_over:
-            fading_out.bind(on_complete=token.game.finish_game_if_over)
         fading_out.start(token)
 
 
@@ -54,11 +48,11 @@ class DamageToken(FadingToken):
     Class defining the FadingTokens representing damage
     """
     def __init__(self, pos: tuple[float,float], size: tuple[float,float],
-                 game: MineMadnessGame, **kwargs):
+                 dungeon: DungeonLayout, **kwargs):
         super().__init__(**kwargs)
         self.final_opacity = 0.25
         self.duration = 0.2
-        self.game: MineMadnessGame = game
+        self.dungeon: DungeonLayout = dungeon
 
         with self.canvas:
             self.color = Color(1, 0, 0, 1)
@@ -66,6 +60,23 @@ class DamageToken(FadingToken):
 
         self.fade()
 
+    @staticmethod
+    def _fade_out(animation: Animation, token: FadingToken) -> None:
+        """
+        Removes the token from the DungeonLayout.damage_token_list (active damage tokens) when the fading out is completed
+        :return: None
+        """
+        fading_out = Animation(opacity=0, duration=token.duration)
+        fading_out.bind(on_complete=token.remove_from_damage_token_list)
+        fading_out.start(token)
+
+    @staticmethod
+    def remove_from_damage_token_list(animation: Animation, fading_token: FadingToken) -> None:
+        """
+        Removes the FadingToken from the list of currently active FadingTokens of DungeonLayout
+        :return: None
+        """
+        fading_token.dungeon.damage_tokens.remove(fading_token)
 
 class DiggingToken(FadingToken):
     """
@@ -126,3 +137,14 @@ class EffectToken(FadingToken):
             self.shape = Rectangle(pos=pos, size=size, source=self.source)
 
         self.fade()
+
+    @staticmethod
+    def _fade_out(animation: Animation, token: FadingToken) -> None:
+        """
+        Removes the effect from the PlayerToken.effect_queue (currently acting effects) when the fading out is completed
+        :return: None
+        """
+        fading_out = Animation(opacity=0, duration=token.duration)
+        # token.character_token is the CharacterToken upon which FadingToken acts
+        fading_out.bind(on_complete=token.character_token.remove_effect_if_in_queue)
+        fading_out.start(token)

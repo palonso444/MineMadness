@@ -45,13 +45,8 @@ This is a experimental branch. It uses events instead of manually triggering swi
 
 2. When killing last monster of dungeon, program breaks
 
-3. Sometimes, when the next monster to move is searched, it crashes becaure tries to compare remaining_moves > 0 and remaining moves is None. this bug happens not very often
+3. When exiting the dungeon and only one character alive, there is some kind of bug with the selection circle
 
-4. When game over, it crashes because App.self.game is None and tries to access App.game.level
-
-5. Try to get rid of on_positions to update in dungeon.
-
-6. Rename dungeon module to level,
-Dungeonlayout to Levellayout
+4. Try to get rid of on_positions to update in dungeon.
 
 once all is solved, merge

@@ -83,7 +83,6 @@ class DungeonLayout(GridLayout):
         blueprint.place_items("t", self.stats.talisman_number)
         blueprint.place_items("d", self.stats.dynamite_number)
         blueprint.place_items("h", self.stats.powder_number)
-        blueprint.place_items("N", 2)
 
         for item, frequency in self.stats.level_progression().items():
            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
@@ -127,7 +126,7 @@ class DungeonLayout(GridLayout):
                         character = players.Sawyer()
                         character.setup_character(game=self.game)
                     else:
-                        character: players.Player = players.Player.get_data(0)
+                        character: players.Player = players.Player.data[0]
                         character.setup_for_new_level()
                     token_kind = "player"
                     token_species = "sawyer"
@@ -137,7 +136,7 @@ class DungeonLayout(GridLayout):
                         character = players.Hawkins()
                         character.setup_character(game=self.game)
                     else:
-                        character: players.Player = players.Player.get_data(1)
+                        character: players.Player = players.Player.data[1]
                         character.setup_for_new_level()
                     token_kind = "player"
                     token_species = "hawkins"
@@ -147,7 +146,7 @@ class DungeonLayout(GridLayout):
                         character = players.CrusherJane()
                         character.setup_character(game=self.game)
                     else:
-                        character: players.Player = players.Player.get_data(2)
+                        character: players.Player = players.Player.data[2]
                         character.setup_for_new_level()
                     token_kind = "player"
                     token_species = "crusherjane"
@@ -289,7 +288,7 @@ class DungeonLayout(GridLayout):
                     token_species = "trap"
                     character = traps.Trap()
 
-            if isinstance(character, monsters.Monster):
+            if character is not None and character.kind == "monster":
                 character.setup_character(game=self.game)  # Players are set up after matching blueprint
 
             # empty spaces ("." or " ") are None

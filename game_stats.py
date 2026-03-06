@@ -32,7 +32,7 @@ class DungeonStats:
         # are dead
         from player_classes import Player
 
-        dead_char: int = len([player for player in Player.data if player.state == "dead"])
+        dead_char: int = len(Player.find_all_chars_with_state("dead"))
         trigger: int = randint(1, 10)
 
         if dead_char == 0:

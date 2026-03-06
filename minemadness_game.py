@@ -12,14 +12,13 @@ from character_class import Character
 from interface import Interfacebutton
 from monster_classes import Monster
 from player_classes import Player
-from tokens_fading import DamageToken
 from dungeon_classes import DungeonLayout
 
 
 class MineMadnessGame(Screen):  # initialized in kv file
 
     level = NumericProperty(None)
-    dungeon = ObjectProperty(None)
+    dungeon = ObjectProperty(None, allownone=True)
     turn = NumericProperty(None, allownone=True)
     active_character = ObjectProperty(None, allownone=True)
 
@@ -283,9 +282,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         act_char_cls = self.active_character.__class__
 
-        # characters can move until they have no moves left.
-        # Monsters move only once (remaining_moves = 0 when finish first move)
-        if any(character.has_moves_left and character.state == "in_game" for character in act_char_cls.data):
+        if any(character.state == "in_game" and character.has_moves_left for character in act_char_cls.data):
             start_index: int = act_char_cls.data.index(self.active_character) + start_index_mod
             self.active_character: Character = act_char_cls.find_next_char_in_game_with_moves(starting_index=start_index)
         else:

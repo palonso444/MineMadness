@@ -94,7 +94,7 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         """
         Shows FadingTokens for the next effect on the queue
         :param solid_token: SolidToken on which FadingToken is shown
-        :param effect_queue: queue of currently working effects formatted as a dict as follows:
+        :param effect_queue: queue of currently working effects o the Player, formatted as a dict as follows:
         {effect_name(str): effect_ends (bool)}
         :return: None
         """
@@ -103,9 +103,9 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
             solid_token.show_effect_token(effect_name, effect_ends=effect_ends)
 
 
-    def remove_effect_if_in_queue(self, animation: Animation, fading_token:FadingToken) -> None:
+    def remove_effect_if_in_queue(self, animation: Animation, fading_token: FadingToken) -> None:
         """
-        Triggered when fading_out animation of FadingToken is completed
+        Triggered when fading_out animation is completed. Removes the effect of the effect_queue of the CharacterToken
         :param animation: animation object of fading_out
         :param fading_token: FadingToken fading out
         :return: None
@@ -358,7 +358,8 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         :return: None
         """
         with self.dungeon.canvas.after:  # canvas.after to ensure is visible on the CharacterToken
-            DamageToken(pos=self.pos, size=self.size, game=self.dungeon.game)
+            fading_token = DamageToken(pos=self.pos, size=self.size, dungeon=self.dungeon)
+        self.dungeon.damage_tokens.append(fading_token)
 
 
 class PlayerToken(CharacterToken):

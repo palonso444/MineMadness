@@ -30,6 +30,14 @@ class Monster(Character, ABC):
     def move(self):
         pass
 
+    def setup_character(self, game: MineMadnessGame) -> None:
+        """
+        Sets up the character when it first enters the game
+        :return: None
+        """
+        super().setup_character(game)
+        self.stats.remaining_attacks = 0
+
     @property
     def has_all_gems(self) -> bool:
         """
@@ -89,9 +97,9 @@ class Monster(Character, ABC):
         Resets remaining moves and attacks of all Monsters of the class back to the maximum
         :return: None
         """
-        super().reset_moves()
         for character in cls.data:
             if character.state == "in_game":
+                character.remaining_moves = character.stats.moves
                 character.stats.remaining_attacks = character.stats.max_attacks
                 character.acted_on_tile = False
 

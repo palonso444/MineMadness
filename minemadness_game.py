@@ -21,9 +21,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
     dungeon = ObjectProperty(None, allownone=True)
     turn = NumericProperty(None, allownone=True)
     active_character = ObjectProperty(None, allownone=True)
-
     ability_button = BooleanProperty(False)
-
     inv_object = StringProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
@@ -37,26 +35,16 @@ class MineMadnessGame(Screen):  # initialized in kv file
     @staticmethod
     def start_level(game: MineMadnessGame, dungeon: DungeonLayout) -> None:
         """
-        Triggered when dungeon assigned to self.dungeon. Triggers the setup of the level
+        Triggered when dungeon assigned to self.dungeon. Sets up Class attributes of Characters and starts new level
         :param game: instance of MineMadnessGame
         :param dungeon: assigned dungeon instance
         :return: None
         """
         if dungeon is not None:
-
             dungeon.build_level()
-
-            #if not game.game_already_over:
-                #game.finish_game_if_over(game=game)  # TODO: this must be out of here
-
-            players.Player.gems = 0
             if game.level == 1 or game.advanced_start:
                 players.Player.set_player_order()
-            else:
-                for player in players.Player.data:
-                    if player.state == "in_game":
-                        player.remove_all_effects()
-
+            players.Player.gems = 0
             App.get_running_app().save_game()
             game.initialize_switches()  # this starts the game
 
@@ -252,8 +240,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
         if self.turn is not None:
-            #self.check_if_all_players_exited()
-            # call game.check_if_game_over() if game over for lack of shovels is implemented
 
             # turn continues
             if self.active_character.has_moves_left:
@@ -272,7 +258,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
                     self.active_character.remove_effects_if_over(self.turn)
                     if self.active_character.token is not None:  # dead characters have no Token
                         self.active_character.token.unselect_token()
-                self.activate_next_character()
+                if self._check_if_game_over() is None:
+                    self.activate_next_character()
 
     def activate_next_character(self, start_index_mod: int = 0) -> None:
         """
@@ -329,28 +316,30 @@ class MineMadnessGame(Screen):  # initialized in kv file
             # needs to be reset to None otherwise it is not possible to pick 2 equal objects in a row
             game.inv_object = None
 
-    def check_if_all_players_exited(self) -> None:
+    def _check_if_game_over(self) -> str | None:
         """
-        Checks if all Players have exited the level, so game must move to the next level
-        :return: None
+        Checks if the game is over and returns the game over message in case game is over
+        :return: The game over message, None if the game is not over
         """
-        # players may not be all dead and game will be over (in case Sawyer is killed)
-        if players.Player.all_out() and not players.Player.all_players_dead() and not self.game_already_over:
-            self.finish_level()
+        if players.Player.all_dead():
+            return "Monsters killed y'all!"
+
+        if (Player.check_if_dead("sawyer") and Player.gems < self.dungeon.total_gems
+            and not any(player.has_item("talisman") for player in Player.find_all_chars_with_state("is_alive"))):
+            return "Only Sawyer could pick up gems..."
+
+        return None
 
     def finish_game_if_over(self) -> None:
         """
         Checks if the game is over, and if yes, triggers game over screen.
         :return: None
         """
-        if players.Player.all_dead():
-            self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
-            App.get_running_app().trigger_game_over("Monsters killed y'all!")
+        game_over_msg : str | None = self._check_if_game_over()
 
-        elif (Player.check_if_dead("sawyer") and Player.gems < self.dungeon.total_gems
-            and not any(player.has_item("talisman") for player in Player.find_all_chars_with_state("is_alive"))):
-            self.turn = None  # needed to abort of MineMadnessGame.on_character_done()
-            App.get_running_app().trigger_game_over("Only Sawyer could pick up gems...")
+        if game_over_msg is not None:
+            self.turn = None
+            App.get_running_app().trigger_game_over(game_over_msg)
 
     def finish_level(self) -> None:
         """

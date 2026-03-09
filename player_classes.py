@@ -110,7 +110,9 @@ class Player(Character, ABC):
         :return: None
         """
         self.heal(self.stats.recovery_end_of_level)
+        self.remove_all_effects()
         self.ability_active = False
+        self.remaining_moves = 0
         self.state = "in_game"
 
     @staticmethod

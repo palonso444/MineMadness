@@ -87,7 +87,7 @@ class Character(ABC, EventDispatcher):
         :remaining_moves: value of new remaining moves
         :return: None
         """
-        if character.has_moved and character.state == "in_game":
+        if character.game.turn is not None and character.state == "in_game" and character.has_moved:
             character.game.character_moved()
 
     def to_dict(self):
@@ -121,6 +121,7 @@ class Character(ABC, EventDispatcher):
         self.game = game
         self.__class__.data.append(self)
         self.state = "in_game"
+        self.remaining_moves = 0
 
     def get_position(self) -> tuple[int,int]:
         """

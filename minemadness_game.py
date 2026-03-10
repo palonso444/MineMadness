@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from kivy.app import App
-from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty
+from kivy.properties import NumericProperty, ObjectProperty
 from kivy.uix.screenmanager import Screen
 
 import player_classes as players
 import monster_classes as monsters
 from character_class import Character
 from monster_classes import Monster
-from interface import Interfacebutton
 from dungeon_classes import DungeonLayout
 
 

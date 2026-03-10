@@ -4,7 +4,6 @@ from random import choice
 
 from player_classes import Player
 
-
 class AbilityButton(ToggleButton):
 
     @property

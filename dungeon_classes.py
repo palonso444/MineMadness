@@ -63,7 +63,7 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         if len(damage_tokens) == 0:
-            dungeon.game.finish_game_if_over()
+            dungeon.game.finish_game_or_finish_level()
 
     def _generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """

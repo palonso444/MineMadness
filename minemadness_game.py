@@ -206,7 +206,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param turn: turn number (even for players, odd for monsters)
         :return: None
         """
-        if turn is not None:
+        if turn is not None and not game.finish_game_or_finish_level():
             game.active_character = None  # to ensure updating
             if turn % 2 == 0 or monsters.Monster.all_dead():
                 players.Player.reset_moves()
@@ -269,7 +269,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
                     self.active_character.remove_effects_if_over(self.turn)
                     if self.active_character.token is not None:  # dead characters have no Token
                         self.active_character.token.unselect_token()
-                if self._check_if_game_over() is None:
+                if self._check_if_game_over() is None and not (players.Player.all_out() and not players.Player.all_dead()):
                     self.activate_next_character()
 
     def activate_next_character(self, start_index_mod: int = 0) -> None:
@@ -323,16 +323,21 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         return None
 
-    def finish_game_if_over(self) -> None:
+    def finish_game_or_finish_level(self) -> bool:
         """
-        Checks if the game is over, and if yes, triggers game over screen.
-        :return: None
+        Checks if the game is over, and if yes, triggers game over screen. If not but no players in game, triggers next level
+        :return: True if game or level are is finished, False if ir continues
         """
         game_over_msg : str | None = self._check_if_game_over()
 
         if game_over_msg is not None:
             self.turn = None
             App.get_running_app().trigger_game_over(game_over_msg)
+            return True
+        if players.Player.all_out() and not players.Player.all_dead():
+            self.finish_level()
+            return True
+        return False
 
     def finish_level(self) -> None:
         """

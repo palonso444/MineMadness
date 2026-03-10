@@ -48,4 +48,6 @@ This is a experimental branch. It uses events instead of manually triggering swi
 
 4. Try to get rid of on_positions to update in dungeon.
 
+5. If last character is killed and level must be changed because all others have exited, program breaks
+
 once all is solved, merge

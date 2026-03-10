@@ -18,7 +18,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
     dungeon = ObjectProperty(None, allownone=True)
     turn = NumericProperty(None, allownone=True)
     active_character = ObjectProperty(None, allownone=True)
-    ability_button = BooleanProperty(False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -75,21 +74,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.update_label("whisky_button", None)
             self.update_label("talisman_button", None)
 
-        self.force_update("ability_button")
-
-    def force_update(self, switch_name) -> None:
-        """
-        Forces updating a property value even if the value does not change
-        :param switch_name: property name to force update
-        :return: None
-        """
-        switch_value = getattr(self, switch_name)
-        if isinstance(switch_value, bool):
-            switch_value = not switch_value
-        elif switch_name == "turn":
-            raise NotImplementedError("Deprecated! Use self.turn += 1 instead")
-
-        setattr(self, switch_name, switch_value)
+        self.update_ability_button()
 
     def update_label(self, label_id: str, value: int | str | None) -> None:
         """
@@ -143,27 +128,24 @@ class MineMadnessGame(Screen):  # initialized in kv file
         for item, value in self.active_character.inventory.items():
             self.update_inventory_button(item, value)
 
-    @staticmethod
-    def on_ability_button(game: MineMadnessGame, value: bool) -> None:
+    def update_ability_button(self) -> None:
         """
-        Updates the state of the ability button depending on the circumstances of the game
-        :param game: current instance of MineMadnessGame
-        :param value: current boolean value of the switch
+        Updates the display of the ability button
         :return: None
         """
-        game.ability_button_active = False
+        self.ability_button_active = False
 
-        if game.active_character.kind == "monster":
-            game.ids.ability_button.text = ""
-            game.ids.ability_button.disabled = True
-            game.ids.ability_button.state = "normal"
+        if self.active_character.kind == "monster":
+            self.ids.ability_button.text = ""
+            self.ids.ability_button.disabled = True
+            self.ids.ability_button.state = "normal"
 
-        elif game.active_character.kind == "player":
-            game.ids.ability_button.text = game.active_character.ability_display
-            game.ids.ability_button.disabled = not game.ids.ability_button.condition_active
-            game.ids.ability_button.state = "down" if game.active_character.ability_active else "normal"
+        elif self.active_character.kind == "player":
+            self.ids.ability_button.text = self.active_character.ability_display
+            self.ids.ability_button.disabled = not self.ids.ability_button.condition_active
+            self.ids.ability_button.state = "down" if self.active_character.ability_active else "normal"
 
-        game.ability_button_active = True
+        self.ability_button_active = True
 
     def add_dungeon_to_game(self, dungeon: DungeonLayout | None = None) -> None:
         """

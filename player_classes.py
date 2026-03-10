@@ -373,7 +373,7 @@ class Player(Character, ABC):
 
         if object_name in self.special_items:
             self.special_items[object_name] += 1
-            game.force_update("ability_button")
+            game.update_ability_button()
 
         elif object_name in self.inventory.keys():
             self.inventory[object_name] += 1
@@ -384,7 +384,7 @@ class Player(Character, ABC):
             character_attribute = getattr(self, f"{object_name}s")
             character_attribute += 1
             setattr(self, f"{object_name}s", character_attribute)
-            game.force_update("ability_button")  # for Crusher Jane
+            game.update_ability_button()  # for Crusher Jane
 
         tile.get_token("pickable").delete_token(tile)
 
@@ -674,7 +674,7 @@ class Sawyer(Player):
         self.ignores.remove("pickable")
         self.ignores.remove("treasure")
         self.ability_active = False
-        self.get_dungeon().game.force_update("ability_button")  # must be here. If attacked must update button a well
+        self.game.update_ability_button()  # must be here. If attacked must update button a well
 
     def enhance_damage(self, damage: int) -> int:
         """
@@ -774,7 +774,7 @@ class CrusherJane(Player):
             if self.weapons == 0:
                 game = self.get_dungeon().game
                 self.ability_active = False
-                game.force_update("ability_button")
+                game.update_ability_button()
 
 class Hawkins(Player):
     """Can dig without shovels
@@ -868,7 +868,7 @@ class Hawkins(Player):
         """
         self.special_items["dynamite"] -= 1
         self.ability_active = False
-        self.token.dungeon.game.force_update("ability_button")
+        self.game.update_ability_button()
         tile.dynamite_fall()
         self.remaining_moves -= 1
 

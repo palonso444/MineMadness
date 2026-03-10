@@ -21,10 +21,18 @@ class Monster(Character, ABC):
         self.ignores: list[str] = ["pickable", "light", "treasure"]  # token_kind or token_species
         self.attacks_and_retreats: bool = False
         self.invisible: bool = False
+        self.inventory: dict[str,int] = {
+            "jerky": 0,
+            "coffee": 0,
+            "tobacco": 0,
+            "whisky": 0,
+            "talisman": 0
+        }  # placeholder needed for MineMadnessGame update_inventory_interface(). Must not be updated!
 
         # exclusive of Monster class
         self.chases: str = "player"
         self.acted_on_tile: bool = False
+
 
     @abstractmethod
     def move(self):

@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from kivy.app import App
-from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty, StringProperty
+from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty
 from kivy.uix.screenmanager import Screen
 
 import player_classes as players
 import monster_classes as monsters
 from character_class import Character
-from interface import Interfacebutton
 from monster_classes import Monster
+from interface import Interfacebutton
 from player_classes import Player
 from dungeon_classes import DungeonLayout
 
@@ -22,7 +20,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
     turn = NumericProperty(None, allownone=True)
     active_character = ObjectProperty(None, allownone=True)
     ability_button = BooleanProperty(False)
-    inv_object = StringProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -46,22 +43,17 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 players.Player.set_player_order()
             players.Player.gems = 0
             App.get_running_app().save_game()
-            game.initialize_switches()  # this starts the game
-
-    def initialize_switches(self) -> None:
-        self.turn = 0  # even for players, odd for monsters. Player starts
-        self.ability_button_active = True  # TODO: when button unbinding in self.on_ability_button() works this has to go
+            game.ability_button_active = True
+            game.turn = 0   # this starts the game
 
     def update_interface(self) -> None:
         """
         Updates the interface display
         :return: None
         """
-        for button_type in Interfacebutton.types:
-            self.inv_object = button_type
-
         self.update_label("name_label", self.active_character.name.upper())
         self.update_experience_bar()
+        self.update_inventory_interface()
 
         if self.active_character.kind == "player":
             self.update_label("level_label", self.level * 30)
@@ -131,6 +123,26 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.ids.experience_bar.value = self.active_character.experience
         else:
             self.ids.experience_bar.value = 0
+
+    def update_inventory_button(self, item: str, item_value: int) -> None:
+        """
+        When a character picks up an object enables the corresponding button if applicable.
+        :param item: item to update
+        :param item_value: new value of the item
+        :return: None
+        """
+        if item_value == 0:
+            self.ids[item + "_button"].disabled = True
+        else:
+            self.ids[item + "_button"].disabled = False
+
+    def update_inventory_interface(self) -> None:
+        """
+        Updates the whole inventory interface
+        :return: None
+        """
+        for item, value in self.active_character.inventory.items():
+            self.update_inventory_button(item, value)
 
     @staticmethod
     def on_ability_button(game: MineMadnessGame, value: bool) -> None:
@@ -297,24 +309,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         self.active_character.token.unselect_token()
         self.active_character = new_active_character
-
-    @staticmethod
-    def on_inv_object(game: MineMadnessGame, inv_object: str | None) -> None:
-        """
-        When a character picks up an object enables the corresponding button if applicable.
-        :param game: current instance of the game.
-        :param inv_object: object of the inventory just picked up
-        :return: None
-        """
-        if inv_object is not None:
-            character = game.active_character
-
-            if character.inventory is None or character.inventory[inv_object] == 0:
-                game.ids[inv_object + "_button"].disabled = True
-            else:
-                game.ids[inv_object + "_button"].disabled = False
-            # needs to be reset to None otherwise it is not possible to pick 2 equal objects in a row
-            game.inv_object = None
 
     def _check_if_game_over(self) -> str | None:
         """

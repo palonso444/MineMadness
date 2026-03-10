@@ -52,7 +52,6 @@ class AbilityButton(ToggleButton):
                         character.token.show_effect_token("armed", effect_ends=True)
                         character.ability_active = False
 
-
 class Interfacebutton(Button):
 
     types = ("jerky", "coffee", "tobacco", "whisky", "talisman")
@@ -60,9 +59,7 @@ class Interfacebutton(Button):
     def apply_cost(self, item):
 
         character = self.game.active_character
-        character.inventory[item] -= 1
-        self.game.inv_object = item  # this disables the button, if necessary
-
+        character.update_inventory(item, -1)
         character.remaining_moves -= self.stats.use_time
         self.game.activate_accessible_tiles(character.remaining_moves)
 
@@ -84,7 +81,6 @@ class Interfacebutton(Button):
         )
         return effect_size
 
-
 class JerkyButton(Interfacebutton):
     """
     Increases life
@@ -99,7 +95,6 @@ class JerkyButton(Interfacebutton):
         # this updates health bar
         character.token.bar_length = character.stats.health / character.stats.natural_health
         self.apply_cost("jerky")
-
 
 class CoffeeButton(Interfacebutton):
     """
@@ -121,7 +116,6 @@ class CoffeeButton(Interfacebutton):
         character.token.show_effect_token("moves")
         self.apply_cost("coffee")
 
-
 class TobaccoButton(Interfacebutton):
     """
     Increases toughness (armor-like effect)
@@ -140,7 +134,6 @@ class TobaccoButton(Interfacebutton):
         )
         character.token.show_effect_token("toughness")
         self.apply_cost("tobacco")
-
 
 class WhiskyButton(Interfacebutton):
     """
@@ -166,10 +159,8 @@ class WhiskyButton(Interfacebutton):
                 "end_turn": self.game.turn + self.stats.effect_duration,
             }
         )
-
         character.token.show_effect_token("strength")
         self.apply_cost("whisky")
-
 
 class TalismanButton(Interfacebutton):
     """
@@ -183,9 +174,7 @@ class TalismanButton(Interfacebutton):
         if Player.all_alive():
             character = self.game.active_character
             character.experience = character.stats.exp_to_next_level
-
             character.token.show_effect_token("level_up")
-
         else:
             player = choice(Player.find_all_chars_with_state("dead"))
             player.resurrect(character.get_dungeon())

@@ -77,15 +77,16 @@ class Player(Character, ABC):
         self.invisible: bool = False
         self.step_transition: str = "in_out_quad" # walking
         self.step_duration: float = 0.35
-
-        # attributes exclusive of Player class
+        # Inventory must be modified exclusively by calling Player.update_inventory!
         self.inventory: dict[str,int] = {
             "jerky": 2,
             "coffee": 0,
             "tobacco": 0,
             "whisky": 0,
-            "talisman": 0,
+            "talisman": 0
         }
+
+        # exclusive of Player class
         self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
         self.special_items: dict[str,int] | None = None
@@ -134,6 +135,18 @@ class Player(Character, ABC):
         :return: None
         """
         player.game.update_label("weapons_label", value)
+
+    def update_inventory(self, item: str, value: int) -> None:
+        """
+        Updates the player inventory
+        :param item: item to update
+        :param value: value to add (or subtract if negative) to the current value
+        :return: None
+        """
+        if item not in self.inventory.keys():
+            raise KeyError(f"Player inventory has no item named {item}")
+        self.inventory[item] += value
+        self.game.update_inventory_button(item, self.inventory[item])
 
     @abstractmethod
     def on_player_level(self, instance: Player, value: int) -> None:

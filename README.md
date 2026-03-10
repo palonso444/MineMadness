@@ -1,5 +1,4 @@
 The purpose of this branch is to get rid of all unnecessary switches or minemadness_game: 
-- gems
 - and all other in the method force_update method) and of the method force_update itself.
 - Also, it may have some bugs, see at the end of the file:
 

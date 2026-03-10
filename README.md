@@ -1,7 +1,5 @@
 The purpose of this branch is to get rid of all unnecessary switches or minemadness_game: 
-- gems
 - and all other in the method force_update method) and of the method force_update itself.
-- Inventory object. Property must be triggered when object is added to the dictionary of the character, not manually via Stringproperty
 - Also, it may have some bugs, see at the end of the file:
 
 
@@ -48,5 +46,7 @@ This is a experimental branch. It uses events instead of manually triggering swi
 3. When exiting the dungeon and only one character alive, there is some kind of bug with the selection circle
 
 4. Try to get rid of on_positions to update in dungeon.
+
+5. If last character is killed and level must be changed because all others have exited, program breaks
 
 once all is solved, merge

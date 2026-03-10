@@ -9,7 +9,6 @@ import monster_classes as monsters
 from character_class import Character
 from monster_classes import Monster
 from interface import Interfacebutton
-from player_classes import Player
 from dungeon_classes import DungeonLayout
 
 
@@ -59,7 +58,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.update_label("level_label", self.level * 30)
             self.update_label("shovels_label", self.active_character.shovels)
             self.update_label("weapons_label", self.active_character.weapons)
-            self.update_label("gems_label", Player.gems)
+            self.update_label("gems_label", players.Player.gems)
             self.update_label("jerky_button", "Jerky")
             self.update_label("coffee_button", "Coffee")
             self.update_label("tobacco_button", "Tobacco")
@@ -211,7 +210,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             game.active_character = None  # to ensure updating
             if turn % 2 == 0 or monsters.Monster.all_dead():
                 players.Player.reset_moves()
-                game.active_character = next(player for player in Player.data if player.state == "in_game")
+                game.active_character = next(player for player in players.Player.data if player.state == "in_game")
             else:
                 monsters.Monster.reset_moves()
                 game.active_character = next(monster for monster in Monster.data if monster.state == "in_game")
@@ -298,7 +297,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         self.dungeon.disable_all_tiles()
         player_movement_range = self.dungeon.get_range(self.active_character.get_position(), steps)
-        positions_in_range = player_movement_range.union({player.get_position() for player in Player.data if player.state == "in_game"})
+        positions_in_range = player_movement_range.union({player.get_position() for player in players.Player.data if player.state == "in_game"})
         self.dungeon.enable_tiles(positions_in_range, self.active_character)
 
     def switch_character(self, new_active_character: Character) -> None:
@@ -318,8 +317,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if players.Player.all_dead():
             return "Monsters killed y'all!"
 
-        if (Player.check_if_dead("sawyer") and Player.gems < self.dungeon.total_gems
-            and not any(player.has_item("talisman") for player in Player.find_all_chars_with_state("is_alive"))):
+        if (players.Player.check_if_dead("sawyer") and players.Player.gems < self.dungeon.total_gems
+            and not any(player.has_item("talisman") for player in players.Player.find_all_chars_with_state("is_alive"))):
             return "Only Sawyer could pick up gems..."
 
         return None

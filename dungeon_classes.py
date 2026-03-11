@@ -11,8 +11,9 @@ from collections import deque
 from random import choice, uniform
 from numpy import uint8, int16, ogrid, zeros, clip
 
-import player_classes as players
-import monster_classes as monsters
+import players
+import monsters
+from player_classes import Player
 import trap_class as traps
 import tile_classes as tiles
 from game_stats import DungeonStats
@@ -76,7 +77,7 @@ class DungeonLayout(GridLayout):
         if self.game.level == 1:
             player_chars: list[str] = ["%", "?", "&"]
         else:
-            player_chars: list[str] = players.Player.get_alive_player_chars()
+            player_chars: list[str] = Player.get_alive_player_chars()
         blueprint.place_items_as_group(player_chars, min_dist=1)
         blueprint.place_items(" ", 1)
         blueprint.place_items("o", self.stats.gem_number)
@@ -126,7 +127,7 @@ class DungeonLayout(GridLayout):
                         character = players.Sawyer()
                         character.setup_character(game=self.game)
                     else:
-                        character: players.Player = players.Player.data[0]
+                        character: Player = players.Player.data[0]
                         character.setup_for_new_level()
                     token_kind = "player"
                     token_species = "sawyer"
@@ -136,7 +137,7 @@ class DungeonLayout(GridLayout):
                         character = players.Hawkins()
                         character.setup_character(game=self.game)
                     else:
-                        character: players.Player = players.Player.data[1]
+                        character: Player = Player.data[1]
                         character.setup_for_new_level()
                     token_kind = "player"
                     token_species = "hawkins"
@@ -146,7 +147,7 @@ class DungeonLayout(GridLayout):
                         character = players.CrusherJane()
                         character.setup_character(game=self.game)
                     else:
-                        character: players.Player = players.Player.data[2]
+                        character: Player = Player.data[2]
                         character.setup_for_new_level()
                     token_kind = "player"
                     token_species = "crusherjane"

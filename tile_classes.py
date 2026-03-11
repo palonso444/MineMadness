@@ -4,9 +4,9 @@ from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.app import App
 
-from monster_classes import Monster
 from tokens_solid import SceneryToken, PlayerToken, MonsterToken
 from tokens_fading import ExplosionToken
+from monster_classes import Monster
 
 
 class Tile(Button):
@@ -381,4 +381,3 @@ class Tile(Button):
                                         gradient=(0.95, 0.95),
                                         timeout=0,
                                         max_timeout=0.25)
-

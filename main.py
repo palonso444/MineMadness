@@ -15,7 +15,8 @@ from os import remove
 import sys
 
 from dungeon_blueprint import Blueprint
-from player_classes import Player, Sawyer, Hawkins, CrusherJane  # players needed for globals()
+from player_classes import Player
+from players import Sawyer, Hawkins, CrusherJane  # players needed for globals()
 from dungeon_classes import DungeonLayout
 from minemadness_game import MineMadnessGame
 from game_add_screens import MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig, LoadingScreen
@@ -188,12 +189,9 @@ class MineMadnessApp(App):
                                         if self.game.dungeon.torches_dict is not None else None
 
         # game is not JSON serializable
-        game_state["players_alive"] = {player.__class__.__name__:
+        game_state["players"] = {player.__class__.__name__:
                                            {k: v for k, v in player.to_dict().items() if k != "game"}
-                                       for player in Player.data if player.state == "in_game"}
-        game_state["players_dead"] = {Player.__class__.__name__:
-                                          {k: v for k, v in player.to_dict().items() if k != "game"}
-                                      for player in Player.data if player.state == "dead"}
+                                       for player in Player.data}
         return game_state
 
     def continue_game_or_load(self) -> None:
@@ -230,14 +228,9 @@ class MineMadnessApp(App):
         self.game.level = data["level"]
 
         if self.game.level > 1:
-            Player.in_game = [globals()[key](attributes_dict=data["players_alive"][key])
-                              for key in data["players_alive"].keys()]
-            Player.dead = [globals()[key](attributes_dict=data["players_dead"][key])
-                           for key in data["players_dead"].keys()]
+            Player.data = [globals()[key](attributes_dict=data["players"][key]) for key in data["players"].keys()]
 
-        for player in Player.dead:
-            player.game = self.game
-        for player in Player.in_game:
+        for player in Player.data:
             player.game = self.game
 
         self.ongoing_game = True

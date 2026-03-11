@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from random import random
 
-from kivy.properties import NumericProperty
+from kivy.properties import NumericProperty, BooleanProperty
 
 from character_class import Character
 import game_stats as stats
@@ -13,8 +13,9 @@ class Player(Character, ABC):
 
     experience = NumericProperty(0)
     player_level = NumericProperty(1)
-    shovels = NumericProperty(0)
-    weapons = NumericProperty(0)
+    shovels = NumericProperty(None)
+    weapons = NumericProperty(None)
+    ability_active = BooleanProperty(False)
 
     data: list[Character] = []
     gems: int = 0
@@ -90,7 +91,6 @@ class Player(Character, ABC):
         self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
         self.special_items: dict[str,int] | None = None
-        self.ability_active: bool | None = None
         self.level_track: dict[int,dict] = dict()
 
         self.bind(experience=self.on_experience)
@@ -115,6 +115,16 @@ class Player(Character, ABC):
         self.ability_active = False
         self.remaining_moves = 0
         self.state = "in_game"
+
+    @staticmethod
+    def on_ability_active(player: Player, value: bool) -> None:
+        """
+        Notifies the to update the state of the ability button when Player.ability_active changes
+        :param player: instance of the Player
+        :param value: new ability_active value
+        :return: None
+        """
+        player.game.update_ability_button()
 
     @staticmethod
     def on_shovels(player: Player, value: int) -> None:
@@ -377,7 +387,6 @@ class Player(Character, ABC):
 
         elif object_name in self.inventory.keys():
             self.inventory[object_name] += 1
-            game.inv_object = object_name
 
         # weapons and shovels
         else:
@@ -599,7 +608,6 @@ class Sawyer(Player):
 
         self.special_items: dict[str, int] | None = {"powder": 2}
         self.ability_display: str = "Hide"
-        self.ability_active: bool = False
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
@@ -674,7 +682,6 @@ class Sawyer(Player):
         self.ignores.remove("pickable")
         self.ignores.remove("treasure")
         self.ability_active = False
-        self.game.update_ability_button()  # must be here. If attacked must update button a well
 
     def enhance_damage(self, damage: int) -> int:
         """
@@ -704,12 +711,22 @@ class CrusherJane(Player):
         self.stats = stats.CrusherJaneStats()
         self._update_level_track(self.player_level)
 
-        self.special_items: dict[str:int] = {"weapons": self.weapons}
+        self.special_items: dict[str:int] = {"weapons": None}
         self.ability_display: str = "Weapons"
-        self.ability_active: bool = False
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
+
+    @staticmethod
+    def on_weapons(player: Player, value: int):
+        """
+        Notifies updates special item dictionary and calls super to update game button
+        :param player: instance of the Player
+        :param value: new weapon value
+        :return: None
+        """
+        player.special_items["weapons"] = value
+        super().on_weapons(player, value)
 
     def can_dig(self, token_species: str) -> bool:
         """
@@ -772,9 +789,7 @@ class CrusherJane(Player):
         if self.ability_active:
             super().subtract_weapon()
             if self.weapons == 0:
-                game = self.get_dungeon().game
                 self.ability_active = False
-                game.update_ability_button()
 
 class Hawkins(Player):
     """Can dig without shovels
@@ -797,7 +812,6 @@ class Hawkins(Player):
 
         self.special_items: dict[str:int] | None = {"dynamite": 2}
         self.ability_display: str = "Dynamite"
-        self.ability_active: bool = False
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
@@ -868,7 +882,6 @@ class Hawkins(Player):
         """
         self.special_items["dynamite"] -= 1
         self.ability_active = False
-        self.game.update_ability_button()
         tile.dynamite_fall()
         self.remaining_moves -= 1
 

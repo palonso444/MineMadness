@@ -445,7 +445,7 @@ class HawkinsStats(PlayerStats):  # BALANCED
 
 @dataclass
 class CrusherJaneStats(PlayerStats):  # BALANCED
-    initial_weapons: int = 4
+    initial_weapons: int = 0
     health: int = 10
     strength: list[int] = field(default_factory=lambda: [2,5])
     advantage_strength_incr: int = 2

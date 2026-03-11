@@ -1,6 +1,4 @@
-The purpose of this branch is to get rid of all unnecessary switches or minemadness_game: 
-- and all other in the method force_update method) and of the method force_update itself.
-- Also, it may have some bugs, see at the end of the file:
+THIS IS THE DEVELOP BRANCH!
 
 
 ![mine_madness](https://github.com/user-attachments/assets/f7495fcb-5e02-406b-9c3b-5f7fd324362c)
@@ -37,16 +35,5 @@ https://palonso444.itch.io/minemadness
 Developer notes
 ---------------
 
-This is a experimental branch. It uses events instead of manually triggering switches. It has several bugs:
+This is the develop branch
 
-1. Some monsters move simultaneously sometimes. usually when a character exits. not clear why
-
-2. When killing last monster of dungeon, program breaks
-
-3. When exiting the dungeon and only one character alive, there is some kind of bug with the selection circle
-
-4. Try to get rid of on_positions to update in dungeon.
-
-5. If last character is killed and level must be changed because all others have exited, program breaks
-
-once all is solved, merge

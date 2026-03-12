@@ -122,10 +122,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param item_value: new value of the item
         :return: None
         """
-        if item_value == 0:
-            self.ids[item + "_button"].disabled = True
-        else:
-            self.ids[item + "_button"].disabled = False
+        self.ids[item + "_button"].disabled = True if item_value == 0 else False
 
     def update_inventory_interface(self) -> None:
         """

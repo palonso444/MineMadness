@@ -190,8 +190,15 @@ class MineMadnessApp(App):
 
         # game is not JSON serializable
         game_state["players"] = {player.__class__.__name__:
-                                           {k: v for k, v in player.to_dict().items() if k != "game"}
+                                     {k: v for k, v in player.to_dict().items() if k != "game"}
                                        for player in Player.data}
+
+        # get all attributes defined as properties
+        for player in Player.data:
+            game_state["players"][player.__class__.__name__]["shovels"] = player.shovels
+            game_state["players"][player.__class__.__name__]["weapons"] = player.weapons
+            game_state["players"][player.__class__.__name__]["special_items"] = player.special_items
+
         return game_state
 
     def continue_game_or_load(self) -> None:

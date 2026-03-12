@@ -23,7 +23,7 @@ class Sawyer(Player):
         self.stats = stats.SawyerStats()
         self._update_level_track(self.player_level)
 
-        self.special_items: dict[str, int] | None = {"powder": 2}
+        self.special_items: dict[str, int] = {"powder": 2}
         self.ability_display: str = "Hide"
 
         if attributes_dict is not None:
@@ -227,7 +227,7 @@ class Hawkins(Player):
         self.stats = stats.HawkinsStats()
         self._update_level_track(self.player_level)
 
-        self.special_items: dict[str:int] | None = {"dynamite": 2}
+        self.special_items: dict[str:int] = {"dynamite": 2}
         self.ability_display: str = "Dynamite"
 
         if attributes_dict is not None:

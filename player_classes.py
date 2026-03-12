@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from random import random
 
-from kivy.properties import NumericProperty, BooleanProperty
+from kivy.properties import NumericProperty, BooleanProperty, DictProperty
 
 from character_class import Character
 
@@ -13,6 +13,7 @@ class Player(Character, ABC):
     player_level = NumericProperty(1)
     shovels = NumericProperty(None)
     weapons = NumericProperty(None)
+    special_items = DictProperty(None)
     ability_active = BooleanProperty(False)
 
     data: list[Character] = []
@@ -88,7 +89,6 @@ class Player(Character, ABC):
         # exclusive of Player class
         self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
-        self.special_items: dict[str,int] | None = None
         self.level_track: dict[int,dict] = dict()
 
         self.bind(experience=self.on_experience)
@@ -125,6 +125,18 @@ class Player(Character, ABC):
         player.game.update_ability_button()
 
     @staticmethod
+    def on_special_items(player: Player, special_items: dict) -> None:
+        """
+        Notifies the to update the state of the ability button when Player.ability_active changes
+        :param player: instance of the Player
+        :param special_items: new special_items dict
+        :return: None
+        """
+        # this callback only takes effect during the game
+        if player.game is not None and player.game.turn is not None:
+            player.game.update_ability_button()
+
+    @staticmethod
     def on_shovels(player: Player, value: int) -> None:
         """
         Notifies the game when a shovel is used or picked up
@@ -132,7 +144,8 @@ class Player(Character, ABC):
         :param value: new shovels value
         :return: None
         """
-        player.game.update_label("shovels_label", value)
+        if player.game is not None:
+            player.game.update_label("shovels_label", value)
 
     @staticmethod
     def on_weapons(player: Player, value: int):
@@ -142,7 +155,8 @@ class Player(Character, ABC):
         :param value: new weapon value
         :return: None
         """
-        player.game.update_label("weapons_label", value)
+        if player.game is not None:
+            player.game.update_label("weapons_label", value)
 
     def update_inventory(self, item: str, value: int) -> None:
         """
@@ -376,12 +390,10 @@ class Player(Character, ABC):
         :param tile: Tile where the object is
         :return: None
         """
-        game = self.get_dungeon().game
         object_name = tile.get_token("pickable").species
 
         if object_name in self.special_items:
             self.special_items[object_name] += 1
-            game.update_ability_button()
 
         elif object_name in self.inventory.keys():
             self.inventory[object_name] += 1
@@ -391,7 +403,6 @@ class Player(Character, ABC):
             character_attribute = getattr(self, f"{object_name}s")
             character_attribute += 1
             setattr(self, f"{object_name}s", character_attribute)
-            game.update_ability_button()  # for Crusher Jane
 
         tile.get_token("pickable").delete_token(tile)
 
@@ -460,12 +471,13 @@ class Player(Character, ABC):
         opponent = opponent_tile.get_token("monster").character
         opponent = self.fight_opponent(opponent)
         self.subtract_weapon()
-        self.remaining_moves -= 1
 
         if opponent.stats.health <= 0:
             opponent.kill_character(opponent_tile)
             self.experience += opponent.stats.experience_when_killed
             self.get_dungeon().game.ids.experience_bar.value = self.experience
+
+        self.remaining_moves -= 1
 
     def heal(self, extra_points: int) -> None:
         """

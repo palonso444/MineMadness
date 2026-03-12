@@ -44,12 +44,14 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def update_interface(self) -> None:
         """
-        Updates the interface display
+        Updates the interface display. Updating of labels and enabling / disabling buttons goes differently. Update
+        interface functions enable and disable buttons. Update label updates the text of the button or erases it
         :return: None
         """
         self.update_label("name_label", self.active_character.name.upper())
         self.update_experience_bar()
         self.update_inventory_interface()
+        self.update_lower_interface()
 
         if self.active_character.kind == "player":
             self.update_label("level_label", self.level * 30)
@@ -61,6 +63,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.update_label("tobacco_button", "Tobacco")
             self.update_label("whisky_button", "Whisky")
             self.update_label("talisman_button", "Talisman")
+            # lower interface
+            self.update_label("options_button", "Options")
+            self.update_label("main_menu_button", "Main Menu")
+
         else:
             self.update_label("level_label", None)
             self.update_label("shovels_label", None)
@@ -71,6 +77,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.update_label("tobacco_button", None)
             self.update_label("whisky_button", None)
             self.update_label("talisman_button", None)
+            # lower interface
+            self.update_label("options_button", None)
+            self.update_label("main_menu_button", None)
 
         self.update_ability_button()
 
@@ -125,6 +134,14 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         for item, value in self.active_character.inventory.items():
             self.update_inventory_button(item, value)
+
+    def update_lower_interface(self) -> None:
+        """
+        Updates the interface showed at the bottom of the game screen
+        :return: None
+        """
+        self.ids.options_button.disabled = False if self.turn % 2 == 0 else True
+        self.ids.main_menu_button.disabled = False if self.turn % 2 == 0 else True
 
     def update_ability_button(self) -> None:
         """

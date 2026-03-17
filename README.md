@@ -1,5 +1,3 @@
-THIS IS THE DEVELOP BRANCH!
-
 
 ![mine_madness](https://github.com/user-attachments/assets/f7495fcb-5e02-406b-9c3b-5f7fd324362c)
 
@@ -31,9 +29,4 @@ https://palonso444.itch.io/minemadness
 ![mobile1](https://github.com/user-attachments/assets/f9fec359-d6b4-49f8-a69f-1e7eed695b77)
 ![mobile3](https://github.com/user-attachments/assets/3b3562ac-5640-44a9-ab98-43186c618850)
 
-
-Developer notes
----------------
-
-This is the develop branch
 

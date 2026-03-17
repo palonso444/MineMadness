@@ -163,11 +163,10 @@ class WhiskyButton(Interfacebutton):
 
 class TalismanButton(Interfacebutton):
     """
-    Revives a random character from the death ones, if any
+    Revives a Sawyer, if dead, or random character from the death ones, if any
     Otherwise, levels up the character that uses it
     """
-
-    def on_release(self):
+    def on_release(self) -> None:
 
         character = self.game.active_character
         if Player.all_alive():
@@ -175,7 +174,11 @@ class TalismanButton(Interfacebutton):
             character.experience = character.stats.exp_to_next_level
             character.token.show_effect_token("level_up")
         else:
-            player = choice(Player.find_all_chars_with_state("dead"))
+            # if sawyer dead, she is the first to come back
+            if Player.data[0].state == "dead":
+                player = Player.data[0]
+            else:
+                player = choice(Player.find_all_chars_with_state("dead"))
             player.resurrect(character.get_dungeon())
             player.token.show_effect_token("resurrect")
 

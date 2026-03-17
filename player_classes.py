@@ -254,6 +254,8 @@ class Player(Character, ABC):
         Sets all inventory objects and special items to 0
         :return: None
         """
+        self.weapons = 0
+        self.shovels = 0
         for key in self.inventory.keys():
             self.inventory[key] = 0
         if self.special_items is not None:
@@ -509,7 +511,6 @@ class Player(Character, ABC):
         self.unbind(experience=self.on_experience)
         self.unbind(player_level=self.on_player_level)
 
-        Player.dead.remove(self)
         self.player_level = self.player_level - 1 if self.player_level > 1 else 1
         for key, value in self.level_track[self.player_level].items():
             self.stats.__setattr__(key, value)
@@ -520,7 +521,13 @@ class Player(Character, ABC):
         self.stats.exp_to_next_level = self.player_level * self.stats.base_exp_to_level_up
         self.reset_objects()
 
-        location: Tile = dungeon.get_random_tile(free=True)
+        # resurrected playe must be accessible
+        while True:
+            location: Tile = dungeon.get_random_tile(free=True)
+            if len(dungeon.find_shortest_path(location.position,
+                                              self.game.active_character.get_position(),
+                                              self.blocked_by)) > 1:
+                break
         location.place_item(self.kind, self.species, character=self)
         self.state = "in_game"
 

@@ -200,6 +200,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :param turn: turn number (even for players, odd for monsters)
         :return: None
         """
+        print(turn)
         if turn is not None and not game.finish_game_or_finish_level():
             game.active_character = None  # to ensure updating
             if turn % 2 == 0 or Monster.all_dead():

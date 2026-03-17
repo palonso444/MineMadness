@@ -195,6 +195,9 @@ class MineMadnessApp(App):
 
         # get all attributes defined as properties
         for player in Player.data:
+            game_state["players"][player.__class__.__name__]["ability_active"] = player.ability_active
+            game_state["players"][player.__class__.__name__]["experience"] = player.experience
+            game_state["players"][player.__class__.__name__]["player_level"] = player.player_level
             game_state["players"][player.__class__.__name__]["shovels"] = player.shovels
             game_state["players"][player.__class__.__name__]["weapons"] = player.weapons
             game_state["players"][player.__class__.__name__]["special_items"] = player.special_items

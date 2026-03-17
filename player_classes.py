@@ -110,6 +110,9 @@ class Player(Character, ABC):
         """
         self.heal(self.stats.recovery_end_of_level)
         self.remove_all_effects()
+        if self.is_hidden:  # there is no token at this state, we cannot call unhide()
+            self.ignores.remove("pickable")
+            self.ignores.remove("treasure")
         self.ability_active = False
         self.remaining_moves = 0
         self.state = "in_game"
@@ -122,7 +125,8 @@ class Player(Character, ABC):
         :param value: new ability_active value
         :return: None
         """
-        player.game.update_ability_button()
+        if player.game.turn is not None:
+            player.game.update_ability_button()
 
     @staticmethod
     def on_special_items(player: Player, special_items: dict) -> None:
@@ -132,7 +136,6 @@ class Player(Character, ABC):
         :param special_items: new special_items dict
         :return: None
         """
-        # this callback only takes effect during the game
         if player.game is not None and player.game.turn is not None:
             player.game.update_ability_button()
 
@@ -520,6 +523,7 @@ class Player(Character, ABC):
         self.experience = 0
         self.stats.exp_to_next_level = self.player_level * self.stats.base_exp_to_level_up
         self.reset_objects()
+        self.ability_active = False
 
         # resurrected playe must be accessible
         while True:

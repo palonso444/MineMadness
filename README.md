@@ -1,3 +1,6 @@
+THIS IS THE DEVELOP BRANCH!
+
+
 ![mine_madness](https://github.com/user-attachments/assets/f7495fcb-5e02-406b-9c3b-5f7fd324362c)
 
 
@@ -31,12 +34,6 @@ https://palonso444.itch.io/minemadness
 
 Developer notes
 ---------------
-This branch contains the game itself with all the interfaces.
 
-Monster and player attributes are already balanced.
+This is the develop branch
 
-Monster frequencies per level are already balanced.
-
-Player leveling up is already balanced.
-
-Game mechanics like applying toughness, leveling up, increasing attributes when consuming an item... should work, but they are not properly unit-tested.

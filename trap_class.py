@@ -22,7 +22,7 @@ class Trap:
         """
         return self.hidden
 
-    def setup_character(self):
+    def setup_character(self, game: MineMadnessGame):
         """
         Placeholder needed by DungeonLayout.match_blueprint()
         """

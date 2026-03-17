@@ -4,6 +4,7 @@
 #: import TobaccoStats game_stats.TobaccoStats
 #: import WhiskyStats game_stats.WhiskyStats
 #: import TalismanStats game_stats.TalismanStats
+#: import AbilityButton interface.AbilityButton
 #: import get_resource_path main.get_resource_path
 
 <DungeonLayout>:
@@ -41,6 +42,12 @@
         app.game.dungeon.unschedule_all_events() if app.ongoing_game else None
         app.root.current = "main_menu"
 
+<OptionsButton@Button>
+    text: "Options"
+    on_release:
+        app.game.dungeon.unschedule_all_events() if app.ongoing_game else None
+        app.root.current = "in_game_options" if app.ongoing_game else "out_game_options"
+
 <MusicButton@Button>
     text: "Music OFF" if app.music_on else "Music ON"
     on_release:
@@ -50,13 +57,6 @@
     text: "Flickering torches OFF" if app.flickering_torches_on else "Flickering torches ON"
     on_release:
         app.flickering_torches_on = not app.flickering_torches_on
-
-<OptionsButton@Button>
-    text: "Options"
-    on_release:
-        app.game.dungeon.unschedule_all_events() if app.ongoing_game else None
-        app.root.current = "in_game_options" if app.ongoing_game else "out_game_options"
-
 
 <ContinueOrLoadButton@Button>
     disabled: True if not app.ongoing_game and not app.saved_game else False
@@ -94,13 +94,6 @@
     effect_cls: "ScrollEffect"  # avoids bouncing when reaching end of scroll
 
 <MineMadnessGame>:
-    on_active_character_id:
-        name_label.text = root.active_character.name.upper()
-
-    #on_level: level_label.text = "Depth: " + str(self.level * 30) + " ft."
-    on_shovels: shovels_label.text = "Shovels: " + str(root.active_character.stats.shovels) if root.active_character.kind == "player" else ""
-    on_weapons: weapons_label.text = "Weapons: " + str(root.active_character.stats.weapons) if root.active_character.kind == "player" else ""
-    on_gems: gems_label.text = "Gems: " + str(root.active_character.gems) + '/' + str(root.total_gems) if root.active_character.kind == "player" else ""
 
     BoxLayout:
         orientation: "vertical"
@@ -191,7 +184,9 @@
             padding: "0dp", "10dp","0dp","5dp"
             spacing: "5dp"
             OptionsButton:
+                id: options_button
             MainMenuButton:
+                id: main_menu_button
 
 <GameOver>:
     MenuLayout:
@@ -225,7 +220,6 @@
                 size_hint: 1, 0.2
             MainMenuButton:
                 size_hint: 1, 0.1
-
 
 <InGameOptions>
     MenuLayout:

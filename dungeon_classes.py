@@ -11,8 +11,9 @@ from collections import deque
 from random import choice, uniform
 from numpy import uint8, int16, ogrid, zeros, clip
 
-import player_classes as players
-import monster_classes as monsters
+import players
+import monsters
+from player_classes import Player
 import trap_class as traps
 import tile_classes as tiles
 from game_stats import DungeonStats
@@ -29,263 +30,43 @@ class DungeonLayout(GridLayout):
 
     positions_to_update = NumericProperty(0)
     bright_spots = ListProperty([])
+    damage_tokens = ListProperty([])  # list of currenly acting DamageTokens in the whole dungeon
 
     def __init__(self, game: MineMadnessGame,
                  blueprint: Blueprint | None = None,
-                 torches_dict: dict[tuple:[list]] | None = None,
+                 torches_dict: dict[tuple, list] | None = None,
                  **kwargs):
         super().__init__(**kwargs)
 
         self.game: MineMadnessGame = game
-        self.dungeon_level: int = game.level
-        self.advanced_start: bool = False  # for testing, set to True and change MineMadnessGame.level attribute
-        self.stats: DungeonStats = DungeonStats(self.dungeon_level)
+        self.stats: DungeonStats = DungeonStats(self.game.level)
         self.rows: int = self.stats.size
         self.cols: int = self.stats.size
+        self.total_gems: int = self.stats.gem_number
+
         if blueprint is None:
-            self.blueprint: Blueprint = self.generate_blueprint(self.rows, self.cols)
-        else:
+            self.blueprint: Blueprint = self._generate_blueprint(self.rows, self.cols)
+        else:  # if game is loaded, blueprint is passed as argument
             self.blueprint = blueprint
 
-        self.tiles_dict: dict[tuple: Tile] | None = None
+        self.tiles_dict: dict[tuple, Tile] | None = None
         self.moving_token: CharacterToken | None = None  # CharacterTokens are not associated to any Tile while sliding
 
-        self.torches_dict: dict[tuple:list] | None = torches_dict
+        self.torches_dict: dict[tuple, list] | None = torches_dict
         self.darkness: Rectangle | None = None
         self.darkness_intensity: int = 150  # from 0 to 255
         self.flickering_torches: ClockEvent | None = None
 
-    def _setup_torches_dict(self) -> None:
-        """
-        Sets up the DungeonLayout.torches_dict. Keys are wall positions, values are list of pos_modifiers of all
-        torches attached to that wall
-        :return: None
-        """
-        wall_positions = self.scan_tiles(["wall"])
-        wall_free_positions = self.scan_tiles(["wall"], exclude=True)
-
-        all_torches_dict = {wall_position: [position for position in wall_free_positions
-                                            if self.are_nearby(wall_position, position)]
-                            for wall_position in wall_positions}
-        all_torches_dict = {key: value for key, value in all_torches_dict.items() if len(value) > 0}
-
-        if len(all_torches_dict) > 0:
-            torches_dict: dict = {key: [] for key in all_torches_dict.keys()}
-
-            for _ in range(self.stats.torch_number):
-                random_key = choice(list(all_torches_dict.keys()))
-                random_value = choice(all_torches_dict[random_key])
-                torches_dict[random_key].append(self.get_relative_position(random_key, random_value))
-                all_torches_dict[random_key].remove(random_value)
-
-                if len(all_torches_dict[random_key]) == 0:
-                    del all_torches_dict[random_key]
-                    if len(all_torches_dict) == 0:
-                        break
-
-            self.torches_dict = {key: value for key, value in torches_dict.items() if len(value) > 0}
-
-    def unschedule_all_events(self) -> None:
-        """
-        Unschedules all events running in the background
-        :return: None
-        """
-        if self.flickering_torches is not None:
-            self.flickering_torches.cancel()
-            self.flickering_torches = None
-
-        for tile in self.children:
-            token: CharacterToken | None = None
-            if tile.has_token("monster"):
-                token = tile.get_token("monster")
-            elif tile.has_token("player"):
-                token = tile.get_token("player")
-            if token is not None:
-                token.effect_queue.clear()
-            if self.moving_token is not None:
-                self.moving_token.effect_queue.clear()
-                self.moving_token.animation.cancel(self.moving_token)
-                self.moving_token.animation = None
-                self.moving_token = None
-
     @staticmethod
-    def on_positions_to_update(dungeon: DungeonLayout, positions_to_update: list) -> None:
+    def on_damage_tokens(dungeon, damage_tokens) -> None:
         """
-        This function assigns DungeonLayout to the dungeon attribute of MineMadnessGame and starts the level.
-        Triggered when all Tokens are positioned in their correct pos (level_start list is empty)
-        :param dungeon: dungeon
-        :param positions_to_update: list of token positions that need to be positioned. When empty, lever starts
+        When all DamageTokens in the dungeon are out, check if game over
         :return: None
         """
-        if positions_to_update == 0:
-            dungeon._rotate_torches()
-            dungeon.update_bright_spots()
-            dungeon.hide_penumbras()
-            dungeon.game.dungeon = dungeon
+        if len(damage_tokens) == 0:
+            dungeon.game.finish_game_or_finish_level()
 
-            # if dungeon.bright_spots does not change its values, darkness must be cast manually
-            if len(dungeon.bright_spots) == 0:
-                with dungeon.canvas.after:
-                    # uncomment this to run the cythonized version
-                    # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
-                    dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.darkness_intensity)
-
-    def update_bright_spots(self) -> None:
-        """
-        Stores in DungeonLayout.bright_spots one bright spot dict for each Token with bright_intensity > 0
-        :return: None
-        """
-        current_bright_spots = self.bright_spots[:]
-
-        self.bright_spots = ([{"center": token.center,
-                               "radius": token.bright_radius,
-                               "intensity": token.bright_int,
-                               "gradient": token.gradient,
-                               "timeout": None,
-                               "max_timeout": None}
-                              for tile in self.children
-                              for token_list in tile.tokens.values()
-                              for token in token_list if token.bright_int > 0]
-
-                             +
-
-                             [bright_spot for bright_spot in current_bright_spots if
-                              bright_spot["max_timeout"] is not None])
-
-    def add_bright_spot(self, center: tuple[float, float], radius: float, intensity: float,
-                       gradient: tuple[float, float], timeout: float | None, max_timeout: float | None) -> None:
-        """
-        Adds a single bright spot dict to DungeonLayout.bright_spots
-        :return: None
-        """
-        self.bright_spots.append({key: value for key, value in locals().items() if key != "self"})
-
-    @staticmethod
-    def on_bright_spots(dungeon: DungeonLayout, bright_spots: list[dict]) -> None:
-        """
-        Callback triggered upon modification of DungeonLayout.bright_spots
-        :param dungeon: DungeonLayout instance
-        :param bright_spots: list containing the center pos of all torches centers
-        :return: None
-        """
-        if dungeon.flickering_torches is not None:
-            dungeon.flickering_torches.cancel()
-
-        if len(dungeon.bright_spots) > 0 and App.get_running_app().flickering_torches_on:
-            dungeon.flickering_torches = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(
-                alpha_intensity= dungeon.darkness_intensity, dt=dt), 1 / 15)
-        else:
-            # if last bright spot is removed, cast static darkness
-            if dungeon.darkness in dungeon.canvas.after.children:
-                dungeon.canvas.after.remove(dungeon.darkness)
-
-            with dungeon.canvas.after:
-                # uncomment this to run the cythonized version
-                # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
-                dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.darkness_intensity)
-
-    def hide_penumbras(self) -> None:
-        """
-        Hides the penumbras Monster throughout the DungeonLayout (if any), if they have a
-        Player within reachable range
-        :return: None
-        """
-        for tile in self.children:
-            if tile.has_token("monster", "penumbra"):
-                character = tile.get_token("monster").character
-                character.hide_if_player_in_range(character.stats.moves)  # remaining moves not yet established
-
-    def restore_canvas_color(self, canvas: str) -> None:
-        """
-        Restores the canvas Color to the original state
-        :param canvas: canvas to restore (before, after, canvas)
-        :return: None
-        """
-        match canvas:
-            case "canvas":
-                canvas_context = self.canvas
-            case "after":
-                canvas_context = self.canvas.after
-            case "before":
-                canvas_context =  self.canvas.before
-            case _:
-                raise Exception(f"Invalid canvas argument {canvas}. Valid are: before, canvas, after.")
-
-        with canvas_context:
-            Color (1,1,1,1)
-
-    @staticmethod
-    def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
-        """
-        Returns the distance (in number of steps) between 2 positions of the dungeon
-        :param position1: first position
-        :param position2: second position
-        :return: distance between the two positions
-        """
-        return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
-
-    @staticmethod
-    def get_relative_position(position: tuple[int:int], target_position: tuple[int:int]) -> tuple[int, int]:
-        """
-        Returns the relative position of between the position and the target_position
-        :param position: position of reference
-        :param target_position: position whose relative position must be calculated
-        :return: relative position. Examples: (-1, 0) -> up, (1, 0) -> down, (0, -1) -> left, (0, 1) -> right
-        """
-        return target_position[0] - position[0], target_position[1] - position[1]
-
-    @staticmethod
-    def are_nearby(position_1: tuple[int:int], position_2: tuple[int:int]) -> bool:
-        """
-        Checks if two positions in the dungeon have nearby positions
-        :param position_1: first position
-        :param position_2: second position
-        :return: True if they are nearby, False otherwise
-        """
-        directions = (-1, 0), (1, 0), (0, -1), (0, 1)
-        return any((position_1[0] + dx, position_1[1] + dy) == position_2 for dx, dy in directions)
-
-    def check_if_connexion(self, position_1: tuple[int, int], position_2: tuple[int, int],
-                           obstacles_kinds: list[str], num_of_steps: int) -> bool:
-        """
-        Checks if two positions of the DungeonLayout are connected or there are obstacles on the way that makes
-        one inaccessible from the other in the given number of steps
-        :param position_1: coordinates of the first position
-        :param position_2: coordinates of the second position
-        :param obstacles_kinds: Token.kinds of the obstacles to consider
-        :param num_of_steps: maximum number of steps
-        :return: True if there is a connexion, False otherwise
-        """
-        path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
-        # +1 added to steps as first position of the path is position_1, does not count
-        return 1 < len(path) <= num_of_steps + 1
-
-    @staticmethod
-    def on_pos(dungeon: DungeonLayout, pos: list[int, int]) -> None:
-        """
-        Triggered when the dungeon is positioned the beginning of each level
-        It initializes DungeonLayout.tiles.dict and prepares the floor of the dungeon, placing the exit
-        :param dungeon: Instance of the dungeon corresponding to the current level
-        :param pos: position (actual position on the screen) of the dungeon instance
-        :return: None
-        """
-        dungeon.tiles_dict = dict()
-
-        for y in range(dungeon.blueprint.y_axis):
-            for x in range(dungeon.blueprint.x_axis):
-
-                if dungeon.blueprint.get_position((y, x)) == " ":
-                    tile: Tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=dungeon)
-                else:
-                    tile: Tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=dungeon)
-
-                dungeon.tiles_dict[tile.position] = tile
-                dungeon.add_widget(tile)
-
-        dungeon.match_blueprint()
-        dungeon.place_torches(size_modifier=0.5)
-
-    def generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
+    def _generate_blueprint(self, y_axis: int, x_axis: int) -> Blueprint:
         """
         Places items on DungeonLayout.blueprint depending on DungeonLayout.stats
         :param y_axis: length of y_axis of the blueprint
@@ -293,7 +74,11 @@ class DungeonLayout(GridLayout):
         :return: complete blueprint of the dungeon
         """
         blueprint = Blueprint(y_axis, x_axis)
-        blueprint.place_items_as_group(players.Player.get_surviving_players(), min_dist=1)
+        if self.game.level == 1:
+            player_chars: list[str] = ["%", "?", "&"]
+        else:
+            player_chars: list[str] = Player.get_alive_player_chars()
+        blueprint.place_items_as_group(player_chars, min_dist=1)
         blueprint.place_items(" ", 1)
         blueprint.place_items("o", self.stats.gem_number)
         blueprint.place_items("t", self.stats.talisman_number)
@@ -305,131 +90,32 @@ class DungeonLayout(GridLayout):
 
         return blueprint
 
-    def darkness_flicker(self, alpha_intensity: int, dt: float) -> None:
+    def _set_tiles(self) -> None:
         """
-        Wrapper function that generates a darkness with flickering brightness points. Needs to be scheduled
-        using Clock.schedule_interval() and specifying the desired frequency
-        :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
-        :param dt: delta time
+        Initializes DungeonLayout.tiles.dict and prepares the floor of the dungeon, placing the exit and setting
+        up characters
         :return: None
         """
-        for bright_spot in self.bright_spots:
-            if bright_spot["timeout"] is not None:
-                bright_spot["timeout"] += dt
-                if bright_spot["timeout"] > bright_spot["max_timeout"]:
-                    self.bright_spots.remove(bright_spot)
+        self.tiles_dict = {}
 
-        if self.darkness in self.canvas.after.children:
-            self.canvas.after.remove(self.darkness)
+        for y in range(self.blueprint.y_axis):
+            for x in range(self.blueprint.x_axis):
 
-        with self.canvas.after:
-            # uncomment this to run the cythonized version
-            # self.darkness = cl.generate_darkness_layer(self, alpha_intensity)
-            self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
+                if self.blueprint.get_position((y, x)) == " ":
+                    tile: Tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=self)
+                else:
+                    tile: Tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
 
+                self.tiles_dict[tile.position] = tile
+                self.add_widget(tile)
 
-    def _generate_darkness_layer(self, alpha_intensity: int) -> Rectangle:
-        """
-        **********************************************************************************
-        THIS FUNCTION HAS BEEN CYTHONIZED -- SEE cythonized_lights.pyx
-        **********************************************************************************
-
-        Generates a darkness layer with optional illuminated areas
-        :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
-        :return: darkness layer to be displayed on the canvas
-        """
-        texture = Texture.create(size=self.size, colorfmt="rgba")
-        data = zeros((texture.height, texture.width, 4), dtype=uint8)
-        data[:, :, 3] = alpha_intensity
-
-        for bright_spot in self.bright_spots:
-            gradient = uniform(bright_spot["gradient"][0], bright_spot["gradient"][1])
-            max_distance = bright_spot["radius"] ** 2
-            y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
-
-            distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
-            light_mask = (distance_from_center < max_distance)  # [bool] array
-            brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** gradient)
-                          * alpha_intensity * bright_spot["intensity"])
-
-            temp_data = data[light_mask, 3].astype(int16) - brightness.astype(int16)
-            data[light_mask, 3] = clip(temp_data, 0, alpha_intensity).astype(uint8)
-
-        texture.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
-
-        return Rectangle(texture=texture, pos=self.pos, size=self.size)
-
-    def _add_position_to_update(self, tile_position: tuple[int, int]) -> None:
-        """
-        Updates the counter of positions to update. Counter is decreased by Tile.update_tokens_pos() after updating
-        Token.pos according to Tile.pos. When counter reaches 0, means that all Tokens are positioned in their
-        respective pos and game can start.
-        :param tile_position: position of the tile where Token must be positioned
-        :return: None
-        """
-        if tile_position != (self.rows - 1, 0):  # position lower left corner does not need to be repositioned
-            self.positions_to_update += 1
-
-    def place_torches(self, size_modifier: float) -> None:
-        """
-        Sets up DungeonLayout.torches_dict and places torches depending on wall positions (torches are always
-        attached to walls)
-        :param size_modifier: modifier to apply to the original size of the torch (from 0 to 1, 1 being Tile.size)
-        :return: None
-        """
-        if self.torches_dict is None:
-            self._setup_torches_dict()
-
-        tile_side = self.get_random_tile().width
-        torch_side = tile_side * size_modifier
-        pos_modifier: tuple[float, float] | None = None
-
-        if self.torches_dict is not None:
-            for tile_position in self.torches_dict.keys():
-                for relative_position in self.torches_dict[tile_position]:
-                    match relative_position:  # relative positions (y, x), pos_modifiers (x, y)
-                        case (-1, 0):
-                            pos_modifier = (tile_side / 2 - torch_side / 2, -tile_side + torch_side)  # upper
-                        case (1, 0):
-                            pos_modifier = (tile_side / 2 - torch_side / 2, 0)  # lower
-                        case (0, 1):
-                            pos_modifier = (tile_side - torch_side, -tile_side / 2 + torch_side / 2)  # right
-                        case (0, -1):
-                            pos_modifier = (0, -tile_side / 2 + torch_side / 2)  # left
-
-                    self._add_position_to_update(tile_position)
-                    tile = self.get_tile(tile_position)
-                    tile.place_item("light", "torch", character=None,
-                                    size_modifier=size_modifier, pos_modifier=pos_modifier,
-                                    bright_radius=tile.width * 2.5, bright_int=0.8, gradient = (0.45, 0.75))
-
-    def _rotate_torches(self) -> None:
-        """
-        Rotates the torches depending on which side of the wall they are located. Must be called after updating
-        torches.shape.pos as it needs the final Token.shape position to be established
-        :return: None
-        """
-        for tile in self.children:
-            for token in tile.tokens["light"]:
-                # pos_modifiers (x, y)
-                if token.pos_modifier == (tile.width / 2 - token.size[0] / 2, -tile.width + token.size[0]):  # upper
-                    token.rotate_token(degrees=180, axis=token.center)
-
-                elif token.pos_modifier == (tile.width / 2 - token.size[0] / 2, 0):  # lower
-                    pass
-
-                elif token.pos_modifier == (tile.width - token.size[0], -tile.width / 2 + token.size[0] / 2):  # right
-                    token.rotate_token(degrees=90, axis=token.center)
-
-                elif token.pos_modifier == (0, -tile.width / 2 + token.size[0] / 2):  # left
-                    token.rotate_token(degrees=270, axis=token.center)
-
-    def match_blueprint(self) -> None:
+    def _match_blueprint(self) -> Character | None:
         """
         Matches the symbols of the DungeonLayout.blueprint with the corresponding tokens and characters
-        :return: None
+        :return: the character ready to be set up for starting adventure, of None if there is no character
         """
         for tile in self.children:
+
             tile_position = (tile.row, tile.col)
             character = None
             token_kind = None
@@ -437,26 +123,32 @@ class DungeonLayout(GridLayout):
             match self.blueprint.get_position(tile_position):
 
                 case "%":
-                    if self.dungeon_level == 1 or self.advanced_start:
+                    if self.game.level == 1 or self.game.advanced_start:
                         character = players.Sawyer()
+                        character.setup_character(game=self.game)
                     else:
-                        character = players.Player.transfer_player("sawyer")
+                        character: Player = players.Player.data[0]
+                        character.setup_for_new_level()
                     token_kind = "player"
                     token_species = "sawyer"
 
                 case "?":
-                    if self.dungeon_level == 1 or self.advanced_start:
+                    if self.game.level == 1 or self.game.advanced_start:
                         character = players.Hawkins()
+                        character.setup_character(game=self.game)
                     else:
-                        character = players.Player.transfer_player("hawkins")
+                        character: Player = Player.data[1]
+                        character.setup_for_new_level()
                     token_kind = "player"
                     token_species = "hawkins"
 
                 case "&":
-                    if self.dungeon_level == 1 or self.advanced_start:
+                    if self.game.level == 1 or self.game.advanced_start:
                         character = players.CrusherJane()
+                        character.setup_character(game=self.game)
                     else:
-                        character = players.Player.transfer_player("crusherjane")
+                        character: Player = Player.data[2]
+                        character.setup_for_new_level()
                     token_kind = "player"
                     token_species = "crusherjane"
 
@@ -597,15 +289,346 @@ class DungeonLayout(GridLayout):
                     token_species = "trap"
                     character = traps.Trap()
 
-            if character is not None:
-                character.setup_character()
+            if character is not None and character.kind == "monster":
+                character.setup_character(game=self.game)  # Players are set up after matching blueprint
 
             # empty spaces ("." or " ") are None
             if token_kind is not None and token_species is not None:
                 self._add_position_to_update(tile_position)
                 tile.place_item(token_kind, token_species, character)
 
-    def get_tile(self, position: tuple[int:int]) -> Tile:
+    def _place_torches(self, size_modifier: float) -> None:
+        """
+        Sets up DungeonLayout.torches_dict and places torches depending on wall positions (torches are always
+        attached to walls)
+        :param size_modifier: modifier to apply to the original size of the torch (from 0 to 1, 1 being Tile.size)
+        :return: None
+        """
+        if self.torches_dict is None:
+            self._setup_torches_dict()
+
+        tile_side = self.get_random_tile().width
+        torch_side = tile_side * size_modifier
+        pos_modifier: tuple[float, float] | None = None
+
+        if self.torches_dict is not None:
+            for tile_position in self.torches_dict.keys():
+                for relative_position in self.torches_dict[tile_position]:
+                    match relative_position:  # relative positions (y, x), pos_modifiers (x, y)
+                        case (-1, 0):
+                            pos_modifier = (tile_side / 2 - torch_side / 2, -tile_side + torch_side)  # upper
+                        case (1, 0):
+                            pos_modifier = (tile_side / 2 - torch_side / 2, 0)  # lower
+                        case (0, 1):
+                            pos_modifier = (tile_side - torch_side, -tile_side / 2 + torch_side / 2)  # right
+                        case (0, -1):
+                            pos_modifier = (0, -tile_side / 2 + torch_side / 2)  # left
+
+                    self._add_position_to_update(tile_position)
+                    tile = self.get_tile(tile_position)
+                    tile.place_item("light", "torch", character=None,
+                                    size_modifier=size_modifier, pos_modifier=pos_modifier,
+                                    bright_radius=tile.width * 2.5, bright_int=0.8, gradient = (0.45, 0.75))
+
+    def _setup_torches_dict(self) -> None:
+        """
+        Sets up the DungeonLayout.torches_dict. Keys are wall positions, values are list of pos_modifiers of all
+        torches attached to that wall
+        :return: None
+        """
+        wall_positions = self.scan_tiles(["wall"])
+        wall_free_positions = self.scan_tiles(["wall"], exclude=True)
+
+        all_torches_dict = {wall_position: [position for position in wall_free_positions
+                                            if self.are_nearby(wall_position, position)]
+                            for wall_position in wall_positions}
+        all_torches_dict = {key: value for key, value in all_torches_dict.items() if len(value) > 0}
+
+        if len(all_torches_dict) > 0:
+            torches_dict: dict = {key: [] for key in all_torches_dict.keys()}
+
+            for _ in range(self.stats.torch_number):
+                random_key = choice(list(all_torches_dict.keys()))
+                random_value = choice(all_torches_dict[random_key])
+                torches_dict[random_key].append(self.get_relative_position(random_key, random_value))
+                all_torches_dict[random_key].remove(random_value)
+
+                if len(all_torches_dict[random_key]) == 0:
+                    del all_torches_dict[random_key]
+                    if len(all_torches_dict) == 0:
+                        break
+
+            self.torches_dict = {key: value for key, value in torches_dict.items() if len(value) > 0}
+
+    def _rotate_torches(self) -> None:
+        """
+        Rotates the torches depending on which side of the wall they are located. Must be called after updating
+        torches.shape.pos as it needs the final Token.shape position to be established
+        :return: None
+        """
+        for tile in self.children:
+            for token in tile.tokens["light"]:
+                # pos_modifiers (x, y)
+                if token.pos_modifier == (tile.width / 2 - token.size[0] / 2, -tile.width + token.size[0]):  # upper
+                    token.rotate_token(degrees=180, axis=token.center)
+
+                elif token.pos_modifier == (tile.width / 2 - token.size[0] / 2, 0):  # lower
+                    pass
+
+                elif token.pos_modifier == (tile.width - token.size[0], -tile.width / 2 + token.size[0] / 2):  # right
+                    token.rotate_token(degrees=90, axis=token.center)
+
+                elif token.pos_modifier == (0, -tile.width / 2 + token.size[0] / 2):  # left
+                    token.rotate_token(degrees=270, axis=token.center)
+
+    def build_level(self) -> None:
+        """
+        Transforms the blueprint into a fully fledged level
+        :return: None
+        """
+        self._set_tiles()
+        self._match_blueprint()
+        self._place_torches(size_modifier=0.5)
+
+    def unschedule_all_events(self) -> None:
+        """
+        Unschedules all events running in the background
+        :return: None
+        """
+        if self.flickering_torches is not None:
+            self.flickering_torches.cancel()
+            self.flickering_torches = None
+
+        for tile in self.children:
+            token: CharacterToken | None = None
+            if tile.has_token("monster"):
+                token = tile.get_token("monster")
+            elif tile.has_token("player"):
+                token = tile.get_token("player")
+            if token is not None:
+                token.effect_queue.clear()
+            if self.moving_token is not None:
+                self.moving_token.effect_queue.clear()
+                self.moving_token.animation.cancel(self.moving_token)
+                self.moving_token.animation = None
+                self.moving_token = None
+
+    @staticmethod
+    def on_positions_to_update(dungeon: DungeonLayout, positions_to_update: list) -> None:
+        """
+        This function assigns DungeonLayout to the dungeon attribute of MineMadnessGame and starts the level.
+        Triggered when all Tokens are positioned in their correct pos (level_start list is empty)
+        :param dungeon: dungeon
+        :param positions_to_update: list of token positions that need to be positioned. When empty, lever starts
+        :return: None
+        """
+        if positions_to_update == 0:
+            dungeon._rotate_torches()
+            dungeon.update_bright_spots()
+            dungeon.hide_penumbras()
+            dungeon.game.dungeon = dungeon
+
+            # if dungeon.bright_spots does not change its values, darkness must be cast manually
+            if len(dungeon.bright_spots) == 0:
+                with dungeon.canvas.after:
+                    # uncomment this to run the cythonized version
+                    # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
+                    dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.darkness_intensity)
+
+    def update_bright_spots(self) -> None:
+        """
+        Stores in DungeonLayout.bright_spots one bright spot dict for each Token with bright_intensity > 0
+        :return: None
+        """
+        current_bright_spots = self.bright_spots[:]
+
+        self.bright_spots = ([{"center": token.center,
+                               "radius": token.bright_radius,
+                               "intensity": token.bright_int,
+                               "gradient": token.gradient,
+                               "timeout": None,
+                               "max_timeout": None}
+                              for tile in self.children
+                              for token_list in tile.tokens.values()
+                              for token in token_list if token.bright_int > 0]
+                             +
+                             [bright_spot for bright_spot in current_bright_spots if
+                              bright_spot["max_timeout"] is not None])
+
+    def add_bright_spot(self, center: tuple[float, float], radius: float, intensity: float,
+                       gradient: tuple[float, float], timeout: float | None, max_timeout: float | None) -> None:
+        """
+        Adds a single bright spot dict to DungeonLayout.bright_spots
+        :return: None
+        """
+        self.bright_spots.append({key: value for key, value in locals().items() if key != "self"})
+
+    @staticmethod
+    def on_bright_spots(dungeon: DungeonLayout, bright_spots: list[dict]) -> None:
+        """
+        Callback triggered upon modification of DungeonLayout.bright_spots
+        :param dungeon: DungeonLayout instance
+        :param bright_spots: list containing the center pos of all torches centers
+        :return: None
+        """
+        if dungeon.flickering_torches is not None:
+            dungeon.flickering_torches.cancel()
+
+        if len(dungeon.bright_spots) > 0 and App.get_running_app().flickering_torches_on:
+            dungeon.flickering_torches = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(
+                alpha_intensity= dungeon.darkness_intensity, dt=dt), 1 / 15)
+        else:
+            # if last bright spot is removed, cast static darkness
+            if dungeon.darkness in dungeon.canvas.after.children:
+                dungeon.canvas.after.remove(dungeon.darkness)
+
+            with dungeon.canvas.after:
+                # uncomment this to run the cythonized version
+                # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
+                dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.darkness_intensity)
+
+    def hide_penumbras(self) -> None:
+        """
+        Hides the penumbras Monster throughout the DungeonLayout (if any), if they have a
+        Player within reachable range
+        :return: None
+        """
+        for tile in self.children:
+            if tile.has_token("monster", "penumbra"):
+                character = tile.get_token("monster").character
+                character.hide_if_player_in_range(character.stats.moves)  # remaining moves not yet established
+
+    def restore_canvas_color(self, canvas: str) -> None:
+        """
+        Restores the canvas Color to the original state
+        :param canvas: canvas to restore (before, after, canvas)
+        :return: None
+        """
+        match canvas:
+            case "canvas":
+                canvas_context = self.canvas
+            case "after":
+                canvas_context = self.canvas.after
+            case "before":
+                canvas_context =  self.canvas.before
+            case _:
+                raise Exception(f"Invalid canvas argument {canvas}. Valid are: before, canvas, after.")
+
+        with canvas_context:
+            Color (1,1,1,1)
+
+    @staticmethod
+    def get_distance(position1: tuple[int:int], position2: tuple[int:int]) -> int:
+        """
+        Returns the distance (in number of steps) between 2 positions of the dungeon
+        :param position1: first position
+        :param position2: second position
+        :return: distance between the two positions
+        """
+        return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
+
+    @staticmethod
+    def get_relative_position(position: tuple[int:int], target_position: tuple[int:int]) -> tuple[int, int]:
+        """
+        Returns the relative position of between the position and the target_position
+        :param position: position of reference
+        :param target_position: position whose relative position must be calculated
+        :return: relative position. Examples: (-1, 0) -> up, (1, 0) -> down, (0, -1) -> left, (0, 1) -> right
+        """
+        return target_position[0] - position[0], target_position[1] - position[1]
+
+    @staticmethod
+    def are_nearby(position_1: tuple[int:int], position_2: tuple[int:int]) -> bool:
+        """
+        Checks if two positions in the dungeon have nearby positions
+        :param position_1: first position
+        :param position_2: second position
+        :return: True if they are nearby, False otherwise
+        """
+        directions = (-1, 0), (1, 0), (0, -1), (0, 1)
+        return any((position_1[0] + dx, position_1[1] + dy) == position_2 for dx, dy in directions)
+
+    def check_if_connexion(self, position_1: tuple[int, int], position_2: tuple[int, int],
+                           obstacles_kinds: list[str], num_of_steps: int) -> bool:
+        """
+        Checks if two positions of the DungeonLayout are connected or there are obstacles on the way that makes
+        one inaccessible from the other in the given number of steps
+        :param position_1: coordinates of the first position
+        :param position_2: coordinates of the second position
+        :param obstacles_kinds: Token.kinds of the obstacles to consider
+        :param num_of_steps: maximum number of steps
+        :return: True if there is a connexion, False otherwise
+        """
+        path = self.find_shortest_path(position_1, position_2, obstacles_kinds)
+        # +1 added to steps as first position of the path is position_1, does not count
+        return 1 < len(path) <= num_of_steps + 1
+
+    def darkness_flicker(self, alpha_intensity: int, dt: float) -> None:
+        """
+        Wrapper function that generates a darkness with flickering brightness points. Needs to be scheduled
+        using Clock.schedule_interval() and specifying the desired frequency
+        :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
+        :param dt: delta time
+        :return: None
+        """
+        for bright_spot in self.bright_spots:
+            if bright_spot["timeout"] is not None:
+                bright_spot["timeout"] += dt
+                if bright_spot["timeout"] > bright_spot["max_timeout"]:
+                    self.bright_spots.remove(bright_spot)
+
+        if self.darkness in self.canvas.after.children:
+            self.canvas.after.remove(self.darkness)
+
+        with self.canvas.after:
+            # uncomment this to run the cythonized version
+            # self.darkness = cl.generate_darkness_layer(self, alpha_intensity)
+            self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
+
+
+    def _generate_darkness_layer(self, alpha_intensity: int) -> Rectangle:
+        """
+        **********************************************************************************
+        THIS FUNCTION HAS BEEN CYTHONIZED -- SEE cythonized_lights.pyx
+        **********************************************************************************
+
+        Generates a darkness layer with optional illuminated areas
+        :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
+        :return: darkness layer to be displayed on the canvas
+        """
+        texture = Texture.create(size=self.size, colorfmt="rgba")
+        data = zeros((texture.height, texture.width, 4), dtype=uint8)
+        data[:, :, 3] = alpha_intensity
+
+        for bright_spot in self.bright_spots:
+            gradient = uniform(bright_spot["gradient"][0], bright_spot["gradient"][1])
+            max_distance = bright_spot["radius"] ** 2
+            y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
+
+            distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
+            light_mask = (distance_from_center < max_distance)  # [bool] array
+            brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** gradient)
+                          * alpha_intensity * bright_spot["intensity"])
+
+            temp_data = data[light_mask, 3].astype(int16) - brightness.astype(int16)
+            data[light_mask, 3] = clip(temp_data, 0, alpha_intensity).astype(uint8)
+
+        texture.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
+
+        return Rectangle(texture=texture, pos=self.pos, size=self.size)
+
+    def _add_position_to_update(self, tile_position: tuple[int, int]) -> None:
+        """
+        Updates the counter of positions to update. Counter is decreased by Tile.update_tokens_pos() after updating
+        Token.pos according to Tile.pos. When counter reaches 0, means that all Tokens are positioned in their
+        respective pos and game can start.
+        :param tile_position: position of the tile where Token must be positioned
+        :return: None
+        """
+        if tile_position != (self.rows - 1, 0):  # position lower left corner does not need to be repositioned
+            self.positions_to_update += 1
+
+    def get_tile(self, position: tuple[int,int]) -> Tile:
         """
         Returns the tile at the specified coordinates
         :param position: coordinates of the tile

@@ -4,9 +4,9 @@ from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.app import App
 
-from monster_classes import Monster
 from tokens_solid import SceneryToken, PlayerToken, MonsterToken
 from tokens_fading import ExplosionToken
+from monster_classes import Monster
 
 
 class Tile(Button):
@@ -214,7 +214,7 @@ class Tile(Button):
         else:
             # if characters are hidden will give connexion so no need to check within "check_with" methods
             return self.dungeon.check_if_connexion(active_player.token.position, self.position,
-                                                   active_player.blocked_by, active_player.stats.remaining_moves)
+                                                   active_player.blocked_by, active_player.remaining_moves)
 
     def _check_with_monster_token(self, active_player: Player) -> bool:
         """
@@ -266,7 +266,7 @@ class Tile(Button):
             return False
         if self.get_token("player").character == active_player:
             return True
-        if not self.get_token("player").character.has_moves_left and not Monster.all_dead_or_out():
+        if not self.get_token("player").character.has_moves_left and not Monster.all_dead():
             return False
 
         return True
@@ -309,16 +309,15 @@ class Tile(Button):
                 if self.first_click_time and current_time - self.first_click_time < self.double_click_interval:
                     self.first_click_time = None
                     player.perform_passive_action()
+                    player.token.skip_moves()  # one passive action per turn
                 else:
                     self.first_click_time = Clock.get_time()
                     return
             else:
                 self.dungeon.game.switch_character(self.get_token("player").character)
-            self.dungeon.game.update_switch("character_done")
 
         elif player.using_dynamite:
             player.throw_dynamite(self)
-            # game.update_switch("character_done") at the end of self.dynamite_explode(). Here does not work
 
         # move player
         elif not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with + ["trap"])\
@@ -333,7 +332,6 @@ class Tile(Button):
 
         else:
             player.act_on_tile(self)
-            self.dungeon.game.update_switch("character_done")
 
     def dynamite_fall(self) -> None:
         """
@@ -367,7 +365,6 @@ class Tile(Button):
 
         self.place_item("wall", "rock", None)
         self._show_explosion()
-        self.dungeon.game.update_switch("character_done")
 
     def _show_explosion(self) -> None:
         """
@@ -384,4 +381,3 @@ class Tile(Button):
                                         gradient=(0.95, 0.95),
                                         timeout=0,
                                         max_timeout=0.25)
-

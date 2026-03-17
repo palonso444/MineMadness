@@ -2,48 +2,59 @@ from __future__ import annotations
 from random import randint
 from abc import ABC, abstractmethod
 
+from kivy.event import EventDispatcher
+from kivy.properties import NumericProperty
 
-class Character(ABC):
 
-    data: list[Character] | None = None
+class Character(ABC, EventDispatcher):
 
-    @classmethod
-    def clear_character_data(cls) -> None:
-        """
-        Removes all characters from the Character.data list
-        :return: None
-        """
-        cls.data.clear()
+    remaining_moves = NumericProperty(None)
 
     @classmethod
-    def rearrange_ids(cls) -> None:
-        """
-        Rearranges characters ids to match their order in Character.data list
-        :return: None
-        """
-        for character in cls.data:
-            character.id = cls.data.index(character)
-
-    @classmethod
-    def initialize_moves_attacks(cls) -> None:
+    def reset_moves(cls) -> None:
         """
         Resets remaining moves of all characters of the class back to the maximum
         :return: None
         """
         for character in cls.data:
-            character.stats.remaining_moves = character.stats.moves
-
+            if character.state == "in_game":
+                character.remaining_moves = character.stats.moves
 
     @classmethod
-    def all_dead_or_out(cls) -> bool:
+    def all_dead(cls) -> bool:
         """
-        Checks if all instances characters of the class are dead or out of game
-        :return:: True if all are dead or out of game, False otherwise
+        Checks if all instances characters of the class are dead
+        :return:: True if all are dead, False otherwise
         """
-        return len(cls.data) == 0
+        return all(character.state == "dead" for character in cls.data)
 
+    @classmethod
+    def find_all_chars_with_state(cls, state: str) -> list[Character]:
+        """
+        Returns all characters from data with a given state (in_game, dead or exited)
+        :param state: state of the character
+        :return: list of characters
+        """
+        if state == "is_alive":
+            return [character for character in cls.data if character.is_alive]
+        return [character for character in cls.data if character.state == state]
 
-    def __init__(self):
+    @classmethod
+    def find_next_char_in_game_with_moves(cls, starting_index: int) -> Character | None:
+        """
+        Finds the next character than can still move. Returns None if no character can move.
+        :param starting_index: index to start the search in Player.data
+        :return: the Player with remaining moves
+        """
+        n = len(cls.data)
+        for i in range(1, n + 1):
+            next_index = (starting_index + i) % n
+            character = cls.data[next_index]
+            if character.state == "in_game" and character.remaining_moves > 0:
+                return character
+        return None
+
+    def __init__(self, **kwargs):
 
         """
         Those are common attributes to all characters (Players and Monsters).
@@ -51,9 +62,11 @@ class Character(ABC):
         id, position, token and dungeon, initialized in DungeonLayout.place_item()
         Exclusive attributes of each class are added within corresponding classes.
         """
+        super().__init__(**kwargs)
+        self.game: MineMadnessGame | None = None  # needed to update for remaining_moves, weapons and shovels
         self.char: str | None = None
         self.name: str | None = None
-        self.id: int | None = None   # initialized in DungeonLayout.place_item()
+        self.state: str | None = None  # in_game, dead, exited
         self.kind: str | None = None
         self.species: str | None = None
         self.token: Token | None = None  # initialized in DungeonLayout.place_item()
@@ -65,6 +78,17 @@ class Character(ABC):
         self.step_transition: str | None = None  # defines kind of movement (walk, stomp, glide...)
         self.step_duration: float | None = None  # defines speed of movement, from 0 to 1
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
+
+    @staticmethod
+    def on_remaining_moves(character: Character, remaining_moves: int) -> None:
+        """
+        Notifies the game when the character moves
+        :character: instance of the Character
+        :remaining_moves: value of new remaining moves
+        :return: None
+        """
+        if character.game.turn is not None and character.state == "in_game" and character.has_moved:
+            character.game.character_moved()
 
     def to_dict(self):
         """
@@ -89,14 +113,15 @@ class Character(ABC):
             else:
                 setattr(self, attribute, value)
 
-
-    def setup_character(self):
+    def setup_character(self, game: MineMadnessGame) -> None:
         """
         Sets up the character when its CharacterToken is placed onto the tile
         :return: None
         """
-        self.id = len(self.__class__.data)
+        self.game = game
         self.__class__.data.append(self)
+        self.state = "in_game"
+        self.remaining_moves = 0
 
     def get_position(self) -> tuple[int,int]:
         """
@@ -166,14 +191,6 @@ class Character(ABC):
         return False
 
     @property
-    def is_exited(self) -> bool:  # needed for everybody for self.fight_on_tile()
-        """
-        Checks if the character has exited the level
-        :return: True if character is hidden, False otherwise
-        """
-        return False
-
-    @property
     def using_dynamite(self) -> bool:  # needed for everybody for Token.on_slide_completed()
         """
         Checks if the character is using dynamite
@@ -187,7 +204,7 @@ class Character(ABC):
         Checks if has moves left
         :return: True if character has moves left, False otherwise
         """
-        return self.stats.remaining_moves > 0
+        return self.remaining_moves > 0
 
     @property
     def has_moved(self) -> bool:
@@ -195,7 +212,11 @@ class Character(ABC):
         Checks if the character has moved this turn
         :return: True if character has moved, False otherwise
         """
-        return self.stats.remaining_moves < self.stats.moves
+        return self.remaining_moves < self.stats.moves
+
+    @property
+    def is_alive(self) -> bool:
+        return self.state != "dead"
 
     def hide(self) -> None:
         """
@@ -243,13 +264,11 @@ class Character(ABC):
 
         return opponent
 
-
     def kill_character(self, tile: Tile) -> None:
         """
         Removes the character from the game
         :param tile:: tile in which the character to kill is located
         :return: None
         """
-        del self.__class__.data[self.id]
-        self.__class__.rearrange_ids()
         self.token.delete_token(tile)
+        self.state = "dead"

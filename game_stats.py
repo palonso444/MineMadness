@@ -32,7 +32,7 @@ class DungeonStats:
         # are dead
         from player_classes import Player
 
-        dead_char: int = len(Player.dead_data)
+        dead_char: int = len(Player.find_all_chars_with_state("dead"))
         trigger: int = randint(1, 10)
 
         if dead_char == 0:
@@ -48,13 +48,13 @@ class DungeonStats:
 
     @property
     def dynamite_number(self) -> int:
-        # dynamites are rare unless Hawkins has run out of dynamites
+        # dynamites are rare unless Hawkins runs out of dynamites
         if self.stats_level < 3:
             return 0
 
         from player_classes import Player
 
-        for player in Player.exited:
+        for player in [player for player in Player.data if player.state == "exited"]:
             if player.species == "hawkins":
                 dynamites: int = player.special_items["dynamite"]
                 trigger = randint(1, 10)
@@ -391,7 +391,6 @@ class CharacterStats(ABC):
     health: int | None = None
     strength: list[int] | None = None
     moves: int | None = None
-    remaining_moves: int | None = None
 
     # needed for players in fight_on_tile()
     experience_when_killed: int | None = None
@@ -408,9 +407,9 @@ class CharacterStats(ABC):
 @dataclass
 class PlayerStats(CharacterStats, ABC):
 
-    shovels: int = 3
+    initial_shovels: int = 3
     digging_moves: int = 1
-    weapons: int = 3
+    initial_weapons: int = 3
     advantage_strength_incr: int | None = None
     shooting_range: int | None = None
     recovery_end_of_level: int = 0  # health points players heal at end of level
@@ -446,7 +445,7 @@ class HawkinsStats(PlayerStats):  # BALANCED
 
 @dataclass
 class CrusherJaneStats(PlayerStats):  # BALANCED
-    weapons: int = 4
+    initial_weapons: int = 4
     health: int = 10
     strength: list[int] = field(default_factory=lambda: [2,5])
     advantage_strength_incr: int = 2

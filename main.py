@@ -15,7 +15,8 @@ from os import remove
 import sys
 
 from dungeon_blueprint import Blueprint
-from player_classes import Player, Sawyer, Hawkins, CrusherJane  # players needed for globals()
+from player_classes import Player
+from players import Sawyer, Hawkins, CrusherJane  # players needed for globals()
 from dungeon_classes import DungeonLayout
 from minemadness_game import MineMadnessGame
 from game_add_screens import MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig, LoadingScreen
@@ -131,7 +132,7 @@ class MineMadnessApp(App):
 
     def _clean_previous_game(self) -> None:
         """
-        Cleans the data from the previous game and removes it from the ScreenManager
+        Cleans the data from the previous game and removes it from the ScreenManager. Erases everything
         :return: None
         """
         self.game.clean_previous_game()
@@ -187,8 +188,20 @@ class MineMadnessApp(App):
         game_state["torches_dict"] = {str(key): value for key,value in self.game.dungeon.torches_dict.items()}\
                                         if self.game.dungeon.torches_dict is not None else None
 
-        game_state["players_alive"] = {player.__class__.__name__: player.to_dict() for player in Player.data}
-        game_state["players_dead"] = {player.__class__.__name__: player.to_dict() for player in Player.dead_data}
+        # game is not JSON serializable
+        game_state["players"] = {player.__class__.__name__:
+                                     {k: v for k, v in player.to_dict().items() if k != "game"}
+                                       for player in Player.data}
+
+        # get all attributes defined as properties
+        for player in Player.data:
+            game_state["players"][player.__class__.__name__]["ability_active"] = player.ability_active
+            game_state["players"][player.__class__.__name__]["experience"] = player.experience
+            game_state["players"][player.__class__.__name__]["player_level"] = player.player_level
+            game_state["players"][player.__class__.__name__]["shovels"] = player.shovels
+            game_state["players"][player.__class__.__name__]["weapons"] = player.weapons
+            game_state["players"][player.__class__.__name__]["special_items"] = player.special_items
+
         return game_state
 
     def continue_game_or_load(self) -> None:
@@ -225,10 +238,11 @@ class MineMadnessApp(App):
         self.game.level = data["level"]
 
         if self.game.level > 1:
-            Player.data = [globals()[key](attributes_dict=data["players_alive"][key])
-                                   for key in data["players_alive"].keys()]
-            Player.dead_data = [globals()[key](attributes_dict=data["players_dead"][key])
-                                   for key in data["players_dead"].keys()]
+            Player.data = [globals()[key](attributes_dict=data["players"][key]) for key in data["players"].keys()]
+
+        for player in Player.data:
+            player.game = self.game
+
         self.ongoing_game = True
         self._setup_dungeon_screen(DungeonLayout(game=self.game,
                                                  blueprint = Blueprint(layout=data["blueprint"]["layout"]),

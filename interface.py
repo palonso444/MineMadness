@@ -178,7 +178,7 @@ class TalismanButton(Interfacebutton):
             if Player.data[0].state == "dead":
                 player = Player.data[0]
             else:
-                player = choice(Player.find_all_chars_with_state("dead"))
+                player = choice(Player.get_all_with_state("dead"))
             player.resurrect(character.get_dungeon())
             player.token.show_effect_token("resurrect")
 

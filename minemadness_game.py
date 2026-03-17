@@ -202,7 +202,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         if turn is not None and not game.finish_game_or_finish_level():
             # monsters all dead and players starts turn with other than Sawyer
-            if game.active_character is not None and not game.active_character.has_moved:
+            if (game.active_character is not None
+                    and game.active_character.state == "in_game"
+                    and not game.active_character.has_moved):
                 Player.reset_moves()
                 c = game.active_character
                 game.active_character = None  # to ensure updating
@@ -285,7 +287,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         if any(character.state == "in_game" and character.has_moves_left for character in act_char_cls.data):
             start_index: int = act_char_cls.data.index(self.active_character) + start_index_mod
-            self.active_character: Character = act_char_cls.find_next_char_in_game_with_moves(starting_index=start_index)
+            self.active_character: Character = act_char_cls.get_next_in_game_with_moves(starting_index=start_index)
         else:
             self.turn += 1
 
@@ -321,7 +323,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             return "Monsters killed y'all!"
 
         if (Player.check_if_dead("sawyer") and Player.gems < self.dungeon.total_gems
-            and not any(player.has_item("talisman") for player in Player.find_all_chars_with_state("is_alive"))):
+            and not any(player.has_item("talisman") for player in Player.get_all_with_state("is_alive"))):
             return "Only Sawyer could pick up gems..."
 
         return None

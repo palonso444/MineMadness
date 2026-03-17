@@ -29,7 +29,7 @@ class Character(ABC, EventDispatcher):
         return all(character.state == "dead" for character in cls.data)
 
     @classmethod
-    def find_all_chars_with_state(cls, state: str) -> list[Character]:
+    def get_all_with_state(cls, state: str) -> list[Character]:
         """
         Returns all characters from data with a given state (in_game, dead or exited)
         :param state: state of the character
@@ -40,7 +40,7 @@ class Character(ABC, EventDispatcher):
         return [character for character in cls.data if character.state == state]
 
     @classmethod
-    def find_next_char_in_game_with_moves(cls, starting_index: int) -> Character | None:
+    def get_next_in_game_with_moves(cls, starting_index: int) -> Character | None:
         """
         Finds the next character than can still move. Returns None if no character can move.
         :param starting_index: index to start the search in Player.data

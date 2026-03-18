@@ -17,7 +17,7 @@ class Character(ABC, EventDispatcher):
         :return: None
         """
         for character in cls.data:
-            if character.state == "in_game":
+            if character.is_alive:
                 character.remaining_moves = character.stats.moves
 
     @classmethod

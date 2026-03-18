@@ -4,7 +4,6 @@ from random import randint, choice
 from abc import ABC, abstractmethod
 from statistics import mean, pvariance
 
-import game_stats as stats
 from character_class import Character
 
 
@@ -32,7 +31,6 @@ class Monster(Character, ABC):
         # exclusive of Monster class
         self.chases: str = "player"
         self.acted_on_tile: bool = False
-
 
     @abstractmethod
     def move(self):

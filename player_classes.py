@@ -173,12 +173,13 @@ class Player(Character, ABC):
         self.inventory[item] += value
         self.game.update_inventory_button(item, self.inventory[item])
 
+    @staticmethod
     @abstractmethod
-    def on_player_level(self, instance: Player, value: int) -> None:
+    def on_player_level(player: Player, level: int) -> None:
         """
         Logic of levelling up
-        :param instance: instance of the player
-        :param value: new level
+        :param player: instance of the player
+        :param level: new level value
         :return: None
         """
         pass
@@ -289,7 +290,7 @@ class Player(Character, ABC):
                     player.player_level * player.stats.base_exp_to_level_up
                 )
 
-            player.get_dungeon().game.ids.experience_bar.max = player.stats.exp_to_next_level
+            player.game.ids.experience_bar.max = player.stats.exp_to_next_level
             player.experience = exp_value
             player.token.effect_queue = [{"level_up": False} for _ in range(player.player_level - start_level)]
             # experience bar updated by MineMadnessgame.update_interface()
@@ -353,7 +354,7 @@ class Player(Character, ABC):
                 trap_token.character.unhide()
                 trap_token.show_effect_token("trap")
                 self.experience += trap_token.character.stats.experience_when_found
-                self.get_dungeon().game.ids.experience_bar.value = self.experience
+                self.game.ids.experience_bar.value = self.experience
 
     def act_on_tile(self, tile:Tile) -> None:
         """
@@ -386,8 +387,9 @@ class Player(Character, ABC):
         Takes a Player out of a level
         :return: None
         """
-        self.state = "exited"
         self.token.delete_token(self.token.get_current_tile())
+        self.state = "exited"
+
 
     def _pick_object(self, tile: Tile) -> None:
         """
@@ -417,9 +419,8 @@ class Player(Character, ABC):
         :param tile: Tile where the gem is
         :return: None
         """
-        game = self.get_dungeon().game
         Player.gems += 1
-        game.update_label("gems_label", Player.gems)
+        self.game.update_label("gems_label", Player.gems)
         tile.get_token("treasure").delete_token(tile)
 
     def fall_in_trap(self, tile:Tile) ->None:
@@ -440,7 +441,7 @@ class Player(Character, ABC):
         trap_token = tile.get_token("trap")
         trap_token.show_effect_token(effect="trap_out")
         self.experience += trap_token.character.stats.calculate_experience(self.get_dungeon().dungeon_level)
-        self.get_dungeon().game.ids.experience_bar.value = self.experience
+        self.game.ids.experience_bar.value = self.experience
         trap_token.delete_token(tile)
         self.remaining_moves -= 1
 
@@ -480,7 +481,7 @@ class Player(Character, ABC):
         if opponent.stats.health <= 0:
             opponent.kill_character(opponent_tile)
             self.experience += opponent.stats.experience_when_killed
-            self.get_dungeon().game.ids.experience_bar.value = self.experience
+            self.game.ids.experience_bar.value = self.experience
 
         self.remaining_moves -= 1
 
@@ -593,7 +594,7 @@ class Player(Character, ABC):
         self.stats.natural_moves += increase
         self.stats.moves += increase
         self.remaining_moves += increase
-        self.get_dungeon().game.activate_accessible_tiles(self.remaining_moves)
+        self.game.activate_accessible_tiles(self.remaining_moves)
 
     def _level_up_strength(self, increase: tuple[int, int]) -> None:
         """

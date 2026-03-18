@@ -71,7 +71,7 @@ class MineMadnessApp(App):
         self.music: Optional[Sound] = None
         self.music_on: Optional[bool] = None
 
-        self.flickering_torches_on: bool = True
+        self.flickering_torches_on: bool = False
 
         self.game: MineMadnessGame | None = None
         self.sm: ScreenManager | None = None

@@ -29,7 +29,7 @@ source.exclude_dirs = tests,bin,venv,__pycache__,trash,build
 source.exclude_patterns = setup.py,saved_game.json
 
 # (str) Application versioning (method 1)
-version = 2.9
+version = 3.0
 
 # (str) Application versioning (method 2)
 #version.regex = __version__ = ['"](.*)['"]
@@ -371,7 +371,7 @@ ios.kivy_ios_branch = master
 #ios.ios_deploy_dir = ../ios_deploy
 # Or specify URL and branch
 ios.ios_deploy_url = https://github.com/phonegap/ios-deploy
-ios.ios_deploy_branch = 1.10.0
+ios.ios_deploy_branch = 1.12.2
 
 # (bool) Whether or not to sign the code
 ios.codesign.allowed = false

@@ -29,7 +29,7 @@ source.exclude_dirs = tests,bin,venv,__pycache__,trash,build
 source.exclude_patterns = setup.py,saved_game.json
 
 # (str) Application versioning (method 1)
-version = 3.0
+version = 3.1
 
 # (str) Application versioning (method 2)
 #version.regex = __version__ = ['"](.*)['"]
@@ -324,7 +324,7 @@ android.debug_artifact = apk
 #p4a.fork = kivy
 
 # (str) python-for-android branch to use, defaults to master
-#p4a.branch = develop
+p4a.branch = develop
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = HEAD

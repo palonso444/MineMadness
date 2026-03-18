@@ -390,7 +390,6 @@ class Player(Character, ABC):
         self.token.delete_token(self.token.get_current_tile())
         self.state = "exited"
 
-
     def _pick_object(self, tile: Tile) -> None:
         """
         Handles the logic of picking up objects
@@ -403,7 +402,7 @@ class Player(Character, ABC):
             self.special_items[object_name] += 1
 
         elif object_name in self.inventory.keys():
-            self.inventory[object_name] += 1
+            self.update_inventory(object_name, 1)
 
         # weapons and shovels
         else:

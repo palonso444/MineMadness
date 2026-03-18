@@ -344,12 +344,15 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
                 self._slide_one_step(next_tile, on_complete)
 
         else:
+            # level might change in between
+            current_level: int = self.character.game.level
             self.update_token_on_tile(current_tile)
             self.character.act_on_tile(current_tile)
-            if self.character.kind == "monster":  # monsters move only once per turn
-                self.skip_moves()
-            else:
-                self.character.remaining_moves -= self.steps
+            if current_level == self.character.game.level:
+                if self.character.kind == "monster":  # monsters move only once per turn
+                    self.skip_moves()
+                else:
+                    self.character.remaining_moves -= self.steps
             self.steps = 0
 
     def show_damage(self) -> None:
@@ -501,13 +504,14 @@ class PlayerToken(CharacterToken):
         :param args: This function receives variable number of arguments. They cannot be typehint
         :return: None
         """
-        self.circle.circle = (  # self is CharacterToken, self.circle is Line
-            self.pos[0]  # center_x of circle = CharacterToken.pos[0] (x)
-            + self.width / 2,
-            self.pos[1]  # center_y of circle = CharacterToken.pos[1] (y)
-            + self.height / 2,
-            self.width / 2,  # radius of circle = CharacterToken.width / 2
-        )
+        if self.circle is not None:  # TODO: remove this and find out why bug happens when sawyer exitst last with exact moves
+            self.circle.circle = (  # self is CharacterToken, self.circle is Line
+                self.pos[0]  # center_x of circle = CharacterToken.pos[0] (x)
+                + self.width / 2,
+                self.pos[1]  # center_y of circle = CharacterToken.pos[1] (y)
+                + self.height / 2,
+                self.width / 2,  # radius of circle = CharacterToken.width / 2
+            )
 
     def _remove_selection_circle(self) -> None:
         """

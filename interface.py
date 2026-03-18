@@ -59,10 +59,8 @@ class Interfacebutton(Button):
 
         character = self.game.active_character
         character.update_inventory(item, -1)
-        character.remaining_moves -= self.stats.use_time
-        self.game.activate_accessible_tiles(character.remaining_moves)
-
         character.check_if_overdose(item)
+        character.remaining_moves -= self.stats.use_time
 
     def get_effect_size(self, character, attribute: str):
 

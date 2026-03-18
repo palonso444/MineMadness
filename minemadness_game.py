@@ -236,7 +236,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
             # player turn
             elif game.turn % 2 == 0 or Monster.all_dead():
-                game.active_character.token.select_character()
+                character.token.select_character()
                 game.update_interface()
                 game.activate_accessible_tiles(game.active_character.remaining_moves)
 
@@ -244,8 +244,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
             else:
                 game.dungeon.disable_all_tiles()  # tiles deactivated in monster turn
                 game.update_interface()
-                game.active_character.token.select_character()
-                game.active_character.move()
+                character.token.select_character()
+                character.move()
 
     def character_moved(self) -> None:
         """

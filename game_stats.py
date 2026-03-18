@@ -32,7 +32,7 @@ class DungeonStats:
         # are dead
         from player_classes import Player
 
-        dead_char: int = len(Player.find_all_chars_with_state("dead"))
+        dead_char: int = len(Player.get_all_with_state("dead"))
         trigger: int = randint(1, 10)
 
         if dead_char == 0:
@@ -54,7 +54,7 @@ class DungeonStats:
 
         from player_classes import Player
 
-        for player in [player for player in Player.data if player.state == "exited"]:
+        for player in Player.get_all_with_state("exited"):
             if player.species == "hawkins":
                 dynamites: int = player.special_items["dynamite"]
                 trigger = randint(1, 10)
@@ -74,7 +74,7 @@ class DungeonStats:
                     else:
                         return 1
 
-        # if hawkins not it players exited (dead)
+        # if hawkins dead
         return 0
 
     @property
@@ -85,7 +85,7 @@ class DungeonStats:
 
         from player_classes import Player
 
-        for player in Player.exited:
+        for player in Player.get_all_with_state("exited"):
             if player.species == "sawyer":
                 powders: int = player.special_items["powder"]
                 trigger = randint(1, 10)
@@ -105,7 +105,6 @@ class DungeonStats:
                     else:
                         return 1
 
-        # if self.dungeon.advanced_start, Sawyer is not in Players.exited
         return 0
 
     @property

@@ -78,8 +78,6 @@ class Tile(Button):
         :return: None
         """
         for token_list in self.tokens.values():
-            #while len(token_list) > 0:
-                #token_list[0].delete_token(self)
             for token in token_list:
                 token.delete_token(self)
 

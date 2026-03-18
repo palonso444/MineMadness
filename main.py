@@ -218,7 +218,7 @@ class MineMadnessApp(App):
 
     def load_game(self) -> None:
         """
-        Loads the game from the JSON file, cleans the previous one and generated Player.data and Player.dead_data
+        Loads the game from the JSON file, cleans the previous one and generated Player.data
         :return: None
         """
         with open(self.saved_game_file, "r") as f:

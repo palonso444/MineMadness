@@ -484,7 +484,7 @@ class PlayerToken(CharacterToken):
                 width=1.5,
             )
 
-        self.bind(pos=self._move_selection_circle, size=self._move_selection_circle)
+        self.bind(pos=self._move_selection_circle)
 
     def unselect_token(self) -> None:
         """

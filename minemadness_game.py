@@ -201,13 +201,19 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
         if turn is not None and not game.finish_game_or_finish_level():
-            game.active_character = None  # to ensure updating
-            if turn % 2 == 0 or Monster.all_dead():
+            # monsters all dead and players starts turn with other than Sawyer
+            if game.active_character is not None:
                 Player.reset_moves()
-                game.active_character = next(player for player in Player.data if player.state == "in_game")
+                c = game.active_character
+                game.active_character = None  # to ensure updating
+                game.active_character = c
             else:
-                Monster.reset_moves()
-                game.active_character = next(monster for monster in Monster.data if monster.state == "in_game")
+                if turn % 2 == 0 or Monster.all_dead():
+                    Player.reset_moves()
+                    game.active_character = next(player for player in Player.data if player.state == "in_game")
+                else:
+                    Monster.reset_moves()
+                    game.active_character = next(monster for monster in Monster.data if monster.state == "in_game")
 
     @staticmethod
     def on_active_character(game: MineMadnessGame, character: Character | None) -> None:
@@ -224,6 +230,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
             # if no monsters and character is selected again after moves run out, a turn passes
             if Monster.all_dead() and not character.has_moves_left:
+                # initialize moves here so on_turn() knows turn must start with this character
+                character.remaining_moves = character.stats.moves
                 game.turn += 1
 
             # player turn
@@ -276,8 +284,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
         if any(character.state == "in_game" and character.has_moves_left for character in act_char_cls.data):
             start_index: int = act_char_cls.data.index(self.active_character) + start_index_mod
-            self.active_character: Character = act_char_cls.find_next_char_in_game_with_moves(starting_index=start_index)
+            self.active_character: Character = act_char_cls.get_next_in_game_with_moves(starting_index=start_index)
         else:
+            self.active_character = None
             self.turn += 1
 
     ####### END OF FUNCTIONS MANAGING THE TURN SEQUENCE  ##################
@@ -312,7 +321,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             return "Monsters killed y'all!"
 
         if (Player.check_if_dead("sawyer") and Player.gems < self.dungeon.total_gems
-            and not any(player.has_item("talisman") for player in Player.find_all_chars_with_state("is_alive"))):
+            and not any(player.has_item("talisman") for player in Player.get_all_with_state("is_alive"))):
             return "Only Sawyer could pick up gems..."
 
         return None
@@ -340,8 +349,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         """
         Monster.data.clear()
         self.dungeon.unschedule_all_events()
-        self.turn = None
         self.active_character = None
+        self.turn = None
         self.level += 1
         self.remove_dungeon_from_game()
         self.add_dungeon_to_game()

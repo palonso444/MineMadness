@@ -3,10 +3,11 @@ from game_stats import TrapStats
 
 class Trap:
 
-    def __init__(self):
+    def __init__(self, game: MineMadnessGame):
         """
         Class defining Traps
         """
+        self.game = game
         self.char: str | None = "!"
         self.kind: str | None = "trap"
         self.species: str | None = "trap"
@@ -43,7 +44,7 @@ class Trap:
         :return: None
         """
         self.unhide()
-        damage = self.stats.calculate_damage(self.token.dungeon.dungeon_level)
+        damage = self.stats.calculate_damage(self.game.level)
         damage = player.apply_toughness(damage)
 
         if player.is_hidden:

@@ -155,12 +155,12 @@ class DungeonLayout(GridLayout):
                 case "K":
                     token_kind = "monster"
                     token_species = "kobold"
-                    character = monsters.Kobold()
+                    character: Monster = monsters.Kobold()
 
                 case "L":
                     token_kind = "monster"
                     token_species = "lizard"
-                    character = monsters.BlindLizard()
+                    character: Monster = monsters.BlindLizard()
 
                 case "B":
                     token_kind = "monster"
@@ -170,67 +170,67 @@ class DungeonLayout(GridLayout):
                 case "H":
                     token_kind = "monster"
                     token_species = "hound"
-                    character = monsters.CaveHound()
+                    character: Monster = monsters.CaveHound()
 
                 case "G":
                     token_kind = "monster"
                     token_species = "growl"
-                    character = monsters.Growl()
+                    character: Monster = monsters.Growl()
 
                 case "R":
                     token_kind = "monster"
                     token_species = "golem"
-                    character = monsters.RockGolem()
+                    character: Monster = monsters.RockGolem()
 
                 case "O":
                     token_kind = "monster"
                     token_species = "gnome"
-                    character = monsters.DarkGnome()
+                    character: Monster = monsters.DarkGnome()
 
                 case "N":
                     token_kind = "monster"
                     token_species = "nightmare"
-                    character = monsters.NightMare()
+                    character: Monster = monsters.NightMare()
 
                 case "Y":
                     token_kind = "monster"
                     token_species = "lindworm"
-                    character = monsters.LindWorm()
+                    character: Monster = monsters.LindWorm()
 
                 case "S":
                     token_kind = "monster"
                     token_species = "shadow"
-                    character = monsters.WanderingShadow()
+                    character: Monster = monsters.WanderingShadow()
 
                 case "W":
                     token_kind = "monster"
                     token_species = "wisp"
-                    character = monsters.DepthsWisp()
+                    character: Monster = monsters.DepthsWisp()
 
                 case "D":
                     token_kind = "monster"
                     token_species = "djinn"
-                    character = monsters.MountainDjinn()
+                    character: Monster = monsters.MountainDjinn()
 
                 case "P":
                     token_kind = "monster"
                     token_species = "pixie"
-                    character = monsters.Pixie()
+                    character: Monster = monsters.Pixie()
 
                 case "V":
                     token_kind = "monster"
                     token_species = "rattlesnake"
-                    character = monsters.RattleSnake()
+                    character: Monster = monsters.RattleSnake()
 
                 case "A":
                     token_kind = "monster"
                     token_species = "penumbra"
-                    character = monsters.Penumbra()
+                    character: Monster = monsters.Penumbra()
 
                 case "C":
                     token_kind = "monster"
                     token_species = "clawjaw"
-                    character = monsters.ClawJaw()
+                    character: Monster = monsters.ClawJaw()
 
                 case "#":
                     token_kind = "wall"
@@ -287,7 +287,7 @@ class DungeonLayout(GridLayout):
                 case "!":
                     token_kind = "trap"
                     token_species = "trap"
-                    character = traps.Trap()
+                    character: Trap = traps.Trap(game=self.game)
 
             if character is not None and character.kind == "monster":
                 character.setup_character(game=self.game)  # Players are set up after matching blueprint

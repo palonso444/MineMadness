@@ -843,7 +843,7 @@ class RattleSnakeStats(MonsterStats):
 class PenumbraStats(MonsterStats):
     char: str = "A"
     health: int = 15
-    strength: list[int] = field(default_factory=lambda: [3,7])
+    strength: list[int] = field(default_factory=lambda: [2,5])
     moves: int = 12  # do not go below 7 or will not move due to max_attack and retreat moves
     max_attacks: int = 3
     random_motility: float = 0.4
@@ -897,7 +897,7 @@ class ClawJawStats(MonsterStats):
 @dataclass
 class TrapStats:
     char: str = "!"
-    base_damage: list[int] = field(default_factory=lambda: [2, 4])
+    base_damage: list[int] = field(default_factory=lambda: [1, 2])
     base_experience_when_disarmed: int = 8
     experience_when_found: int = 10
 

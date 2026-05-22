@@ -300,7 +300,6 @@ class Tile(Button):
 
         """
         player = self.dungeon.game.active_character
-        self.dungeon.game.disable_lower_interface(True)
 
         if self.has_token("player"):
             if self.get_token("player") == player.token:
@@ -325,6 +324,7 @@ class Tile(Button):
                  and not any(self.has_token(token_kind) for token_kind in player.cannot_share_tile_with)
                  and not player.can_disarm_trap):
 
+            self.dungeon.game.disable_lower_interface(True)
             path = self.dungeon.find_shortest_path(
                 player.token.position, self.position, player.blocked_by)
             player.token.slide(path, player.token.on_move_completed)

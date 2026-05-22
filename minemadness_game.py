@@ -137,8 +137,19 @@ class MineMadnessGame(Screen):  # initialized in kv file
         Updates the interface showed at the bottom of the game screen
         :return: None
         """
-        self.ids.options_button.disabled = False if self.turn % 2 == 0 else True
-        self.ids.main_menu_button.disabled = False if self.turn % 2 == 0 else True
+        if self.turn % 2 == 0:
+            self.disable_lower_interface(False)
+        else:
+            self.disable_lower_interface(True)
+
+    def disable_lower_interface(self, disabled: bool) -> None:
+        """
+        Disables or enables the lower interface buttons
+        :param disabled: boolean indicating if they should be enabled
+        :return: None
+        """
+        self.ids.options_button.disabled = disabled
+        self.ids.main_menu_button.disabled = disabled
 
     def update_ability_button(self) -> None:
         """
@@ -257,6 +268,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             # turn continues
             if self.active_character.has_moves_left:
                 if self.active_character.kind == "player":
+                    self.disable_lower_interface(False)
                     self.activate_accessible_tiles(self.active_character.remaining_moves)
                 elif self.active_character.kind == "monster":
                     if self.active_character.has_acted:

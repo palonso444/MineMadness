@@ -1,6 +1,8 @@
 from __future__ import annotations
 from monster_classes import Monster
+from random import randint
 import game_stats as stats
+
 
 # RANDOM MOVEMENT MONSTERS
 

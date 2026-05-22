@@ -439,7 +439,7 @@ class Player(Character, ABC):
         """
         trap_token = tile.get_token("trap")
         trap_token.show_effect_token(effect="trap_out")
-        self.experience += trap_token.character.stats.calculate_experience(self.get_dungeon().dungeon_level)
+        self.experience += trap_token.character.stats.calculate_experience(self.get_dungeon().game.level)
         self.game.ids.experience_bar.value = self.experience
         trap_token.delete_token(tile)
         self.remaining_moves -= 1

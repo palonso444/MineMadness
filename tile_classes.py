@@ -300,6 +300,7 @@ class Tile(Button):
 
         """
         player = self.dungeon.game.active_character
+        self.dungeon.game.disable_lower_interface(True)
 
         if self.has_token("player"):
             if self.get_token("player") == player.token:

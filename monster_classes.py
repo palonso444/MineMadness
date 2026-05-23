@@ -138,8 +138,8 @@ class Monster(Character, ABC):
         Manages attack of monsters to surrounding players
         :return:None
         """
-        if self.stats.remaining_attacks > self.remaining_moves:
-            self.stats.remaining_attacks = self.remaining_moves
+        if self.stats.remaining_attacks > self.remaining_moves - self.token.steps:
+            self.stats.remaining_attacks = self.remaining_moves - self.token.steps
 
         surrounding_player_tiles = [
             tile for position in self.get_dungeon().get_nearby_positions(self.get_position())

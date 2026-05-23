@@ -29,7 +29,7 @@ source.exclude_dirs = tests,bin,venv,__pycache__,trash,build
 source.exclude_patterns = setup.py,saved_game.json
 
 # (str) Application versioning (method 1)
-version = 3.3
+version = 3.4
 
 # (str) Application versioning (method 2)
 #version.regex = __version__ = ['"](.*)['"]

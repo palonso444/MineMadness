@@ -519,7 +519,7 @@ class ClawJaw(Monster):
         self.step_duration: float = 0.4
         self.stats = stats.ClawJawStats()
 
-        # exclusive of claw jaw
+        # exclusive of ClawJaw
         self.dig_position: tuple[int,int] | None = None  # position of the wall to dig
         self.dig_factor: float = 0.75  # the higher, the higher the chance of taking digging path if free available
 
@@ -542,11 +542,11 @@ class ClawJaw(Monster):
         """
         match token_species:
             case "rock":
-                return self.remaining_moves >= 1
+                return self.token.steps <= self.remaining_moves - 1
             case "granite":
-                return self.remaining_moves >= 3
+                return self.token.steps <= self.remaining_moves - 3
             case "quartz":
-                return self.remaining_moves == self.stats.moves
+                return self.token.steps == 0
             case _:
                 raise ValueError(f"Invalid token_species {token_species}")
 
@@ -586,13 +586,10 @@ class ClawJaw(Monster):
         """
         match wall_tile.get_token("wall").species:
             case "rock":
-                # self.remaining_moves -= 1
                 self.token.steps += 1
             case "granite":
-                # self.remaining_moves -= 3
                 self.token.steps += 3
             case "quartz":
-                # self.remaining_moves = 0
                 self.token.steps = self.remaining_moves
 
         wall_tile.get_token("wall").show_digging()

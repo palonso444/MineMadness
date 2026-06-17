@@ -7,19 +7,15 @@ Welcome to the underground madness!
 
 FEATURING:
 
+Chess-like mechanics - think carefully your next move!
+
 Random level generation - each experience is unique!
 
 Monsters with variable AI - from wanderers to merciless hunters.
 
 2 game modes - Hardcore, and even more Hardcore!
 
-This game has been developed in Python using the Kivy framework.
-
-It has been thoroughly tested, but some bugs may lurk in the shadows. If you encounter any issues or have any suggestions, please feel free to leave your feedback in the comments in the itch.io page.
-
 NOTE: The flickering of the torches may cause performance issues on some devices. If this occurs, the feature can be disabled in the Options Menu.
-
-WARNING: Although this game is available for Windows and Android, only the Android version is properly balanced and tested. The Windows version is only for demonstration purposes.
 
 
 Itch.io page to download the game

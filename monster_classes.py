@@ -117,7 +117,8 @@ class Monster(Character, ABC):
         """
         if len(path) == 1:
             self.act_on_tile(self.token.get_current_tile())
-            self.token.skip_moves()  # if monster is blocked, this triggers next monster
+            if not self.can_retreat:
+                self.token.skip_moves()  # if monster is blocked, this triggers next monster
         else:
             self.token.slide(path, self.token.on_move_completed)
 

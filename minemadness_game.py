@@ -324,7 +324,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.active_character.token.unselect_token()
         self.active_character = new_active_character
 
-    def _check_if_game_over(self) -> str | None:
+    @staticmethod
+    def _check_if_game_over() -> str | None:
         """
         Checks if the game is over and returns the game over message in case game is over
         :return: The game over message, None if the game is not over
@@ -332,8 +333,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if Player.all_dead():
             return "Monsters killed y'all!"
 
-        if (Player.check_if_dead("sawyer") and Player.gems < self.dungeon.total_gems
-            and not any(player.has_item("talisman") for player in Player.get_all_with_state("is_alive"))):
+        if (Player.check_if_dead("sawyer") and
+                not any(player.has_item("talisman") for player in Player.get_all_with_state("is_alive"))):
             return "Only Sawyer could pick up gems..."
 
         return None

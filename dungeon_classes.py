@@ -86,11 +86,11 @@ class DungeonLayout(GridLayout):
         blueprint.place_items("h", self.stats.powder_number)
 
         # add here elements to test
-        # blueprint.place_items("V", 3)
+        # blueprint.place_items("A", 3)
 
         # comment these two lines to avoid adding elements to the dungeon
         for item, frequency in self.stats.level_progression().items():
-           blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
+            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
         return blueprint
 

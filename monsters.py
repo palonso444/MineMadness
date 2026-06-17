@@ -341,12 +341,13 @@ class RattleSnake(Monster):
         """
         super().attack_players()
         path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
-            self.remaining_moves, self.chases, ["wall"])))
+            self.remaining_moves - self.token.steps, self.chases, ["wall"])))
         if len(path) > 1:  # if all players dead, no path
             self.token.slide(path, self.token.on_retreat_completed)
         else:  # if it cannot retreat will stay in place
             # self.remaining_moves = 0
-            self.token.steps = self.remaining_moves
+            # self.token.steps = self.remaining_moves
+            self.token.skip_moves()
 
     def move(self) -> None:
         """
@@ -365,9 +366,9 @@ class RattleSnake(Monster):
                                  if self.get_dungeon().are_nearby(access, target)
                                  and self.get_dungeon().check_if_connexion
                                  (self.get_position(), access,
-                                  self.blocked_by, self.remaining_moves // randint(2,4))}
+                                  self.blocked_by, (self.remaining_moves - self.token.steps) // randint(2,4))}
                 if len(accesses) == 0:
-                    self.get_dungeon().game.activate_next_character()
+                    self.token.skip_moves()
                 else:
                     super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
         else:
@@ -468,12 +469,13 @@ class Penumbra(Monster):
         super().attack_players()
 
         path: list[tuple[int,int]] = (self.get_path_to_target(self.find_random_target(
-            max_steps=self.remaining_moves, min_steps=self.stats.min_retreat_dist)))
+            max_steps=self.remaining_moves - self.token.steps, min_steps=self.stats.min_retreat_dist)))
         if len(path) > 1:
             self.token.slide(path, self.token.on_retreat_completed)
         else:  # if it cannot retreat will stay in place
             #self.remaining_moves = 0
-            self.token.steps = self.remaining_moves
+            # self.token.steps = self.remaining_moves
+            self.token.skip_moves()
 
     def move(self):
         """

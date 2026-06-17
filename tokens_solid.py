@@ -249,6 +249,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
         Skips the rest of the moves (if any)
         :return: None
         """
+        self.steps = 0
         self.character.remaining_moves = 0
 
     def update_token_on_tile(self, tile : Tile) -> None:
@@ -348,12 +349,12 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
             current_level: int = self.character.game.level
             self.update_token_on_tile(current_tile)
             self.character.act_on_tile(current_tile)
-            if current_level == self.character.game.level:
+            if current_level == self.character.game.level and not self.character.can_retreat:
                 if self.character.kind == "monster":  # monsters move only once per turn
                     self.skip_moves()
                 else:
                     self.character.remaining_moves -= self.steps
-            self.steps = 0
+                    self.steps = 0
 
     def show_damage(self) -> None:
         """

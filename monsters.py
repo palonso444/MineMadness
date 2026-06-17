@@ -332,7 +332,7 @@ class RattleSnake(Monster):
         Property defining if a Character can retreat after an attack
         :return: True if character can retreat after attack, False otherwise
         """
-        return self.has_acted and self.remaining_moves > 0
+        return self.has_acted and self.token.steps < self.remaining_moves
 
     def attack_players(self) -> None:
         """
@@ -345,7 +345,6 @@ class RattleSnake(Monster):
         if len(path) > 1:  # if all players dead, no path
             self.token.slide(path, self.token.on_retreat_completed)
         else:  # if it cannot retreat will stay in place
-            # self.remaining_moves = 0
             # self.token.steps = self.remaining_moves
             self.token.skip_moves()
 
@@ -368,6 +367,7 @@ class RattleSnake(Monster):
                                  (self.get_position(), access,
                                   self.blocked_by, (self.remaining_moves - self.token.steps) // randint(2,4))}
                 if len(accesses) == 0:
+                    # self.token.steps = self.remaining_moves
                     self.token.skip_moves()
                 else:
                     super().move_token_or_act_on_tile(self._select_path_to_target(accesses))
@@ -403,7 +403,7 @@ class Penumbra(Monster):
         are set to 0 when it cannot reach any player with enough remaining moves to attack and retreat
         :return: True if character can retreat after attack, False otherwise
         """
-        return self.has_acted and self.remaining_moves > 0
+        return self.has_acted and self.token.steps < self.remaining_moves
 
     @property
     def is_hidden(self) -> bool:
@@ -473,7 +473,6 @@ class Penumbra(Monster):
         if len(path) > 1:
             self.token.slide(path, self.token.on_retreat_completed)
         else:  # if it cannot retreat will stay in place
-            #self.remaining_moves = 0
             # self.token.steps = self.remaining_moves
             self.token.skip_moves()
 

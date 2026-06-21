@@ -185,8 +185,8 @@ class MineMadnessApp(App):
         game_state["blueprint"] = self.game.dungeon.blueprint.to_dict()
 
         # keys must be converted from tuple to str in order to be JSON encoded
-        game_state["torches_dict"] = {str(key): value for key,value in self.game.dungeon.torches_dict.items()}\
-                                        if self.game.dungeon.torches_dict is not None else None
+        game_state["torches_dict"] = {str(key): value for key,value in self.game.dungeon.dm.torches_dict.items()}\
+                                        if self.game.dungeon.dm.torches_dict is not None else None
 
         # game is not JSON serializable
         game_state["players"] = {player.__class__.__name__:
@@ -211,7 +211,7 @@ class MineMadnessApp(App):
         """
         if self.ongoing_game:
             # resumes the flickering of lights
-            self.game.dungeon.on_bright_spots(self.game.dungeon, self.game.dungeon.bright_spots)
+            self.game.dungeon.dm.on_bright_spots(self.game.dungeon.dm, self.game.dungeon.dm.bright_spots)
             self.sm.current = "game_screen"
         else:
             self.load_game()

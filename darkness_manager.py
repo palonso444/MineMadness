@@ -1,20 +1,41 @@
 from __future__ import annotations
-from random import choice
-from kivy.graphics.texture import Texture
-from kivy.clock import Clock
 
-class DarknessManager:
-    
-    def __init__(self, dungeon: DungeonLayout):
+from kivy.graphics.texture import Texture
+from kivy.graphics import Rectangle
+from kivy.clock import Clock
+from kivy.properties import ListProperty
+from kivy.event import EventDispatcher
+from kivy.app import App
+
+from random import choice, uniform
+from numpy import zeros, uint8, ogrid, int16, clip
+
+class DarknessManager(EventDispatcher):
+    """
+    Manages the darkness layer covering the dungeon and the logic of torch placement and flickering
+    """
+    bright_spots = ListProperty([])
+
+    def __init__(self, dungeon: DungeonLayout, **kwargs):
+        super().__init__(**kwargs)
         self.dungeon: DungeonLayout = dungeon
-        self.torches: dict | None = None
+        self.torches_dict: dict | None = None
         self.darkness: Rectangle | None = None
-        self.darkness_intensity: int = 150  # from 0 to 255
+        self.darkness_intensity: int = 150  #  alpha intensity of the darkness. Must range from 0 to 255
         self.flickering_torches: ClockEvent | None = None
 
-    def _setup_torches(self) -> None:
+    def initialize_torches(self) -> None:
         """
-        Sets up the DungeonLayout.torches_dict. Keys are wall positions, values are list of pos_modifiers of all
+        Places, rotates and initalizes the torches
+        :return: None
+        """
+        self._place_torches(size_modifier=0.5)
+        self._rotate_torches()
+        self.update_bright_spots()
+
+    def _setup_torches_dict(self) -> None:
+        """
+        Sets up the torches_dict. Keys are wall positions, values are list of pos_modifiers of all
         torches attached to that wall
         :return: None
         """
@@ -50,7 +71,7 @@ class DarknessManager:
         :return: None
         """
         if self.torches_dict is None:
-            self._setup_torches()
+            self._setup_torches_dict()
     
         tile_side = self.dungeon.get_random_tile().width
         torch_side = tile_side * size_modifier
@@ -69,7 +90,7 @@ class DarknessManager:
                         case (0, -1):
                             pos_modifier = (0, -tile_side / 2 + torch_side / 2)  # left
     
-                    self.dungeon._add_position_to_update(tile_position)
+                    self.dungeon.add_position_to_update(tile_position)
                     tile = self.dungeon.get_tile(tile_position)
                     tile.place_item("light", "torch", character=None,
                                     size_modifier=size_modifier, pos_modifier=pos_modifier,
@@ -125,34 +146,32 @@ class DarknessManager:
         self.bright_spots.append({key: value for key, value in locals().items() if key != "self"})
     
     @staticmethod
-    def on_bright_spots(dungeon: DungeonLayout, bright_spots: list[dict]) -> None:
+    def on_bright_spots(dm: DarknessManager, bright_spots: list[dict]) -> None:
         """
         Callback triggered upon modification of DungeonLayout.bright_spots
-        :param dungeon: DungeonLayout instance
+        :param dm: DarknessManager instance
         :param bright_spots: list containing the center pos of all torches centers
         :return: None
         """
-        if dungeon.flickering_torches is not None:
-            dungeon.flickering_torches.cancel()
+        if dm.flickering_torches is not None:
+            dm.flickering_torches.cancel()
 
-        if len(dungeon.bright_spots) > 0 and App.get_running_app().flickering_torches_on:
-            dungeon.flickering_torches = Clock.schedule_interval(lambda dt: dungeon.darkness_flicker(
-                alpha_intensity= dungeon.darkness_intensity, dt=dt), 1 / 15)
+        if len(dm.bright_spots) > 0 and App.get_running_app().flickering_torches_on:
+            dm.flickering_torches = Clock.schedule_interval(lambda dt: dm.darkness_flicker(dt=dt), 1 / 15)
         else:
             # if last bright spot is removed, cast static darkness
-            if dungeon.darkness in dungeon.canvas.after.children:
-                dungeon.canvas.after.remove(dungeon.darkness)
+            if dm.darkness in dm.dungeon.canvas.after.children:
+                dm.dungeon.canvas.after.remove(dm.darkness)
 
-            with dungeon.canvas.after:
+            with dm.dungeon.canvas.after:
                 # uncomment this to run the cythonized version
                 # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
-                dungeon.darkness = dungeon._generate_darkness_layer(alpha_intensity=dungeon.darkness_intensity)
+                dm.darkness = dm.generate_darkness_layer()
     
-    def darkness_flicker(self, alpha_intensity: int, dt: float) -> None:
+    def darkness_flicker(self, dt: float) -> None:
         """
         Wrapper function that generates a darkness with flickering brightness points. Needs to be scheduled
         using Clock.schedule_interval() and specifying the desired frequency
-        :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
         :param dt: delta time
         :return: None
         """
@@ -162,27 +181,25 @@ class DarknessManager:
                 if bright_spot["timeout"] > bright_spot["max_timeout"]:
                     self.bright_spots.remove(bright_spot)
 
-        if self.darkness in self.canvas.after.children:
-            self.canvas.after.remove(self.darkness)
+        if self.darkness in self.dungeon.canvas.after.children:
+            self.dungeon.canvas.after.remove(self.darkness)
 
-        with self.canvas.after:
+        with self.dungeon.canvas.after:
             # uncomment this to run the cythonized version
             # self.darkness = cl.generate_darkness_layer(self, alpha_intensity)
-            self.darkness = self._generate_darkness_layer(alpha_intensity=alpha_intensity)
+            self.darkness = self.generate_darkness_layer()
 
-    def _generate_darkness_layer(self, alpha_intensity: int) -> Rectangle:
+    def generate_darkness_layer(self) -> Rectangle:
         """
         **********************************************************************************
         THIS FUNCTION HAS BEEN CYTHONIZED -- SEE cythonized_lights.pyx
         **********************************************************************************
-
         Generates a darkness layer with optional illuminated areas
-        :param alpha_intensity: alpha intensity of the darkness. Must range from 0 to 255
         :return: darkness layer to be displayed on the canvas
         """
-        texture = Texture.create(size=self.size, colorfmt="rgba")
+        texture = Texture.create(size=self.dungeon.size, colorfmt="rgba")
         data = zeros((texture.height, texture.width, 4), dtype=uint8)
-        data[:, :, 3] = alpha_intensity
+        data[:, :, 3] = self.darkness_intensity
 
         for bright_spot in self.bright_spots:
             gradient = uniform(bright_spot["gradient"][0], bright_spot["gradient"][1])
@@ -192,11 +209,11 @@ class DarknessManager:
             distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
             light_mask = (distance_from_center < max_distance)  # [bool] array
             brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** gradient)
-                          * alpha_intensity * bright_spot["intensity"])
+                          * self.darkness_intensity * bright_spot["intensity"])
 
             temp_data = data[light_mask, 3].astype(int16) - brightness.astype(int16)
-            data[light_mask, 3] = clip(temp_data, 0, alpha_intensity).astype(uint8)
+            data[light_mask, 3] = clip(temp_data, 0, self.darkness_intensity).astype(uint8)
 
         texture.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
 
-        return Rectangle(texture=texture, pos=self.pos, size=self.size)
+        return Rectangle(texture=texture, pos=self.dungeon.pos, size=self.dungeon.size)

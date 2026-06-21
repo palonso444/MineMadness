@@ -117,7 +117,9 @@ class Monster(Character, ABC):
         """
         if len(path) == 1:
             self.act_on_tile(self.token.get_current_tile())
-            if not self.can_retreat:
+            if self.can_retreat:
+                self.retreat()
+            else:
                 self.token.skip_moves()  # if monster is blocked, this triggers next monster
         else:
             self.token.slide(path, self.token.on_move_completed)
@@ -133,6 +135,17 @@ class Monster(Character, ABC):
             self.attack_players()
             self.acted_on_tile = True
 
+    def retreat(self) -> None:
+        """
+        Retreats (to be called after attack)
+        :return: None
+        """
+        path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
+            self.remaining_moves - self.token.steps, self.chases, ["wall"])))
+        if len(path) > 1:  # if all players dead, no path
+            self.token.slide(path, self.token.on_retreat_completed)
+        else:  # if it cannot retreat will stay in place
+            self.token.skip_moves()
 
     def attack_players(self) -> None:
         """

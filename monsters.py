@@ -334,20 +334,6 @@ class RattleSnake(Monster):
         """
         return self.has_acted and self.token.steps < self.remaining_moves
 
-    def attack_players(self) -> None:
-        """
-        Attacks and retreats
-        :return: None
-        """
-        super().attack_players()
-        path: list[tuple[int,int]] = (self.get_path_to_target(self._find_isolated_target(
-            self.remaining_moves - self.token.steps, self.chases, ["wall"])))
-        if len(path) > 1:  # if all players dead, no path
-            self.token.slide(path, self.token.on_retreat_completed)
-        else:  # if it cannot retreat will stay in place
-            # self.token.steps = self.remaining_moves
-            self.token.skip_moves()
-
     def move(self) -> None:
         """
         Special method for attack only if enough movements left to retreat
@@ -457,24 +443,6 @@ class Penumbra(Monster):
         """
         self.token.color.a = 1  # changes transparency
         self.ability_active = False
-
-    def attack_players(self) -> None:
-        """
-        Attacks and retreats
-        :return: None
-        """
-        #if any(self.get_dungeon().get_tile(position).has_token("player")
-               #for position in self.get_dungeon().get_nearby_positions(self.get_position())):
-
-        super().attack_players()
-
-        path: list[tuple[int,int]] = (self.get_path_to_target(self.find_random_target(
-            max_steps=self.remaining_moves - self.token.steps, min_steps=self.stats.min_retreat_dist)))
-        if len(path) > 1:
-            self.token.slide(path, self.token.on_retreat_completed)
-        else:  # if it cannot retreat will stay in place
-            # self.token.steps = self.remaining_moves
-            self.token.skip_moves()
 
     def move(self):
         """

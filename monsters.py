@@ -566,7 +566,7 @@ class ClawJaw(Monster):
         if wall_tile.has_token("light"):
             while len(wall_tile.tokens["light"]) > 0:
                 wall_tile.get_token("light").delete_token(wall_tile)
-            self.get_dungeon().update_bright_spots()
+            self.get_dungeon().dm.update_bright_spots()
 
     def _move_across_walls(self, target: tuple[int,int]) -> None:
         """

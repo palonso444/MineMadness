@@ -360,7 +360,7 @@ class Tile(Button):
             token.character.kill_character(self)
         self.delete_all_tokens()  # delete all pickables
         if has_light:  # no need to check all dungeon if tile has no torch
-            self.dungeon.update_bright_spots()
+            self.dungeon.dm.update_bright_spots()
 
         self.place_item("wall", "rock", None)
         self._show_explosion()

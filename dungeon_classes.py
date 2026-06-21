@@ -26,10 +26,11 @@ class DungeonLayout(GridLayout):
     """
 
     positions_to_update = NumericProperty(0)
-    damage_tokens = ListProperty([])  # list of currenly acting DamageTokens in the whole dungeon
+    damage_tokens = ListProperty([])  # list of currently acting DamageTokens in the whole dungeon
 
     def __init__(self, game: MineMadnessGame,
                  blueprint: Blueprint | None = None,
+                 torches_dict: dict | None = None,
                  **kwargs):
         super().__init__(**kwargs)
 
@@ -47,7 +48,7 @@ class DungeonLayout(GridLayout):
         self.tiles_dict: dict[tuple, Tile] | None = None
         self.moving_token: CharacterToken | None = None  # CharacterTokens are not associated to any Tile while sliding
 
-        self.dm: DarknessManager | None = None  # instantiated in build_level()
+        self.dm: DarknessManager = DarknessManager(self, torches_dict=torches_dict)
 
     @staticmethod
     def on_damage_tokens(dungeon, damage_tokens) -> None:
@@ -300,7 +301,8 @@ class DungeonLayout(GridLayout):
         """
         self._set_tiles()
         self._match_blueprint()
-        self.dm = DarknessManager(self)
+        # must be called here to properly save torch positions in MineMadnessApp.get_game_state()
+        self.dm.place_torches(size_modifier=0.5)
 
     def unschedule_all_events(self) -> None:
         """

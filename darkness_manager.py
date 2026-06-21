@@ -16,10 +16,10 @@ class DarknessManager(EventDispatcher):
     """
     bright_spots = ListProperty([])
 
-    def __init__(self, dungeon: DungeonLayout, **kwargs):
+    def __init__(self, dungeon: DungeonLayout, torches_dict: dict | None, **kwargs):
         super().__init__(**kwargs)
         self.dungeon: DungeonLayout = dungeon
-        self.torches_dict: dict | None = None
+        self.torches_dict: dict | None = torches_dict
         self.darkness: Rectangle | None = None
         self.darkness_intensity: int = 150  #  alpha intensity of the darkness. Must range from 0 to 255
         self.flickering_torches: ClockEvent | None = None
@@ -29,7 +29,6 @@ class DarknessManager(EventDispatcher):
         Places, rotates and initalizes the torches
         :return: None
         """
-        self._place_torches(size_modifier=0.5)
         self._rotate_torches()
         self.update_bright_spots()
 
@@ -63,7 +62,7 @@ class DarknessManager(EventDispatcher):
 
             self.torches_dict = {key: value for key, value in torches_dict.items() if len(value) > 0}
         
-    def _place_torches(self, size_modifier: float) -> None:
+    def place_torches(self, size_modifier: float) -> None:
         """
         Sets up DungeonLayout.torches_dict and places torches depending on wall positions (torches are always
         attached to walls)

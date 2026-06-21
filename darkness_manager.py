@@ -23,6 +23,10 @@ class DarknessManager(EventDispatcher):
         self.darkness: Rectangle | None = None
         self.darkness_intensity: int = 150  #  alpha intensity of the darkness. Must range from 0 to 255
         self.flickering_torches: ClockEvent | None = None
+        self.darkness_text = None
+
+        with self.dungeon.canvas.after:
+            Rectangle(texture=self.darkness_text, pos=self.dungeon.pos, size=self.dungeon.size)
 
     def initialize_torches(self) -> None:
         """
@@ -197,14 +201,17 @@ class DarknessManager(EventDispatcher):
         Generates a darkness layer with optional illuminated areas
         :return: darkness layer to be displayed on the canvas
         """
-        texture = Texture.create(size=self.dungeon.size, colorfmt="rgba")
-        data = zeros((texture.height, texture.width, 4), dtype=uint8)
+        # texture = Texture.create(size=self.dungeon.size, colorfmt="rgba")
+        if self.darkness_text is None:
+            self.create_text()
+
+        data = zeros((self.darkness_text.height, self.darkness_text.width, 4), dtype=uint8)
         data[:, :, 3] = self.darkness_intensity
 
         for bright_spot in self.bright_spots:
             gradient = uniform(bright_spot["gradient"][0], bright_spot["gradient"][1])
             max_distance = bright_spot["radius"] ** 2
-            y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
+            y_pos, x_pos = ogrid[:self.darkness_text.height, :self.darkness_text.width]  # grid of coordinates of all pixels
 
             distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
             light_mask = (distance_from_center < max_distance)  # [bool] array
@@ -214,6 +221,13 @@ class DarknessManager(EventDispatcher):
             temp_data = data[light_mask, 3].astype(int16) - brightness.astype(int16)
             data[light_mask, 3] = clip(temp_data, 0, self.darkness_intensity).astype(uint8)
 
-        texture.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
+        self.darkness_text.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
 
-        return Rectangle(texture=texture, pos=self.dungeon.pos, size=self.dungeon.size)
+        return Rectangle(texture=self.darkness_text, pos=self.dungeon.pos, size=self.dungeon.size)
+    def create_text(self):
+        self.darkness_text = Texture.create(size=self.dungeon.size, colorfmt="rgba")
+
+        #with self.dungeon.canvas.after:
+            #self.darkness = Rectangle(texture=self.darkness_text, pos=self.dungeon.pos, size=self.dungeon.size)
+
+

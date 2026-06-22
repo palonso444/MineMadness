@@ -530,7 +530,6 @@ class Player(Character, ABC):
             "strength": self.stats.natural_strength,
             #TODO: add other rellevant stats here (trap spotting and so on)
         }
-        print(self.level_track)
 
     def _level_up_health(self, increase: int) -> None:
         """

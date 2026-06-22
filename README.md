@@ -1,6 +1,16 @@
 
 ![mine_madness](https://github.com/user-attachments/assets/f7495fcb-5e02-406b-9c3b-5f7fd324362c)
 
+THIS IS A LEGACY BRANCH
+------------------------
+It contains the mechanics of the first version of the game:
+- Automatic level progression
+- XP by killing monsters, not by completing levels
+- No hidden objects behind walls
+- Less monster and wall types
+- No wandering monster
+- and others...
+
 
 Welcome to the underground madness!
 -----------------------------------

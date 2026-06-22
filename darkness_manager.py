@@ -210,11 +210,11 @@ class DarknessManager(EventDispatcher):
 
         for bright_spot in self.bright_spots:
             gradient = uniform(bright_spot["gradient"][0], bright_spot["gradient"][1])
-            max_distance = bright_spot["radius"] ** 2
-            y_pos, x_pos = ogrid[:self.darkness_text.height, :self.darkness_text.width]  # grid of coordinates of all pixels
+            #max_distance = bright_spot["radius"] ** 2
+            #y_pos, x_pos = ogrid[:self.darkness_text.height, :self.darkness_text.width]  # grid of coordinates of all pixels
 
-            distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
-            light_mask = (distance_from_center < max_distance)  # [bool] array
+            #distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
+            #light_mask = (distance_from_center < max_distance)  # [bool] array
             brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** gradient)
                           * self.darkness_intensity * bright_spot["intensity"])
 
@@ -224,10 +224,19 @@ class DarknessManager(EventDispatcher):
         self.darkness_text.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
 
         return Rectangle(texture=self.darkness_text, pos=self.dungeon.pos, size=self.dungeon.size)
+
     def create_text(self):
         self.darkness_text = Texture.create(size=self.dungeon.size, colorfmt="rgba")
 
         #with self.dungeon.canvas.after:
             #self.darkness = Rectangle(texture=self.darkness_text, pos=self.dungeon.pos, size=self.dungeon.size)
+
+    def precompute_bright_spots(self):
+        for bright_spot in self.bright_spots:
+            max_distance = bright_spot["radius"] ** 2
+            y_pos, x_pos = ogrid[:self.darkness_text.height, :self.darkness_text.width]  # grid of coordinates of all pixels
+
+            distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
+            light_mask = (distance_from_center < max_distance)  # [bool] array
 
 

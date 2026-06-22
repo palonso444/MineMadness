@@ -411,14 +411,11 @@ class PlayerStats(CharacterStats, ABC):
     initial_weapons: int = 3
     advantage_strength_incr: int | None = None
     shooting_range: int | None = None
-    recovery_end_of_level: int = 0  # health points players heal at end of level
-    base_exp_to_level_up: int = 10
 
     def __post_init__(self):
         self.natural_health: int = self.health  # only modified by leveling up
         self.natural_moves: int = self.moves  # only modified by leveling up
         self.natural_strength: list[int] = self.strength  # only modified by leveling up
-        self.exp_to_next_level: int = self.base_exp_to_level_up
 
 
 @dataclass

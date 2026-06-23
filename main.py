@@ -302,6 +302,15 @@ class MineMadnessApp(App):
         self.sm.add_widget(prog_menu)
         self.sm.current = "progression_menu"
 
+    def start_next_level(self) -> None:
+        """
+        Starts the next level
+        :return: None
+        """
+        self.game.setup_next_level()
+        self.sm.current = "game_screen"
+        # progression menu is created dynamically
+        self.sm.remove_widget(self.sm.get_screen("progression_menu"))
 
 
 

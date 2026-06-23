@@ -87,9 +87,6 @@
             size: self.size
             source: get_resource_path("./backgrounds/" + self.kind + "background.png") if self.kind else None
 
-<ProgressBar>:
-    padding: "40dp"
-
 <ScrollView>:
     effect_cls: "ScrollEffect"  # avoids bouncing when reaching end of scroll
 
@@ -302,7 +299,7 @@
 <CharacterProgressionMenu>
     canvas:
         Color:
-            rgba: 0, 0, 0, 0.3
+            rgba: 0, 0, 0, 0.7
         Rectangle:
             pos: self.pos
             size: self.size
@@ -314,5 +311,5 @@
             text: "PROGRESSION MENU"
         Button:
             text: "next level"
-            on_release: app.game.start_next_level()
+            on_release: app.start_next_level()
 

@@ -356,12 +356,11 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.turn = None
         App.get_running_app().show_progression_menu()
 
-    def start_next_level(self) -> None:
+    def setup_next_level(self) -> None:
         """
-        Starts the next level the level
+        Starts the next level
         :return: None
         """
-        # self.level += 1
         self.remove_dungeon_from_game()
+        self.level += 1  # must be updated here before adding dungeon
         self.add_dungeon_to_game()
-        self.level += 1

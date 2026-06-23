@@ -94,11 +94,11 @@
     effect_cls: "ScrollEffect"  # avoids bouncing when reaching end of scroll
 
 <MineMadnessGame>:
-
     BoxLayout:
         orientation: "vertical"
         padding: "5dp"
         size_hint: 1,1
+        id: main_layout
 
         # HEADER LABELS: CHARACTER NAME AND ABILITY BUTTON
         BoxLayout:
@@ -298,3 +298,21 @@
     Label:
         halign: "center"
         text: "Loading..."
+
+<CharacterProgressionMenu>
+    canvas:
+        Color:
+            rgba: 0, 0, 0, 0.3
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    FloatLayout:
+    MenuLayout:
+        size_hint: 0.9, 0.1
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        Label:
+            text: "PROGRESSION MENU"
+        Button:
+            text: "next level"
+            on_release: app.game.start_next_level()
+

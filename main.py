@@ -3,6 +3,7 @@ from typing import Optional
 
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.graphics import Fbo, ClearColor, ClearBuffers, Rectangle
 from kivy.lang import Builder
 from kivy.core.text import LabelBase
 from kivy.properties import NumericProperty, BooleanProperty, StringProperty
@@ -19,7 +20,8 @@ from player_classes import Player
 from players import Sawyer, Hawkins, CrusherJane  # players needed for globals()
 from dungeon_classes import DungeonLayout
 from minemadness_game import MineMadnessGame
-from game_add_screens import MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig, LoadingScreen
+from game_add_screens import MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig, LoadingScreen, \
+    CharacterProgressionMenu
 
 
 def get_resource_path(relative_path: str) -> str:
@@ -284,6 +286,23 @@ class MineMadnessApp(App):
         self._clean_previous_game()
         self.ongoing_game = False
         self.sm.transition.duration = 0.3
+
+    def show_progression_menu(self) -> None:
+        """
+        Shows the character progression menu
+        :return: None
+        """
+        prog_menu = CharacterProgressionMenu(name="progression_menu")
+        background = self.game.export_as_image().texture
+        background.flip_vertical()
+
+        with prog_menu.canvas.before:
+            Rectangle(texture=background, size=Window.size)
+
+        self.sm.add_widget(prog_menu)
+        self.sm.current = "progression_menu"
+
+
 
 
 ######################################################### START APP ###################################################

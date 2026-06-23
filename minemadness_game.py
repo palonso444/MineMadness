@@ -347,13 +347,21 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def finish_level(self) -> None:
         """
-        Finishes the level and provides a new one
+        Finishes the level
         :return: None
         """
         Monster.data.clear()
         self.dungeon.unschedule_all_events()
         self.active_character = None
         self.turn = None
-        self.level += 1
+        App.get_running_app().show_progression_menu()
+
+    def start_next_level(self) -> None:
+        """
+        Starts the next level the level
+        :return: None
+        """
+        # self.level += 1
         self.remove_dungeon_from_game()
         self.add_dungeon_to_game()
+        self.level += 1

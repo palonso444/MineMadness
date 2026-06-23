@@ -18,5 +18,8 @@ class NewGameConfig(Screen):
 class GameOver(Screen):
     pass
 
+class CharacterProgressionMenu(Screen):
+    pass
+
 class LoadingScreen(Screen):
     pass

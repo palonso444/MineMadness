@@ -1,4 +1,5 @@
 from kivy.uix.screenmanager import Screen
+from kivy.properties import ObjectProperty
 
 class MainMenu(Screen):
     pass
@@ -19,7 +20,7 @@ class GameOver(Screen):
     pass
 
 class CharacterProgressionMenu(Screen):
-    pass
+    background = ObjectProperty(None, allownone=True)
 
 class LoadingScreen(Screen):
     pass

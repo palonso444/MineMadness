@@ -3,7 +3,6 @@ from typing import Optional
 
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.graphics import Fbo, ClearColor, ClearBuffers, Rectangle
 from kivy.lang import Builder
 from kivy.core.text import LabelBase
 from kivy.properties import NumericProperty, BooleanProperty, StringProperty
@@ -20,9 +19,7 @@ from player_classes import Player
 from players import Sawyer, Hawkins, CrusherJane  # players needed for globals()
 from dungeon_classes import DungeonLayout
 from minemadness_game import MineMadnessGame
-from game_add_screens import MainMenu, HowToPlay, GameOver, OutGameOptions, InGameOptions, NewGameConfig, LoadingScreen, \
-    CharacterProgressionMenu
-
+import screen_classes as scr
 
 def get_resource_path(relative_path: str) -> str:
     """
@@ -88,7 +85,7 @@ class MineMadnessApp(App):
         Shows a loading screen
         :return: None
         """
-        self.sm.add_widget(LoadingScreen(name="loading_screen"))
+        self.sm.add_widget(scr.LoadingScreen(name="loading_screen"))
         self.sm.current = "loading_screen"
 
     def on_start(self) -> None:
@@ -115,12 +112,13 @@ class MineMadnessApp(App):
         :return: None
         """
         self._load_music()
-        self.sm.add_widget(MainMenu(name="main_menu"))  # this widget must be added first for a smooth start
-        self.sm.add_widget(HowToPlay(name="how_to_play"))
-        self.sm.add_widget(GameOver(name="game_over"))
-        self.sm.add_widget(OutGameOptions(name="out_game_options"))
-        self.sm.add_widget(InGameOptions(name="in_game_options"))
-        self.sm.add_widget(NewGameConfig(name="new_game_config"))
+        self.sm.add_widget(scr.MainMenu(name="main_menu"))  # this widget must be added first for a smooth start
+        self.sm.add_widget(scr.HowToPlay(name="how_to_play"))
+        self.sm.add_widget(scr.GameOver(name="game_over"))
+        self.sm.add_widget(scr.OutGameOptions(name="out_game_options"))
+        self.sm.add_widget(scr.InGameOptions(name="in_game_options"))
+        self.sm.add_widget(scr.NewGameConfig(name="new_game_config"))
+        self.sm.add_widget(scr.CharacterProgressionMenu(name="progression_menu"))
         self.sm.current = "main_menu"
 
     def _load_music(self)-> None:
@@ -292,14 +290,9 @@ class MineMadnessApp(App):
         Shows the character progression menu
         :return: None
         """
-        prog_menu = CharacterProgressionMenu(name="progression_menu")
-        background = self.game.export_as_image().texture
-        background.flip_vertical()
-
-        with prog_menu.canvas.before:
-            Rectangle(texture=background, size=Window.size)
-
-        self.sm.add_widget(prog_menu)
+        bg = self.game.export_as_image().texture
+        bg.flip_vertical()
+        self.sm.get_screen("progression_menu").background = bg
         self.sm.current = "progression_menu"
 
     def start_next_level(self) -> None:
@@ -309,8 +302,6 @@ class MineMadnessApp(App):
         """
         self.game.setup_next_level()
         self.sm.current = "game_screen"
-        # progression menu is created dynamically
-        self.sm.remove_widget(self.sm.get_screen("progression_menu"))
 
 
 

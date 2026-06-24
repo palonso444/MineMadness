@@ -15,7 +15,7 @@ from os import remove
 import sys
 
 from dungeon_blueprint import Blueprint
-from player_classes import Player
+from player_class import Player
 from players import Sawyer, Hawkins, CrusherJane  # players needed for globals()
 from dungeon_classes import DungeonLayout
 from minemadness_game import MineMadnessGame
@@ -77,6 +77,7 @@ class MineMadnessApp(App):
 
     def build(self) -> ScreenManager:
         Builder.load_file(get_resource_path("./how_to_play.kv"))
+        Builder.load_file(get_resource_path("./progression_menu.kv"))
         self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
         return self.sm
 

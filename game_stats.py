@@ -30,7 +30,7 @@ class DungeonStats:
     def talisman_number(self) -> int:
         # Talisman does not appear in very first levels. In other levels has low frequency, ges higher when characters
         # are dead
-        from player_classes import Player
+        from player_class import Player
 
         dead_char: int = len(Player.get_all_with_state("dead"))
         trigger: int = randint(1, 10)

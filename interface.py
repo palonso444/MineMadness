@@ -2,7 +2,7 @@ from kivy.uix.togglebutton import ToggleButton
 from random import choice
 import widget_classes as wdg
 
-from player_classes import Player
+from player_class import Player
 
 class AbilityButton(ToggleButton):
 

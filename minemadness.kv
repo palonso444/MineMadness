@@ -6,6 +6,7 @@
 #: import TalismanStats game_stats.TalismanStats
 #: import AbilityButton interface.AbilityButton
 #: import get_resource_path main.get_resource_path
+#: import dp kivy.metrics.dp
 
 <DungeonLayout>:
     size_hint: None, None
@@ -42,7 +43,7 @@
     font_name: "edmunds"
     font_size: "75sp"
     color: 1, 0, 0, 1  # red
-    halign: 'center'
+    halign: "center"
 
 <MainMenuButton@GameButton>
     text: "Main Menu"
@@ -304,25 +305,3 @@
     GameLabel:
         halign: "center"
         text: "Loading..."
-
-<CharacterProgressionMenu>
-    canvas:
-        Rectangle:
-            pos: self.pos
-            size: self.size
-            texture: root.background
-        Color:
-            rgba: 0, 0, 0, 0.7
-        Rectangle:
-            pos: self.pos
-            size: self.size
-    FloatLayout:
-    MenuLayout:
-        size_hint: 0.9, 0.1
-        pos_hint: {"center_x": 0.5, "center_y": 0.5}
-        GameLabel:
-            text: "PROGRESSION MENU"
-        GameButton:
-            text: "next level"
-            on_release: app.start_next_level()
-

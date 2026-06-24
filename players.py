@@ -1,5 +1,5 @@
 from __future__ import annotations
-from player_classes import Player
+from player_class import Player
 import game_stats as stats
 
 class Sawyer(Player):

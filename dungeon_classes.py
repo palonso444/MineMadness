@@ -10,7 +10,7 @@ from random import choice
 import players
 import monsters
 from darkness_manager import DarknessManager
-from player_classes import Player
+from player_class import Player
 import trap_class as traps
 import tile_classes as tiles
 from game_stats import DungeonStats

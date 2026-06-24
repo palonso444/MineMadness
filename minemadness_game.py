@@ -4,9 +4,9 @@ from kivy.app import App
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.uix.screenmanager import Screen
 
-from player_classes import Player
+from player_class import Player
 from character_class import Character
-from monster_classes import Monster
+from monster_class import Monster
 from dungeon_classes import DungeonLayout
 
 

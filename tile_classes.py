@@ -6,7 +6,7 @@ from kivy.app import App
 
 from tokens_solid import SceneryToken, PlayerToken, MonsterToken
 from tokens_fading import ExplosionToken
-from monster_classes import Monster
+from monster_class import Monster
 
 
 class Tile(Button):

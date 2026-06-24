@@ -1,0 +1,116 @@
+<ProgressionTitleLabel@TitleLabel>
+    font_size: "35sp"
+
+<ProgressionSubtitleLabel@GameLabel>
+    halign: "center"
+    font_size: "30sp"
+
+<ProgressionColNameLabel@GameLabel>
+    halign: "center"
+    font_size: "22sp"
+
+<ProgressionRowNameLabel@GameLabel>
+    font_size: "22sp"
+
+<CharacterProgressionMenu>
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            texture: root.background
+        Color:
+            rgba: 0, 0, 0, 0.7
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    FloatLayout:
+        # general layout
+        BoxLayout:
+            size_hint: 0.9, 0.9
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            orientation: "vertical"
+            # menu title and available XP points
+            MenuLayout:
+                size_hint: 1, 0.2
+                ProgressionTitleLabel:
+                    text: "LEVEL COMPLETED!"
+                ProgressionSubtitleLabel:
+                    text: "Total group XP: 4"
+            # col names (out of scroll)
+            GridLayout:
+                size_hint: 1, 0.15
+                rows: 1
+                cols: 4
+                # first column name is empty
+                Label:
+                    text: ""
+                ProgressionColNameLabel:
+                    text: "Sawyer"
+                ProgressionColNameLabel:
+                    text: "Hawkins"
+                ProgressionColNameLabel
+                    text: "Crusher Jane"
+            # scroll containing gridlayout with all upgradeable stats
+            ScrollView:
+                size_hint: 1, 0.6
+                GridLayout:
+                    size_hint: 1, None
+                    height: self.minimum_height
+                    row_default_height: dp(50)
+                    # row_force_default: True
+                    rows: 6
+                    cols: 4
+                    ProgressionRowNameLabel:
+                        text: "Attack"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    ProgressionRowNameLabel:
+                        text: "Health"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    ProgressionRowNameLabel:
+                        text: "% Critical"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    ProgressionRowNameLabel:
+                        text: "Moves"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    ProgressionRowNameLabel:
+                        text: "Regeneration"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    ProgressionRowNameLabel:
+                        text: "Trap detection"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+                    GameLabel:
+                        text: "UPGRADE"
+            BoxLayout:
+                size_hint: 1, 0.1
+                padding: "0dp", "10dp", "0dp", "0dp"  # left, top, right, bottom
+                GameButton:
+                    text: "Ready for next level"
+                    on_release: app.start_next_level()

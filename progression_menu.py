@@ -7,6 +7,9 @@ from widget_classes import GameButton
 
 
 class UpgradeInterface(BoxLayout):
+    """
+    Widget including the value of the stat and upgrade and downgrade buttons
+    """
     display_value = StringProperty(None)
 
 class SwitchPlayerButton(GameButton):

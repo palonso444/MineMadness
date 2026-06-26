@@ -1,5 +1,4 @@
 from __future__ import annotations
-from random import randint
 from abc import ABC, abstractmethod
 
 from kivy.event import EventDispatcher
@@ -250,7 +249,7 @@ class Character(ABC, EventDispatcher):
         :param opponent: opponent Character
         :return: opponent Character with inflicted damage
         """
-        damage = randint(self.stats.strength[0], self.stats.strength[1])
+        damage = self.stats.strength
         damage = opponent.apply_toughness(damage)
         damage = self.enhance_damage(damage)
 

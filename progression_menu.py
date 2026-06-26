@@ -1,9 +1,13 @@
 from __future__ import annotations
 from kivy.uix.screenmanager import Screen
+from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from player_class import Player
 from widget_classes import GameButton
 
+
+class UpgradeInterface(BoxLayout):
+    display_value = StringProperty(None)
 
 class SwitchPlayerButton(GameButton):
     """
@@ -26,6 +30,14 @@ class CharacterProgressionMenu(Screen):
     player_species = StringProperty(None)
     player_name = StringProperty(None)
 
+    # display properties
+    player_strength = NumericProperty(None)
+    player_health = NumericProperty(None)
+    player_perc_critical = NumericProperty(None)
+    player_moves = NumericProperty(None)
+    player_recovery = NumericProperty(None)
+    player_trap_detect = NumericProperty(None)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.players_temp_stats: dict[str, dict] = {}
@@ -35,9 +47,9 @@ class CharacterProgressionMenu(Screen):
         Triggered before screen transition starts. Sets the initial conditions of the menu
         :return: None
         """
-        # sawyer is always the first character to show
-        self.player_species = "sawyer"
         self.get_stats()
+        # sawyer is always the first character to show up
+        self.player_species = Player.data[0].species
 
     @staticmethod
     def on_player_species(instance: Screen, player_species: str) -> None:
@@ -48,6 +60,7 @@ class CharacterProgressionMenu(Screen):
         :return: None
         """
         instance.player_name = Player.get_by_species(player_species).name
+        instance.display_stats()
 
     def get_stats(self) -> None:
         """
@@ -78,6 +91,18 @@ class CharacterProgressionMenu(Screen):
             self.player_species = Player.data[0].species
         else:
             self.player_species = Player.data[idx+1].species
+
+    def display_stats(self):
+        """
+        Displays the stats of the selected player
+        :return: None
+        """
+        self.player_strength = self.players_temp_stats[self.player_species]["strength"]
+        self.player_health = self.players_temp_stats[self.player_species]["health"]
+        self.player_perc_critical = 0
+        self.player_moves = self.players_temp_stats[self.player_species]["moves"]
+        self.player_recovery = self.players_temp_stats[self.player_species]["recovery"]
+        self.player_trap_detect = self.players_temp_stats[self.player_species]["trap_spotting_chance"]
 
     def _get_current_player_index(self) -> int:
         """

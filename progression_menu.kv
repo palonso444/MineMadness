@@ -15,6 +15,15 @@
 <SwitchPlayerButton>
     opacity: 0.6
 
+<UpgradeInterface>
+    orientation: "horizontal"
+    Button:
+        text: "Downgrade"
+    GameLabel:
+        text: root.display_value if root.display_value is not None else ""
+    Button:
+        text: "Upgrade"
+
 <CharacterProgressionMenu>
     canvas:
         Rectangle:
@@ -65,28 +74,28 @@
                     cols: 2
                     ProgressionRowNameLabel:
                         text: "Strength"
-                    GameLabel:
-                        text: "UPGRADE"
+                    UpgradeInterface:
+                        display_value: str(root.player_strength) if root.player_strength is not None else ""
                     ProgressionRowNameLabel:
                         text: "Health"
-                    GameLabel:
-                        text: "UPGRADE"
+                    UpgradeInterface:
+                        display_value: str(root.player_health) if root.player_health is not None else ""
                     ProgressionRowNameLabel:
                         text: "% Critical"
-                    GameLabel:
-                        text: "UPGRADE"
+                    UpgradeInterface:
+                        display_value: str(root.player_perc_critical) if root.player_perc_critical is not None else ""
                     ProgressionRowNameLabel:
                         text: "Moves"
-                    GameLabel:
-                        text: "UPGRADE"
+                    UpgradeInterface:
+                        display_value: str(root.player_moves) if root.player_moves is not None else ""
                     ProgressionRowNameLabel:
                         text: "Recovery"
-                    GameLabel:
-                        text: "UPGRADE"
+                    UpgradeInterface:
+                        display_value: str(root.player_recovery) if root.player_recovery is not None else ""
                     ProgressionRowNameLabel:
                         text: "Trap detection"
-                    GameLabel:
-                        text: "UPGRADE"
+                    UpgradeInterface:
+                        display_value: str(root.player_trap_detect) if root.player_trap_detect is not None else ""
             BoxLayout:
                 size_hint: 1, 0.1
                 padding: "0dp", "10dp", "0dp", "0dp"  # left, top, right, bottom

@@ -19,6 +19,7 @@ from player_class import Player
 from players import Sawyer, Hawkins, CrusherJane  # players needed for globals()
 from dungeon_classes import DungeonLayout
 from minemadness_game import MineMadnessGame
+from progression_menu import CharacterProgressionMenu
 import screen_classes as scr
 
 def get_resource_path(relative_path: str) -> str:
@@ -119,7 +120,7 @@ class MineMadnessApp(App):
         self.sm.add_widget(scr.OutGameOptions(name="out_game_options"))
         self.sm.add_widget(scr.InGameOptions(name="in_game_options"))
         self.sm.add_widget(scr.NewGameConfig(name="new_game_config"))
-        self.sm.add_widget(scr.CharacterProgressionMenu(name="progression_menu"))
+        self.sm.add_widget(CharacterProgressionMenu(name="progression_menu"))
         self.sm.current = "main_menu"
 
     def _load_music(self)-> None:

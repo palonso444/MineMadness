@@ -68,6 +68,18 @@ class Player(Character, ABC):
             # modify starting index because there is one less player in game
             game.activate_next_character(start_index_mod=-1)
 
+    @classmethod
+    def get_by_species(cls, species: str) -> Player:
+        """
+        Retrieves a player by species from Player.data
+        :param species: species of the player to get
+        :return: player instance
+        """
+        for player in Player.data:
+            if player.species == species:
+                return player
+        raise ValueError(f"Player of species {species} not found")
+
 
     def __init__(self):
         super().__init__()

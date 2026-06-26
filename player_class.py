@@ -103,6 +103,21 @@ class Player(Character, ABC):
         self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
         self.level_track: dict[int,dict] = {}
+        self.upgrade_track: dict[str,int] | None = None
+
+    @abstractmethod
+    def get_upgrade_cost(self)-> int:
+        """
+        Calculates the cost of upgrading a stat
+        """
+        pass
+
+    def initialize_upgrade_track(self)-> None:
+        """
+        Initializes the track of upgrades
+        :return: None
+        """
+        self.upgrade_track = {key: 1 for key in self.stats.to_dict().keys()}
 
     def setup_character(self, game: MineMadnessGame) -> None:
         """

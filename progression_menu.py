@@ -31,9 +31,9 @@ class SwitchPlayerButton(GameButton):
 class CharacterProgressionMenu(Screen):
     background = ObjectProperty(None, allownone=True)
     player_species = StringProperty(None)
-    player_name = StringProperty(None)
 
     # display properties
+    player_name = StringProperty(None)
     player_strength = NumericProperty(None)
     player_health = NumericProperty(None)
     player_perc_critical = NumericProperty(None)

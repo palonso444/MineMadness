@@ -28,6 +28,11 @@ class Sawyer(Player):
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
 
+        self.initialize_upgrade_track()
+
+    def get_upgrade_cost(self) -> None:
+        pass
+
     def can_dig(self, token_species: str) -> bool:
         """
         Determines if a Character is able to dig a certain kind of wall
@@ -108,6 +113,11 @@ class CrusherJane(Player):
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
+
+        self.initialize_upgrade_track()
+
+    def get_upgrade_cost(self) -> None:
+        pass
 
     @staticmethod
     def on_weapons(player: Player, value: int):
@@ -190,6 +200,11 @@ class Hawkins(Player):
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
+
+        self.initialize_upgrade_track()
+
+    def get_upgrade_cost(self) -> None:
+        pass
 
     def can_dig(self, token_species: str) -> bool:
         """

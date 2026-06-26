@@ -6,23 +6,38 @@
     font_size: "30sp"
 
 <PlayerNameLabel@GameLabel>
+    size_hint_x: 0.35
     halign: "center"
     font_size: "30sp"
 
-<ProgressionRowNameLabel@GameLabel>
-    font_size: "22sp"
+<RowNameLabel@GameLabel>
+    font_size: "25sp"
+    size_hint_x: 0.25
+
+<ColNameLabel@GameLabel>
+    halign: "center"
+    font_size: "25sp"
 
 <SwitchPlayerButton>
-    opacity: 0.6
+    size_hint_x: 0.15
 
 <UpgradeInterface>
     orientation: "horizontal"
-    Button:
-        text: "Downgrade"
+    size_hint_x: 0.75
     GameLabel:
+        size_hint_x: 0.40
+        halign: "center"
         text: root.display_value if root.display_value is not None else ""
-    Button:
-        text: "Upgrade"
+    GameLabel:
+        size_hint_x: 0.40
+        halign: "center"
+        text: "cost"
+    GameButton:
+        size_hint_x: 0.10
+        text: "D"
+    GameButton:
+        size_hint_x: 0.10
+        text: "U"
 
 <CharacterProgressionMenu>
     canvas:
@@ -52,6 +67,7 @@
             BoxLayout:
                 orientation: "horizontal"
                 size_hint: 1, 0.15
+                padding: "50dp", "5dp", "50dp", "10dp"  # left, top, right, bottom
                 SwitchPlayerButton:
                     text: "previous"
                     button_type: "previous"
@@ -62,37 +78,45 @@
                     text: "next"
                     button_type: "next"
                     progr_menu: root
+
             # scroll containing gridlayout with all upgradeable stats
             ScrollView:
-                size_hint: 1, 0.6
+                size_hint: 1, 0.5
                 GridLayout:
                     size_hint: 1, None
                     height: self.minimum_height
                     row_default_height: dp(50)
-                    # row_force_default: True
-                    rows: 6
+                    rows: 7
                     cols: 2
-                    ProgressionRowNameLabel:
+                    #colnames
+                    #Label:
+                    #Label:
+                    #ColNameLabel:
+                        #text: "upgrade cost"
+                    #ColNameLabel:
+                        #text: "actions"
+
+                    RowNameLabel:
                         text: "Strength"
                     UpgradeInterface:
                         display_value: str(root.player_strength) if root.player_strength is not None else ""
-                    ProgressionRowNameLabel:
+                    RowNameLabel:
                         text: "Health"
                     UpgradeInterface:
                         display_value: str(root.player_health) if root.player_health is not None else ""
-                    ProgressionRowNameLabel:
+                    RowNameLabel:
                         text: "% Critical"
                     UpgradeInterface:
                         display_value: str(root.player_perc_critical) if root.player_perc_critical is not None else ""
-                    ProgressionRowNameLabel:
+                    RowNameLabel:
                         text: "Moves"
                     UpgradeInterface:
                         display_value: str(root.player_moves) if root.player_moves is not None else ""
-                    ProgressionRowNameLabel:
+                    RowNameLabel:
                         text: "Recovery"
                     UpgradeInterface:
                         display_value: str(root.player_recovery) if root.player_recovery is not None else ""
-                    ProgressionRowNameLabel:
+                    RowNameLabel:
                         text: "Trap detection"
                     UpgradeInterface:
                         display_value: str(root.player_trap_detect) if root.player_trap_detect is not None else ""

@@ -1,16 +1,9 @@
 from __future__ import annotations
 from kivy.uix.screenmanager import Screen
-from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from player_class import Player
 from widget_classes import GameButton
 
-
-class UpgradeInterface(BoxLayout):
-    """
-    Widget including the value of the stat and upgrade and downgrade buttons
-    """
-    display_value = StringProperty(None)
 
 class SwitchPlayerButton(GameButton):
     """

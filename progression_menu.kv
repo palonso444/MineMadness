@@ -54,6 +54,7 @@
             size_hint: 0.9, 0.9
             pos_hint: {"center_x": 0.5, "center_y": 0.5}
             orientation: "vertical"
+
             # menu title and available XP points
             MenuLayout:
                 size_hint: 1, 0.2
@@ -61,6 +62,11 @@
                     text: "LEVEL COMPLETED!"
                 ProgressionSubtitleLabel:
                     text: "Total group XP: 4"
+
+            #spacer
+            Label:
+                size_hint_y: 0.025
+
             # character name (out of scroll)
             BoxLayout:
                 orientation: "horizontal"
@@ -77,6 +83,10 @@
                     button_type: "next"
                     progr_menu: root
 
+            #spacer
+            Label:
+                size_hint_y: 0.025
+
             #colnames (out of scroll)
             BoxLayout:
                 size_hint_y: 0.1
@@ -92,7 +102,7 @@
 
             # scroll containing gridlayout with all upgradeable stats
             ScrollView:
-                size_hint: 1, 0.5
+                size_hint: 1, 0.45
                 GridLayout:
                     size_hint: 1, None
                     height: self.minimum_height

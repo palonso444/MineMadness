@@ -12,7 +12,7 @@
 
 <RowNameLabel@GameLabel>
     font_size: "25sp"
-    size_hint_x: 0.25
+    size_hint_x: 0.3
 
 <ColNameLabel@GameLabel>
     halign: "center"
@@ -21,23 +21,21 @@
 <SwitchPlayerButton>
     size_hint_x: 0.15
 
-<UpgradeInterface>
+<UpgradeButtons@BoxLayout>
     orientation: "horizontal"
-    size_hint_x: 0.75
-    GameLabel:
-        size_hint_x: 0.40
-        halign: "center"
-        text: root.display_value if root.display_value is not None else ""
-    GameLabel:
-        size_hint_x: 0.40
-        halign: "center"
-        text: "cost"
+    size_hint_x: 0.2
+    spacing: "4dp"
+    padding: "0dp", "2dp", "0dp", "2dp"  # left, top, right, bottom
     GameButton:
-        size_hint_x: 0.10
+        size_hint_x: 0.5
         text: "D"
     GameButton:
-        size_hint_x: 0.10
+        size_hint_x: 0.5
         text: "U"
+
+<DisplayLabel@GameLabel>
+    size_hint_x: 0.25
+    halign: "center"
 
 <CharacterProgressionMenu>
     canvas:
@@ -66,7 +64,7 @@
             # character name (out of scroll)
             BoxLayout:
                 orientation: "horizontal"
-                size_hint: 1, 0.15
+                size_hint: 1, 0.1
                 padding: "50dp", "5dp", "50dp", "10dp"  # left, top, right, bottom
                 SwitchPlayerButton:
                     text: "previous"
@@ -79,6 +77,19 @@
                     button_type: "next"
                     progr_menu: root
 
+            #colnames (out of scroll)
+            BoxLayout:
+                size_hint_y: 0.1
+                RowNameLabel:
+                    text: ""
+                DisplayLabel:
+                    text: ""
+                DisplayLabel:
+                    text: "upgrade cost"
+                DisplayLabel:
+                    size_hint_x: 0.2
+                    text: "actions"
+
             # scroll containing gridlayout with all upgradeable stats
             ScrollView:
                 size_hint: 1, 0.5
@@ -86,40 +97,57 @@
                     size_hint: 1, None
                     height: self.minimum_height
                     row_default_height: dp(50)
-                    rows: 7
-                    cols: 2
-                    #colnames
-                    #Label:
-                    #Label:
-                    #ColNameLabel:
-                        #text: "upgrade cost"
-                    #ColNameLabel:
-                        #text: "actions"
+                    rows: 6
+                    cols: 4
 
                     RowNameLabel:
                         text: "Strength"
-                    UpgradeInterface:
-                        display_value: str(root.player_strength) if root.player_strength is not None else ""
+                    DisplayLabel:
+                        text: str(root.player_strength) if root.player_strength is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
                     RowNameLabel:
                         text: "Health"
-                    UpgradeInterface:
-                        display_value: str(root.player_health) if root.player_health is not None else ""
+                    DisplayLabel:
+                        text: str(root.player_health) if root.player_health is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
                     RowNameLabel:
                         text: "% Critical"
-                    UpgradeInterface:
-                        display_value: str(root.player_perc_critical) if root.player_perc_critical is not None else ""
+                    DisplayLabel:
+                        text: str(root.player_perc_critical) if root.player_perc_critical is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
                     RowNameLabel:
                         text: "Moves"
-                    UpgradeInterface:
-                        display_value: str(root.player_moves) if root.player_moves is not None else ""
+                    DisplayLabel:
+                        text: str(root.player_moves) if root.player_moves is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
                     RowNameLabel:
                         text: "Recovery"
-                    UpgradeInterface:
-                        display_value: str(root.player_recovery) if root.player_recovery is not None else ""
+                    DisplayLabel:
+                        text: str(root.player_recovery) if root.player_recovery is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
                     RowNameLabel:
                         text: "Trap detection"
-                    UpgradeInterface:
-                        display_value: str(root.player_trap_detect) if root.player_trap_detect is not None else ""
+                    DisplayLabel:
+                        text: str(root.player_trap_detect) if root.player_trap_detect is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
             BoxLayout:
                 size_hint: 1, 0.1
                 padding: "0dp", "10dp", "0dp", "0dp"  # left, top, right, bottom

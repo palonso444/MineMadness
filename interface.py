@@ -1,8 +1,8 @@
-from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
 from random import choice
+import widget_classes as wdg
 
-from player_classes import Player
+from player_class import Player
 
 class AbilityButton(ToggleButton):
 
@@ -51,7 +51,7 @@ class AbilityButton(ToggleButton):
                         character.token.show_effect_token("armed", effect_ends=True)
                         character.ability_active = False
 
-class Interfacebutton(Button):
+class Interfacebutton(wdg.GameButton):
 
     types = ("jerky", "coffee", "tobacco", "whisky", "talisman")
 

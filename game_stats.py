@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from abc import ABC
 from random import randint, uniform
 from typing import ClassVar
@@ -30,7 +30,7 @@ class DungeonStats:
     def talisman_number(self) -> int:
         # Talisman does not appear in very first levels. In other levels has low frequency, ges higher when characters
         # are dead
-        from player_classes import Player
+        from player_class import Player
 
         dead_char: int = len(Player.get_all_with_state("dead"))
         trigger: int = randint(1, 10)
@@ -52,7 +52,7 @@ class DungeonStats:
         if self.stats_level < 3:
             return 0
 
-        from player_classes import Player
+        from player_class import Player
 
         for player in Player.get_all_with_state("exited"):
             if player.species == "hawkins":
@@ -83,7 +83,7 @@ class DungeonStats:
         if self.stats_level < 3:
             return 0
 
-        from player_classes import Player
+        from player_class import Player
 
         for player in Player.get_all_with_state("exited"):
             if player.species == "sawyer":
@@ -388,7 +388,7 @@ class CharacterStats(ABC):
 
     toughness: int = 0
     health: int | None = None
-    strength: list[int] | None = None
+    strength: int | None = None
     moves: int | None = None
 
     # needed for players in fight_on_tile()
@@ -411,46 +411,47 @@ class PlayerStats(CharacterStats, ABC):
     initial_weapons: int = 3
     advantage_strength_incr: int | None = None
     shooting_range: int | None = None
-    recovery_end_of_level: int = 0  # health points players heal at end of level
-    base_exp_to_level_up: int = 10
+    recovery: float | None = None
 
     def __post_init__(self):
         self.natural_health: int = self.health  # only modified by leveling up
         self.natural_moves: int = self.moves  # only modified by leveling up
-        self.natural_strength: list[int] = self.strength  # only modified by leveling up
-        self.exp_to_next_level: int = self.base_exp_to_level_up
+        self.natural_strength: int = self.strength  # only modified by leveling up
 
 
 @dataclass
 class SawyerStats(PlayerStats): # BALANCED
     health: int = 5
-    strength: list[int] = field(default_factory=lambda: [1,3])
+    strength: int = 1
     advantage_strength_incr: int = 5
     moves: int = 4
     digging_moves: int = 3
     trap_spotting_chance: float = 0.2
     trap_disarming_chance: float = 0.3
+    recovery: float = 0.0
 
 
 @dataclass
 class HawkinsStats(PlayerStats):  # BALANCED
     health: int = 8
-    strength: list[int] = field(default_factory=lambda: [1,4])
+    strength: list[int] = 2
     moves: int = 3
     shooting_range: int = 2
     trap_spotting_chance: float = 0.3
     trap_disarming_chance: float = 0.7
+    recovery: float = 0.0
 
 
 @dataclass
 class CrusherJaneStats(PlayerStats):  # BALANCED
     initial_weapons: int = 4
     health: int = 10
-    strength: list[int] = field(default_factory=lambda: [2,5])
+    strength: int = 3
     advantage_strength_incr: int = 2
     moves: int = 3
     trap_spotting_chance: float = 0.1
     trap_disarming_chance: float = 0.0
+    recovery: float = 0.0
 
 
 @dataclass
@@ -478,7 +479,7 @@ class MonsterStats(CharacterStats, ABC):
 class KoboldStats(MonsterStats): # BALANCED
     char: str = "K"
     health: int = 3
-    strength: list[int] = field(default_factory=lambda: [1,2])
+    strength: int = 2
     moves: int = 5
     random_motility: float = 1.0
     experience_when_killed: int = 6
@@ -502,7 +503,7 @@ class KoboldStats(MonsterStats): # BALANCED
 class BlindLizardStats(MonsterStats):  # BALANCED
     char: str = "L"
     health: int = 14
-    strength: list[int] = field(default_factory=lambda: [2,6])
+    strength: int = 4
     moves: int = 4
     random_motility: float = 1.0
     experience_when_killed: int = 18
@@ -523,7 +524,7 @@ class BlindLizardStats(MonsterStats):  # BALANCED
 class BlackDeathStats(MonsterStats):  # BALANCED
     char: str = "B"
     health: int = 1
-    strength: list[int] = field(default_factory=lambda: [3,50])
+    strength: int = 25
     moves: int = 7
     random_motility: float = 1.0
     dodging_ability: int = 8
@@ -554,7 +555,7 @@ class BlackDeathStats(MonsterStats):  # BALANCED
 class CaveHoundStats(MonsterStats):  # BALANCED
     char: str = "H"
     health: int = 12
-    strength: list[int] = field(default_factory=lambda: [2,4])
+    strength: int = 3
     moves: int = 6
     random_motility: float = 1.0
     experience_when_killed: int = 12
@@ -580,7 +581,7 @@ class CaveHoundStats(MonsterStats):  # BALANCED
 class GrowlStats(MonsterStats):  # BALANCED
     char: str = "G"
     health: int = 60
-    strength: list[int] = field(default_factory=lambda: [4,8])
+    strength: int = 6
     moves: int = 6
     random_motility: float = 0.5
     experience_when_killed: int = 30
@@ -606,7 +607,7 @@ class GrowlStats(MonsterStats):  # BALANCED
 class RockGolemStats(MonsterStats):  # BALANCED
     char: str = "R"
     health: int = 140
-    strength: list[int] = field(default_factory=lambda: [12,22])
+    strength: int = 22
     moves: int = 3
     experience_when_killed: int = 75
 
@@ -632,7 +633,7 @@ class RockGolemStats(MonsterStats):  # BALANCED
 class DarkGnomeStats(MonsterStats):  # BALANCED
     char: str = "O"
     health: int = 8
-    strength: list[int] = field(default_factory=lambda: [1,3])
+    strength: int = 2
     moves: int = 5
     random_motility: float = 0.5
     experience_when_killed: int = 6
@@ -658,7 +659,7 @@ class DarkGnomeStats(MonsterStats):  # BALANCED
 class NightmareStats(MonsterStats): # BALANCED
     char: str = "N"
     health: int = 35
-    strength: list[int] = field(default_factory=lambda: [2,6])
+    strength: int = 7
     random_motility: float = 0.2
     moves: int = 9
     experience_when_killed: int = 30
@@ -685,7 +686,7 @@ class NightmareStats(MonsterStats): # BALANCED
 class LindWormStats(MonsterStats):  # BALANCED
     char: str = "Y"
     health: int = 230
-    strength: list[int] = field(default_factory=lambda: [20,30])
+    strength: int = 30
     moves: int = 9
     experience_when_killed: int = 150
 
@@ -713,7 +714,7 @@ class LindWormStats(MonsterStats):  # BALANCED
 class WanderingShadowStats(MonsterStats):  # BALANCED
     char: str = "S"
     health: int = 7
-    strength: list[int] = field(default_factory=lambda: [1,4])
+    strength: int = 3
     moves: int = 6
     random_motility: float = 1.0
     dodging_ability: int = 14
@@ -738,7 +739,7 @@ class WanderingShadowStats(MonsterStats):  # BALANCED
 class DepthsWispStats(MonsterStats):  # BALANCED
     char: str = "W"
     health: int = 1
-    strength: list[int] = field(default_factory=lambda: [1,1])
+    strength: int = 1
     moves: int = 4
     dodging_ability: int = 14
     experience_when_killed: int = 3
@@ -764,7 +765,7 @@ class DepthsWispStats(MonsterStats):  # BALANCED
 class MountainDjinnStats(MonsterStats):  # BALANCED
     char: str = "D"
     health: int = 65
-    strength: list[int] = field(default_factory=lambda: [7,12])
+    strength: int = 10
     moves: int = 7
     dodging_ability: int = 14
     experience_when_killed: int = 40
@@ -791,7 +792,7 @@ class MountainDjinnStats(MonsterStats):  # BALANCED
 class PixieStats(MonsterStats):  # BALANCED
     char: str = "P"
     health: int = 2
-    strength: list[int] = field(default_factory=lambda: [1,1])
+    strength: int = 1
     moves: int = 4
     random_motility: float = 1.0
     dodging_ability: int = 10
@@ -816,7 +817,7 @@ class PixieStats(MonsterStats):  # BALANCED
 class RattleSnakeStats(MonsterStats):
     char: str = "V"
     health: int = 9
-    strength: list[int] = field(default_factory=lambda: [2,10])
+    strength: int = 6
     moves: int = 8
     max_attacks: int = 1
     random_motility: float = 0.2
@@ -843,7 +844,7 @@ class RattleSnakeStats(MonsterStats):
 class PenumbraStats(MonsterStats):
     char: str = "A"
     health: int = 15
-    strength: list[int] = field(default_factory=lambda: [2,5])
+    strength: int = 3
     moves: int = 12  # do not go below 7 or will not move due to max_attack and retreat moves
     max_attacks: int = 3
     random_motility: float = 0.4
@@ -873,7 +874,7 @@ class PenumbraStats(MonsterStats):
 class ClawJawStats(MonsterStats):
     char: str = "C"
     health: int = 42
-    strength: list[int] = field(default_factory=lambda: [2,6])
+    strength: int = 5
     moves: int = 7
     random_motility: float = 0.7
     experience_when_killed: int = 32
@@ -897,7 +898,7 @@ class ClawJawStats(MonsterStats):
 @dataclass
 class TrapStats:
     char: str = "!"
-    base_damage: list[int] = field(default_factory=lambda: [1, 2])
+    base_damage: int = 1
     base_experience_when_disarmed: int = 8
     experience_when_found: int = 10
 

@@ -4,9 +4,9 @@ from kivy.app import App
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.uix.screenmanager import Screen
 
-from player_classes import Player
+from player_class import Player
 from character_class import Character
-from monster_classes import Monster
+from monster_class import Monster
 from dungeon_classes import DungeonLayout
 
 
@@ -37,6 +37,8 @@ class MineMadnessGame(Screen):  # initialized in kv file
             dungeon.build_level()
             if game.level == 1 or game.advanced_start:
                 Player.set_player_order()
+            for player in Player.data:
+                player.update_level_track()
             Player.gems = 0
             App.get_running_app().save_game()
             game.ability_button_active = True
@@ -49,7 +51,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
         :return: None
         """
         self.update_label("name_label", self.active_character.name.upper())
-        self.update_experience_bar()
         self.update_inventory_interface()
         self.update_lower_interface()
 
@@ -103,17 +104,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 self.ids[label_id].text = f"{label_id.split('_')[0].capitalize()}: {value}"
         else:
             self.ids[label_id].text = ""
-
-    def update_experience_bar(self) -> None:
-        """
-        Updates the range of the experience bar according to the current active character.
-        :return: None
-        """
-        if self.active_character.kind == "player":
-            self.ids.experience_bar.max = self.active_character.stats.exp_to_next_level
-            self.ids.experience_bar.value = self.active_character.experience
-        else:
-            self.ids.experience_bar.value = 0
 
     def update_inventory_button(self, item: str, item_value: int) -> None:
         """
@@ -357,13 +347,20 @@ class MineMadnessGame(Screen):  # initialized in kv file
 
     def finish_level(self) -> None:
         """
-        Finishes the level and provides a new one
+        Finishes the level
         :return: None
         """
         Monster.data.clear()
         self.dungeon.unschedule_all_events()
         self.active_character = None
         self.turn = None
-        self.level += 1
+        App.get_running_app().show_progression_menu()
+
+    def setup_next_level(self) -> None:
+        """
+        Starts the next level
+        :return: None
+        """
         self.remove_dungeon_from_game()
+        self.level += 1  # must be updated here before adding dungeon
         self.add_dungeon_to_game()

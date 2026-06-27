@@ -1,5 +1,5 @@
 from __future__ import annotations
-from player_classes import Player
+from player_class import Player
 import game_stats as stats
 
 class Sawyer(Player):
@@ -21,13 +21,17 @@ class Sawyer(Player):
         self.ignores: list[str] = self.ignores + ["dynamite"]
 
         self.stats = stats.SawyerStats()
-        self._update_level_track(self.player_level)
 
         self.special_items: dict[str, int] = {"powder": 2}
         self.ability_display: str = "Hide"
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
+
+        self.initialize_upgrade_track()
+
+    def get_upgrade_cost(self) -> None:
+        pass
 
     def can_dig(self, token_species: str) -> bool:
         """
@@ -48,31 +52,6 @@ class Sawyer(Player):
         :return: True if the Sawyer can fight, False otherwise
         """
         return self.weapons > 0
-
-    @staticmethod
-    def on_player_level(player: Player, level: int):
-        """Sawyer is a young, inexperienced but cunning character. Is it not particularly strong
-        but her dexterity allows her to survive the most compromised situations.
-
-        Sawyer increases 1 movement every 2 levels,
-        1 health per level,
-        1 recovery_end_of_level per level,
-        1 max damage every 2 levels
-        +0.05 in trap spotting chance every 3 levels
-        """
-        if player.game is not None:
-            player._level_up_health(2)
-            player.stats.recovery_end_of_level += 1
-
-            if not level % 2 == 0:
-                player._level_up_moves(1)
-                player._level_up_strength((0, 1))
-
-            if level % 3 == 0:
-                player.stats.trap_spotting_chance += 0.05 \
-                    if player.stats.trap_spotting_chance < 1.0 else player.stats.trap_spotting_chance
-
-            player._update_level_track(level)
 
     def perform_passive_action(self) -> None:
         """
@@ -128,13 +107,17 @@ class CrusherJane(Player):
         self.ignores: list[str] = self.ignores + ["powder", "dynamite", "treasure"]
 
         self.stats = stats.CrusherJaneStats()
-        self._update_level_track(self.player_level)
 
         self.special_items: dict[str:int] = {"weapons": None}
         self.ability_display: str = "Weapons"
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
+
+        self.initialize_upgrade_track()
+
+    def get_upgrade_cost(self) -> None:
+        pass
 
     @staticmethod
     def on_weapons(player: Player, value: int):
@@ -166,24 +149,6 @@ class CrusherJane(Player):
         :return: True, always
         """
         return True
-
-    @staticmethod
-    def on_player_level(player: Player, level: int):
-        """Crusher Jane is a big, strong and not particularly intelligent woman. Relies on brute strength and on her
-        physical endurance to resist the most brutal hits.
-        Crusher Jane increases 1 movement every 4 levels,
-        2 health every level,
-        (+1, +2) strength per level,
-        1 recovery_end_of_level per level
-        """
-        if player.game is not None:
-            player._level_up_health(3)
-            player._level_up_strength((1, 2))
-            if not level % 2 == 0:
-                player.stats.recovery_end_of_level += 1
-            if level % 4 == 0:
-                player._level_up_moves(1)
-            player._update_level_track(level)
 
     def perform_passive_action(self) -> None:
         """
@@ -229,13 +194,17 @@ class Hawkins(Player):
         self.ignores: list[str] = self.ignores+ ["powder", "treasure"]
 
         self.stats = stats.HawkinsStats()
-        self._update_level_track(self.player_level)
 
         self.special_items: dict[str:int] = {"dynamite": 2}
         self.ability_display: str = "Dynamite"
 
         if attributes_dict is not None:
             self.overwrite_attributes(attributes_dict)
+
+        self.initialize_upgrade_track()
+
+    def get_upgrade_cost(self) -> None:
+        pass
 
     def can_dig(self, token_species: str) -> bool:
         """
@@ -258,29 +227,6 @@ class Hawkins(Player):
         :return: True if Hawkins can fight, False otherwise
         """
         return self.weapons > 0
-
-    @staticmethod
-    def on_player_level(player: Player, level: int):
-        """Hawkins is an old and wise man. It is trained by the most difficult situations of life, and it is strong
-        for his age. But his most valuable asset is his wits.
-        Hawkins increases 1 movement every 3 levels
-        1 health point every level
-        1 recovery_end_of_level every 3 levels
-        1 max damage every level and 1 min damage every 2 levels
-        + 0.05 in trap_spotting every 2 levels
-        """
-        if player.game is not None:
-            player._level_up_health(2)
-            player._level_up_strength((0, 1))
-            if not level % 2 == 0:
-                player._level_up_strength((1, 0))
-            if level % 3 == 0:
-                player._level_up_moves(1)
-                player.stats.recovery_end_of_level += 1
-            if level % 2 == 0:
-                player.stats.trap_spotting_chance += 0.05 \
-                    if player.stats.trap_spotting_chance < 1.0 else player.stats.trap_spotting_chance
-            player._update_level_track(level)
 
     def perform_passive_action(self) -> None:
         """

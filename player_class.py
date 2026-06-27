@@ -18,6 +18,7 @@ class Player(Character, ABC):
 
     data: list[Character] = []
     gems: int = 0
+    group_xp: int = 0
 
     @classmethod
     def set_player_order(cls) -> None:
@@ -67,6 +68,18 @@ class Player(Character, ABC):
             # modify starting index because there is one less player in game
             game.activate_next_character(start_index_mod=-1)
 
+    @classmethod
+    def get_by_species(cls, species: str) -> Player:
+        """
+        Retrieves a player by species from Player.data
+        :param species: species of the player to get
+        :return: player instance
+        """
+        for player in Player.data:
+            if player.species == species:
+                return player
+        raise ValueError(f"Player of species {species} not found")
+
 
     def __init__(self):
         super().__init__()
@@ -89,10 +102,22 @@ class Player(Character, ABC):
         # exclusive of Player class
         self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
-        self.level_track: dict[int,dict] = dict()
+        self.level_track: dict[int,dict] = {}
+        self.upgrade_track: dict[str,int] | None = None
 
-        self.bind(experience=self.on_experience)
-        self.bind(player_level=self.on_player_level)
+    @abstractmethod
+    def get_upgrade_cost(self)-> int:
+        """
+        Calculates the cost of upgrading a stat
+        """
+        pass
+
+    def initialize_upgrade_track(self)-> None:
+        """
+        Initializes the track of upgrades
+        :return: None
+        """
+        self.upgrade_track = {key: 1 for key in self.stats.to_dict().keys()}
 
     def setup_character(self, game: MineMadnessGame) -> None:
         """
@@ -108,7 +133,6 @@ class Player(Character, ABC):
         Sets up the Player to start a new level (not level 1)
         :return: None
         """
-        self.heal(self.stats.recovery_end_of_level)
         self.remove_all_effects()
         if self.is_hidden:  # there is no token at this state, we cannot call unhide()
             self.ignores.remove("pickable")
@@ -172,17 +196,6 @@ class Player(Character, ABC):
             raise KeyError(f"Player inventory has no item named {item}")
         self.inventory[item] += value
         self.game.update_inventory_button(item, self.inventory[item])
-
-    @staticmethod
-    @abstractmethod
-    def on_player_level(player: Player, level: int) -> None:
-        """
-        Logic of levelling up
-        :param player: instance of the player
-        :param level: new level value
-        :return: None
-        """
-        pass
 
     @abstractmethod
     def enhance_damage(self, damage: int) -> int:
@@ -272,28 +285,6 @@ class Player(Character, ABC):
         :return: None
         """
         self.weapons -= 1
-
-    @staticmethod
-    def on_experience(player, exp_value) -> None:
-        """
-        Checks if the player must level up and, if so, levels up
-        :param player: player instance
-        :param exp_value: experience value
-        :return: None
-        """
-        if exp_value >= player.stats.exp_to_next_level:
-            start_level: int = player.player_level
-            while exp_value >= player.stats.exp_to_next_level:
-                exp_value -= player.stats.exp_to_next_level
-                player.player_level += 1
-                player.stats.exp_to_next_level = (
-                    player.player_level * player.stats.base_exp_to_level_up
-                )
-
-            player.game.ids.experience_bar.max = player.stats.exp_to_next_level
-            player.experience = exp_value
-            player.token.effect_queue = [{"level_up": False} for _ in range(player.player_level - start_level)]
-            # experience bar updated by MineMadnessgame.update_interface()
 
     def remove_all_effects(self, turn: int = 0) -> None:
         """
@@ -479,8 +470,6 @@ class Player(Character, ABC):
 
         if opponent.stats.health <= 0:
             opponent.kill_character(opponent_tile)
-            self.experience += opponent.stats.experience_when_killed
-            self.game.ids.experience_bar.value = self.experience
 
         self.remaining_moves -= 1
 
@@ -511,9 +500,6 @@ class Player(Character, ABC):
         :param dungeon: DungeonLayout were the Player should be resurrected
         :return: None
         """
-        self.unbind(experience=self.on_experience)
-        self.unbind(player_level=self.on_player_level)
-
         self.player_level = self.player_level - 1 if self.player_level > 1 else 1
         for key, value in self.level_track[self.player_level].items():
             self.stats.__setattr__(key, value)
@@ -534,9 +520,6 @@ class Player(Character, ABC):
                 break
         location.place_item(self.kind, self.species, character=self)
         self.state = "in_game"
-
-        self.bind(experience=self.on_experience)
-        self.bind(player_level=self.on_player_level)
 
     def apply_toughness(self, damage):
         """
@@ -563,16 +546,16 @@ class Player(Character, ABC):
         """
         pass
 
-    def _update_level_track(self, level: int) -> None:
+    def update_level_track(self) -> None:
         """
         Adds a new level to the level track
-        :param level: level to add
         :return: None
         """
-        self.level_track[level] = {
+        self.level_track[self.game.level] = {
             "health": self.stats.natural_health,
             "moves": self.stats.natural_moves,
             "strength": self.stats.natural_strength,
+            #TODO: add other rellevant stats here (trap spotting and so on)
         }
 
     def _level_up_health(self, increase: int) -> None:

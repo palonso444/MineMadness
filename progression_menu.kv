@@ -1,0 +1,166 @@
+<ProgressionTitleLabel@TitleLabel>
+    font_size: "35sp"
+
+<ProgressionSubtitleLabel@GameLabel>
+    halign: "center"
+    font_size: "30sp"
+
+<PlayerNameLabel@GameLabel>
+    size_hint_x: 0.35
+    halign: "center"
+    font_size: "30sp"
+
+<RowNameLabel@GameLabel>
+    font_size: "25sp"
+    size_hint_x: 0.3
+
+<ColNameLabel@GameLabel>
+    halign: "center"
+    font_size: "25sp"
+
+<SwitchPlayerButton>
+    size_hint_x: 0.15
+
+<UpgradeButtons@BoxLayout>
+    orientation: "horizontal"
+    size_hint_x: 0.2
+    spacing: "4dp"
+    padding: "0dp", "2dp", "0dp", "2dp"  # left, top, right, bottom
+    GameButton:
+        size_hint_x: 0.5
+        text: "D"
+    GameButton:
+        size_hint_x: 0.5
+        text: "U"
+
+<DisplayLabel@GameLabel>
+    size_hint_x: 0.25
+    halign: "center"
+
+<CharacterProgressionMenu>
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            texture: self.background
+        Color:
+            rgba: 0, 0, 0, 0.7
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    FloatLayout:
+        # general layout
+        BoxLayout:
+            size_hint: 0.9, 0.9
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            orientation: "vertical"
+
+            # menu title and available XP points
+            MenuLayout:
+                size_hint: 1, 0.2
+                ProgressionTitleLabel:
+                    text: "LEVEL COMPLETED!"
+                ProgressionSubtitleLabel:
+                    text: "Total group XP: 4"
+
+            #spacer
+            Label:
+                size_hint_y: 0.025
+
+            # character name (out of scroll)
+            BoxLayout:
+                orientation: "horizontal"
+                size_hint: 1, 0.1
+                padding: "50dp", "5dp", "50dp", "10dp"  # left, top, right, bottom
+                SwitchPlayerButton:
+                    text: "previous"
+                    button_type: "previous"
+                    progr_menu: root
+                PlayerNameLabel:
+                    text: root.player_name if root.player_name is not None else ""
+                SwitchPlayerButton:
+                    text: "next"
+                    button_type: "next"
+                    progr_menu: root
+
+            #spacer
+            Label:
+                size_hint_y: 0.025
+
+            #colnames (out of scroll)
+            BoxLayout:
+                size_hint_y: 0.1
+                RowNameLabel:
+                    text: ""
+                DisplayLabel:
+                    text: ""
+                DisplayLabel:
+                    text: "upgrade cost"
+                DisplayLabel:
+                    size_hint_x: 0.2
+                    text: "actions"
+
+            # scroll containing gridlayout with all upgradeable stats
+            ScrollView:
+                size_hint: 1, 0.45
+                GridLayout:
+                    size_hint: 1, None
+                    height: self.minimum_height
+                    row_default_height: dp(50)
+                    rows: 6
+                    cols: 4
+
+                    RowNameLabel:
+                        text: "Strength"
+                    DisplayLabel:
+                        text: str(root.player_strength) if root.player_strength is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
+                    RowNameLabel:
+                        text: "Health"
+                    DisplayLabel:
+                        text: str(root.player_health) if root.player_health is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
+                    RowNameLabel:
+                        text: "% Critical"
+                    DisplayLabel:
+                        text: str(root.player_perc_critical) if root.player_perc_critical is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
+                    RowNameLabel:
+                        text: "Moves"
+                    DisplayLabel:
+                        text: str(root.player_moves) if root.player_moves is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
+                    RowNameLabel:
+                        text: "Recovery"
+                    DisplayLabel:
+                        text: str(root.player_recovery) if root.player_recovery is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
+                    RowNameLabel:
+                        text: "Trap detection"
+                    DisplayLabel:
+                        text: str(root.player_trap_detect) if root.player_trap_detect is not None else ""
+                    DisplayLabel:
+                        text: "cost"
+                    UpgradeButtons:
+
+            BoxLayout:
+                size_hint: 1, 0.1
+                padding: "0dp", "10dp", "0dp", "0dp"  # left, top, right, bottom
+                GameButton:
+                    text: "Ready for next level"
+                    on_release: app.start_next_level()

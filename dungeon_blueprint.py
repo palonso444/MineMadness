@@ -98,7 +98,7 @@ class Blueprint:
         """
         return any(self.spot_is_free((y, x)) for y in range(self.y_axis) for x in range(self.x_axis))
 
-    def random_location(self) -> tuple [int, int]:
+    def get_random_position(self) -> tuple [int, int]:
         """
         Returns a random position of the grid
         :return: coordinates of the random position
@@ -124,7 +124,7 @@ class Blueprint:
         for number in range(number_of_items):
 
             while self.check_if_free_spots():
-                position = self.random_location()
+                position = self.get_random_position()
 
                 if self.spot_is_free(position):
                     self.place_single_item(item, position)
@@ -146,7 +146,7 @@ class Blueprint:
 
         items = deque(items)
         if position is None:
-            position = self.random_location()
+            position = self.get_random_position()
 
         self.place_single_item(items.popleft(), position=position)
         placed_positions = {position}
@@ -154,7 +154,7 @@ class Blueprint:
         max_dist = max_dist if max_dist is not None and max_dist >= min_dist else min_dist
 
         while len(tested_positions) < self.area and len(items) > 0:
-            cand_position = self.random_location()
+            cand_position = self.get_random_position()
 
             if cand_position in tested_positions:
                 continue

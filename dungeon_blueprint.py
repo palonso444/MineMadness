@@ -1,5 +1,5 @@
 from collections import deque
-from random import randint
+from random import choice
 from items_kinds import get_item_kind
 
 
@@ -39,7 +39,7 @@ class Blueprint:
         This is defined as post_init because it needs self.position_template to be initialized
         """
         if self.layout is None:
-            self.layout: list[list[dict]] = self.generate_empty_layout(self.y_axis, self.x_axis)
+            self._generate_empty_layout(self.y_axis, self.x_axis)
 
     @staticmethod
     def get_distance(position1: tuple[int, int], position2: tuple[int, int]) -> int:
@@ -51,14 +51,21 @@ class Blueprint:
         """
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
-    def generate_empty_layout(self, y_axis: int, x_axis: int) -> list[list[dict]]:
+    def _generate_empty_layout(self, y_axis: int, x_axis: int) -> None:
         """
         Creates an empty grid of points of the specified dimensions
         :param y_axis: length of the y-axis
         :param x_axis: length of the x-axis
         :return: grid of points
         """
-        return [[self.position_template.copy() for _ in range(x_axis)] for _ in range(y_axis)]
+        self.layout = [[self.position_template.copy() for _ in range(x_axis)] for _ in range(y_axis)]
+
+    def _generate_spot_list(self) -> list[tuple[int, int]]:
+        """
+        Returns a list of all coordinates of the spots of the grid (y,x)
+        :return: list of coordinates
+        """
+        return [(y, x) for y in range(self.y_axis) for x in range(self.x_axis)]
 
     def to_dict(self) -> dict:
         """
@@ -99,20 +106,6 @@ class Blueprint:
         """
         return all(value is None for value in self.get_position(position).values())
 
-    def check_if_free_positions(self) -> bool:
-        """
-        Checks if any position of the grid has a value of "." (free)
-        :return: True if there is at least one free position, False otherwise
-        """
-        return any(self.position_is_free((y, x)) for y in range(self.y_axis) for x in range(self.x_axis))
-
-    def get_random_spot(self) -> tuple [int, int]:
-        """
-        Returns a random position of the grid
-        :return: coordinates of the random position
-        """
-        return randint(0, self.y_axis - 1), randint(0, self.x_axis - 1)
-
     def place_single_item(self, item:str, position: tuple[int,int]) -> None:
         """
         Places the specified item at the specified position of the map. Overwrites position if not free.
@@ -124,18 +117,22 @@ class Blueprint:
 
     def place_items(self, item: str, number_of_items: int = 1) -> None:
         """
-        Places a given number of items in the map. Does not overwrite occupied positions.
+        Places a given number of items in the map. Does not overwrite occupied positions. Items not possible to place
+        are skipped
         :param item: item to place
         :param number_of_items: number of items to place
         :return: None
         """
-        for number in range(number_of_items):
+        available_spots: list[tuple[int,int]] = self._generate_spot_list()
 
-            while self.check_if_free_positions():
-                position = self.get_random_spot()
-
-                if self.position_is_free(position):
-                    self.place_single_item(item, position)
+        for _ in range(number_of_items):
+            if len(available_spots) == 0:
+                break
+            while len(available_spots) > 0:
+                spot: tuple[int,int] = choice(available_spots)
+                available_spots.remove(spot)
+                if self.position_is_free(spot):
+                    self.place_single_item(item, spot)
                     break
 
     def place_items_as_group(self, items: list, min_dist: int, max_dist: int | None = None,
@@ -152,46 +149,44 @@ class Blueprint:
         :return: None
         """
         items = deque(items)
-        if position is None:
-            position = self.get_random_spot()
+        available_spots: list[tuple[int,int]] = self._generate_spot_list()
 
-        self.place_single_item(items.popleft(), position=position)
+        if position is None:
+            position: tuple[int,int] = choice(available_spots)
+
+        self.place_single_item(items.popleft(), position)
         placed_positions = {position}
-        tested_positions = {position}
+        available_spots.remove(position)
+
         max_dist = max_dist if max_dist is not None and max_dist >= min_dist else min_dist
 
-        while len(tested_positions) < self.area and len(items) > 0:
-            cand_position = self.get_random_spot()
+        while len(available_spots) > 0 and len(items) > 0:
+            cand_position = choice(available_spots)
+            available_spots.remove(cand_position)
 
-            if cand_position in tested_positions:
+            if not all(min_dist <= self.get_distance(cand_position, p) for p in placed_positions):
                 continue
 
-            tested_positions.add(cand_position)
+            if not (any(self.get_distance(cand_position, p) <= max_dist for p in placed_positions) if scatter
+            else all(self.get_distance(cand_position, p) <= max_dist for p in placed_positions)):
+                    continue
 
-            if all(min_dist <= self.get_distance(cand_position, position) for position in placed_positions):
-
-                if ((scatter and any (self.get_distance(cand_position, position) <= max_dist
-                                      for position in placed_positions)) or
-                        (not scatter and all(self.get_distance(cand_position, position) <= max_dist
-                                             for position in placed_positions))):
-
-                    placed_positions.add(cand_position)
-                    self.place_single_item(items.popleft(), position=cand_position)
+            placed_positions.add(cand_position)
+            self.place_single_item(items.popleft(), cand_position)
 
     def place_item_on_top(self, item: str, on_top_kind: str) -> None:
         """
-        Places an item on positions already occupied by items of different kind
+        Places an item on positions already occupied by items of different kind. Items not possible to place
+        are skipped
         :param item: item to place
         :param on_top_kind: on top of which kind of item?
         :return: None
         """
-        tested_spots: set[tuple[int, int]] = set()
-        while len(tested_spots) < self.area:
-            spot: tuple[int,int] = self.get_random_spot()
-            if spot in tested_spots:
-                continue
-            tested_spots.add(spot)
-            if self.has_item_kind(spot, on_top_kind):
+        available_spots: list[tuple[int,int]] = self._generate_spot_list()
+        while len(available_spots) > 0:
+            spot: tuple[int,int] = choice(available_spots)
+            available_spots.remove(spot)
+            if self.has_item_kind(spot, on_top_kind) and not self.has_item_kind(spot, get_item_kind(item)):
                 self.place_single_item(item, spot)
                 return
 

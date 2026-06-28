@@ -71,19 +71,19 @@ class DungeonLayout(GridLayout):
             player_chars: list[str] = ["%", "?", "&"]
         else:
             player_chars: list[str] = Player.get_alive_player_chars()
-        blueprint.place_items_as_group(player_chars, min_dist=1)
+        blueprint.place_items_as_group(player_chars,  min_dist=1)
         blueprint.place_items(" ", 1)
-        blueprint.place_items("o", self.stats.gem_number)
+        blueprint.place_items("o",  self.stats.gem_number)
         blueprint.place_items("t", self.stats.talisman_number)
         blueprint.place_items("d", self.stats.dynamite_number)
         blueprint.place_items("h", self.stats.powder_number)
 
         # add here elements to test
-        # blueprint.place_items("V", 5)
+        # blueprint.place_items("%", 1)
 
         # comment these two lines to avoid adding elements to the dungeon
-        #for item, frequency in self.stats.level_progression().items():
-            #blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
+        for item, frequency in self.stats.level_progression().items():
+            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
         return blueprint
 
@@ -98,7 +98,7 @@ class DungeonLayout(GridLayout):
         for y in range(self.blueprint.y_axis):
             for x in range(self.blueprint.x_axis):
 
-                if self.blueprint.get_position((y, x)) == " ":
+                if self.blueprint.has_item((y, x), " "):
                     tile: Tile = tiles.Tile(row=y, col=x, kind="exit", dungeon_instance=self)
                 else:
                     tile: Tile = tiles.Tile(row=y, col=x, kind="floor", dungeon_instance=self)
@@ -106,10 +106,10 @@ class DungeonLayout(GridLayout):
                 self.tiles_dict[tile.position] = tile
                 self.add_widget(tile)
 
-    def _match_blueprint(self) -> Character | None:
+    def _place_tokens(self) -> None:
         """
-        Matches the symbols of the DungeonLayout.blueprint with the corresponding tokens and characters
-        :return: the character ready to be set up for starting adventure, of None if there is no character
+        Places the tokens according to the blueprint and sets up the Token.character (if any)
+        :return: None
         """
         for tile in self.children:
 
@@ -117,174 +117,172 @@ class DungeonLayout(GridLayout):
             character = None
             token_kind = None
             token_species = None
-            match self.blueprint.get_position(tile_position):
+            if self.blueprint.has_item(tile_position, "%"):
+                if self.game.level == 1 or self.game.advanced_start:
+                    character = players.Sawyer()
+                    character.setup_character(game=self.game)
+                else:
+                    character: Player = players.Player.data[0]
+                    character.setup_for_new_level()
+                token_kind = "player"
+                token_species = "sawyer"
 
-                case "%":
-                    if self.game.level == 1 or self.game.advanced_start:
-                        character = players.Sawyer()
-                        character.setup_character(game=self.game)
-                    else:
-                        character: Player = players.Player.data[0]
-                        character.setup_for_new_level()
-                    token_kind = "player"
-                    token_species = "sawyer"
+            elif self.blueprint.has_item(tile_position, "?"):
+                if self.game.level == 1 or self.game.advanced_start:
+                    character = players.Hawkins()
+                    character.setup_character(game=self.game)
+                else:
+                    character: Player = Player.data[1]
+                    character.setup_for_new_level()
+                token_kind = "player"
+                token_species = "hawkins"
 
-                case "?":
-                    if self.game.level == 1 or self.game.advanced_start:
-                        character = players.Hawkins()
-                        character.setup_character(game=self.game)
-                    else:
-                        character: Player = Player.data[1]
-                        character.setup_for_new_level()
-                    token_kind = "player"
-                    token_species = "hawkins"
+            elif self.blueprint.has_item(tile_position, "&"):
+                if self.game.level == 1 or self.game.advanced_start:
+                    character = players.CrusherJane()
+                    character.setup_character(game=self.game)
+                else:
+                    character: Player = Player.data[2]
+                    character.setup_for_new_level()
+                token_kind = "player"
+                token_species = "crusherjane"
 
-                case "&":
-                    if self.game.level == 1 or self.game.advanced_start:
-                        character = players.CrusherJane()
-                        character.setup_character(game=self.game)
-                    else:
-                        character: Player = Player.data[2]
-                        character.setup_for_new_level()
-                    token_kind = "player"
-                    token_species = "crusherjane"
+            if self.blueprint.has_item(tile_position, "K"):
+                token_kind = "monster"
+                token_species = "kobold"
+                character: Monster = monsters.Kobold()
 
-                case "K":
-                    token_kind = "monster"
-                    token_species = "kobold"
-                    character: Monster = monsters.Kobold()
+            elif self.blueprint.has_item(tile_position, "L"):
+                token_kind = "monster"
+                token_species = "lizard"
+                character: Monster = monsters.BlindLizard()
 
-                case "L":
-                    token_kind = "monster"
-                    token_species = "lizard"
-                    character: Monster = monsters.BlindLizard()
+            elif self.blueprint.has_item(tile_position, "B"):
+                token_kind = "monster"
+                token_species = "blackdeath"
+                character = monsters.BlackDeath()
 
-                case "B":
-                    token_kind = "monster"
-                    token_species = "blackdeath"
-                    character = monsters.BlackDeath()
+            elif self.blueprint.has_item(tile_position, "H"):
+                token_kind = "monster"
+                token_species = "hound"
+                character: Monster = monsters.CaveHound()
 
-                case "H":
-                    token_kind = "monster"
-                    token_species = "hound"
-                    character: Monster = monsters.CaveHound()
+            elif self.blueprint.has_item(tile_position, "G"):
+                token_kind = "monster"
+                token_species = "growl"
+                character: Monster = monsters.Growl()
 
-                case "G":
-                    token_kind = "monster"
-                    token_species = "growl"
-                    character: Monster = monsters.Growl()
+            elif self.blueprint.has_item(tile_position, "R"):
+                token_kind = "monster"
+                token_species = "golem"
+                character: Monster = monsters.RockGolem()
 
-                case "R":
-                    token_kind = "monster"
-                    token_species = "golem"
-                    character: Monster = monsters.RockGolem()
+            elif self.blueprint.has_item(tile_position, "O"):
+                token_kind = "monster"
+                token_species = "gnome"
+                character: Monster = monsters.DarkGnome()
 
-                case "O":
-                    token_kind = "monster"
-                    token_species = "gnome"
-                    character: Monster = monsters.DarkGnome()
+            elif self.blueprint.has_item(tile_position, "N"):
+                token_kind = "monster"
+                token_species = "nightmare"
+                character: Monster = monsters.NightMare()
 
-                case "N":
-                    token_kind = "monster"
-                    token_species = "nightmare"
-                    character: Monster = monsters.NightMare()
+            elif self.blueprint.has_item(tile_position, "Y"):
+                token_kind = "monster"
+                token_species = "lindworm"
+                character: Monster = monsters.LindWorm()
 
-                case "Y":
-                    token_kind = "monster"
-                    token_species = "lindworm"
-                    character: Monster = monsters.LindWorm()
+            elif self.blueprint.has_item(tile_position, "S"):
+                token_kind = "monster"
+                token_species = "shadow"
+                character: Monster = monsters.WanderingShadow()
 
-                case "S":
-                    token_kind = "monster"
-                    token_species = "shadow"
-                    character: Monster = monsters.WanderingShadow()
+            elif self.blueprint.has_item(tile_position, "W"):
+                token_kind = "monster"
+                token_species = "wisp"
+                character: Monster = monsters.DepthsWisp()
 
-                case "W":
-                    token_kind = "monster"
-                    token_species = "wisp"
-                    character: Monster = monsters.DepthsWisp()
+            elif self.blueprint.has_item(tile_position, "D"):
+                token_kind = "monster"
+                token_species = "djinn"
+                character: Monster = monsters.MountainDjinn()
 
-                case "D":
-                    token_kind = "monster"
-                    token_species = "djinn"
-                    character: Monster = monsters.MountainDjinn()
+            elif self.blueprint.has_item(tile_position, "P"):
+                token_kind = "monster"
+                token_species = "pixie"
+                character: Monster = monsters.Pixie()
 
-                case "P":
-                    token_kind = "monster"
-                    token_species = "pixie"
-                    character: Monster = monsters.Pixie()
+            elif self.blueprint.has_item(tile_position, "V"):
+                token_kind = "monster"
+                token_species = "rattlesnake"
+                character: Monster = monsters.RattleSnake()
 
-                case "V":
-                    token_kind = "monster"
-                    token_species = "rattlesnake"
-                    character: Monster = monsters.RattleSnake()
+            elif self.blueprint.has_item(tile_position, "A"):
+                token_kind = "monster"
+                token_species = "penumbra"
+                character: Monster = monsters.Penumbra()
 
-                case "A":
-                    token_kind = "monster"
-                    token_species = "penumbra"
-                    character: Monster = monsters.Penumbra()
+            elif self.blueprint.has_item(tile_position, "C"):
+                token_kind = "monster"
+                token_species = "clawjaw"
+                character: Monster = monsters.ClawJaw()
 
-                case "C":
-                    token_kind = "monster"
-                    token_species = "clawjaw"
-                    character: Monster = monsters.ClawJaw()
+            if self.blueprint.has_item(tile_position, "#"):
+                token_kind = "wall"
+                token_species = "rock"
 
-                case "#":
-                    token_kind = "wall"
-                    token_species = "rock"
+            elif self.blueprint.has_item(tile_position, "{"):
+                token_kind = "wall"
+                token_species = "granite"
 
-                case "{":
-                    token_kind = "wall"
-                    token_species = "granite"
+            elif self.blueprint.has_item(tile_position, "*"):
+                token_kind = "wall"
+                token_species = "quartz"
 
-                case "*":
-                    token_kind = "wall"
-                    token_species = "quartz"
+            if self.blueprint.has_item(tile_position, "p"):
+                token_kind = "pickable"
+                token_species = "shovel"
 
-                case "p":
-                    token_kind = "pickable"
-                    token_species = "shovel"
+            elif self.blueprint.has_item(tile_position, "x"):
+                token_kind = "pickable"
+                token_species = "weapon"
 
-                case "x":
-                    token_kind = "pickable"
-                    token_species = "weapon"
+            elif self.blueprint.has_item(tile_position, "j"):
+                token_kind = "pickable"
+                token_species = "jerky"
 
-                case "j":
-                    token_kind = "pickable"
-                    token_species = "jerky"
+            elif self.blueprint.has_item(tile_position, "c"):
+                token_kind = "pickable"
+                token_species = "coffee"
 
-                case "c":
-                    token_kind = "pickable"
-                    token_species = "coffee"
+            elif self.blueprint.has_item(tile_position, "l"):
+                token_kind = "pickable"
+                token_species = "tobacco"
 
-                case "l":
-                    token_kind = "pickable"
-                    token_species = "tobacco"
+            elif self.blueprint.has_item(tile_position, "w"):
+                token_kind = "pickable"
+                token_species = "whisky"
 
-                case "w":
-                    token_kind = "pickable"
-                    token_species = "whisky"
+            elif self.blueprint.has_item(tile_position, "t"):
+                token_kind = "pickable"
+                token_species = "talisman"
 
-                case "t":
-                    token_kind = "pickable"
-                    token_species = "talisman"
+            elif self.blueprint.has_item(tile_position, "h"):
+                token_kind = "pickable"
+                token_species = "powder"
 
-                case "h":
-                    token_kind = "pickable"
-                    token_species = "powder"
+            elif self.blueprint.has_item(tile_position, "d"):
+                token_kind = "pickable"
+                token_species = "dynamite"
 
-                case "d":
-                    token_kind = "pickable"
-                    token_species = "dynamite"
+            elif self.blueprint.has_item(tile_position, "o"):
+                token_kind = "treasure"
+                token_species = "gem"
 
-                case "o":
-                    token_kind = "treasure"
-                    token_species = "gem"
-
-                case "!":
-                    token_kind = "trap"
-                    token_species = "trap"
-                    character: Trap = traps.Trap(game=self.game)
+            if self.blueprint.has_item(tile_position, "!"):
+                token_kind = "trap"
+                token_species = "trap"
+                character: Trap = traps.Trap(game=self.game)
 
             if character is not None and character.kind == "monster":
                 character.setup_character(game=self.game)  # Players are set up after matching blueprint
@@ -300,7 +298,7 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         self._set_tiles()
-        self._match_blueprint()
+        self._place_tokens()
         # must be called here to properly save torch positions in MineMadnessApp.get_game_state()
         self.dm.place_torches(size_modifier=0.5)
 

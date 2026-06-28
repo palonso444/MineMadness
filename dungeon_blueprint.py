@@ -1,10 +1,12 @@
 from collections import deque
 from random import randint
+from items_kinds import get_item_kind
 
 
 class Blueprint:
     """
-    Program-agnostic module to generate ASCII-based blueprints of dungeon rooms
+    Program-agnostic module to generate ASCII-based blueprints of dungeon rooms.
+    Supports multiple item kinds per position
     """
 
     def __init__(self, y_axis: int | None = None, x_axis: int | None = None, layout:list[list] | None = None):
@@ -12,6 +14,16 @@ class Blueprint:
         if layout is None and (y_axis is None or x_axis is None):
             raise ValueError("No None allowed in y_axis and x_axis if layout is None.")
 
+        self.position_template: dict[str, str | None] = {
+                                                            "player": None,
+                                                            "monster": None,
+                                                            "trap": None,
+                                                            "wall": None,
+                                                            "pickable": None,
+                                                            "treasure": None,
+                                                            "exit": None
+                                                        }
+        self.layout: list[list] | None = layout
         if x_axis is not None and y_axis is not None:
             self.y_axis: int = y_axis
             self.x_axis: int = x_axis
@@ -20,10 +32,14 @@ class Blueprint:
             self.x_axis: int = len(layout[0])
         self.area: int = self.y_axis * self.x_axis
 
-        if layout is None:
-            self.layout: list[list[str]] = self.generate_empty_layout(y_axis, x_axis)
-        else:
-            self.layout: list[list[str]] = layout
+        self.post_init()
+
+    def post_init(self) -> None:
+        """
+        This is defined as post_init because it needs self.position_template to be initialized
+        """
+        if self.layout is None:
+            self.layout: list[list[dict]] = self.generate_empty_layout(self.y_axis, self.x_axis)
 
     @staticmethod
     def get_distance(position1: tuple[int, int], position2: tuple[int, int]) -> int:
@@ -35,15 +51,14 @@ class Blueprint:
         """
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
-    @staticmethod
-    def generate_empty_layout(y_axis: int, x_axis: int) -> list[list[str]]:
+    def generate_empty_layout(self, y_axis: int, x_axis: int) -> list[list[dict]]:
         """
         Creates an empty grid of points of the specified dimensions
         :param y_axis: length of the y-axis
         :param x_axis: length of the x-axis
         :return: grid of points
         """
-        return [["." for _ in range(x_axis)] for _ in range(y_axis)]
+        return [[self.position_template.copy() for _ in range(x_axis)] for _ in range(y_axis)]
 
     def to_dict(self) -> dict:
         """
@@ -52,13 +67,21 @@ class Blueprint:
         """
         return{key: value for key, value in vars(self).items()}
 
-    def get_position(self, position:tuple[int,int]) -> str:
+    def get_position(self, position:tuple[int,int]) -> dict:
         """
         Returns the value of the specified position of the grid
         :param position: coordinates of the position whose value must be returned
-        :return: value of the specified position
+        :return: contents of the specified position
         """
         return self.layout[position[0]][position[1]]
+
+    def has_item(self, position:tuple[int,int], item: str) -> bool:
+        """
+        Checks if the passed positions has an item of the passed kind
+        :item: char of the item to check
+        :return: True if it has the item, False otherwise
+        """
+        return self.get_position(position)[get_item_kind(item)] == item
 
     def spot_is_free(self, position:tuple[int,int]) -> bool:
         """
@@ -66,9 +89,9 @@ class Blueprint:
         :param position: coordinates of the position
         :return: True if the position is free, False otherwise
         """
-        return self.get_position(position) == "."
+        return all(value is None for value in self.get_position(position).values())
 
-    def check_for_free_spots(self) -> bool:
+    def check_if_free_spots(self) -> bool:
         """
         Checks if any position of the grid has a value of "." (free)
         :return: True if there is at least one free position, False otherwise
@@ -82,14 +105,6 @@ class Blueprint:
         """
         return randint(0, self.y_axis - 1), randint(0, self.x_axis - 1)
 
-    def print_layout(self) -> None:
-        """
-        Prints the room grid in a pretty and legible way
-        :return: None
-        """
-        for row in self.layout:
-            print(" ".join(row))
-
     def place_single_item(self, item:str, position: tuple[int,int]) -> None:
         """
         Places the specified item at the specified position of the map. Overwrites position if not free.
@@ -97,7 +112,7 @@ class Blueprint:
         :param position: coordinates of the position where to place the item
         :return: None
         """
-        self.layout[position[0]][position[1]] = item
+        self.get_position(position)[get_item_kind(item)] = item
 
     def place_items(self, item: str, number_of_items = 1) -> None:
         """
@@ -108,7 +123,7 @@ class Blueprint:
         """
         for number in range(number_of_items):
 
-            while self.check_for_free_spots():
+            while self.check_if_free_spots():
                 position = self.random_location()
 
                 if self.spot_is_free(position):
@@ -163,4 +178,3 @@ if __name__ == "__main__":
     #test.place_items("4", 0.5)
     #test.place_equal_items("2",99)
     #test.place_items_as_group(("A","B","C", "D", "E"),1, 2, scatter=True)
-    test.print_layout()

@@ -113,9 +113,9 @@ class DungeonStats:
         torches = randint(area // 25, area // 12)
         return torches if torches < 8 else 8
 
-    def level_progression(self) -> dict[str:float]:
+    def level_progression(self) -> dict[str,float]:
         """
-        Organizes in a dictionary the frequency of items in the level
+        Organizes in a dictionary the frequency of items in the level.
         :return: dictionary with item.char as key and item frequency as value
         """
         total_freq: float | None = None

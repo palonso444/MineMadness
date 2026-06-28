@@ -77,13 +77,21 @@ class Blueprint:
 
     def has_item(self, position:tuple[int,int], item: str) -> bool:
         """
-        Checks if the passed positions has an item of the passed kind
+        Checks if the passed positions has an item
         :item: char of the item to check
         :return: True if it has the item, False otherwise
         """
         return self.get_position(position)[get_item_kind(item)] == item
 
-    def spot_is_free(self, position:tuple[int,int]) -> bool:
+    def has_item_kind(self, position:tuple[int,int], item_kind: str) -> bool:
+        """
+        Checks if the passed positions has an item of the passed kind
+        :item_kind: kind of the item to check
+        :return: True if it has the item, False otherwise
+        """
+        return self.get_position(position)[item_kind] is not None
+
+    def position_is_free(self, position:tuple[int,int]) -> bool:
         """
         Returns True if the value of the given position is "." (free)
         :param position: coordinates of the position
@@ -91,14 +99,14 @@ class Blueprint:
         """
         return all(value is None for value in self.get_position(position).values())
 
-    def check_if_free_spots(self) -> bool:
+    def check_if_free_positions(self) -> bool:
         """
         Checks if any position of the grid has a value of "." (free)
         :return: True if there is at least one free position, False otherwise
         """
-        return any(self.spot_is_free((y, x)) for y in range(self.y_axis) for x in range(self.x_axis))
+        return any(self.position_is_free((y, x)) for y in range(self.y_axis) for x in range(self.x_axis))
 
-    def get_random_position(self) -> tuple [int, int]:
+    def get_random_spot(self) -> tuple [int, int]:
         """
         Returns a random position of the grid
         :return: coordinates of the random position
@@ -114,7 +122,7 @@ class Blueprint:
         """
         self.get_position(position)[get_item_kind(item)] = item
 
-    def place_items(self, item: str, number_of_items = 1) -> None:
+    def place_items(self, item: str, number_of_items: int = 1) -> None:
         """
         Places a given number of items in the map. Does not overwrite occupied positions.
         :param item: item to place
@@ -123,10 +131,10 @@ class Blueprint:
         """
         for number in range(number_of_items):
 
-            while self.check_if_free_spots():
-                position = self.get_random_position()
+            while self.check_if_free_positions():
+                position = self.get_random_spot()
 
-                if self.spot_is_free(position):
+                if self.position_is_free(position):
                     self.place_single_item(item, position)
                     break
 
@@ -143,10 +151,9 @@ class Blueprint:
         scattered positioning but guarantees that all items are placed in most of the cases.
         :return: None
         """
-
         items = deque(items)
         if position is None:
-            position = self.get_random_position()
+            position = self.get_random_spot()
 
         self.place_single_item(items.popleft(), position=position)
         placed_positions = {position}
@@ -154,7 +161,7 @@ class Blueprint:
         max_dist = max_dist if max_dist is not None and max_dist >= min_dist else min_dist
 
         while len(tested_positions) < self.area and len(items) > 0:
-            cand_position = self.get_random_position()
+            cand_position = self.get_random_spot()
 
             if cand_position in tested_positions:
                 continue
@@ -171,10 +178,20 @@ class Blueprint:
                     placed_positions.add(cand_position)
                     self.place_single_item(items.popleft(), position=cand_position)
 
-if __name__ == "__main__":
+    def place_item_on_top(self, item: str, on_top_kind: str) -> None:
+        """
+        Places an item on positions already occupied by items of different kind
+        :param item: item to place
+        :param on_top_kind: on top of which kind of item?
+        :return: None
+        """
+        tested_spots: set[tuple[int, int]] = set()
+        while len(tested_spots) < self.area:
+            spot: tuple[int,int] = self.get_random_spot()
+            if spot in tested_spots:
+                continue
+            tested_spots.add(spot)
+            if self.has_item_kind(spot, on_top_kind):
+                self.place_single_item(item, spot)
+                return
 
-    test = Blueprint(10,10)
-    #test.place_single_item("%", (1,1))
-    #test.place_items("4", 0.5)
-    #test.place_equal_items("2",99)
-    #test.place_items_as_group(("A","B","C", "D", "E"),1, 2, scatter=True)

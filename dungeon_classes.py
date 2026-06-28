@@ -81,9 +81,13 @@ class DungeonLayout(GridLayout):
         # add here elements to test
         # blueprint.place_items("%", 1)
 
-        # comment these two lines to avoid adding elements to the dungeon
-        for item, frequency in self.stats.level_progression().items():
+        # comment these lines to avoid adding elements to the dungeon
+        # place everything but walls
+        for item, frequency in self.stats.level_progression()["non_walls"].items():
             blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
+        # place walls
+        for item, frequency in self.stats.level_progression()["walls"].items():
+            blueprint.place_items(item=item, number_of_items=int(frequency * blueprint.area))
 
         return blueprint
 

@@ -113,13 +113,13 @@ class DungeonStats:
         torches = randint(area // 25, area // 12)
         return torches if torches < 8 else 8
 
-    def level_progression(self) -> dict[str,float]:
+    def level_progression(self) -> dict[str,dict]:
         """
-        Organizes in a dictionary the frequency of items in the level.
-        :return: dictionary with item.char as key and item frequency as value
+        Organizes in a dictionary the frequency of monsters in the level.
+        :return: dictionary with Monster.char as key and monster frequency as value
         """
         total_freq: float | None = None
-        while total_freq is None or total_freq > self.max_total_freq:
+        while total_freq is None or total_freq < self.max_total_freq:
 
             total_monster_freq: float | None = None
             while (total_monster_freq is None or
@@ -186,14 +186,22 @@ class DungeonStats:
             total_freq: float = (total_monster_freq +
                                  total_wall_freq +
                                  total_weapon_shovel_freq +
-                                 total_item_freq +
+                                 # total_item_freq + # items don't count to the total as they are mostly hidden under walls
                                  total_trap_freq)
 
-        all_frequencies = {**monster_frequencies,
-                           **wall_frequencies,
-                           **weapon_shovel_frequencies,
-                           **item_frequencies,
-                           **trap_frequency}
+        all_frequencies = {
+                               "non_walls":
+                               {
+                                    **monster_frequencies,
+                                    **weapon_shovel_frequencies,
+                                    **item_frequencies,
+                                    **trap_frequency
+                               },
+                           "walls":
+                               {
+                                    **wall_frequencies
+                               }
+                           }
 
         del monster_frequencies, wall_frequencies, weapon_shovel_frequencies, item_frequencies, trap_frequency
         return all_frequencies

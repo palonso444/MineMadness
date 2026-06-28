@@ -1,3 +1,7 @@
+"""
+This dictionary is for the use of the Blueprint() class
+"""
+
 ITEMS_KINDS = \
     {
         "%": "player",

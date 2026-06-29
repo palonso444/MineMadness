@@ -104,7 +104,7 @@ class Blueprint:
         """
         return all(value is None for value in self.get_position(position).values())
 
-    def place_single_item(self, item:str, position: tuple[int,int]) -> None:
+    def place_item(self, item:str, position: tuple[int,int]) -> None:
         """
         Places the specified item at the specified position of the map. Overwrites position if not free.
         :param item: item to place
@@ -130,7 +130,7 @@ class Blueprint:
                 spot: tuple[int,int] = choice(available_spots)
                 available_spots.remove(spot)
                 if self.position_is_free(spot):
-                    self.place_single_item(item, spot)
+                    self.place_item(item, spot)
                     break
 
     def place_items_as_group(self, items: list, min_dist: int, max_dist: int | None = None,
@@ -152,7 +152,7 @@ class Blueprint:
         if position is None:
             position: tuple[int,int] = choice(available_spots)
 
-        self.place_single_item(items.popleft(), position)
+        self.place_item(items.popleft(), position)
         placed_positions = {position}
         available_spots.remove(position)
 
@@ -170,21 +170,49 @@ class Blueprint:
                     continue
 
             placed_positions.add(cand_position)
-            self.place_single_item(items.popleft(), cand_position)
+            self.place_item(items.popleft(), cand_position)
 
-    def place_item_on_top(self, item: str, on_top_kind: str) -> None:
+    def place_item_on_top(self, item: str, on_top_kind: str, skip: list[str] | None) -> None:
         """
         Places an item on positions already occupied by items of different kind. Items not possible to place
         are skipped
         :param item: item to place
         :param on_top_kind: on top of which kind of item?
+        :param skip: list of items chars of items of on_top_kind on which nothing should be placed
         :return: None
         """
         available_spots: list[tuple[int,int]] = self._generate_spot_list()
+        if skip is None:
+            skip: list = []
         while len(available_spots) > 0:
             spot: tuple[int,int] = choice(available_spots)
             available_spots.remove(spot)
-            if self.has_item_kind(spot, on_top_kind) and not self.has_item_kind(spot, get_item_kind(item)):
-                self.place_single_item(item, spot)
+            if (self.has_item_kind(spot, on_top_kind)
+                    and not self.has_item_kind(spot, get_item_kind(item))
+                    and not any(self.has_item(spot, item) for item in skip)):
+                self.place_item(item, spot)
                 return
+
+    def place_items_on_top_shuffled(self, numbers_of_items: dict[str,int], on_top_kind: str,
+                                    skip: list[str] | None = None) -> dict[str,int]:
+        """
+        Places a given number of items in the map in the same position as other items. It places one item of each type
+        at the time to avoid placing all the items of a type in a row. Does not overwrite positions occupied by items
+        placed by this same method. Items not possible to place are skipped
+        :param numbers_of_items: dict containing the item as keys and the number of items to place as value
+        :param on_top_kind: number of items to place
+        :param skip: list of items chars of items of on_top_kind on which nothing should be placed
+        :return: dictionary with the number of items placed
+        """
+        total_items: int = sum(value for value in numbers_of_items.values())
+        placed_items: dict = {item: 0 for item in numbers_of_items.keys()}
+
+        for _ in range(total_items):
+            for item, number in numbers_of_items.items():
+                if placed_items[item] < number:
+                    self.place_item_on_top(item, on_top_kind, skip)
+                    placed_items[item] += 1
+
+        return placed_items
+
 

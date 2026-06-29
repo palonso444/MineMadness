@@ -115,8 +115,23 @@ class DungeonStats:
 
     def level_progression(self) -> dict[str,dict]:
         """
-        Organizes in a dictionary the frequency of monsters in the level.
-        :return: dictionary with Monster.char as key and monster frequency as value
+        Organizes in a dictionary the frequency of tokens in the level. Distinguises between walls (may be placed on
+         top of things) and non walls. Example:
+        {
+            'non_walls':
+                        {
+                        'K': 0.08246315557241504,
+                        'L': 0,
+                        'B': 0,
+                        ...
+                        },
+         'walls': {
+                    '#': 0.31074701450139147,
+                    '{': 0,
+                    '*': 0
+                    }
+        }
+        :return: dictionary with Token.char as key and monster frequency as value
         """
         total_freq: float | None = None
         while total_freq is None or total_freq > self.max_total_freq:
@@ -186,11 +201,11 @@ class DungeonStats:
             total_freq: float = (total_monster_freq +
                                  total_wall_freq +
                                  total_weapon_shovel_freq +
-                                 total_item_freq +
+                                 # total_item_freq + items don't count as they are mostly hidden
                                  total_trap_freq)
 
         all_frequencies = {
-                               "non_walls":
+                            "non_walls":
                                {
                                     **monster_frequencies,
                                     **weapon_shovel_frequencies,

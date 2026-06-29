@@ -39,7 +39,7 @@ class Blueprint:
         This is defined as post_init because it needs self.position_template to be initialized
         """
         if self.layout is None:
-            self._generate_empty_layout(self.y_axis, self.x_axis)
+            self._generate_empty_layout()
 
     @staticmethod
     def get_distance(position1: tuple[int, int], position2: tuple[int, int]) -> int:
@@ -51,14 +51,12 @@ class Blueprint:
         """
         return abs(position1[0] - position2[0]) + abs(position1[1] - position2[1])
 
-    def _generate_empty_layout(self, y_axis: int, x_axis: int) -> None:
+    def _generate_empty_layout(self) -> None:
         """
         Creates an empty grid of points of the specified dimensions
-        :param y_axis: length of the y-axis
-        :param x_axis: length of the x-axis
         :return: grid of points
         """
-        self.layout = [[self.position_template.copy() for _ in range(x_axis)] for _ in range(y_axis)]
+        self.layout = [[self.position_template.copy() for _ in range(self.x_axis)] for _ in range(self.y_axis)]
 
     def _generate_spot_list(self) -> list[tuple[int, int]]:
         """

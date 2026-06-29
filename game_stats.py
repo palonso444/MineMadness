@@ -119,7 +119,7 @@ class DungeonStats:
         :return: dictionary with Monster.char as key and monster frequency as value
         """
         total_freq: float | None = None
-        while total_freq is None or total_freq < self.max_total_freq:
+        while total_freq is None or total_freq > self.max_total_freq:
 
             total_monster_freq: float | None = None
             while (total_monster_freq is None or

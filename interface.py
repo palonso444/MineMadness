@@ -140,16 +140,13 @@ class WhiskyButton(Interfacebutton):
     def on_release(self):
 
         character = self.game.active_character
-        effect_size = int(
-            (character.stats.natural_strength[0] + character.stats.natural_strength[1]) / 2
-            * self.stats.effect_size
-        )
+        effect_size = int((character.stats.natural_strength / 2) * self.stats.effect_size)
         effect_size = (
             effect_size
             if effect_size > self.stats.min_effect
             else self.stats.min_effect
         )
-        character.stats.strength[1] += effect_size
+        character.stats.strength += effect_size
         character.effects["strength"].append(
             {
                 "size": effect_size,

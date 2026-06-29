@@ -186,7 +186,7 @@ class DungeonStats:
             total_freq: float = (total_monster_freq +
                                  total_wall_freq +
                                  total_weapon_shovel_freq +
-                                 # total_item_freq + # items don't count to the total as they are mostly hidden under walls
+                                 total_item_freq +
                                  total_trap_freq)
 
         all_frequencies = {

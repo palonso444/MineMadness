@@ -1,0 +1,44 @@
+"""
+This dictionary is for the use of the Blueprint() class
+"""
+
+ITEMS_KINDS = \
+    {
+        "%": "player",
+        "?": "player",
+        "&": "player",
+        "K": "monster",
+        "L": "monster",
+        "B": "monster",
+        "H": "monster",
+        "G": "monster",
+        "R": "monster",
+        "O": "monster",
+        "N": "monster",
+        "Y": "monster",
+        "S": "monster",
+        "W": "monster",
+        "D": "monster",
+        "P": "monster",
+        "V": "monster",
+        "A": "monster",
+        "C": "monster",
+        "#": "wall",
+        "{": "wall",
+        "*": "wall",
+        "p": "pickable",
+        "x": "pickable",
+        "j": "pickable",
+        "c": "pickable",
+        "l": "pickable",
+        "w": "pickable",
+        "t": "pickable",
+        "h": "pickable",
+        "d": "pickable",
+        "o": "treasure",
+        "!": "trap",
+        " ": "exit"
+    }
+
+def get_item_kind(item: str) -> str:
+    return ITEMS_KINDS[item]

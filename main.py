@@ -1,0 +1,314 @@
+from __future__ import annotations
+from typing import Optional
+
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.lang import Builder
+from kivy.core.text import LabelBase
+from kivy.properties import NumericProperty, BooleanProperty, StringProperty
+from kivy.uix.screenmanager import ScreenManager, FadeTransition
+from kivy.core.audio import SoundLoader, Sound
+from kivy.core.window import Window
+from json import dump, load
+from os.path import exists, abspath, join
+from os import remove
+import sys
+
+from dungeon_blueprint import Blueprint
+from player_class import Player
+from players import Sawyer, Hawkins, CrusherJane  # players needed for globals()
+from dungeon_classes import DungeonLayout
+from minemadness_game import MineMadnessGame
+from progression_menu import CharacterProgressionMenu
+import screen_classes as scr
+
+def get_resource_path(relative_path: str) -> str:
+    """
+    This function is needed when compiling the game using Pyinstaller. It allows
+    the executable to find the resource files
+    :param relative_path: initial path of a resource files
+    :return: modified path of a resource file
+    """
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = abspath(".")
+
+    return join(base_path, relative_path)
+
+def setup_window_size_if_desktop(width: int, height: int) -> None:
+    """
+    Sets up the size of the window in case the game is running on desktop
+    :param width: width in pixels of the window
+    :param height: height in pixels of the window
+    :return: None
+    """
+    if getattr(sys, 'frozen', False):
+        Window.size = (width, height)  # width, height in pixels
+
+
+LabelBase.register(name = 'duality', fn_regular= get_resource_path('fonts/duality.otf'))
+LabelBase.register(name = 'edmunds', fn_regular= get_resource_path('fonts/edmunds_distressed.otf'))
+setup_window_size_if_desktop(500, 800)
+
+class MineMadnessApp(App):
+
+    music_on = BooleanProperty(None)
+    flickering_torches_on = BooleanProperty(None)
+    game_mode_normal = BooleanProperty(None)
+    ongoing_game = BooleanProperty(False)
+    saved_game = BooleanProperty(False)
+    game_over_message = StringProperty(None)
+    game_over_level = NumericProperty(None)
+
+    def __init__(self):
+        super().__init__()
+        self.game_mode_normal: bool = True
+        self.saved_game_file: str = "saved_game.json"
+        self.saved_game: bool = exists("saved_game.json")
+        self.music_file: str = "stocktune_celestial_dreams_unveiled.ogg"  # must be in music/ directory
+
+        self.music: Optional[Sound] = None
+        self.music_on: Optional[bool] = None
+
+        self.flickering_torches_on: bool = False
+
+        self.game: MineMadnessGame | None = None
+        self.sm: ScreenManager | None = None
+
+    def build(self) -> ScreenManager:
+        Builder.load_file(get_resource_path("./how_to_play.kv"))
+        Builder.load_file(get_resource_path("./progression_menu.kv"))
+        self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
+        return self.sm
+
+    def show_loading_screen(self) -> None:
+        """
+        Shows a loading screen
+        :return: None
+        """
+        self.sm.add_widget(scr.LoadingScreen(name="loading_screen"))
+        self.sm.current = "loading_screen"
+
+    def on_start(self) -> None:
+        """
+        Schedules app launch some time ahead to avoid black screen issue during app launching on Android.
+        See the following GitHub issue for more info: https://github.com/kivy/python-for-android/issues/2720
+        :return: None
+        """
+        Clock.schedule_once(self._show_loading_screen, 2)
+
+    def _show_loading_screen(self, dt) -> None:
+        """
+        This delayed start ensures no frozen black screen when launching the app
+        :param dt: delta time
+        :return: None
+        """
+        self.show_loading_screen()
+        Clock.schedule_once(self._launch_app, 0)  # heavy music and screen loading scheduled to next frame
+
+    def _launch_app(self, dt) -> None:
+        """
+        Loads the music and sets up all screens
+        :param dt: delta time
+        :return: None
+        """
+        self._load_music()
+        self.sm.add_widget(scr.MainMenu(name="main_menu"))  # this widget must be added first for a smooth start
+        self.sm.add_widget(scr.HowToPlay(name="how_to_play"))
+        self.sm.add_widget(scr.GameOver(name="game_over"))
+        self.sm.add_widget(scr.OutGameOptions(name="out_game_options"))
+        self.sm.add_widget(scr.InGameOptions(name="in_game_options"))
+        self.sm.add_widget(scr.NewGameConfig(name="new_game_config"))
+        self.sm.add_widget(CharacterProgressionMenu(name="progression_menu"))
+        self.sm.current = "main_menu"
+
+    def _load_music(self)-> None:
+        """
+        Loads the music
+        :return: None
+        """
+        self.music = SoundLoader.load(get_resource_path(f"./music/{self.music_file}"))
+        self.music.loop = True
+        self.music_on: bool = True
+
+    def _clean_previous_game(self) -> None:
+        """
+        Cleans the data from the previous game and removes it from the ScreenManager. Erases everything
+        :return: None
+        """
+        self.game.clean_previous_game()
+        self.sm.remove_widget(self.sm.get_screen("game_screen"))
+        self.game = None
+
+    def start_new_game(self) -> None:
+        """
+        Starts a new game
+        :return: None
+        """
+        if self.saved_game:
+            remove(self.saved_game_file)
+            self.saved_game = False
+        if self.sm.has_screen("game_screen"):
+            self._clean_previous_game()
+        self.game = MineMadnessGame(name="game_screen")
+        self.ongoing_game = True
+        self._setup_dungeon_screen()
+
+    def _setup_dungeon_screen(self, dungeon: DungeonLayout | None = None) -> None:
+        """
+        Adds a new dungeon to MineMadnessGame
+        :param dungeon: dungeon to add. If None, a random one is added
+        :return: None
+        """
+        self.game.add_dungeon_to_game(dungeon)
+        self.sm.add_widget(self.game)
+        self.sm.current = "game_screen"
+
+    def save_game(self) -> None:
+        """
+        Saves the game
+        :return: None
+        """
+        with open(self.saved_game_file, "w") as f:
+            dump(self._get_game_state(), f, indent=4)
+        self.saved_game = True
+
+    def _get_game_state(self) -> dict:
+        """
+        Captures the state of the dungeon (blueprint) and the data of alive and dead players
+        and stores everything into a dictionary. ONLY WORKS IF USED AT THE VERY BEGINNING OF LEVEL,
+        NOT ONCE THE LEVEL STARTED
+        :return: dictionary with the state of the game (blueprint, alive players, dead players)
+        """
+        game_state = dict()
+        game_state["level"] = self.game.level
+        game_state["game_mode_normal"] = self.game_mode_normal
+        game_state["blueprint"] = self.game.dungeon.blueprint.to_dict()
+
+        # keys must be converted from tuple to str in order to be JSON encoded
+        game_state["torches_dict"] = {str(key): value for key,value in self.game.dungeon.dm.torches_dict.items()}\
+                                        if self.game.dungeon.dm.torches_dict is not None else None
+
+        # game is not JSON serializable
+        game_state["players"] = {player.__class__.__name__:
+                                     {k: v for k, v in player.to_dict().items() if k != "game"}
+                                       for player in Player.data}
+
+        # get all attributes defined as properties
+        for player in Player.data:
+            game_state["players"][player.__class__.__name__]["ability_active"] = player.ability_active
+            game_state["players"][player.__class__.__name__]["shovels"] = player.shovels
+            game_state["players"][player.__class__.__name__]["weapons"] = player.weapons
+            game_state["players"][player.__class__.__name__]["special_items"] = player.special_items
+
+        return game_state
+
+    def continue_game_or_load(self) -> None:
+        """
+        Regulates the function of the ContinueButton defined in the kv file
+        :return: None
+        """
+        if self.ongoing_game:
+            # resumes the flickering of lights
+            self.game.dungeon.dm.on_bright_spots(self.game.dungeon.dm, self.game.dungeon.dm.bright_spots)
+            self.sm.current = "game_screen"
+        else:
+            self.load_game()
+
+    def load_game(self) -> None:
+        """
+        Loads the game from the JSON file, cleans the previous one and generated Player.data
+        :return: None
+        """
+        with open(self.saved_game_file, "r") as f:
+            data = load(f)
+
+        # torches dict keys are str and need to be converted to tuple
+        if data["torches_dict"] is not None:
+            data["torches_dict"] = {(int(key[1]), int(key[4])): value
+                                    for key, value in data["torches_dict"].items()}
+        #level_track are nested dict and keys are str which must be converted to int
+        data = self._convert_all_digit_keys_to_int(data)
+
+        self.game_mode_normal = data["game_mode_normal"]
+        if self.sm.has_screen("game_screen"):
+            self._clean_previous_game()
+        self.game = MineMadnessGame(name="game_screen")
+        self.game.level = data["level"]
+
+        if self.game.level > 1:
+            Player.data = [globals()[key](attributes_dict=data["players"][key]) for key in data["players"].keys()]
+
+        for player in Player.data:
+            player.game = self.game
+
+        self.ongoing_game = True
+        self._setup_dungeon_screen(DungeonLayout(game=self.game,
+                                                 blueprint = Blueprint(layout=data["blueprint"]["layout"]),
+                                                 torches_dict = data["torches_dict"]))
+
+
+    def _convert_all_digit_keys_to_int(self, dictionary: dict) -> dict:
+        """
+        Checks all keys of a dictionary (also nested) and converts them to int if they are str and digit
+        :param dictionary: dictionary to convert
+        :return: converted dictionary
+        """
+        new_dict = dict()
+        for key, value in dictionary.items():
+            new_key = int(key) if isinstance(key, str) and key.isdigit() else key
+            new_dict[new_key] = self._convert_all_digit_keys_to_int(value) if isinstance(value, dict) else value
+
+        return new_dict
+
+    @staticmethod
+    def on_music_on(app, music_on):
+        if music_on:
+            app.music.volume = 1
+            app.music.play()
+        else:
+            app.music.stop()
+
+    def trigger_game_over(self, message: str) -> None:
+        """
+        Triggers game over screen
+        :param message: message to display on game over screen (reason why game over)
+        :return: None
+        """
+        if not self.game_mode_normal:
+            remove(self.saved_game_file)
+            self.saved_game = False
+        self.sm.transition.duration = 1.5
+        self.game_over_message = message
+        self.game_over_level = self.game.level
+        self.sm.current = "game_over"
+        self._clean_previous_game()
+        self.ongoing_game = False
+        self.sm.transition.duration = 0.3
+
+    def show_progression_menu(self) -> None:
+        """
+        Shows the character progression menu
+        :return: None
+        """
+        bg = self.game.export_as_image().texture
+        bg.flip_vertical()
+        self.sm.get_screen("progression_menu").background = bg
+        self.sm.current = "progression_menu"
+
+    def start_next_level(self) -> None:
+        """
+        Starts the next level
+        :return: None
+        """
+        self.game.setup_next_level()
+        self.sm.current = "game_screen"
+
+
+
+######################################################### START APP ###################################################
+
+
+if __name__ == "__main__":
+    MineMadnessApp().run()

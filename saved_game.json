@@ -1,0 +1,629 @@
+{
+    "level": 1,
+    "game_mode_normal": true,
+    "blueprint": {
+        "position_template": {
+            "player": null,
+            "monster": null,
+            "trap": null,
+            "wall": null,
+            "pickable": null,
+            "treasure": null,
+            "exit": null
+        },
+        "layout": [
+            [
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": " "
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": "H",
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                }
+            ],
+            [
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                }
+            ],
+            [
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                }
+            ],
+            [
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": "o",
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                }
+            ],
+            [
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": "%",
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                }
+            ],
+            [
+                {
+                    "player": "&",
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": "?",
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                }
+            ]
+        ],
+        "y_axis": 6,
+        "x_axis": 6,
+        "area": 36
+    },
+    "torches_dict": null,
+    "players": {
+        "Sawyer": {
+            "char": "%",
+            "name": "Sawyer",
+            "state": "in_game",
+            "kind": "player",
+            "species": "sawyer",
+            "stats": {
+                "toughness": 0,
+                "health": 5,
+                "strength": 1,
+                "moves": 4,
+                "experience_when_killed": null,
+                "initial_shovels": 3,
+                "digging_moves": 3,
+                "initial_weapons": 3,
+                "advantage_strength_incr": 5,
+                "shooting_range": null,
+                "recovery": 0.0,
+                "percent_critical": 0.05,
+                "upgrade_track": {
+                    "toughness": 1,
+                    "health": 1,
+                    "strength": 1,
+                    "moves": 1,
+                    "experience_when_killed": 1,
+                    "initial_shovels": 1,
+                    "digging_moves": 1,
+                    "initial_weapons": 1,
+                    "advantage_strength_incr": 1,
+                    "shooting_range": 1,
+                    "recovery": 1,
+                    "percent_critical": 1,
+                    "upgrade_track": 1,
+                    "trap_spotting_chance": 1,
+                    "trap_disarming_chance": 1,
+                    "natural_health": 1,
+                    "natural_moves": 1,
+                    "natural_strength": 1
+                },
+                "trap_spotting_chance": 0.2,
+                "trap_disarming_chance": 0.3,
+                "natural_health": 5,
+                "natural_moves": 4,
+                "natural_strength": 1
+            },
+            "blocked_by": [
+                "wall",
+                "monster",
+                "trap"
+            ],
+            "cannot_share_tile_with": [
+                "wall",
+                "monster",
+                "player"
+            ],
+            "ignores": [
+                "light",
+                "dynamite"
+            ],
+            "invisible": false,
+            "step_transition": "in_out_quad",
+            "step_duration": 0.35,
+            "inventory": {
+                "jerky": 2,
+                "coffee": 0,
+                "tobacco": 0,
+                "whisky": 0,
+                "talisman": 0
+            },
+            "effects": {
+                "moves": [],
+                "toughness": [],
+                "strength": []
+            },
+            "level_track": {
+                "1": {
+                    "health": 5,
+                    "moves": 4,
+                    "strength": 1
+                }
+            },
+            "ability_display": "Hide",
+            "ability_active": false,
+            "shovels": 3,
+            "weapons": 3,
+            "special_items": {
+                "powder": 2
+            }
+        },
+        "Hawkins": {
+            "char": "?",
+            "name": "Hawkins",
+            "state": "in_game",
+            "kind": "player",
+            "species": "hawkins",
+            "stats": {
+                "toughness": 0,
+                "health": 8,
+                "strength": 2,
+                "moves": 3,
+                "experience_when_killed": null,
+                "initial_shovels": 3,
+                "digging_moves": 1,
+                "initial_weapons": 3,
+                "advantage_strength_incr": null,
+                "shooting_range": 2,
+                "recovery": 0.0,
+                "percent_critical": 0.05,
+                "upgrade_track": {
+                    "toughness": 1,
+                    "health": 1,
+                    "strength": 1,
+                    "moves": 1,
+                    "experience_when_killed": 1,
+                    "initial_shovels": 1,
+                    "digging_moves": 1,
+                    "initial_weapons": 1,
+                    "advantage_strength_incr": 1,
+                    "shooting_range": 1,
+                    "recovery": 1,
+                    "percent_critical": 1,
+                    "upgrade_track": 1,
+                    "trap_spotting_chance": 1,
+                    "trap_disarming_chance": 1,
+                    "natural_health": 1,
+                    "natural_moves": 1,
+                    "natural_strength": 1
+                },
+                "trap_spotting_chance": 0.3,
+                "trap_disarming_chance": 0.7,
+                "natural_health": 8,
+                "natural_moves": 3,
+                "natural_strength": 2
+            },
+            "blocked_by": [
+                "wall",
+                "monster",
+                "trap"
+            ],
+            "cannot_share_tile_with": [
+                "wall",
+                "monster",
+                "player"
+            ],
+            "ignores": [
+                "light",
+                "powder",
+                "treasure"
+            ],
+            "invisible": false,
+            "step_transition": "in_out_quad",
+            "step_duration": 0.35,
+            "inventory": {
+                "jerky": 2,
+                "coffee": 0,
+                "tobacco": 0,
+                "whisky": 0,
+                "talisman": 0
+            },
+            "effects": {
+                "moves": [],
+                "toughness": [],
+                "strength": []
+            },
+            "level_track": {
+                "1": {
+                    "health": 8,
+                    "moves": 3,
+                    "strength": 2
+                }
+            },
+            "ability_display": "Dynamite",
+            "ability_active": false,
+            "shovels": 3,
+            "weapons": 3,
+            "special_items": {
+                "dynamite": 2
+            }
+        },
+        "CrusherJane": {
+            "char": "&",
+            "name": "Crusher Jane",
+            "state": "in_game",
+            "kind": "player",
+            "species": "crusherjane",
+            "stats": {
+                "toughness": 0,
+                "health": 10,
+                "strength": 3,
+                "moves": 3,
+                "experience_when_killed": null,
+                "initial_shovels": 3,
+                "digging_moves": 1,
+                "initial_weapons": 4,
+                "advantage_strength_incr": 2,
+                "shooting_range": null,
+                "recovery": 0.0,
+                "percent_critical": 0.1,
+                "upgrade_track": {
+                    "toughness": 1,
+                    "health": 1,
+                    "strength": 1,
+                    "moves": 1,
+                    "experience_when_killed": 1,
+                    "initial_shovels": 1,
+                    "digging_moves": 1,
+                    "initial_weapons": 1,
+                    "advantage_strength_incr": 1,
+                    "shooting_range": 1,
+                    "recovery": 1,
+                    "percent_critical": 1,
+                    "upgrade_track": 1,
+                    "trap_spotting_chance": 1,
+                    "trap_disarming_chance": 1,
+                    "natural_health": 1,
+                    "natural_moves": 1,
+                    "natural_strength": 1
+                },
+                "trap_spotting_chance": 0.1,
+                "trap_disarming_chance": 0.0,
+                "natural_health": 10,
+                "natural_moves": 3,
+                "natural_strength": 3
+            },
+            "blocked_by": [
+                "wall",
+                "monster",
+                "trap"
+            ],
+            "cannot_share_tile_with": [
+                "wall",
+                "monster",
+                "player"
+            ],
+            "ignores": [
+                "light",
+                "powder",
+                "dynamite",
+                "treasure"
+            ],
+            "invisible": false,
+            "step_transition": "in_out_quad",
+            "step_duration": 0.35,
+            "inventory": {
+                "jerky": 2,
+                "coffee": 0,
+                "tobacco": 0,
+                "whisky": 0,
+                "talisman": 0
+            },
+            "effects": {
+                "moves": [],
+                "toughness": [],
+                "strength": []
+            },
+            "level_track": {
+                "1": {
+                    "health": 10,
+                    "moves": 3,
+                    "strength": 3
+                }
+            },
+            "ability_display": "Weapons",
+            "ability_active": false,
+            "shovels": 3,
+            "weapons": 4,
+            "special_items": {
+                "weapons": 4
+            }
+        }
+    }
+}

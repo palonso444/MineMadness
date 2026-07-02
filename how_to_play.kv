@@ -1,0 +1,116 @@
+#: import get_resource_path main.get_resource_path
+#:set picture_width_hint 0.2
+
+<HowToPlayLayout@BoxLayout>
+    orientation: "horizontal"
+    padding: "10dp"
+    spacing: "10dp"
+    size_hint: 1, None  # x_axis, y_axis
+    height: self.minimum_height
+
+<HowToPlayLabel@Label>
+    font_size: "30sp"
+    # size of Label is dynamic depending on number of pictures in the parent Layout
+    size_hint: 1 - (len(self.parent.children) - 1) * picture_width_hint, None
+    height: self.texture_size[1]
+    text_size: self.width, None
+
+<HowToPlayPicture@Image>
+    size_hint: picture_width_hint, 1
+    pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+<HowToPlay>
+    MenuLayout:
+        orientation: "vertical"
+        size_hint: 1, 1
+
+        ScrollView:
+            size_hint: 1, 0.9
+
+            MenuLayout:
+                orientation: "vertical"
+                size_hint: 1, None
+                height: self.minimum_height
+                HowToPlayLayout:
+                    HowToPlayLabel:
+                        text_size: self.size  # needed to make halign work
+                        halign: "center"
+                        text: "How To Play"
+                        font_name: "edmunds"
+                        font_size: "60sp"
+                        color: 1, 0, 0, 1  # red
+                HowToPlayLayout:
+                    HowToPlayLabel:
+                        text: "In this endless mine, innumerable foes and riches await in the darkness.\nHow deep can you go?"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/gemtoken.png")
+                    HowToPlayPicture:
+                        source: get_resource_path("./backgrounds/exitbackground.png")
+                    HowToPlayLabel:
+                        text: "Collect all gems and exit through the door to the next level!"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/traptoken.png")
+                    HowToPlayLabel:
+                        text: "Double-tap on a character to skip the turn and attempt to uncover traps within movement range."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/sawyertoken.png")
+                    HowToPlayLabel:
+                        text: "SAWYER: the weakest and the only character capable to pick up gems. Deadly if attacking hidden!"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/hawkinstoken.png")
+                    HowToPlayLabel:
+                        text: "HAWKINS: can dig through almost any wall without shovels and blow up stuff with dynamite!"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/crusherjanetoken.png")
+                    HowToPlayLabel:
+                        text: "CRUSHER JANE: the tank. Can kill with no weapons. With weapons, she is even more lethal!"
+                HowToPlayLayout:
+                    HowToPlayLabel:
+                        text: "Objects left behind by lost adventurers will aid you in this perilous quest:"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/weapontoken.png")
+                    HowToPlayLabel:
+                        text: "WEAPONS: these jagged peaks once abandoned by early miners now serve as effective weapons!"
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/shoveltoken.png")
+                    HowToPlayLabel:
+                        text: "SHOVELS: these rusty tools can be still used to open your own path through the rocky walls."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/jerkytoken.png")
+                    HowToPlayLabel:
+                        text: "JERKY: this meat, dried for decades, will fill you with warmth and restore your lost life."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/coffeetoken.png")
+                    HowToPlayLabel:
+                        text: "COFFEE: black and thick as the surrounding darkness, this potent brew will quicken your stride."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/whiskytoken.png")
+                    HowToPlayLabel:
+                        text: "WHISKY: a swig of this potent firewater will give you the strength to fight courageously."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/tobaccotoken.png")
+                    HowToPlayLabel:
+                        text: "TOBACCO: chewing this aged tobacco will increase your toughness against monster attacks."
+                HowToPlayLayout:
+                    HowToPlayPicture:
+                        source: get_resource_path("./tokens/talismantoken.png")
+                    HowToPlayLabel:
+                        text: "TALISMAN: this rare indian relic will bring back dead characters or level up whoever uses it."
+                HowToPlayLayout:
+                    HowToPlayLabel:
+                        text: "You have learned enough to survive the early levels... Good luck, adventurer!"
+
+        MainMenuButton:
+            size_hint: 1, 0.1
+            font_size: "30sp"

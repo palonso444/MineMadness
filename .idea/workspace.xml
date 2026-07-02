@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="cbc96356-2f91-4f1c-8124-26cec5fa06dc" name="Changes" comment="menu works">
+      <change beforePath="$PROJECT_DIR$/progression_menu.py" beforeDir="false" afterPath="$PROJECT_DIR$/progression_menu.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="301-blueprint-as-list-of-dicts" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;palonso444&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/palonso444/MineMadness.git&quot;,
+    &quot;accountId&quot;: &quot;b5d67f0f-b888-4ecd-9091-54f18676ecc4&quot;
+  },
+  &quot;recentNewPullRequestHead&quot;: {
+    &quot;server&quot;: {
+      &quot;useHttp&quot;: false,
+      &quot;host&quot;: &quot;github.com&quot;,
+      &quot;port&quot;: null,
+      &quot;suffix&quot;: null
+    },
+    &quot;owner&quot;: &quot;palonso444&quot;,
+    &quot;repository&quot;: &quot;MineMadness&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="2mfRdHpo2KQZYrBnkxVObeT64CA" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.character_classes.executor": "Run",
+    "Python.dungeon_blueprint.executor": "Run",
+    "Python.dungeon_classes.executor": "Run",
+    "Python.game_stats.executor": "Run",
+    "Python.interface.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.monster_classes.executor": "Run",
+    "Python.player_classes.executor": "Run",
+    "Python.tile_classes.executor": "Run",
+    "Python.token_classes.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/home/pol/Documents/PycharmProjects/MineMadness/.buildozer/android/platform/python-for-android/pythonforandroid/recipes/cythonized_lights",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyIntegratedToolsModulesConfigurable"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/.buildozer/android/platform/python-for-android/pythonforandroid/recipes/cythonized_lights" />
+      <recent name="$PROJECT_DIR$/cythonized_lights" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/tokens" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/.buildozer/android/platform/python-for-android/pythonforandroid/recipes/cythonized_lights" />
+      <recent name="$PROJECT_DIR$/cythonized_lights" />
+      <recent name="$PROJECT_DIR$/.buildozer/android/platform/python-for-android/pythonforandroid/recipes/cythonized_lights/cythonized_lights" />
+      <recent name="$PROJECT_DIR$/.buildozer/android/platform/python-for-android/pythonforandroid/recipes" />
+      <recent name="$PROJECT_DIR$/.buildozer/android/platform/python-for-android/pythonforandroid" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="MineMadness" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-0e3be3396995-c546a90a8094-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.23339.19" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="cbc96356-2f91-4f1c-8124-26cec5fa06dc" name="Changes" comment="" />
+      <created>1727465731517</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1727465731517</updated>
+    </task>
+    <task id="LOCAL-00400" summary="fixed all bugs in theory">
+      <option name="closed" value="true" />
+      <created>1773825773113</created>
+      <option name="number" value="00400" />
+      <option name="presentableId" value="LOCAL-00400" />
+      <option name="project" value="LOCAL" />
+      <updated>1773825773114</updated>
+    </task>
+    <task id="LOCAL-00401" summary="flickering torches off">
+      <option name="closed" value="true" />
+      <created>1773828033671</created>
+      <option name="number" value="00401" />
+      <option name="presentableId" value="LOCAL-00401" />
+      <option name="project" value="LOCAL" />
+      <updated>1773828033672</updated>
+    </task>
+    <task id="LOCAL-00402" summary="further fixes">
+      <option name="closed" value="true" />
+      <created>1773840575131</created>
+      <option name="number" value="00402" />
+      <option name="presentableId" value="LOCAL-00402" />
+      <option name="project" value="LOCAL" />
+      <updated>1773840575131</updated>
+    </task>
+    <task id="LOCAL-00403" summary="updated spec">
+      <option name="closed" value="true" />
+      <created>1773843876511</created>
+      <option name="number" value="00403" />
+      <option name="presentableId" value="LOCAL-00403" />
+      <option name="project" value="LOCAL" />
+      <updated>1773843876512</updated>
+    </task>
+    <task id="LOCAL-00404" summary="updated spec">
+      <option name="closed" value="true" />
+      <created>1773846873804</created>
+      <option name="number" value="00404" />
+      <option name="presentableId" value="LOCAL-00404" />
+      <option name="project" value="LOCAL" />
+      <updated>1773846873804</updated>
+    </task>
+    <task id="LOCAL-00405" summary="fixed trap bug">
+      <option name="closed" value="true" />
+      <created>1774274417345</created>
+      <option name="number" value="00405" />
+      <option name="presentableId" value="LOCAL-00405" />
+      <option name="project" value="LOCAL" />
+      <updated>1774274417347</updated>
+    </task>
+    <task id="LOCAL-00406" summary="updated spec">
+      <option name="closed" value="true" />
+      <created>1779288814451</created>
+      <option name="number" value="00406" />
+      <option name="presentableId" value="LOCAL-00406" />
+      <option name="project" value="LOCAL" />
+      <updated>1779288814452</updated>
+    </task>
+    <task id="LOCAL-00407" summary="reduced trap and penumbra strength">
+      <option name="closed" value="true" />
+      <created>1779370308375</created>
+      <option name="number" value="00407" />
+      <option name="presentableId" value="LOCAL-00407" />
+      <option name="project" value="LOCAL" />
+      <updated>1779370308376</updated>
+    </task>
+    <task id="LOCAL-00408" summary="disabled lower interface when players moving">
+      <option name="closed" value="true" />
+      <created>1779452301441</created>
+      <option name="number" value="00408" />
+      <option name="presentableId" value="LOCAL-00408" />
+      <option name="project" value="LOCAL" />
+      <updated>1779452301446</updated>
+    </task>
+    <task id="LOCAL-00409" summary="disabled lower interface when players moving">
+      <option name="closed" value="true" />
+      <created>1779477244414</created>
+      <option name="number" value="00409" />
+      <option name="presentableId" value="LOCAL-00409" />
+      <option name="project" value="LOCAL" />
+      <updated>1779477244416</updated>
+    </task>
+    <task id="LOCAL-00410" summary="fixed bug monster attack">
+      <option name="closed" value="true" />
+      <created>1779551515575</created>
+      <option name="number" value="00410" />
+      <option name="presentableId" value="LOCAL-00410" />
+      <option name="project" value="LOCAL" />
+      <updated>1779551515577</updated>
+    </task>
+    <task id="LOCAL-00411" summary="updated spec">
+      <option name="closed" value="true" />
+      <created>1779551591306</created>
+      <option name="number" value="00411" />
+      <option name="presentableId" value="LOCAL-00411" />
+      <option name="project" value="LOCAL" />
+      <updated>1779551591306</updated>
+    </task>
+    <task id="LOCAL-00412" summary="improved game over">
+      <option name="closed" value="true" />
+      <created>1781693622068</created>
+      <option name="number" value="00412" />
+      <option name="presentableId" value="LOCAL-00412" />
+      <option name="project" value="LOCAL" />
+      <updated>1781693622070</updated>
+    </task>
+    <task id="LOCAL-00413" summary="fixed rattlesnakes">
+      <option name="closed" value="true" />
+      <created>1781700837622</created>
+      <option name="number" value="00413" />
+      <option name="presentableId" value="LOCAL-00413" />
+      <option name="project" value="LOCAL" />
+      <updated>1781700837622</updated>
+    </task>
+    <task id="LOCAL-00414" summary="fixed rattlesnakes">
+      <option name="closed" value="true" />
+      <created>1781702383430</created>
+      <option name="number" value="00414" />
+      <option name="presentableId" value="LOCAL-00414" />
+      <option name="project" value="LOCAL" />
+      <updated>1781702383430</updated>
+    </task>
+    <task id="LOCAL-00415" summary="fixed rattlesnakes">
+      <option name="closed" value="true" />
+      <created>1781703718834</created>
+      <option name="number" value="00415" />
+      <option name="presentableId" value="LOCAL-00415" />
+      <option name="project" value="LOCAL" />
+      <updated>1781703718835</updated>
+    </task>
+    <task id="LOCAL-00416" summary="fixed clawjaw">
+      <option name="closed" value="true" />
+      <created>1781728873238</created>
+      <option name="number" value="00416" />
+      <option name="presentableId" value="LOCAL-00416" />
+      <option name="project" value="LOCAL" />
+      <updated>1781728873243</updated>
+    </task>
+    <task id="LOCAL-00417" summary="refactored retreat">
+      <option name="closed" value="true" />
+      <created>1782035690193</created>
+      <option name="number" value="00417" />
+      <option name="presentableId" value="LOCAL-00417" />
+      <option name="project" value="LOCAL" />
+      <updated>1782035690198</updated>
+    </task>
+    <task id="LOCAL-00418" summary="added darknessmanager">
+      <option name="closed" value="true" />
+      <created>1782038667536</created>
+      <option name="number" value="00418" />
+      <option name="presentableId" value="LOCAL-00418" />
+      <option name="project" value="LOCAL" />
+      <updated>1782038667536</updated>
+    </task>
+    <task id="LOCAL-00419" summary="added darknessmanager">
+      <option name="closed" value="true" />
+      <created>1782046278003</created>
+      <option name="number" value="00419" />
+      <option name="presentableId" value="LOCAL-00419" />
+      <option name="project" value="LOCAL" />
+      <updated>1782046278003</updated>
+    </task>
+    <task id="LOCAL-00420" summary="optimizing">
+      <option name="closed" value="true" />
+      <created>1782077204376</created>
+      <option name="number" value="00420" />
+      <option name="presentableId" value="LOCAL-00420" />
+      <option name="project" value="LOCAL" />
+      <updated>1782077204377</updated>
+    </task>
+    <task id="LOCAL-00421" summary="fixed load game bug">
+      <option name="closed" value="true" />
+      <created>1782078551634</created>
+      <option name="number" value="00421" />
+      <option name="presentableId" value="LOCAL-00421" />
+      <option name="project" value="LOCAL" />
+      <updated>1782078551634</updated>
+    </task>
+    <task id="LOCAL-00422" summary="optimizing lights">
+      <option name="closed" value="true" />
+      <created>1782140768646</created>
+      <option name="number" value="00422" />
+      <option name="presentableId" value="LOCAL-00422" />
+      <option name="project" value="LOCAL" />
+      <updated>1782140768648</updated>
+    </task>
+    <task id="LOCAL-00423" summary="removed obsolete code arranged level track">
+      <option name="closed" value="true" />
+      <created>1782159006814</created>
+      <option name="number" value="00423" />
+      <option name="presentableId" value="LOCAL-00423" />
+      <option name="project" value="LOCAL" />
+      <updated>1782159006815</updated>
+    </task>
+    <task id="LOCAL-00424" summary="removed obsolete code arranged level track">
+      <option name="closed" value="true" />
+      <created>1782159125785</created>
+      <option name="number" value="00424" />
+      <option name="presentableId" value="LOCAL-00424" />
+      <option name="project" value="LOCAL" />
+      <updated>1782159125786</updated>
+    </task>
+    <task id="LOCAL-00425" summary="progression menu shown">
+      <option name="closed" value="true" />
+      <created>1782226564663</created>
+      <option name="number" value="00425" />
+      <option name="presentableId" value="LOCAL-00425" />
+      <option name="project" value="LOCAL" />
+      <updated>1782226564664</updated>
+    </task>
+    <task id="LOCAL-00426" summary="progression menu shown">
+      <option name="closed" value="true" />
+      <created>1782229596744</created>
+      <option name="number" value="00426" />
+      <option name="presentableId" value="LOCAL-00426" />
+      <option name="project" value="LOCAL" />
+      <updated>1782229596745</updated>
+    </task>
+    <task id="LOCAL-00427" summary="progression menu shown">
+      <option name="closed" value="true" />
+      <created>1782320367068</created>
+      <option name="number" value="00427" />
+      <option name="presentableId" value="LOCAL-00427" />
+      <option name="project" value="LOCAL" />
+      <updated>1782320367069</updated>
+    </task>
+    <task id="LOCAL-00428" summary="progression menu shown">
+      <option name="closed" value="true" />
+      <created>1782335684523</created>
+      <option name="number" value="00428" />
+      <option name="presentableId" value="LOCAL-00428" />
+      <option name="project" value="LOCAL" />
+      <updated>1782335684523</updated>
+    </task>
+    <task id="LOCAL-00429" summary="progression menu start implementation">
+      <option name="closed" value="true" />
+      <created>1782484261450</created>
+      <option name="number" value="00429" />
+      <option name="presentableId" value="LOCAL-00429" />
+      <option name="project" value="LOCAL" />
+      <updated>1782484261451</updated>
+    </task>
+    <task id="LOCAL-00430" summary="progression menu start implementation">
+      <option name="closed" value="true" />
+      <created>1782492680121</created>
+      <option name="number" value="00430" />
+      <option name="presentableId" value="LOCAL-00430" />
+      <option name="project" value="LOCAL" />
+      <updated>1782492680123</updated>
+    </task>
+    <task id="LOCAL-00431" summary="progression menu start implementation">
+      <option name="closed" value="true" />
+      <created>1782493017536</created>
+      <option name="number" value="00431" />
+      <option name="presentableId" value="LOCAL-00431" />
+      <option name="project" value="LOCAL" />
+      <updated>1782493017537</updated>
+    </task>
+    <task id="LOCAL-00432" summary="progression menu start implementation">
+      <option name="closed" value="true" />
+      <created>1782508765924</created>
+      <option name="number" value="00432" />
+      <option name="presentableId" value="LOCAL-00432" />
+      <option name="project" value="LOCAL" />
+      <updated>1782508765925</updated>
+    </task>
+    <task id="LOCAL-00433" summary="progression menu layout implemented">
+      <option name="closed" value="true" />
+      <created>1782565624731</created>
+      <option name="number" value="00433" />
+      <option name="presentableId" value="LOCAL-00433" />
+      <option name="project" value="LOCAL" />
+      <updated>1782565624733</updated>
+    </task>
+    <task id="LOCAL-00434" summary="progression menu layout implemented">
+      <option name="closed" value="true" />
+      <created>1782565917589</created>
+      <option name="number" value="00434" />
+      <option name="presentableId" value="LOCAL-00434" />
+      <option name="project" value="LOCAL" />
+      <updated>1782565917589</updated>
+    </task>
+    <task id="LOCAL-00435" summary="changed blueprint system - a dict per spot">
+      <option name="closed" value="true" />
+      <created>1782666222664</created>
+      <option name="number" value="00435" />
+      <option name="presentableId" value="LOCAL-00435" />
+      <option name="project" value="LOCAL" />
+      <updated>1782666222667</updated>
+    </task>
+    <task id="LOCAL-00436" summary="changed blueprint system - a dict per spot">
+      <option name="closed" value="true" />
+      <created>1782666401499</created>
+      <option name="number" value="00436" />
+      <option name="presentableId" value="LOCAL-00436" />
+      <option name="project" value="LOCAL" />
+      <updated>1782666401499</updated>
+    </task>
+    <task id="LOCAL-00437" summary="changed blueprint system - a dict per spot">
+      <option name="closed" value="true" />
+      <created>1782669336114</created>
+      <option name="number" value="00437" />
+      <option name="presentableId" value="LOCAL-00437" />
+      <option name="project" value="LOCAL" />
+      <updated>1782669336114</updated>
+    </task>
+    <task id="LOCAL-00438" summary="changed blueprint system - a dict per spot">
+      <option name="closed" value="true" />
+      <created>1782679202064</created>
+      <option name="number" value="00438" />
+      <option name="presentableId" value="LOCAL-00438" />
+      <option name="project" value="LOCAL" />
+      <updated>1782679202065</updated>
+    </task>
+    <task id="LOCAL-00439" summary="changed blueprint system - a dict per spot">
+      <option name="closed" value="true" />
+      <created>1782753652102</created>
+      <option name="number" value="00439" />
+      <option name="presentableId" value="LOCAL-00439" />
+      <option name="project" value="LOCAL" />
+      <updated>1782753652103</updated>
+    </task>
+    <task id="LOCAL-00440" summary="changed blueprint system - a dict per spot">
+      <option name="closed" value="true" />
+      <created>1782753681550</created>
+      <option name="number" value="00440" />
+      <option name="presentableId" value="LOCAL-00440" />
+      <option name="project" value="LOCAL" />
+      <updated>1782753681550</updated>
+    </task>
+    <task id="LOCAL-00441" summary="changed blueprint system - a dict per spot">
+      <option name="closed" value="true" />
+      <created>1782766197657</created>
+      <option name="number" value="00441" />
+      <option name="presentableId" value="LOCAL-00441" />
+      <option name="project" value="LOCAL" />
+      <updated>1782766197657</updated>
+    </task>
+    <task id="LOCAL-00442" summary="objects hidden behind walls">
+      <option name="closed" value="true" />
+      <created>1782769410009</created>
+      <option name="number" value="00442" />
+      <option name="presentableId" value="LOCAL-00442" />
+      <option name="project" value="LOCAL" />
+      <updated>1782769410009</updated>
+    </task>
+    <task id="LOCAL-00443" summary="upgrade costs">
+      <option name="closed" value="true" />
+      <created>1782824633567</created>
+      <option name="number" value="00443" />
+      <option name="presentableId" value="LOCAL-00443" />
+      <option name="project" value="LOCAL" />
+      <updated>1782824633567</updated>
+    </task>
+    <task id="LOCAL-00444" summary="upgrade costs">
+      <option name="closed" value="true" />
+      <created>1782834994676</created>
+      <option name="number" value="00444" />
+      <option name="presentableId" value="LOCAL-00444" />
+      <option name="project" value="LOCAL" />
+      <updated>1782834994677</updated>
+    </task>
+    <task id="LOCAL-00445" summary="menu work more or less">
+      <option name="closed" value="true" />
+      <created>1782836694969</created>
+      <option name="number" value="00445" />
+      <option name="presentableId" value="LOCAL-00445" />
+      <option name="project" value="LOCAL" />
+      <updated>1782836694969</updated>
+    </task>
+    <task id="LOCAL-00446" summary="menu work more or less">
+      <option name="closed" value="true" />
+      <created>1782919808941</created>
+      <option name="number" value="00446" />
+      <option name="presentableId" value="LOCAL-00446" />
+      <option name="project" value="LOCAL" />
+      <updated>1782919808941</updated>
+    </task>
+    <task id="LOCAL-00447" summary="menu work more or less">
+      <option name="closed" value="true" />
+      <created>1782920844255</created>
+      <option name="number" value="00447" />
+      <option name="presentableId" value="LOCAL-00447" />
+      <option name="project" value="LOCAL" />
+      <updated>1782920844255</updated>
+    </task>
+    <task id="LOCAL-00448" summary="menu works">
+      <option name="closed" value="true" />
+      <created>1782926855937</created>
+      <option name="number" value="00448" />
+      <option name="presentableId" value="LOCAL-00448" />
+      <option name="project" value="LOCAL" />
+      <updated>1782926855938</updated>
+    </task>
+    <option name="localTasksCounter" value="449" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fixed all bugs in theory" />
+    <MESSAGE value="flickering torches off" />
+    <MESSAGE value="further fixes" />
+    <MESSAGE value="fixed trap bug" />
+    <MESSAGE value="reduced trap and penumbra strength" />
+    <MESSAGE value="disabled lower interface when players moving" />
+    <MESSAGE value="fixed bug monster attack" />
+    <MESSAGE value="updated spec" />
+    <MESSAGE value="improved game over" />
+    <MESSAGE value="fixed rattlesnakes" />
+    <MESSAGE value="fixed clawjaw" />
+    <MESSAGE value="refactored retreat" />
+    <MESSAGE value="added darknessmanager" />
+    <MESSAGE value="optimizing" />
+    <MESSAGE value="fixed load game bug" />
+    <MESSAGE value="optimizing lights" />
+    <MESSAGE value="removed obsolete code arranged level track" />
+    <MESSAGE value="progression menu shown" />
+    <MESSAGE value="progression menu start implementation" />
+    <MESSAGE value="progression menu layout implemented" />
+    <MESSAGE value="changed blueprint system - a dict per spot" />
+    <MESSAGE value="objects hidden behind walls" />
+    <MESSAGE value="upgrade costs" />
+    <MESSAGE value="menu work more or less" />
+    <MESSAGE value="menu works" />
+    <option name="LAST_COMMIT_MESSAGE" value="menu works" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/.buildozer/android/app/minemadness_game.py</url>
+          <line>36</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

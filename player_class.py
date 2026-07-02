@@ -1,0 +1,651 @@
+from __future__ import annotations
+from abc import ABC, abstractmethod
+from random import random
+
+from kivy.properties import NumericProperty, BooleanProperty, DictProperty
+
+from character_class import Character
+
+
+class Player(Character, ABC):
+
+    experience = NumericProperty(0)
+    player_level = NumericProperty(1)
+    shovels = NumericProperty(None)
+    weapons = NumericProperty(None)
+    special_items = DictProperty(None)
+    ability_active = BooleanProperty(False)
+
+    data: list[Character] = []
+    gems: int = 0
+    group_xp: int = 0
+
+    # intervals of stats upgrading, depending whether they are int or float
+    upgrade_interval_int: int = 1
+    upgrade_interval_float: float = 0.05
+
+    @classmethod
+    def set_player_order(cls) -> None:
+        """
+        Sets the player turn order: Sawyer, Hawkins, Crusher Jane
+        :return: None
+        """
+        sawyer = next(player for player in Player.data if player.species == "sawyer")
+        hawkins = next(player for player in Player.data if player.species == "hawkins")
+        jane = next(player for player in Player.data if player.species == "crusherjane")
+        Player.data[0], Player.data[1], Player.data[2] = sawyer, hawkins, jane
+
+    @classmethod
+    def all_alive(cls):
+        return all(player.state == "in_game" or player.state == "exited" for player in cls.data)
+
+    @classmethod
+    def all_out(cls):
+        return all(player.state == "dead" or player.state == "exited" for player in cls.data)
+
+    @classmethod
+    def check_if_dead(cls, player_species: str) -> bool:
+        """
+        Checks if a particular Player is dead
+        :param player_species: Player.species of the player to check
+        :return: True if dead, False otherwise
+        """
+        return any(player.species == player_species and player.state == "dead" for player in cls.data)
+
+    @classmethod
+    def get_alive_player_chars(cls) -> list[str]:
+        """
+        Returns the players that survived the level
+        :return: set or tuple containing the characters representing live players
+        """
+        return [player.char for player in cls.data if player.is_alive]
+
+    @classmethod
+    def finish_if_all_players_out(cls, game) -> None:
+        """
+        Finishes the level if all players out
+        :return: None
+        """
+        if cls.all_out():
+            game.finish_level()
+        else:
+            # modify starting index because there is one less player in game
+            game.activate_next_character(start_index_mod=-1)
+
+
+    def __init__(self):
+        super().__init__()
+        self.kind: str = "player"
+        self.blocked_by: list[str] = ["wall", "monster", "trap"]
+        self.cannot_share_tile_with: list[str] = ["wall", "monster", "player"]
+        self.ignores: list[str] = ["light"]
+        self.invisible: bool = False
+        self.step_transition: str = "in_out_quad" # walking
+        self.step_duration: float = 0.35
+        # Inventory must be modified exclusively by calling Player.update_inventory!
+        self.inventory: dict[str,int] = {
+            "jerky": 2,
+            "coffee": 0,
+            "tobacco": 0,
+            "whisky": 0,
+            "talisman": 0
+        }
+
+        # exclusive of Player class
+        self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
+        self.state: str | None = None
+        self.level_track: dict[int,dict] = {}
+
+
+    @abstractmethod
+    def upgrade_cost_natural_strength(self, level: int)-> int:
+        """
+        Calculates the XP cost of upgrading strength
+        :param level: level trying to achieve. Defaults to next level
+        :return: the cost
+        """
+        pass
+
+
+    @abstractmethod
+    def upgrade_cost_natural_health(self, level: int)-> int:
+        """
+        Calculates the XP cost of upgrading health
+        :param level: level trying to achieve. Defaults to next level
+        :return: the cost
+        """
+        pass
+
+
+    @abstractmethod
+    def upgrade_cost_percent_critical(self, level: int)-> int:
+        """
+        Calculates the XP cost of upgrading percentage of critical hit
+        :param level: level trying to achieve. Defaults to next level
+        :return: the cost
+        """
+        pass
+
+
+    @abstractmethod
+    def upgrade_cost_natural_moves(self, level: int)-> int:
+        """
+        Calculates the XP cost of upgrading moves
+        :param level: level trying to achieve. Defaults to next level
+        :return: the cost
+        """
+        pass
+
+
+    @abstractmethod
+    def upgrade_cost_recovery(self, level: int)-> int:
+        """
+        Calculates the XP cost of upgrading recovery
+        :param level: level trying to achieve. Defaults to next level
+        :return: the cost
+        """
+        pass
+
+
+    @abstractmethod
+    def upgrade_cost_trap_spotting_chance(self, level: int)-> int:
+        """
+        Calculates the XP cost of upgrading trep detection
+        :param level: level trying to achieve. Defaults to next level
+        :return: the cost
+        """
+        pass
+
+    def get_upgrade_cost(self, stat: str, level: int) -> int:
+        """
+        Gets the XP cost of upgrading a stat
+        :param stat: name of the stat
+        :param level: level trying to achieve
+        :return: the cost
+        """
+        match stat:
+            case "natural_strength":
+                return self.upgrade_cost_natural_strength(level)
+            case "natural_health":
+                return self.upgrade_cost_natural_health(level)
+            case "percent_critical":
+                return self.upgrade_cost_percent_critical(level)
+            case "natural_moves":
+                return self.upgrade_cost_natural_moves(level)
+            case "recovery":
+                return self.upgrade_cost_recovery(level)
+            case "trap_spotting_chance":
+                return self.upgrade_cost_trap_spotting_chance(level)
+            case _:
+                raise ValueError(f"Invalid stat '{stat}'. Valid are: 'natural_strength', 'natural_health', 'percent_critical', "
+                                 f"'natural_moves', 'recovery', 'trap_spotting_chance'")
+
+    def setup_character(self, game: MineMadnessGame) -> None:
+        """
+        Sets up the character when it first enters the game
+        :return: None
+        """
+        super().setup_character(game)
+        self.shovels = self.stats.initial_shovels
+        self.weapons = self.stats.initial_weapons
+
+    def setup_for_new_level(self) -> None:
+        """
+        Sets up the Player to start a new level (not level 1)
+        :return: None
+        """
+        self.remove_all_effects()
+        if self.is_hidden:  # there is no token at this state, we cannot call unhide()
+            self.ignores.remove("pickable")
+            self.ignores.remove("treasure")
+        self.ability_active = False
+        self.remaining_moves = 0
+        self.state = "in_game"
+
+    @staticmethod
+    def on_ability_active(player: Player, value: bool) -> None:
+        """
+        Notifies the to update the state of the ability button when Player.ability_active changes
+        :param player: instance of the Player
+        :param value: new ability_active value
+        :return: None
+        """
+        if player.game.turn is not None:
+            player.game.update_ability_button()
+
+    @staticmethod
+    def on_special_items(player: Player, special_items: dict) -> None:
+        """
+        Notifies the to update the state of the ability button when Player.ability_active changes
+        :param player: instance of the Player
+        :param special_items: new special_items dict
+        :return: None
+        """
+        if player.game is not None and player.game.turn is not None:
+            player.game.update_ability_button()
+
+    @staticmethod
+    def on_shovels(player: Player, value: int) -> None:
+        """
+        Notifies the game when a shovel is used or picked up
+        :param player: instance of the Player
+        :param value: new shovels value
+        :return: None
+        """
+        if player.game is not None:
+            player.game.update_label("shovels_label", value)
+
+    @staticmethod
+    def on_weapons(player: Player, value: int):
+        """
+        Notifies the game when a weapon is used or picked up
+        :param player: instance of the Player
+        :param value: new weapon value
+        :return: None
+        """
+        if player.game is not None:
+            player.game.update_label("weapons_label", value)
+
+    def update_inventory(self, item: str, value: int) -> None:
+        """
+        Updates the player inventory
+        :param item: item to update
+        :param value: value to add (or subtract if negative) to the current value
+        :return: None
+        """
+        if item not in self.inventory.keys():
+            raise KeyError(f"Player inventory has no item named {item}")
+        self.inventory[item] += value
+        self.game.update_inventory_button(item, self.inventory[item])
+
+    @abstractmethod
+    def enhance_damage(self, damage: int) -> int:
+        """
+        Placeholder needed for fight method
+        :param damage: damage
+        :return: enhanced damage
+        """
+        pass
+
+    @property
+    def has_all_gems(self) -> bool:
+        """
+        Checks if players have all gems
+        :return: True if players have all gems, False otherwise
+        """
+        return Player.gems == self.get_dungeon().total_gems
+
+    def has_item(self, item: str) -> bool:
+        """
+        Checks if a Player has an item
+        :param item: item name to check
+        :return: True if has the item, False otherwise
+        """
+        return self.inventory[item] > 0
+
+    @abstractmethod
+    def can_fight(self, token_species: str) -> bool:
+        """
+        Abstract method defining if the Player fulfills the requirements to fight with an opponent
+        represented by a Token of the specified Token.species
+        :param token_species: Token.species of the opponent
+        :return: True if the Player can fight, False otherwise
+        """
+        pass
+
+    @abstractmethod
+    def can_dig(self, token_species: str) -> bool:
+        """
+        Abstract method defining if the Player fulfills the requirements to dig a wall
+        represented by a Token of the specified Token.species
+        :param token_species: Token.species of the wall
+        :return: True if the Player can dig, False otherwise
+        """
+        pass
+
+    @property
+    def can_retreat(self) -> bool:
+        """
+        Property defining if a Character can retreat after an attack
+        :return: True if character can retreat after attack, False otherwise
+        """
+        return False
+
+    @property
+    def can_find_trap(self) -> bool:
+        """
+        Property defining if a Character is able to spot a trap
+        :return: True if character is able to spot the trap, False otherwise
+        """
+        return random() < self.stats.trap_spotting_chance
+
+    @property
+    def can_disarm_trap(self) -> bool:
+        """
+        Property defining if a Character is able to disarm a trap
+        :return: True if character is able to disarm the trap, False otherwise
+        """
+        return random() < self.stats.trap_disarming_chance
+
+    def reset_objects(self) -> None:
+        """
+        Sets all inventory objects and special items to 0
+        :return: None
+        """
+        self.weapons = 0
+        self.shovels = 0
+        for key in self.inventory.keys():
+            self.inventory[key] = 0
+        if self.special_items is not None:
+            for key in self.special_items.keys():
+                self.special_items[key] = 0
+
+    def subtract_weapon(self) -> None:
+        """
+        Subtracts the weapon used
+        :return: None
+        """
+        self.weapons -= 1
+
+    def remove_all_effects(self, turn: int = 0) -> None:
+        """
+        Removes all effects from the Player, regardless if they are over or not
+        :param turn: turn in which all effects will be removed
+        :return: None
+        """
+        for attribute in self.effects.keys():
+            if len(self.effects[attribute]) > 0:
+                for effect in self.effects[attribute]:
+                    effect["end_turn"] = turn
+        self.remove_effects_if_over(turn)
+
+    def remove_effects_if_over(self, turn: int) -> None:
+        """
+        Removes all effects for which the effect is over
+        """
+        effect_names = list()
+
+        # attributes are: "moves", "toughness", "strength"
+        for attribute, effects in self.effects.items():
+
+            for effect in effects:
+                if effect["end_turn"] <= turn:
+                    player_stat = getattr(self.stats, attribute)
+                    if isinstance(player_stat, int):
+                        player_stat -= effect["size"]
+                    elif isinstance(player_stat, list):
+                        player_stat[1] -= effect["size"]
+                    effect_names.append(attribute)
+                    setattr(self.stats, attribute, player_stat)
+
+            self.effects[attribute] = [effect for effect in effects if effect["end_turn"] > turn]
+
+        if self.token is not None:  # dead characters have no token
+            self.token.effect_queue = self.token.effect_queue + [{effect_name: True} for effect_name in effect_names]
+
+    def perform_passive_action(self) -> None:
+        """
+        Method defining the passive action that Players perform when turn is skipped (double-click on them)
+        :return: None
+        """
+        dungeon: DungeonLayout = self.get_dungeon()
+        hidden_traps_in_range: set[tuple[int,int]] = {position for position in dungeon.get_range(self.get_position(),
+                                                                            self.remaining_moves)
+                                                if dungeon.get_tile(position).has_token("trap")
+                                                and dungeon.get_tile(position).get_token("trap").character.is_hidden}
+
+        for position in hidden_traps_in_range:
+
+            if dungeon.check_if_connexion(self.get_position(),
+                                                     position,
+                                                     [token_kind for token_kind in self.blocked_by
+                                                      if token_kind != "trap"],
+                                                     self.remaining_moves) and self.can_find_trap:
+
+                trap_token = dungeon.get_tile(position).get_token("trap")
+                trap_token.character.unhide()
+                trap_token.show_effect_token("trap")
+                self.experience += trap_token.character.stats.experience_when_found
+                self.game.ids.experience_bar.value = self.experience
+
+    def act_on_tile(self, tile:Tile) -> None:
+        """
+        Handles the logic of PLayer behaviour depending on Tile.token
+        :param tile: Tile upon which the Player should act
+        :return: None
+        """
+        if tile.has_token("wall"):
+            self._dig(tile)
+        elif tile.has_token("monster"):
+            self.fight_on_tile(tile)
+        elif tile.has_token("trap"):
+            if self.get_position() == tile.position:
+                self.fall_in_trap(tile)
+            else:
+                self._disarm_trap(tile)
+        else:
+            if (tile.has_token("pickable") and "pickable" not in self.ignores
+                    and tile.get_token("pickable").species not in self.ignores):
+                self._pick_object(tile)
+            if (tile.has_token("treasure") and "treasure" not in self.ignores
+                    and tile.get_token("treasure").species not in self.ignores):
+                self._pick_gem(tile)
+            if tile.kind == "exit" and self.has_all_gems:
+                self._exit_level()
+                Player.finish_if_all_players_out(self.game)
+
+    def _exit_level(self) -> None:
+        """
+        Takes a Player out of a level
+        :return: None
+        """
+        self.token.delete_token(self.token.get_current_tile())
+        self.state = "exited"
+
+    def _pick_object(self, tile: Tile) -> None:
+        """
+        Handles the logic of picking up objects
+        :param tile: Tile where the object is
+        :return: None
+        """
+        object_name = tile.get_token("pickable").species
+
+        if object_name in self.special_items:
+            self.special_items[object_name] += 1
+
+        elif object_name in self.inventory.keys():
+            self.update_inventory(object_name, 1)
+
+        # weapons and shovels
+        else:
+            character_attribute = getattr(self, f"{object_name}s")
+            character_attribute += 1
+            setattr(self, f"{object_name}s", character_attribute)
+
+        tile.get_token("pickable").delete_token(tile)
+
+    def _pick_gem(self, tile:Tile)-> None:
+        """
+        Handles the logic of picking gems
+        :param tile: Tile where the gem is
+        :return: None
+        """
+        Player.gems += 1
+        self.game.update_label("gems_label", Player.gems)
+        tile.get_token("treasure").delete_token(tile)
+
+    def fall_in_trap(self, tile:Tile) ->None:
+        """
+        Handles the logic of falling on traps
+        :param tile: Tile where the trap is
+        :return: None
+        """
+        tile.get_token("trap").character.show_and_damage(self)
+        self.remaining_moves = 0  # TODO: move this to token! Consider that may fall also when disarming traps
+
+    def _disarm_trap(self, tile:Tile) -> None:
+        """
+        Handles the logic of disarming traps
+        :param tile: Tile where the trap is
+        :return: None
+        """
+        trap_token = tile.get_token("trap")
+        trap_token.show_effect_token(effect="trap_out")
+        self.experience += trap_token.character.stats.calculate_experience(self.get_dungeon().game.level)
+        self.game.ids.experience_bar.value = self.experience
+        trap_token.delete_token(tile)
+        self.remaining_moves -= 1
+
+    def _dig(self, wall_tile: Tile) -> None:
+        """
+        Handles the logic of digging
+        :param wall_tile: Tile where the wall to dig is
+        :return: None
+        """
+        if wall_tile.has_token("wall", "granite"):
+            self.shovels -= 1
+
+        if wall_tile.has_token("wall", "rock"):
+            if not self.species == "hawkins":
+                self.shovels -= 1
+
+        wall_tile.get_token("wall").show_digging()
+        wall_tile.get_token("wall").delete_token(wall_tile)
+
+        if wall_tile.has_token("light"):
+            while len(wall_tile.tokens["light"]) > 0:
+                wall_tile.get_token("light").delete_token(wall_tile)
+            self.get_dungeon().dm.update_bright_spots()
+
+        self.remaining_moves -= self.stats.digging_moves
+
+    def fight_on_tile(self, opponent_tile: Tile) -> None:
+        """
+        Handles the logic of fighting for Players
+        :param opponent_tile: Tile where the opponent is
+        :return: None
+        """
+        opponent = opponent_tile.get_token("monster").character
+        opponent = self.fight_opponent(opponent)
+        self.subtract_weapon()
+
+        if opponent.stats.health <= 0:
+            opponent.kill_character(opponent_tile)
+
+        self.remaining_moves -= 1
+
+    def heal(self, extra_points: int) -> None:
+        """
+        Handles the logic of healing
+        :param extra_points: points to add to the Player.stats.health
+        :return: None
+        """
+        self.stats.health = (
+            self.stats.health + extra_points
+            if self.stats.health + extra_points <= self.stats.natural_health
+            else self.stats.natural_health
+        )
+
+    def kill_character(self, tile) -> None:
+        """
+        Kills a Player
+        :param tile: Tile where the Player is
+        :return: None
+        """
+        super().kill_character(tile)
+        self.remove_all_effects()
+
+    def resurrect(self, dungeon: DungeonLayout) -> None:
+        """
+        Brings a dead Player back to the game
+        :param dungeon: DungeonLayout were the Player should be resurrected
+        :return: None
+        """
+        self.player_level = self.player_level - 1 if self.player_level > 1 else 1
+        for key, value in self.level_track[self.player_level].items():
+            self.stats.__setattr__(key, value)
+
+        # equals attributes to natural_attributes
+        self.stats.__post_init__()
+        self.experience = 0
+        self.stats.exp_to_next_level = self.player_level * self.stats.base_exp_to_level_up
+        self.reset_objects()
+        self.ability_active = False
+
+        # resurrected playe must be accessible
+        while True:
+            location: Tile = dungeon.get_random_tile(free=True)
+            if len(dungeon.find_shortest_path(location.position,
+                                              self.game.active_character.get_position(),
+                                              self.blocked_by)) > 1:
+                break
+        location.place_item(self.kind, self.species, character=self)
+        self.state = "in_game"
+
+    def apply_toughness(self, damage):
+        """
+        Applies the Player.toughness to mitigate damage
+        :param damage: damage to mitigate
+        :return: mitigated damage
+        """
+        for effect in self.effects["toughness"]:
+            effect["size"] -= damage
+            if effect["size"] <= 0:
+                damage = abs(effect["size"])
+                self.effects["toughness"].remove(effect)
+                continue
+            elif effect["size"] > 0:
+                damage = 0
+                break
+        return damage
+
+    def check_if_overdose(self, item) -> bool:
+        """
+        I don't know if this will be ever used. Check if a Player consumed too many items
+        :param item: item to check
+        :return: True if overdosed
+        """
+        pass
+
+    def update_level_track(self) -> None:
+        """
+        Adds a new level to the level track
+        :return: None
+        """
+        self.level_track[self.game.level] = {
+            "health": self.stats.natural_health,
+            "moves": self.stats.natural_moves,
+            "strength": self.stats.natural_strength,
+            #TODO: add other rellevant stats here (trap spotting and so on)
+        }
+
+    def _level_up_health(self, increase: int) -> None:
+        """
+        Levels up Player.stats.health
+        :param increase: value to increase
+        :return: None
+        """
+        self.stats.natural_health += increase
+        self.stats.health += increase
+
+    def _level_up_moves(self, increase: int) -> None:
+        """
+        Levels up Player.stats.moves
+        :param increase: value to increase
+        :return: None
+        """
+        self.stats.natural_moves += increase
+        self.stats.moves += increase
+        self.remaining_moves += increase
+        self.game.activate_accessible_tiles(self.remaining_moves)
+
+    def _level_up_strength(self, increase: tuple[int, int]) -> None:
+        """
+        Levels up Player.stats.strength
+        :param increase: value to increase
+        :return: None
+        """
+        self.stats.natural_strength[0] += increase[0]
+        self.stats.natural_strength[1] += increase[1]
+        self.stats.strength[0] += increase[0]
+        self.stats.strength[1] += increase[1]

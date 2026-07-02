@@ -1,0 +1,236 @@
+<ProgressionTitleLabel@TitleLabel>
+    font_size: "35sp"
+
+<ProgressionSubtitleLabel@GameLabel>
+    halign: "center"
+    font_size: "30sp"
+
+<PlayerNameLabel@GameLabel>
+    size_hint_x: 0.7
+    halign: "center"
+    font_size: "26sp"
+
+<RowNameLabel@GameLabel>
+    font_size: "25sp"
+    size_hint_x: 0.3
+
+<ColNameLabel@GameLabel>
+    halign: "center"
+    font_size: "25sp"
+
+<SwitchPlayerButton>
+    font_size: "20sp"
+    size_hint_x: 0.15
+
+<UpgradeButton>
+    size_hint_x: 0.5
+    text: "U"
+    on_release: self.upgrade()
+
+<DowngradeButton>
+    size_hint_x: 0.5
+    text: "D"
+    on_release: self.downgrade()
+
+<NextLevelButton>
+    text: "Ready for next level"
+    on_release: self.trigger_next_level()
+
+<UpgradeButtonsLayout@BoxLayout>
+    orientation: "horizontal"
+    size_hint_x: 0.2
+    spacing: "4dp"
+    padding: "0dp", "2dp", "0dp", "2dp"  # left, top, right, bottom
+
+<DisplayLabel@GameLabel>
+    size_hint_x: 0.25
+    halign: "center"
+
+<CharacterProgressionMenu>
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            texture: self.background
+        Color:
+            rgba: 0, 0, 0, 0.7
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    FloatLayout:
+        # general layout
+        BoxLayout:
+            size_hint: 0.9, 0.9
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            orientation: "vertical"
+
+            # menu title and available XP points
+            MenuLayout:
+                size_hint: 1, 0.2
+                ProgressionTitleLabel:
+                    text: "LEVEL COMPLETED!"
+                ProgressionSubtitleLabel:
+                    text: f"Total group XP: {str(root.group_xp)}"
+
+            #spacer
+            Label:
+                size_hint_y: 0.025
+
+            # character name (out of scroll)
+            BoxLayout:
+                orientation: "horizontal"
+                size_hint: 1, 0.1
+                padding: "25dp", "5dp", "25dp", "10dp"  # left, top, right, bottom
+                SwitchPlayerButton:
+                    text: "previous"
+                    button_type: "previous"
+                    progr_menu: root
+                PlayerNameLabel:
+                    text: root.player_name if root.player_name is not None else ""
+                SwitchPlayerButton:
+                    text: "next"
+                    button_type: "next"
+                    progr_menu: root
+
+            #spacer
+            Label:
+                size_hint_y: 0.025
+
+            #colnames (out of scroll)
+            BoxLayout:
+                opacity: 1 if root.player is None or root.player.is_alive else 0.5
+                size_hint_y: 0.1
+                RowNameLabel:
+                    text: ""
+                DisplayLabel:
+                    text: ""
+                DisplayLabel:
+                    text: "upgrade cost"
+                DisplayLabel:
+                    size_hint_x: 0.2
+                    text: "actions"
+
+            # scroll containing gridlayout with all upgradeable stats
+            ScrollView:
+                size_hint: 1, 0.45
+                GridLayout:
+                    opacity: 1 if root.player is None or root.player.is_alive else 0.5
+                    size_hint: 1, None
+                    height: self.minimum_height
+                    row_default_height: dp(50)
+                    rows: 6
+                    cols: 4
+
+                    RowNameLabel:
+                        text: "Strength"
+                    DisplayLabel:
+                        text: str(root.player_strength) if root.player_strength is not None else ""
+                    DisplayLabel:
+                        text: str(root.upgrade_cost_strength) if root.player is not None else ""
+                    UpgradeButtonsLayout:
+                        DowngradeButton:
+                            progr_menu: root
+                            stat_name: "natural_strength"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: downgrade_button_natural_strength
+                        UpgradeButton:
+                            progr_menu: root
+                            stat_name: "natural_strength"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: upgrade_button_natural_strength
+
+                    RowNameLabel:
+                        text: "Health"
+                    DisplayLabel:
+                        text: str(root.player_health) if root.player_health is not None else ""
+                    DisplayLabel:
+                        text: str(root.upgrade_cost_health) if root.player is not None else ""
+                    UpgradeButtonsLayout:
+                        DowngradeButton:
+                            progr_menu: root
+                            stat_name: "natural_health"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: downgrade_button_natural_health
+                        UpgradeButton:
+                            progr_menu: root
+                            stat_name: "natural_health"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: upgrade_button_natural_health
+
+                    RowNameLabel:
+                        text: "Moves"
+                    DisplayLabel:
+                        text: str(root.player_moves) if root.player_moves is not None else ""
+                    DisplayLabel:
+                        text: str(root.upgrade_cost_moves) if root.player is not None else ""
+                    UpgradeButtonsLayout:
+                        DowngradeButton:
+                            progr_menu: root
+                            stat_name: "natural_moves"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: downgrade_button_natural_moves
+                        UpgradeButton:
+                            progr_menu: root
+                            stat_name: "natural_moves"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: upgrade_button_natural_moves
+
+                    RowNameLabel:
+                        text: "% Critical"
+                    DisplayLabel:
+                        text: str(int(root.player_percent_critical * 100)) if root.player_percent_critical is not None else ""
+                    DisplayLabel:
+                        text: str(root.upgrade_cost_percent_critical) if root.player is not None else ""
+                    UpgradeButtonsLayout:
+                        DowngradeButton:
+                            progr_menu: root
+                            stat_name: "percent_critical"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: downgrade_button_percent_critical
+                        UpgradeButton:
+                            progr_menu: root
+                            stat_name: "percent_critical"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: upgrade_button_percent_critical
+
+                    RowNameLabel:
+                        text: "% Recovery"
+                    DisplayLabel:
+                        text: str(int(root.player_recovery * 100)) if root.player_recovery is not None else ""
+                    DisplayLabel:
+                        text: str(root.upgrade_cost_recovery) if root.player is not None else ""
+                    UpgradeButtonsLayout:
+                        DowngradeButton:
+                            progr_menu: root
+                            stat_name: "recovery"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: downgrade_button_recovery
+                        UpgradeButton:
+                            progr_menu: root
+                            stat_name: "recovery"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: upgrade_button_recovery
+
+                    RowNameLabel:
+                        text: "% Trap detection"
+                    DisplayLabel:
+                        text: str(int(root.player_trap_spotting_chance * 100)) if root.player_trap_spotting_chance is not None else ""
+                    DisplayLabel:
+                        text: str(root.upgrade_cost_trap_spotting_chance) if root.player is not None else ""
+                    UpgradeButtonsLayout:
+                        DowngradeButton:
+                            progr_menu: root
+                            stat_name: "trap_spotting_chance"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: downgrade_button_trap_spotting_chance
+                        UpgradeButton:
+                            progr_menu: root
+                            stat_name: "trap_spotting_chance"
+                            disabled: self.is_disabled() if root.player is not None else True
+                            id: upgrade_button_trap_spotting_chance
+
+            BoxLayout:
+                size_hint: 1, 0.1
+                padding: "0dp", "10dp", "0dp", "0dp"  # left, top, right, bottom
+                NextLevelButton:
+                    progr_menu: root

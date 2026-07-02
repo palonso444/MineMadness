@@ -225,7 +225,7 @@ class CharacterProgressionMenu(Screen):
 
     def display_player_name(self) -> None:
         """
-        Displays the name of the player
+        Displays the name of the player and informs whether is dead or not
         :return: None
         """
         if self.player.is_alive:

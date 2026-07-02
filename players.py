@@ -33,42 +33,69 @@ class Sawyer(Player):
         """
         Calculates the XP cost of upgrading strength
         """
-        return level
-
+        if level == 2:
+            return 3
+        if level < 6:
+            return 4
+        if level < 8:
+            return 5
+        return 6
 
     def upgrade_cost_natural_health(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading health
         """
-        return level
-
+        if level < 5:
+            return 1
+        if level < 6:
+            return 2
+        if level < 8:
+            return 3
+        return 4
 
     def upgrade_cost_percent_critical(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading percentage of critical hit
         """
-        return level
-
+        if level < 4:
+            return 1
+        if level < 7:
+            return 2
+        if level < 10:
+            return 3
+        return 4
 
     def upgrade_cost_natural_moves(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading moves
         """
-        return level
-
+        if level < 4:
+            return 2
+        if level < 6:
+            return 3
+        if level < 8:
+            return 4
+        return 5
 
     def upgrade_cost_recovery(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading recovery
         """
-        return level
-
+        if level < 4:
+            return 2
+        if level < 10:
+            return 3
+        return 4
 
     def upgrade_cost_trap_spotting_chance(self, level: int) -> int:
         """
-        Calculates the XP cost of upgrading trep detection
+        Calculates the XP cost of upgrading trap detection
         """
-        return level
+        if level < 4:
+            return 2
+        if level < 10:
+            return 3
+        return 4
 
     def can_dig(self, token_species: str) -> bool:
         """
@@ -156,42 +183,59 @@ class CrusherJane(Player):
         """
         Calculates the XP cost of upgrading strength
         """
-        return level
-
+        if level < 6:
+            return 1
+        if level < 11:
+            return 2
+        return 3
 
     def upgrade_cost_natural_health(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading health
         """
-        return level
-
+        if level < 8:
+            return 1
+        if level < 13:
+            return 2
+        return 3
 
     def upgrade_cost_percent_critical(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading percentage of critical hit
         """
-        return level
-
+        if level < 4:
+            return 1
+        return 2
 
     def upgrade_cost_natural_moves(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading moves
         """
-        return level
-
+        if level < 6:
+            return 4
+        if level < 11:
+            return 5
+        return 6
 
     def upgrade_cost_recovery(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading recovery
         """
-        return level
-
+        if level < 4:
+            return 2
+        if level < 10:
+            return 3
+        return 4
 
     def upgrade_cost_trap_spotting_chance(self, level: int) -> int:
         """
-        Calculates the XP cost of upgrading trep detection
+        Calculates the XP cost of upgrading trap detection
         """
-        return level
+        if level < 5:
+            return 4
+        if level < 9:
+            return 5
+        return 6
 
     @staticmethod
     def on_weapons(player: Player, value: int):
@@ -280,42 +324,65 @@ class Hawkins(Player):
         """
         Calculates the XP cost of upgrading strength
         """
-        return level
-
+        if level < 4:
+            return 1
+        if level < 8:
+            return 2
+        if level < 12:
+            return 3
+        return 4
 
     def upgrade_cost_natural_health(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading health
         """
-        return level
-
+        if level < 8:
+            return 1
+        if level < 13:
+            return 2
+        return 3
 
     def upgrade_cost_percent_critical(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading percentage of critical hit
         """
-        return level
-
+        if level < 4:
+            return 1
+        if level < 6:
+            return 2
+        if level < 8:
+            return 3
+        return 4
 
     def upgrade_cost_natural_moves(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading moves
         """
-        return level
-
+        if level < 6:
+            return 3
+        if level < 10:
+            return 4
+        return 5
 
     def upgrade_cost_recovery(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading recovery
         """
-        return level
-
+        if level < 3:
+            return 2
+        if level < 6:
+            return 3
+        if level < 8:
+            return 4
+        return 5
 
     def upgrade_cost_trap_spotting_chance(self, level: int) -> int:
         """
         Calculates the XP cost of upgrading trep detection
         """
-        return level
+        if level < 6:
+            return 1
+        return 2
 
     def can_dig(self, token_species: str) -> bool:
         """

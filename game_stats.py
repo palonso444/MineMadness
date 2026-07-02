@@ -454,7 +454,7 @@ class SawyerStats(PlayerStats): # BALANCED
     moves: int = 4
     digging_moves: int = 3
     trap_spotting_chance: float = 0.2
-    trap_disarming_chance: float = 0.3
+    trap_disarming_chance: float = 0.5
     recovery: float = 0.0
     percent_critical: float = 0.05
 
@@ -466,7 +466,7 @@ class HawkinsStats(PlayerStats):  # BALANCED
     moves: int = 3
     shooting_range: int = 2
     trap_spotting_chance: float = 0.3
-    trap_disarming_chance: float = 0.7
+    trap_disarming_chance: float = 1
     recovery: float = 0.0
     percent_critical: float = 0.05
 
@@ -555,7 +555,7 @@ class BlackDeathStats(MonsterStats):  # BALANCED
     char: str = "B"
     health: int = 1
     strength: int = 25
-    moves: int = 7
+    moves: int = 5
     random_motility: float = 1.0
     dodging_ability: int = 8
     experience_when_killed: int = 22

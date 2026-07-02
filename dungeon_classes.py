@@ -81,21 +81,21 @@ class DungeonLayout(GridLayout):
         blueprint.place_items("h", self.stats.powder_number)
 
         # ADD HERE ELEMENTS TO TEST
-        blueprint.place_items("H", 1)
+        #blueprint.place_items("H", 1)
 
         ### COMMENT THE FOLLOWING LINES TO AVOID PLACING STUFF TO THE DUNGEON
         # place everything but walls
-        #for item, frequency in self.stats.level_progression()["non_walls"].items():
-            #blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
+        for item, frequency in self.stats.level_progression()["non_walls"].items():
+            blueprint.place_items(item=item, number_of_items=int(frequency*blueprint.area))
 
         # place walls on top of pickables except jerkys, shovels and weapons
-        #numbers_of_walls: dict[str, int] = {key: int(value * blueprint.area) for key, value in self.stats.level_progression()["walls"].items()}
-        #placed_walls: dict = blueprint.place_items_on_top_shuffled(numbers_of_walls, on_top_kind="pickable", skip=["j", "p", "x"])
+        numbers_of_walls: dict[str, int] = {key: int(value * blueprint.area) for key, value in self.stats.level_progression()["walls"].items()}
+        placed_walls: dict = blueprint.place_items_on_top_shuffled(numbers_of_walls, on_top_kind="pickable", skip=["j", "p", "x"])
 
         # place remaining walls as usual
-        #numbers_of_walls = {key: value - placed_walls[key] for key, value in numbers_of_walls.items()}
-        #for wall, number in numbers_of_walls.items():
-            #blueprint.place_items(item=wall, number_of_items=number)
+        numbers_of_walls = {key: value - placed_walls[key] for key, value in numbers_of_walls.items()}
+        for wall, number in numbers_of_walls.items():
+            blueprint.place_items(item=wall, number_of_items=number)
 
         return blueprint
 

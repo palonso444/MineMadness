@@ -13,7 +13,7 @@ class DungeonStats:
     """
     def __init__(self, dungeon_level: int):
         self.stats_level = dungeon_level
-        self.xp_end_level = 5
+        self.xp_end_level = 10
         self.max_total_freq: float = 0.8  # max total frequency of all items placed
 
     @property
@@ -959,7 +959,7 @@ class TrapStats:
         """
         level: int = dungeon_level // 4
         level = 1 if level < 1 else level
-        return randint(self.base_damage[0], self.base_damage[1]) * level
+        return self.base_damage * level
 
     def calculate_experience(self, dungeon_level: int) -> int:
         """

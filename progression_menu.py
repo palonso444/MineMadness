@@ -110,7 +110,8 @@ class NextLevelButton(GameButton):
 
 
 class CharacterProgressionMenu(Screen):
-    background = ObjectProperty(None, allownone=True)
+    # cool but confusing
+    # background = ObjectProperty(None, allownone=True)
     player = ObjectProperty(None, allownone=True)
 
     # DISPLAY PROPERTIES.

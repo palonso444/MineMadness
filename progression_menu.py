@@ -4,7 +4,7 @@ from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from player_class import Player
-from widget_classes import GameButton, GameLabel
+from widget_classes import GameButton
 
 class DowngradeButton(GameButton):
     """

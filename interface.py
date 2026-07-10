@@ -163,18 +163,14 @@ class TalismanButton(Interfacebutton):
     """
     def on_release(self) -> None:
 
-        character = self.game.active_character
-        if Player.all_alive():
-            character = self.game.active_character
-            character.experience = character.stats.exp_to_next_level
-            character.token.show_effect_token("level_up")
-        else:
+        #character = self.game.active_character
+        if not Player.all_alive():
             # if sawyer dead, she is the first to come back
             if Player.data[0].state == "dead":
                 player = Player.data[0]
             else:
                 player = choice(Player.get_all_with_state("dead"))
-            player.resurrect(character.get_dungeon())
+            player.resurrect(self.game.dungeon)
             player.token.show_effect_token("resurrect")
 
-        self.apply_cost("talisman")
+            self.apply_cost("talisman")

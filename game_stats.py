@@ -13,7 +13,7 @@ class DungeonStats:
     """
     def __init__(self, dungeon_level: int):
         self.stats_level = dungeon_level
-        self.xp_end_level = 10
+        self.xp_end_level = 5
         self.max_total_freq: float = 0.8  # max total frequency of all items placed
 
     @property

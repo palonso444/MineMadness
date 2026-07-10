@@ -8,7 +8,7 @@
     size_hint: 1, None  # x_axis, y_axis
     height: self.minimum_height
 
-<HowToPlayLabel@Label>
+<HowToPlayLabel@GameLabel>
     font_size: "30sp"
     # size of Label is dynamic depending on number of pictures in the parent Layout
     size_hint: 1 - (len(self.parent.children) - 1) * picture_width_hint, None
@@ -106,7 +106,7 @@
                     HowToPlayPicture:
                         source: get_resource_path("./tokens/talismantoken.png")
                     HowToPlayLabel:
-                        text: "TALISMAN: this rare indian relic will bring back dead characters or level up whoever uses it."
+                        text: "TALISMAN: this rare indian relic will bring back characters from death."
                 HowToPlayLayout:
                     HowToPlayLabel:
                         text: "You have learned enough to survive the early levels... Good luck, adventurer!"

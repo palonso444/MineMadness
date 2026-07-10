@@ -9,7 +9,6 @@ from character_class import Character
 
 class Player(Character, ABC):
 
-    experience = NumericProperty(0)
     player_level = NumericProperty(1)
     shovels = NumericProperty(None)
     weapons = NumericProperty(None)
@@ -198,7 +197,10 @@ class Player(Character, ABC):
         if self.is_hidden:  # there is no token at this state, we cannot call unhide()
             self.ignores.remove("pickable")
             self.ignores.remove("treasure")
+        self.recover()
         self.ability_active = False
+        self.stats.moves = self.stats.natural_moves
+        self.stats.strength = self.stats.natural_strength
         self.remaining_moves = 0
         self.state = "in_game"
 
@@ -371,10 +373,7 @@ class Player(Character, ABC):
             for effect in effects:
                 if effect["end_turn"] <= turn:
                     player_stat = getattr(self.stats, attribute)
-                    if isinstance(player_stat, int):
-                        player_stat -= effect["size"]
-                    elif isinstance(player_stat, list):
-                        player_stat[1] -= effect["size"]
+                    player_stat -= effect["size"]
                     effect_names.append(attribute)
                     setattr(self.stats, attribute, player_stat)
 
@@ -405,8 +404,6 @@ class Player(Character, ABC):
                 trap_token = dungeon.get_tile(position).get_token("trap")
                 trap_token.character.unhide()
                 trap_token.show_effect_token("trap")
-                self.experience += trap_token.character.stats.experience_when_found
-                self.game.ids.experience_bar.value = self.experience
 
     def act_on_tile(self, tile:Tile) -> None:
         """
@@ -491,8 +488,6 @@ class Player(Character, ABC):
         """
         trap_token = tile.get_token("trap")
         trap_token.show_effect_token(effect="trap_out")
-        self.experience += trap_token.character.stats.calculate_experience(self.get_dungeon().game.level)
-        self.game.ids.experience_bar.value = self.experience
         trap_token.delete_token(tile)
         self.remaining_moves -= 1
 
@@ -546,6 +541,14 @@ class Player(Character, ABC):
             else self.stats.natural_health
         )
 
+    def recover(self) -> None:
+        """
+        Handles the logic of recovering health at the end of a level
+        Returns: None
+        """
+        extra_points: int = int(self.stats.natural_health * self.stats.recovery)
+        self.heal(extra_points)
+
     def kill_character(self, tile) -> None:
         """
         Kills a Player
@@ -561,14 +564,11 @@ class Player(Character, ABC):
         :param dungeon: DungeonLayout were the Player should be resurrected
         :return: None
         """
-        self.player_level = self.player_level - 1 if self.player_level > 1 else 1
         for key, value in self.level_track[self.player_level].items():
             self.stats.__setattr__(key, value)
 
         # equals attributes to natural_attributes
         self.stats.__post_init__()
-        self.experience = 0
-        self.stats.exp_to_next_level = self.player_level * self.stats.base_exp_to_level_up
         self.reset_objects()
         self.ability_active = False
 

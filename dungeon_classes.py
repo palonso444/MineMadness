@@ -81,7 +81,7 @@ class DungeonLayout(GridLayout):
         blueprint.place_items("h", self.stats.powder_number)
 
         # ADD HERE ELEMENTS TO TEST
-        # blueprint.place_items("!", 10)
+        # blueprint.place_items("H", 1)
 
         ### COMMENT THE FOLLOWING LINES TO AVOID PLACING STUFF TO THE DUNGEON
         # place everything but walls

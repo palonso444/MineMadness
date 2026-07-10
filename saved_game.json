@@ -32,7 +32,72 @@
                     "exit": null
                 },
                 {
+                    "player": "%",
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": "?",
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
                     "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": "x",
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": "p",
+                    "treasure": null,
+                    "exit": null
+                }
+            ],
+            [
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": "#",
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": "#",
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": "&",
                     "monster": null,
                     "trap": null,
                     "wall": null,
@@ -53,16 +118,7 @@
                     "player": null,
                     "monster": null,
                     "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": "H",
-                    "trap": null,
-                    "wall": null,
+                    "wall": "#",
                     "pickable": null,
                     "treasure": null,
                     "exit": null
@@ -73,7 +129,7 @@
                     "player": null,
                     "monster": null,
                     "trap": null,
-                    "wall": null,
+                    "wall": "#",
                     "pickable": null,
                     "treasure": null,
                     "exit": null
@@ -87,100 +143,6 @@
                     "treasure": null,
                     "exit": null
                 },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                }
-            ],
-            [
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                }
-            ],
-            [
                 {
                     "player": null,
                     "monster": null,
@@ -204,7 +166,7 @@
                     "monster": null,
                     "trap": null,
                     "wall": null,
-                    "pickable": null,
+                    "pickable": "x",
                     "treasure": null,
                     "exit": null
                 },
@@ -212,25 +174,7 @@
                     "player": null,
                     "monster": null,
                     "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
+                    "wall": "#",
                     "pickable": null,
                     "treasure": null,
                     "exit": null
@@ -242,13 +186,31 @@
                     "monster": null,
                     "trap": null,
                     "wall": null,
+                    "pickable": "p",
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": "#",
                     "pickable": null,
                     "treasure": null,
                     "exit": null
                 },
                 {
-                    "player": "%",
+                    "player": null,
                     "monster": null,
+                    "trap": null,
+                    "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": "K",
                     "trap": null,
                     "wall": null,
                     "pickable": null,
@@ -268,25 +230,7 @@
                     "player": null,
                     "monster": null,
                     "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
-                    "pickable": null,
-                    "treasure": null,
-                    "exit": null
-                },
-                {
-                    "player": null,
-                    "monster": null,
-                    "trap": null,
-                    "wall": null,
+                    "wall": "#",
                     "pickable": null,
                     "treasure": null,
                     "exit": null
@@ -294,19 +238,19 @@
             ],
             [
                 {
-                    "player": "&",
+                    "player": null,
                     "monster": null,
                     "trap": null,
-                    "wall": null,
+                    "wall": "#",
                     "pickable": null,
                     "treasure": null,
                     "exit": null
                 },
                 {
-                    "player": "?",
+                    "player": null,
                     "monster": null,
                     "trap": null,
-                    "wall": null,
+                    "wall": "#",
                     "pickable": null,
                     "treasure": null,
                     "exit": null
@@ -324,7 +268,45 @@
                     "player": null,
                     "monster": null,
                     "trap": null,
+                    "wall": "#",
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": "#",
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": "#",
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                }
+            ],
+            [
+                {
+                    "player": null,
+                    "monster": "P",
+                    "trap": null,
                     "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": "#",
                     "pickable": null,
                     "treasure": null,
                     "exit": null
@@ -342,7 +324,25 @@
                     "player": null,
                     "monster": null,
                     "trap": null,
+                    "wall": "#",
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
                     "wall": null,
+                    "pickable": null,
+                    "treasure": null,
+                    "exit": null
+                },
+                {
+                    "player": null,
+                    "monster": null,
+                    "trap": null,
+                    "wall": "#",
                     "pickable": null,
                     "treasure": null,
                     "exit": null
@@ -353,7 +353,26 @@
         "x_axis": 6,
         "area": 36
     },
-    "torches_dict": null,
+    "torches_dict": {
+        "(4, 3)": [
+            [
+                -1,
+                0
+            ]
+        ],
+        "(3, 1)": [
+            [
+                -1,
+                0
+            ]
+        ],
+        "(3, 5)": [
+            [
+                0,
+                -1
+            ]
+        ]
+    },
     "players": {
         "Sawyer": {
             "char": "%",
@@ -395,7 +414,7 @@
                     "natural_strength": 1
                 },
                 "trap_spotting_chance": 0.2,
-                "trap_disarming_chance": 0.3,
+                "trap_disarming_chance": 0.5,
                 "natural_health": 5,
                 "natural_moves": 4,
                 "natural_strength": 1
@@ -484,7 +503,7 @@
                     "natural_strength": 1
                 },
                 "trap_spotting_chance": 0.3,
-                "trap_disarming_chance": 0.7,
+                "trap_disarming_chance": 1,
                 "natural_health": 8,
                 "natural_moves": 3,
                 "natural_strength": 2

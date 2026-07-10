@@ -198,7 +198,10 @@ class Player(Character, ABC):
         if self.is_hidden:  # there is no token at this state, we cannot call unhide()
             self.ignores.remove("pickable")
             self.ignores.remove("treasure")
+        self.recover()
         self.ability_active = False
+        self.stats.moves = self.stats.natural_moves
+        self.stats.strength = self.stats.natural_strength
         self.remaining_moves = 0
         self.state = "in_game"
 
@@ -371,10 +374,7 @@ class Player(Character, ABC):
             for effect in effects:
                 if effect["end_turn"] <= turn:
                     player_stat = getattr(self.stats, attribute)
-                    if isinstance(player_stat, int):
-                        player_stat -= effect["size"]
-                    elif isinstance(player_stat, list):
-                        player_stat[1] -= effect["size"]
+                    player_stat -= effect["size"]
                     effect_names.append(attribute)
                     setattr(self.stats, attribute, player_stat)
 
@@ -545,6 +545,14 @@ class Player(Character, ABC):
             if self.stats.health + extra_points <= self.stats.natural_health
             else self.stats.natural_health
         )
+
+    def recover(self) -> None:
+        """
+        Handles the logic of recovering health at the end of a level
+        Returns: None
+        """
+        extra_points: int = int(self.stats.natural_health * self.stats.recovery)
+        self.heal(extra_points)
 
     def kill_character(self, tile) -> None:
         """

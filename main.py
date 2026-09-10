@@ -76,7 +76,7 @@ class MineMadnessApp(App):
         self.game: MineMadnessGame | None = None
         self.sm: ScreenManager | None = None
 
-    def build(self) -> ScreenManager:
+    def build(self) -> ScreenManager | None:
         Builder.load_file(get_resource_path("./how_to_play.kv"))
         Builder.load_file(get_resource_path("./progression_menu.kv"))
         self.sm = ScreenManager(transition=FadeTransition(duration=0.3))

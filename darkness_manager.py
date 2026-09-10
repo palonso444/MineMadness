@@ -23,9 +23,9 @@ class DarknessManager(EventDispatcher):
         self.flickering_torches: ClockEvent | None = None
 
         self.darkness_intensity: int = 150  # alpha intensity of the darkness. Must range from 0 to 255
-        self.number_of_layers: int = 25
+        self.number_of_layers: int = 25  # number of darkness layers availables in list
         self.darkness: Rectangle | None = None
-        self.darkness_layers: list | None = None
+        self.darkness_layers: list[Rectangle] | None = None
 
     def initialize(self) -> None:
         """
@@ -33,7 +33,7 @@ class DarknessManager(EventDispatcher):
         :return: None
         """
         self._rotate_torches()
-        self.get_all_bright_spots()
+        self.update_bright_spots()  # gets data of all bright tokens
         self.generate_darkness_layers()
 
     def _setup_torches_dict(self) -> None:
@@ -120,9 +120,10 @@ class DarknessManager(EventDispatcher):
                 elif token.pos_modifier == (0, -tile.width / 2 + token.size[0] / 2):  # left
                     token.rotate_token(degrees=270, axis=token.center)
                     
-    def get_all_bright_spots(self) -> None:
+    def update_bright_spots(self, dt: float | None = None) -> None:
         """
         Stores in DungeonLayout.bright_spots one bright spot dict for each Token with bright_intensity > 0
+        :param dt: delta time. Optional. This function may be scheduled
         :return: None
         """
         current_bright_spots = self.bright_spots[:]
@@ -160,12 +161,13 @@ class DarknessManager(EventDispatcher):
             dm.flickering_torches.cancel()
 
         if len(dm.bright_spots) > 0 and App.get_running_app().flickering_torches_on:
+            # regenerate all darkness layers with new bright spot
+            dm.generate_darkness_layers()
             dm.flickering_torches = Clock.schedule_interval(lambda dt: dm.darkness_flicker(dt=dt), 1 / 15)
         else:
             # if last bright spot is removed, cast static darkness
             if dm.darkness in dm.dungeon.canvas.after.children:
                 dm.dungeon.canvas.after.remove(dm.darkness)
-
             dm.darkness = dm._create_darkness_layer()
             dm.dungeon.canvas.after.add(dm.darkness)
     
@@ -193,18 +195,12 @@ class DarknessManager(EventDispatcher):
         Generates a number of darkness with different degree of flickering and stores them in a list
         :return: None
         """
-        if self.darkness_layers is not None:
-            raise AssertionError("Darkness layers are already generated!")
-
         self.darkness_layers = []
         for _ in range(self.number_of_layers):
             self.darkness_layers.append(self._create_darkness_layer())
 
     def _create_darkness_layer(self) -> Rectangle:
         """
-        **********************************************************************************
-        THIS FUNCTION HAS BEEN CYTHONIZED -- SEE cythonized_lights.pyx
-        **********************************************************************************
         Generates a darkness layer with optional illuminated areas
         :return: darkness layer to be displayed on the canvas
         """

@@ -360,7 +360,7 @@ class Tile(Button):
             token.character.kill_character(self)
         self.delete_all_tokens()  # delete all pickables
         if has_light:  # no need to check all dungeon if tile has no torch
-            self.dungeon.dm.get_all_bright_spots()
+            self.dungeon.dm.update_bright_spots()
 
         self.place_item("wall", "rock", None)
         self._show_explosion()
@@ -374,9 +374,12 @@ class Tile(Button):
             ExplosionToken(pos=self.pos, size=self.size)
 
         if App.get_running_app().flickering_torches_on:
-            self.dungeon.add_bright_spot(center=self.center,
+            self.dungeon.dm.add_bright_spot(center=self.center,
                                         radius=self.width * 2,
                                         intensity=1.0,
                                         gradient=(0.95, 0.95),
                                         timeout=0,
                                         max_timeout=0.25)
+
+            # remove explosion brightness after explosion is finished
+            Clock.schedule_once(self.dungeon.dm.update_bright_spots, 0.25)

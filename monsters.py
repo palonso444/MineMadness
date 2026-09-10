@@ -548,7 +548,7 @@ class ClawJaw(Monster):
 
     def dig(self, wall_tile: Tile) -> None:
         """
-        Digging method for Claw Jaw
+        Digging method for Clawjaw
         :param wall_tile: Tile upon which the digging must be performed
         :return: None
         """
@@ -566,7 +566,7 @@ class ClawJaw(Monster):
         if wall_tile.has_token("light"):
             while len(wall_tile.tokens["light"]) > 0:
                 wall_tile.get_token("light").delete_token(wall_tile)
-            self.get_dungeon().dm.get_all_bright_spots()
+            self.get_dungeon().dm.update_bright_spots()
 
     def _move_across_walls(self, target: tuple[int,int]) -> None:
         """

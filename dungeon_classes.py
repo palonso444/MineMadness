@@ -348,7 +348,7 @@ class DungeonLayout(GridLayout):
                 self.moving_token = None
 
     @staticmethod
-    def on_positions_to_update(dungeon: DungeonLayout, positions_to_update: list) -> None:
+    def on_positions_to_update(dungeon: DungeonLayout, positions_to_update: int) -> None:
         """
         This function assigns DungeonLayout to the dungeon attribute of MineMadnessGame and starts the level.
         Triggered when all Tokens are positioned in their correct pos (level_start list is empty)
@@ -357,7 +357,7 @@ class DungeonLayout(GridLayout):
         :return: None
         """
         if positions_to_update == 0:
-            dungeon.dm.initialize_torches()
+            dungeon.dm.initialize()
             dungeon.hide_penumbras()
             dungeon.game.dungeon = dungeon
 
@@ -366,7 +366,7 @@ class DungeonLayout(GridLayout):
                 with dungeon.canvas.after:
                     # uncomment this to run the cythonized version
                     # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
-                    dungeon.darkness = dungeon.dm.generate_darkness_layer()
+                    dungeon.darkness = dungeon.dm._create_darkness_layer()
 
     def hide_penumbras(self) -> None:
         """

@@ -40,7 +40,7 @@ version = 4.2
 # if including numpy, patchelf must be installed or build will fail, run
 # sudo apt-get update
 # sudo apt-get install patchelf
-requirements = python3,kivy,numpy
+requirements = python3,kivy==2.3.0,numpy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes

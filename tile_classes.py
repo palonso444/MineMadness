@@ -377,9 +377,7 @@ class Tile(Button):
             self.dungeon.dm.add_bright_spot(center=self.center,
                                         radius=self.width * 2,
                                         intensity=1.0,
-                                        gradient=(0.95, 0.95),
-                                        timeout=0,
-                                        max_timeout=0.25)
+                                        gradient=(0.95, 0.95))
 
             # remove explosion brightness after explosion is finished
             Clock.schedule_once(self.dungeon.dm.update_bright_spots, 0.25)

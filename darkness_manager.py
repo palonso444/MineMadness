@@ -12,7 +12,8 @@ from numpy import zeros, uint8, ogrid, int16, clip
 
 class DarknessManager(EventDispatcher):
     """
-    Manages the darkness layer covering the dungeon and the logic of torch placement and flickering
+    Manages the darkness layer covering the dungeon and the logic of torch placement and flickering. Updating the list
+    DarknessManager.bright_spots triggers generation of new darkness layers considering all tokens with bright_int > 0
     """
     bright_spots = ListProperty([])
 
@@ -29,12 +30,12 @@ class DarknessManager(EventDispatcher):
 
     def initialize(self) -> None:
         """
-        Places, rotates and initializes the torches and generates darkness layers
+        Places, rotates and initializes the torches and triggers generation of darkness layers by updating
+        DarknessManager.bright_spots
         :return: None
         """
         self._rotate_torches()
         self.update_bright_spots()  # gets data of all bright tokens
-        self.generate_darkness_layers()
 
     def _setup_torches_dict(self) -> None:
         """
@@ -126,23 +127,16 @@ class DarknessManager(EventDispatcher):
         :param dt: delta time. Optional. This function may be scheduled
         :return: None
         """
-        current_bright_spots = self.bright_spots[:]
-    
         self.bright_spots = ([{"center": token.center,
                                 "radius": token.bright_radius,
                                 "intensity": token.bright_int,
-                                "gradient": token.gradient,
-                                "timeout": None,
-                                "max_timeout": None}
+                                "gradient": token.gradient}
                                 for tile in self.dungeon.children
                                 for token_list in tile.tokens.values()
-                                for token in token_list if token.bright_int > 0]
-                                +
-                                [bright_spot for bright_spot in current_bright_spots if
-                                bright_spot["max_timeout"] is not None])
+                                for token in token_list if token.bright_int > 0])
     
     def add_bright_spot(self, center: tuple[float, float], radius: float, intensity: float,
-                        gradient: tuple[float, float], timeout: float | None, max_timeout: float | None) -> None:
+                        gradient: tuple[float, float]) -> None:
         """
         Adds a single bright spot dict to DungeonLayout.bright_spots
         :return: None
@@ -178,12 +172,6 @@ class DarknessManager(EventDispatcher):
         :param dt: delta time
         :return: None
         """
-        for bright_spot in self.bright_spots:
-            if bright_spot["timeout"] is not None:
-                bright_spot["timeout"] += dt
-                if bright_spot["timeout"] > bright_spot["max_timeout"]:
-                    self.bright_spots.remove(bright_spot)
-
         if self.darkness in self.dungeon.canvas.after.children:
             self.dungeon.canvas.after.remove(self.darkness)
 

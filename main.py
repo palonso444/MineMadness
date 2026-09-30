@@ -211,7 +211,7 @@ class MineMadnessApp(App):
         """
         if self.ongoing_game:
             # resumes the flickering of lights
-            self.game.dungeon.dm.on_bright_spots(self.game.dungeon.dm, self.game.dungeon.dm.bright_spots)
+            self.game.dungeon.dm.on_bright_spots(self.game.dungeon.dm, self.game.dungeon.dm.bright_areas)
             self.sm.current = "game_screen"
         else:
             self.load_game()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, ABCMeta
+from dataclasses import dataclass
 
 from kivy.graphics import Ellipse, Rectangle, Color, Line
 from kivy.graphics.context_instructions import PushMatrix, PopMatrix, Rotate
@@ -9,6 +10,13 @@ from kivy.properties import NumericProperty, ListProperty
 
 from tokens_fading import DamageToken, DiggingToken, EffectToken
 
+
+@dataclass()
+class BrightArea:
+    center: tuple[float,float]
+    radius: float
+    intensity: float
+    gradient: tuple [float, float]
 
 class WidgetABCMeta(ABCMeta,type(Widget)):
     """
@@ -50,9 +58,20 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.size: [tuple[float,float]] = self.size[0] * size_modifier, self.size[1] * size_modifier
         self.pos: [tuple[float, float]] = self.pos[0] + pos_modifier[0], self.pos[1] - pos_modifier[1]  # (x,y)
 
-        self.bright_radius: float = bright_radius
-        self.bright_int: float = bright_int
-        self.gradient: tuple [float, float] = gradient  # (min, max). If equals constant brightness, otherwise flickers
+        if bright_radius>0.0 and bright_int>0.0:
+            self.bright_area = BrightArea(center=self.center,
+                                          radius=bright_radius,
+                                          intensity=bright_int,
+                                          gradient=gradient)  # (min, max). If equals constant brightness, otherwise flickers
+        elif bright_radius==0.0 and bright_int==0.0:
+            self.bright_area = None
+        else:
+            raise ValueError(f"Token.bright_radius and Token.bright_int must be both 0.0 or higher. "
+                             f"Current values: {bright_radius},{bright_int}")
+
+        #self.bright_radius: float = bright_radius
+        #self.bright_int: float = bright_int
+        #self.gradient: tuple [float, float] = gradient  # (min, max). If equals constant brightness, otherwise flickers
 
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:
@@ -179,7 +198,7 @@ class SceneryToken(SolidToken):
         if tile.has_token("light"):
             while len(tile.tokens["light"]) > 0:
                 tile.get_token("light").delete_token(tile)
-            self.dungeon.dm.update_bright_spots()
+            self.dungeon.dm.get_all_bright_areas()
 
 
 class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):

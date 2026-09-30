@@ -362,7 +362,7 @@ class DungeonLayout(GridLayout):
             dungeon.game.dungeon = dungeon
 
             # if dungeon.bright_spots does not change its values, darkness must be cast manually
-            if len(dungeon.dm.bright_spots) == 0:
+            if len(dungeon.dm.bright_areas) == 0:
                 with dungeon.canvas.after:
                     # uncomment this to run the cythonized version
                     # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)

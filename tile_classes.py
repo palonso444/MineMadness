@@ -375,9 +375,6 @@ class Tile(Button):
 
         if App.get_running_app().flickering_torches_on:
             self.dungeon.dm.bright_areas.append(BrightArea(center=self.center,
-                                                          radius=self.width * 2,
-                                                          intensity=1.0,
-                                                          gradient=(0.95, 0.95)))
-
-            # remove explosion brightness after explosion is finished
-            Clock.schedule_once(self.dungeon.dm.get_all_bright_areas, 0.25)
+                                                           radius=self.width * 2,
+                                                           intensity=1.0,
+                                                           flicker_mod_range=(0.95, 0.95)))

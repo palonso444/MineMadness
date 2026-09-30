@@ -16,7 +16,8 @@ class BrightArea:
     center: tuple[float,float]
     radius: float
     intensity: float
-    gradient: tuple [float, float]
+    flicker_mod_range: tuple [float, float]
+    id: int | None = None
 
 class WidgetABCMeta(ABCMeta,type(Widget)):
     """
@@ -62,7 +63,7 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
             self.bright_area = BrightArea(center=self.center,
                                           radius=bright_radius,
                                           intensity=bright_int,
-                                          gradient=gradient)  # (min, max). If equals constant brightness, otherwise flickers
+                                          flicker_mod_range=gradient)  # (min, max). If equals constant brightness, otherwise flickers
         elif bright_radius==0.0 and bright_int==0.0:
             self.bright_area = None
         else:
@@ -197,8 +198,10 @@ class SceneryToken(SolidToken):
         super().delete_token(tile)
         if tile.has_token("light"):
             while len(tile.tokens["light"]) > 0:
-                tile.get_token("light").delete_token(tile)
-            self.dungeon.dm.get_all_bright_areas()
+                token = tile.get_token("light")
+                self.dungeon.dm.bright_areas.remove(token.bright_area)
+                token.delete_token(tile)
+            #self.dungeon.dm.get_all_bright_areas()
 
 
 class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):

@@ -20,6 +20,7 @@ class DarknessLayer:
     """
     texture: Rectangle
     pixel_int_data: ndarray
+    light_data: ndarray
     bright_areas: list[BrightArea]
     flicker_mods: dict[int, float]  # key: brightArea id, value: flicker_mod
 
@@ -219,27 +220,32 @@ class DarknessManager(EventDispatcher):
         :return: darkness layer to be displayed on the canvas
         """
         texture = Texture.create(size=self.dungeon.size, colorfmt="rgba")
-        pixel_int_data = zeros((texture.height, texture.width, 4), dtype=uint8)
-        pixel_int_data[:, :, 3] = self.darkness_intensity
+        height, width = texture.height, texture.width
         flicker_mods = {}
 
-        for bright_area in self.bright_areas:
-            flicker_mod = uniform(bright_area.flicker_mod_range[0], bright_area.flicker_mod_range[1])
+        # unclipped alpha: pixel intensity, may go negative. Starts at darkness intensity
+        pixel_int_data = np.full((height, width), self.darkness_intensity, dtype=int16)
+        # 3D array. height and width: one entry per pixel of the texture.
+        # 4: each pixel has four channels, red, green, blue and alpha.
+        light_data = zeros((height, width, 4), dtype=uint8)
+        # Sets the alpha channel of every pixel to darkness intensity
+        light_data[:, :, 3] = self.darkness_intensity
 
-            self._generate_area_data(texture.height,
-                                     texture.width,
+        for bright_area in self.bright_areas:
+            flicker_mod = uniform(*bright_area.flicker_mod_range)
+            self._generate_area_data(height, width,
                                      self.darkness_intensity,
                                      bright_area,
                                      pixel_int_data,
+                                     light_data,
                                      flicker_mod,
                                      revert_brightness=False)
-
             flicker_mods[bright_area.id] = flicker_mod
 
-        pixel_int_data = pixel_int_data.flatten()
-        texture.blit_buffer(pixel_int_data, colorfmt="rgba", bufferfmt="ubyte")
-        return DarknessLayer(texture = Rectangle(texture=texture, pos=self.dungeon.pos, size=self.dungeon.size),
-                             pixel_int_data=pixel_int_data, bright_areas=self.bright_areas[:], flicker_mods=flicker_mods)
+        texture.blit_buffer(light_data.ravel(), colorfmt="rgba", bufferfmt="ubyte")
+        return DarknessLayer(texture=Rectangle(texture=texture, pos=self.dungeon.pos, size=self.dungeon.size),
+                             pixel_int_data=pixel_int_data, light_data=light_data,
+                             bright_areas=self.bright_areas[:], flicker_mods=flicker_mods)
 
     def _add_bright_area(self, bright_area: BrightArea) -> None:
         """
@@ -286,25 +292,22 @@ class DarknessManager(EventDispatcher):
         :param revert_brightness: bool indicating if brightness must be inverted (thus bright_area_removed)
         :return: None
         """
-        height = self.darkness.texture.texture.height
-        width = self.darkness.texture.texture.width
-        self._generate_area_data(height,
-                                 width,
+        height, width = self.darkness.pixel_int_data.shape
+
+        self._generate_area_data(height, width,
                                  self.darkness_intensity,
                                  bright_area,
-                                 self.darkness.pixel_int_data.reshape(height, width, 4),
+                                 self.darkness.pixel_int_data,
+                                 self.darkness.light_data,
                                  flicker_mod=self.darkness.flicker_mods[bright_area.id],
                                  revert_brightness=revert_brightness)
 
-        self.darkness.pixel_int_data = self.darkness.pixel_int_data.flatten()
-        self.darkness.texture.texture.blit_buffer(self.darkness.pixel_int_data, colorfmt="rgba", bufferfmt="ubyte")
+        self.darkness.texture.texture.blit_buffer(self.darkness.light_data.ravel(),
+                                                  colorfmt="rgba", bufferfmt="ubyte")
 
     @staticmethod
-    def _generate_area_data(texture_height: int, texture_width: int,
-                            darkness_intensity: int,
-                            bright_area: BrightArea,
-                            pixel_int_data: np.ndarray,
-                            flicker_mod: float,
+    def _generate_area_data(texture_height: int, texture_width: int, darkness_intensity: int, bright_area: BrightArea,
+                            pixel_int_data: np.ndarray, light_data: np.ndarray, flicker_mod: float,
                             revert_brightness:bool) -> None:
         """
         Generates the pixel intensity data of an area of the darkness layer
@@ -313,19 +316,22 @@ class DarknessManager(EventDispatcher):
         :param darkness_intensity: intensity of the darkness layer
         :param bright_area: BrightArea data to append
         :param pixel_int_data: ndarray of pixel intensity data
+        :param light_data: ndarray of pixel clipped light intensity data
         :param revert_brightness: bool indicating if brightness must be inverted (thus bright_area_removed)
         :return: None
         """
         max_distance = bright_area.radius ** 2
-        y_pos, x_pos = ogrid[:texture_height, :texture_width]  # two arrays of y and x coordinates of the layer
+        # 2 arrays of y and x coordinates for each pixel
+        y_pos, x_pos = ogrid[:texture_height, :texture_width]
 
         distance_from_center = (x_pos - bright_area.center[0]) ** 2 + (y_pos - bright_area.center[1]) ** 2
-        light_mask = (distance_from_center < max_distance)  # [bool] array
+        light_mask = distance_from_center < max_distance
         brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** flicker_mod)
-         * darkness_intensity * bright_area.intensity)
+                      * darkness_intensity * bright_area.intensity).astype(int16)
 
         if revert_brightness:
             brightness *= -1
 
-        temp_data = pixel_int_data[light_mask, 3].astype(int16) - brightness.astype(int16)
-        pixel_int_data[light_mask, 3] = clip(temp_data, 0, darkness_intensity).astype(uint8)
+        pixel_int_data[light_mask] -= brightness  # raw data
+        # clipped data between zero light and darkness intensity
+        light_data[light_mask, 3] = clip(pixel_int_data[light_mask], 0, darkness_intensity).astype(uint8)

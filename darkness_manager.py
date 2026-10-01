@@ -270,12 +270,12 @@ class DarknessManager(EventDispatcher):
         :param dt: delta time
         :return: None
         """
-        remaining = []
+        remaining: list[BrightArea] = []
         for ba in self.bright_areas:
             if ba.duration is not None:
                 ba.elapsed_time += dt
                 if ba.elapsed_time > ba.duration:
-                    continue
+                    continue  # timeout areas are not included in remaining list
             remaining.append(ba)
         self.bright_areas = remaining
 

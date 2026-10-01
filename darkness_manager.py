@@ -146,6 +146,7 @@ class DarknessManager(EventDispatcher):
                              for tile in self.dungeon.children
                              for token_list in tile.tokens.values()
                              for token in token_list if token.bright_area is not None])
+
         for bright_area in self.bright_areas:
             self._set_id(bright_area)
 
@@ -190,6 +191,7 @@ class DarknessManager(EventDispatcher):
 
         self.darkness = choice(self.darkness_layers)
 
+        self._get_timeout_bright_areas(dt)
         # bright areas to add (if present in DarknessManager.bright_areas and not in darkness.bright_areas)
         ba_to_add: list[BrightArea] = [ba for ba in self.bright_areas if ba not in self.darkness.bright_areas]
         # bright areas to remove (if present in darkness.bright_areas and not in DarknessManager.bright_areas)
@@ -251,7 +253,6 @@ class DarknessManager(EventDispatcher):
             uniform(bright_area.flicker_mod_range[0], bright_area.flicker_mod_range[1]))
 
         self._modify_darkness_layer(bright_area, revert_brightness=False)
-        self.darkness.bright_areas.append(bright_area)
 
     def _remove_bright_area(self, bright_area: BrightArea) -> None:
         """
@@ -262,6 +263,21 @@ class DarknessManager(EventDispatcher):
         self._modify_darkness_layer(bright_area, revert_brightness=True)
         del self.darkness.flicker_mods[bright_area.id]
         self.darkness.bright_areas.remove(bright_area)
+
+    def _get_timeout_bright_areas(self, dt: float) -> None:
+        """
+        Purges BrightArea from DarknesManager.bright_areas with exhausted duration
+        :param dt: delta time
+        :return: None
+        """
+        remaining = []
+        for ba in self.bright_areas:
+            if ba.duration is not None:
+                ba.elapsed_time += dt
+                if ba.elapsed_time > ba.duration:
+                    continue
+            remaining.append(ba)
+        self.bright_areas = remaining
 
     def _modify_darkness_layer(self, bright_area: BrightArea, revert_brightness: bool) -> None:
         """

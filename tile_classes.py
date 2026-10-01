@@ -377,4 +377,5 @@ class Tile(Button):
             self.dungeon.dm.bright_areas.append(BrightArea(center=self.center,
                                                            radius=self.width * 2,
                                                            intensity=1.0,
-                                                           flicker_mod_range=(0.95, 0.95)))
+                                                           flicker_mod_range=(0.95, 0.95),
+                                                           duration=0.3))

@@ -17,7 +17,12 @@ class BrightArea:
     radius: float
     intensity: float
     flicker_mod_range: tuple [float, float]
+    duration: float | None = None
+    elapsed_time: float = 0.0
     id: int | None = None
+
+    def __post_init__(self) -> None:
+        assert (self.elapsed_time == 0, "elapsed_time must be 0.0 when instantiating BrightArea")
 
 class WidgetABCMeta(ABCMeta,type(Widget)):
     """
@@ -201,7 +206,6 @@ class SceneryToken(SolidToken):
                 token = tile.get_token("light")
                 self.dungeon.dm.bright_areas.remove(token.bright_area)
                 token.delete_token(tile)
-            #self.dungeon.dm.get_all_bright_areas()
 
 
 class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):

@@ -210,8 +210,8 @@ class MineMadnessApp(App):
         :return: None
         """
         if self.ongoing_game:
-            # resumes the flickering of lights
-            self.game.dungeon.dm.on_bright_spots(self.game.dungeon.dm, self.game.dungeon.dm.bright_areas)
+            # resumes the flickering of lights (if activated)
+            self.game.dungeon.dm.enable_darkness()
             self.sm.current = "game_screen"
         else:
             self.load_game()

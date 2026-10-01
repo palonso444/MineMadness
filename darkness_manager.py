@@ -51,7 +51,17 @@ class DarknessManager(EventDispatcher):
         self._rotate_torches()
         self.get_all_bright_areas()  # gets data of all bright tokens
         self.generate_darkness_layers()
-        self.flickering_torches = Clock.schedule_interval(lambda dt: self.darkness_flicker(dt=dt), 1 / 15)
+        self.enable_darkness()
+
+    def enable_darkness(self) -> None:
+        """
+        Enables the flickering of torches (if activated)
+        :return: None:
+        """
+        if App.get_running_app().flickering_torches_on:
+            self.flickering_torches = Clock.schedule_interval(lambda dt: self.darkness_flicker(dt=dt), 1 / 15)
+        else:
+            self.darkness_flicker(0)  # 0 is a placeholder here
 
     def _setup_torches_dict(self) -> None:
         """

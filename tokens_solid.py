@@ -12,7 +12,7 @@ from tokens_fading import DamageToken, DiggingToken, EffectToken
 
 
 @dataclass()
-class BrightArea:
+class LightArea:
     center: tuple[float,float]
     radius: float
     intensity: float
@@ -22,7 +22,7 @@ class BrightArea:
     id: int | None = None
 
     def __post_init__(self) -> None:
-        assert (self.elapsed_time == 0, "elapsed_time must be 0.0 when instantiating BrightArea")
+        assert self.elapsed_time == 0, "elapsed_time must be 0.0 when instantiating BrightArea"
 
 class WidgetABCMeta(ABCMeta,type(Widget)):
     """
@@ -65,10 +65,10 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.pos: [tuple[float, float]] = self.pos[0] + pos_modifier[0], self.pos[1] - pos_modifier[1]  # (x,y)
 
         if bright_radius>0.0 and bright_int>0.0:
-            self.bright_area = BrightArea(center=self.center,
-                                          radius=bright_radius,
-                                          intensity=bright_int,
-                                          flicker_mod_range=gradient)  # (min, max). If equals constant brightness, otherwise flickers
+            self.bright_area = LightArea(center=self.center,
+                                         radius=bright_radius,
+                                         intensity=bright_int,
+                                         flicker_mod_range=gradient)  # (min, max). If equals constant brightness, otherwise flickers
         elif bright_radius==0.0 and bright_int==0.0:
             self.bright_area = None
         else:
@@ -204,7 +204,7 @@ class SceneryToken(SolidToken):
         if tile.has_token("light"):
             while len(tile.tokens["light"]) > 0:
                 token = tile.get_token("light")
-                self.dungeon.dm.bright_areas.remove(token.bright_area)
+                self.dungeon.dm.light_areas.remove(token.bright_area)
                 token.delete_token(tile)
 
 

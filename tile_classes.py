@@ -4,7 +4,7 @@ from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.app import App
 
-from tokens_solid import SceneryToken, PlayerToken, MonsterToken, BrightArea
+from tokens_solid import SceneryToken, PlayerToken, MonsterToken, LightArea
 from tokens_fading import ExplosionToken
 from monster_class import Monster
 
@@ -374,8 +374,8 @@ class Tile(Button):
             ExplosionToken(pos=self.pos, size=self.size)
 
         if App.get_running_app().flickering_torches_on:
-            self.dungeon.dm.bright_areas.append(BrightArea(center=self.center,
-                                                           radius=self.width * 2,
-                                                           intensity=1.0,
-                                                           flicker_mod_range=(0.95, 0.95),
-                                                           duration=0.3))
+            self.dungeon.dm.light_areas.append(LightArea(center=self.center,
+                                                         radius=self.width * 2,
+                                                         intensity=1.0,
+                                                         flicker_mod_range=(0.95, 0.95),
+                                                         duration=0.3))

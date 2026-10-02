@@ -71,12 +71,12 @@ class MineMadnessApp(App):
         self.music: Optional[Sound] = None
         self.music_on: Optional[bool] = None
 
-        self.flickering_torches_on: bool = False
+        self.flickering_torches_on: bool = True
 
         self.game: MineMadnessGame | None = None
         self.sm: ScreenManager | None = None
 
-    def build(self) -> ScreenManager:
+    def build(self) -> ScreenManager | None:
         Builder.load_file(get_resource_path("./how_to_play.kv"))
         Builder.load_file(get_resource_path("./progression_menu.kv"))
         self.sm = ScreenManager(transition=FadeTransition(duration=0.3))
@@ -210,8 +210,8 @@ class MineMadnessApp(App):
         :return: None
         """
         if self.ongoing_game:
-            # resumes the flickering of lights
-            self.game.dungeon.dm.on_bright_spots(self.game.dungeon.dm, self.game.dungeon.dm.bright_spots)
+            # resumes the flickering of lights (if activated)
+            self.game.dungeon.dm.enable_darkness()
             self.sm.current = "game_screen"
         else:
             self.load_game()

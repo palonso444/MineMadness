@@ -548,7 +548,7 @@ class ClawJaw(Monster):
 
     def dig(self, wall_tile: Tile) -> None:
         """
-        Digging method for Claw Jaw
+        Digging method for Clawjaw
         :param wall_tile: Tile upon which the digging must be performed
         :return: None
         """

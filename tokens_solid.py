@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, ABCMeta
+from dataclasses import dataclass
 
 from kivy.graphics import Ellipse, Rectangle, Color, Line
 from kivy.graphics.context_instructions import PushMatrix, PopMatrix, Rotate
@@ -9,6 +10,19 @@ from kivy.properties import NumericProperty, ListProperty
 
 from tokens_fading import DamageToken, DiggingToken, EffectToken
 
+
+@dataclass()
+class LightArea:
+    center: tuple[float,float]
+    radius: float
+    intensity: float
+    flicker_mod_range: tuple [float, float]
+    duration: float | None = None
+    elapsed_time: float = 0.0
+    id: int | None = None
+
+    def __post_init__(self) -> None:
+        assert self.elapsed_time == 0, "elapsed_time must be 0.0 when instantiating BrightArea"
 
 class WidgetABCMeta(ABCMeta,type(Widget)):
     """
@@ -50,9 +64,20 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.size: [tuple[float,float]] = self.size[0] * size_modifier, self.size[1] * size_modifier
         self.pos: [tuple[float, float]] = self.pos[0] + pos_modifier[0], self.pos[1] - pos_modifier[1]  # (x,y)
 
-        self.bright_radius: float = bright_radius
-        self.bright_int: float = bright_int
-        self.gradient: tuple [float, float] = gradient  # (min, max). If equals constant brightness, otherwise flickers
+        if bright_radius>0.0 and bright_int>0.0:
+            self.bright_area = LightArea(center=self.center,
+                                         radius=bright_radius,
+                                         intensity=bright_int,
+                                         flicker_mod_range=gradient)  # (min, max). If equals constant brightness, otherwise flickers
+        elif bright_radius==0.0 and bright_int==0.0:
+            self.bright_area = None
+        else:
+            raise ValueError(f"Token.bright_radius and Token.bright_int must be both 0.0 or higher. "
+                             f"Current values: {bright_radius},{bright_int}")
+
+        #self.bright_radius: float = bright_radius
+        #self.bright_int: float = bright_int
+        #self.gradient: tuple [float, float] = gradient  # (min, max). If equals constant brightness, otherwise flickers
 
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:
@@ -71,7 +96,6 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         """
         return self.dungeon.get_tile(self.position)
 
-
     def show_effect_token(self, effect: str, pos: tuple [float,float] = None,
                           size: tuple [float,float] = None, effect_ends: bool = False) -> None:
         """
@@ -88,7 +112,6 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         with self.dungeon.canvas.after:
             EffectToken(effect=effect, pos=pos, size=size, character_token=self, effect_ends=effect_ends)
 
-
     @staticmethod
     def on_effect_queue(solid_token: SolidToken, effect_queue: list[dict[str:bool]]) -> None:
         """
@@ -102,7 +125,6 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
             effect_name, effect_ends = list(effect_queue[0].items())[0]
             solid_token.show_effect_token(effect_name, effect_ends=effect_ends)
 
-
     def remove_effect_if_in_queue(self, animation: Animation, fading_token: FadingToken) -> None:
         """
         Triggered when fading_out animation is completed. Removes the effect of the effect_queue of the CharacterToken
@@ -113,7 +135,6 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         effect_in_queue: dict = {fading_token.effect: fading_token.effect_ends}
         if effect_in_queue in self.effect_queue:
             self.effect_queue.remove(effect_in_queue)
-
 
     def delete_token(self, tile: Tile) -> None:
         """
@@ -173,6 +194,18 @@ class SceneryToken(SolidToken):
         """
         with self.dungeon.canvas:
             DiggingToken(pos=self.pos, size=self.size)
+
+    def delete_token(self, tile: Tile) -> None:
+        """
+        Completely erases the Token from the game and all the torches that share tile with it
+        :return: None
+        """
+        super().delete_token(tile)
+        if tile.has_token("light"):
+            while len(tile.tokens["light"]) > 0:
+                token = tile.get_token("light")
+                self.dungeon.dm.light_areas.remove(token.bright_area)
+                token.delete_token(tile)
 
 
 class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):

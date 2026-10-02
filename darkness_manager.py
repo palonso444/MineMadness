@@ -1,36 +1,67 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
+import numpy as np
 from kivy.graphics.texture import Texture
 from kivy.graphics import Rectangle
 from kivy.clock import Clock
-from kivy.properties import ListProperty
 from kivy.event import EventDispatcher
 from kivy.app import App
+
+from tokens_solid import LightArea
 
 from random import choice, uniform
 from numpy import zeros, uint8, ogrid, int16, clip
 
+@dataclass
+class DarknessLayer:
+    """
+    Dataclass defining a darkness layer.
+    """
+    texture: Rectangle
+    pixel_int_data: ndarray
+    light_data: ndarray
+    light_areas: list[LightArea]
+    flicker_mods: dict[int, float]  # key: lightArea id, value: flicker_mod
+
 class DarknessManager(EventDispatcher):
     """
-    Manages the darkness layer covering the dungeon and the logic of torch placement and flickering
+    Manages the darkness layer covering the dungeon and the logic of torch placement and flickering. Updating the list
+    DarknessManager.light_areas triggers generation of new darkness layers considering all tokens with bright_int > 0
     """
-    bright_spots = ListProperty([])
 
     def __init__(self, dungeon: DungeonLayout, torches_dict: dict | None, **kwargs):
         super().__init__(**kwargs)
         self.dungeon: DungeonLayout = dungeon
+        self.light_areas: list[LightArea] | None = None
         self.torches_dict: dict | None = torches_dict
-        self.darkness: Rectangle | None = None
-        self.darkness_intensity: int = 150  #  alpha intensity of the darkness. Must range from 0 to 255
         self.flickering_torches: ClockEvent | None = None
 
-    def initialize_torches(self) -> None:
+        self.darkness_intensity: int = 150  # alpha intensity of the darkness. Must range from 0 to 255
+        self.number_of_layers: int = 10  # number of darkness layers available in list
+        self.darkness: DarknessLayer | None = None
+        self.darkness_layers: list[DarknessLayer] | None = None
+
+    def initialize(self) -> None:
         """
-        Places, rotates and initalizes the torches
+        Places, rotates and initializes the torches, generates the darkness layers and activates the switching
+        between them
         :return: None
         """
         self._rotate_torches()
-        self.update_bright_spots()
+        self.get_all_light_areas()  # gets data of all bright tokens
+        self.generate_darkness_layers()
+        self.enable_darkness()
+
+    def enable_darkness(self) -> None:
+        """
+        Enables the flickering of torches (if activated)
+        :return: None:
+        """
+        if App.get_running_app().flickering_torches_on:
+            self.flickering_torches = Clock.schedule_interval(lambda dt: self.darkness_flicker(dt=dt), 1 / 15)
+        else:
+            self.darkness_flicker(dt=0)  # 0 is a placeholder here
 
     def _setup_torches_dict(self) -> None:
         """
@@ -116,56 +147,48 @@ class DarknessManager(EventDispatcher):
                 elif token.pos_modifier == (0, -tile.width / 2 + token.size[0] / 2):  # left
                     token.rotate_token(degrees=270, axis=token.center)
                     
-    def update_bright_spots(self) -> None:
+    def get_all_light_areas(self, dt: float | None = None) -> None:
         """
-        Stores in DungeonLayout.bright_spots one bright spot dict for each Token with bright_intensity > 0
+        Stores in DungeonLayout.light_areas one light spot dict for each Token with bright_intensity > 0
+        :param dt: delta time. Optional. This function may be scheduled
         :return: None
         """
-        current_bright_spots = self.bright_spots[:]
-    
-        self.bright_spots = ([{"center": token.center,
-                                "radius": token.bright_radius,
-                                "intensity": token.bright_int,
-                                "gradient": token.gradient,
-                                "timeout": None,
-                                "max_timeout": None}
-                                for tile in self.dungeon.children
-                                for token_list in tile.tokens.values()
-                                for token in token_list if token.bright_int > 0]
-                                +
-                                [bright_spot for bright_spot in current_bright_spots if
-                                bright_spot["max_timeout"] is not None])
-    
-    def add_bright_spot(self, center: tuple[float, float], radius: float, intensity: float,
-                        gradient: tuple[float, float], timeout: float | None, max_timeout: float | None) -> None:
-        """
-        Adds a single bright spot dict to DungeonLayout.bright_spots
-        :return: None
-        """
-        self.bright_spots.append({key: value for key, value in locals().items() if key != "self"})
-    
-    @staticmethod
-    def on_bright_spots(dm: DarknessManager, bright_spots: list[dict]) -> None:
-        """
-        Callback triggered upon modification of DungeonLayout.bright_spots
-        :param dm: DarknessManager instance
-        :param bright_spots: list containing the center pos of all torches centers
-        :return: None
-        """
-        if dm.flickering_torches is not None:
-            dm.flickering_torches.cancel()
+        self.light_areas = ([token.bright_area
+                             for tile in self.dungeon.children
+                             for token_list in tile.tokens.values()
+                             for token in token_list if token.bright_area is not None])
 
-        if len(dm.bright_spots) > 0 and App.get_running_app().flickering_torches_on:
-            dm.flickering_torches = Clock.schedule_interval(lambda dt: dm.darkness_flicker(dt=dt), 1 / 15)
+        for light_area in self.light_areas:
+            self._set_id(light_area)
+
+    def _set_id(self, light_area: LightArea) -> None:
+        """
+        Sets a unique id number to a LiightArea based on the id of the previous LightArea of the list
+        :return: None
+        """
+        if self.light_areas.index(light_area) == 0:
+            light_area.id = 0
         else:
-            # if last bright spot is removed, cast static darkness
-            if dm.darkness in dm.dungeon.canvas.after.children:
-                dm.dungeon.canvas.after.remove(dm.darkness)
+            light_area.id = self.light_areas[self.light_areas.index(light_area) - 1].id + 1
 
-            with dm.dungeon.canvas.after:
-                # uncomment this to run the cythonized version
-                # dungeon.darkness = cl.generate_darkness_layer(dungeon, dungeon.darkness_intensity)
-                dm.darkness = dm.generate_darkness_layer()
+    """
+    def check_if_disable_flickering(self) -> bool:
+        ""
+        Checks if there are still flickering elements in the dungeron, if not, it casts a layer of static darkness
+        :return: True if static darkness was cast, False otherwise
+        ""
+        if len(self.bright_areas) == 0:
+            self.flickering_torches.cancel()
+            # if last bright spot is removed, cast static darkness
+            if self.darkness is not None: # and self.darkness.texture in self.dungeon.canvas.after.children:
+                self.dungeon.canvas.after.remove(self.darkness.texture)
+            self.darkness = self._create_darkness_layer()
+            self.dungeon.canvas.after.add(self.darkness.texture)
+            return True
+        elif not self.flickering_torches.is_triggered and App.get_running_app().flickering_torches_on:
+            self.flickering_torches = Clock.schedule_interval(lambda dt: self.darkness_flicker(dt=dt), 1 / 15)
+        return False
+    """
     
     def darkness_flicker(self, dt: float) -> None:
         """
@@ -174,45 +197,151 @@ class DarknessManager(EventDispatcher):
         :param dt: delta time
         :return: None
         """
-        for bright_spot in self.bright_spots:
-            if bright_spot["timeout"] is not None:
-                bright_spot["timeout"] += dt
-                if bright_spot["timeout"] > bright_spot["max_timeout"]:
-                    self.bright_spots.remove(bright_spot)
+        if self.darkness is not None:  # and self.darkness.texture in self.dungeon.canvas.after.children:
+            self.dungeon.canvas.after.remove(self.darkness.texture)
 
-        if self.darkness in self.dungeon.canvas.after.children:
-            self.dungeon.canvas.after.remove(self.darkness)
+        self.darkness = choice(self.darkness_layers)
 
-        with self.dungeon.canvas.after:
-            # uncomment this to run the cythonized version
-            # self.darkness = cl.generate_darkness_layer(self, alpha_intensity)
-            self.darkness = self.generate_darkness_layer()
+        self._get_timeout_light_areas(dt)
+        # light areas to add (if present in DarknessManager.light_areas and not in darkness.light_areas)
+        ba_to_add: list[LightArea] = [ba for ba in self.light_areas if ba not in self.darkness.light_areas]
+        # light areas to remove (if present in darkness.light_areas and not in DarknessManager.light_areas)
+        ba_to_remove: list[LightArea] = [ba for ba in self.darkness.light_areas if ba not in self.light_areas]
 
-    def generate_darkness_layer(self) -> Rectangle:
+        for ba in ba_to_add:
+            self._add_light_area(ba)
+        for ba in ba_to_remove:
+            self._remove_light_area(ba)
+
+        self.dungeon.canvas.after.add(self.darkness.texture)
+
+    def generate_darkness_layers(self) -> None:
         """
-        **********************************************************************************
-        THIS FUNCTION HAS BEEN CYTHONIZED -- SEE cythonized_lights.pyx
-        **********************************************************************************
+        Generates a number of darkness layers with different degree of flickering and stores them in a list
+        :return: None
+        """
+        self.darkness_layers = []
+        for _ in range(self.number_of_layers):
+            self.darkness_layers.append(self._create_darkness_layer())
+
+    def _create_darkness_layer(self) -> DarknessLayer:
+        """
         Generates a darkness layer with optional illuminated areas
         :return: darkness layer to be displayed on the canvas
         """
         texture = Texture.create(size=self.dungeon.size, colorfmt="rgba")
-        data = zeros((texture.height, texture.width, 4), dtype=uint8)
-        data[:, :, 3] = self.darkness_intensity
+        height, width = texture.height, texture.width
+        flicker_mods = {}
 
-        for bright_spot in self.bright_spots:
-            gradient = uniform(bright_spot["gradient"][0], bright_spot["gradient"][1])
-            max_distance = bright_spot["radius"] ** 2
-            y_pos, x_pos = ogrid[:texture.height, :texture.width]  # grid of coordinates of all pixels
+        # unclipped alpha: pixel intensity, may go negative. Starts at darkness intensity
+        pixel_int_data = np.full((height, width), self.darkness_intensity, dtype=int16)
+        # 3D array. height and width: one entry per pixel of the texture.
+        # 4: each pixel has four channels, red, green, blue and alpha.
+        light_data = zeros((height, width, 4), dtype=uint8)
+        # Sets the alpha channel of every pixel to darkness intensity
+        light_data[:, :, 3] = self.darkness_intensity
 
-            distance_from_center = (x_pos - bright_spot["center"][0]) ** 2 + (y_pos - bright_spot["center"][1]) ** 2
-            light_mask = (distance_from_center < max_distance)  # [bool] array
-            brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** gradient)
-                          * self.darkness_intensity * bright_spot["intensity"])
+        for light_area in self.light_areas:
+            flicker_mod = uniform(*light_area.flicker_mod_range)
+            self._generate_area_data(height, width,
+                                     self.darkness_intensity,
+                                     light_area,
+                                     pixel_int_data,
+                                     light_data,
+                                     flicker_mod,
+                                     revert_brightness=False)
+            flicker_mods[light_area.id] = flicker_mod
 
-            temp_data = data[light_mask, 3].astype(int16) - brightness.astype(int16)
-            data[light_mask, 3] = clip(temp_data, 0, self.darkness_intensity).astype(uint8)
+        texture.blit_buffer(light_data.ravel(), colorfmt="rgba", bufferfmt="ubyte")
+        return DarknessLayer(texture=Rectangle(texture=texture, pos=self.dungeon.pos, size=self.dungeon.size),
+                             pixel_int_data=pixel_int_data, light_data=light_data,
+                             light_areas=self.light_areas[:], flicker_mods=flicker_mods)
 
-        texture.blit_buffer(data.flatten(), colorfmt="rgba", bufferfmt="ubyte")
+    def _add_light_area(self, light_area: LightArea) -> None:
+        """
+        Adds a light area to the DarknessManager.darkness_layer
+        :param light_area: data of the light area to add (intensity, radius, center, gradient, etc.)
+        :return: None
+        """
+        self.darkness.light_areas.append(light_area)
+        self._set_id(light_area)
+        self.darkness.flicker_mods[light_area.id] = (
+            uniform(light_area.flicker_mod_range[0], light_area.flicker_mod_range[1]))
 
-        return Rectangle(texture=texture, pos=self.dungeon.pos, size=self.dungeon.size)
+        self._modify_darkness_layer(light_area, revert_brightness=False)
+
+    def _remove_light_area(self, light_area: LightArea) -> None:
+        """
+        Removes a light area from DarknessManager.darkness_layer
+        :param light_area: data of the light area to remove (intensity, radius, center, gradient, etc.)
+        :return: None
+        """
+        self._modify_darkness_layer(light_area, revert_brightness=True)
+        del self.darkness.flicker_mods[light_area.id]
+        self.darkness.light_areas.remove(light_area)
+
+    def _get_timeout_light_areas(self, dt: float) -> None:
+        """
+        Purges LightArea from DarknesManager.light_areas with exhausted duration
+        :param dt: delta time
+        :return: None
+        """
+        remaining: list[LightArea] = []
+        for ba in self.light_areas:
+            if ba.duration is not None:
+                ba.elapsed_time += dt
+                if ba.elapsed_time > ba.duration:
+                    continue  # timeout areas are not included in remaining list
+            remaining.append(ba)
+        self.light_areas = remaining
+
+    def _modify_darkness_layer(self, light_area: LightArea, revert_brightness: bool) -> None:
+        """
+        Adds or removes a light area from the DarknessManager.darkness, depending on the intensity value
+        :param light_area: data of the light area (intensity, radius, center, gradient, etc)
+        :param revert_brightness: bool indicating if brightness must be inverted (thus light_area_removed)
+        :return: None
+        """
+        height, width = self.darkness.pixel_int_data.shape
+
+        self._generate_area_data(height, width,
+                                 self.darkness_intensity,
+                                 light_area,
+                                 self.darkness.pixel_int_data,
+                                 self.darkness.light_data,
+                                 flicker_mod=self.darkness.flicker_mods[light_area.id],
+                                 revert_brightness=revert_brightness)
+
+        self.darkness.texture.texture.blit_buffer(self.darkness.light_data.ravel(),
+                                                  colorfmt="rgba", bufferfmt="ubyte")
+
+    @staticmethod
+    def _generate_area_data(texture_height: int, texture_width: int, darkness_intensity: int, light_area: LightArea,
+                            pixel_int_data: np.ndarray, light_data: np.ndarray, flicker_mod: float,
+                            revert_brightness:bool) -> None:
+        """
+        Generates the pixel intensity data of an area of the darkness layer
+        :param texture_height: height of the darkness texture
+        :param texture_width: width of the darkness texture
+        :param darkness_intensity: intensity of the darkness layer
+        :param light_area: LightArea data to append
+        :param pixel_int_data: ndarray of pixel intensity data
+        :param light_data: ndarray of pixel clipped light intensity data
+        :param revert_brightness: bool indicating if brightness must be inverted (thus light_area_removed)
+        :return: None
+        """
+        max_distance = light_area.radius ** 2
+        # 2 arrays of y and x coordinates for each pixel
+        y_pos, x_pos = ogrid[:texture_height, :texture_width]
+
+        distance_from_center = (x_pos - light_area.center[0]) ** 2 + (y_pos - light_area.center[1]) ** 2
+        light_mask = distance_from_center < max_distance
+        brightness = ((1 - (distance_from_center[light_mask] / max_distance) ** flicker_mod)
+                      * darkness_intensity * light_area.intensity).astype(int16)
+
+        if revert_brightness:
+            brightness *= -1
+
+        pixel_int_data[light_mask] -= brightness  # raw data
+        # clipped data between zero light and darkness intensity
+        light_data[light_mask, 3] = clip(pixel_int_data[light_mask], 0, darkness_intensity).astype(uint8)

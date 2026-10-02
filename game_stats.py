@@ -111,8 +111,7 @@ class DungeonStats:
     @property
     def torch_number(self) -> int:
         area: int = self.size ** 2
-        torches = randint(area // 25, area // 12)
-        return torches if torches < 8 else 8
+        return randint(area // 25, area // 12)
 
     def level_progression(self) -> dict[str,dict]:
         """

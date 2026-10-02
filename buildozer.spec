@@ -29,7 +29,7 @@ source.exclude_dirs = tests,bin,venv,__pycache__,trash,build
 source.exclude_patterns = setup.py,saved_game.json
 
 # (str) Application versioning (method 1)
-version = 4.0
+version = 4.2
 
 # (str) Application versioning (method 2)
 #version.regex = __version__ = ['"](.*)['"]
@@ -40,7 +40,7 @@ version = 4.0
 # if including numpy, patchelf must be installed or build will fail, run
 # sudo apt-get update
 # sudo apt-get install patchelf
-requirements = python3,kivy,numpy
+requirements = python3,kivy==2.3.0,numpy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -324,7 +324,7 @@ android.debug_artifact = apk
 #p4a.fork = kivy
 
 # (str) python-for-android branch to use, defaults to master
-# p4a.branch = develop
+p4a.branch = v2024.01.21
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = HEAD

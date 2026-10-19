@@ -363,6 +363,10 @@ class Tile(Button):
             self.dungeon.dm.update_bright_spots()
 
         self.place_item("wall", "rock", None)
+        if not App.get_running_app().flickering_torches_on:
+            # refresh darkness layer to the wall is not placed on top of it
+            self.dungeon.dm.darkness_flicker(dt=0)
+
         self._show_explosion()
 
     def _show_explosion(self) -> None:

@@ -7,6 +7,7 @@ from kivy.graphics import Rectangle
 from kivy.clock import Clock
 from kivy.event import EventDispatcher
 from kivy.app import App
+from kivy.properties import ListProperty
 
 from tokens_solid import LightArea
 
@@ -30,10 +31,11 @@ class DarknessManager(EventDispatcher):
     DarknessManager.light_areas triggers generation of new darkness layers considering all tokens with bright_int > 0
     """
 
+    light_areas = ListProperty(None)
+
     def __init__(self, dungeon: DungeonLayout, torches_dict: dict | None, **kwargs):
         super().__init__(**kwargs)
         self.dungeon: DungeonLayout = dungeon
-        self.light_areas: list[LightArea] | None = None
         self.torches_dict: dict | None = torches_dict
         self.flickering_torches: ClockEvent | None = None
 
@@ -41,6 +43,11 @@ class DarknessManager(EventDispatcher):
         self.number_of_layers: int = 10  # number of darkness layers available in list
         self.darkness: DarknessLayer | None = None
         self.darkness_layers: list[DarknessLayer] | None = None
+
+    @staticmethod
+    def on_light_areas(dm: DarknessManager, light_areas: list[LightArea]):
+        if not App.get_running_app().flickering_torches_on and dm.darkness_layers is not None:
+            dm.darkness_flicker(dt=0)
 
     def initialize(self) -> None:
         """
@@ -147,10 +154,9 @@ class DarknessManager(EventDispatcher):
                 elif token.pos_modifier == (0, -tile.width / 2 + token.size[0] / 2):  # left
                     token.rotate_token(degrees=270, axis=token.center)
                     
-    def get_all_light_areas(self, dt: float | None = None) -> None:
+    def get_all_light_areas(self) -> None:
         """
         Stores in DungeonLayout.light_areas one light spot dict for each Token with bright_intensity > 0
-        :param dt: delta time. Optional. This function may be scheduled
         :return: None
         """
         self.light_areas = ([token.bright_area
@@ -170,25 +176,6 @@ class DarknessManager(EventDispatcher):
             light_area.id = 0
         else:
             light_area.id = self.light_areas[self.light_areas.index(light_area) - 1].id + 1
-
-    """
-    def check_if_disable_flickering(self) -> bool:
-        ""
-        Checks if there are still flickering elements in the dungeron, if not, it casts a layer of static darkness
-        :return: True if static darkness was cast, False otherwise
-        ""
-        if len(self.bright_areas) == 0:
-            self.flickering_torches.cancel()
-            # if last bright spot is removed, cast static darkness
-            if self.darkness is not None: # and self.darkness.texture in self.dungeon.canvas.after.children:
-                self.dungeon.canvas.after.remove(self.darkness.texture)
-            self.darkness = self._create_darkness_layer()
-            self.dungeon.canvas.after.add(self.darkness.texture)
-            return True
-        elif not self.flickering_torches.is_triggered and App.get_running_app().flickering_torches_on:
-            self.flickering_torches = Clock.schedule_interval(lambda dt: self.darkness_flicker(dt=dt), 1 / 15)
-        return False
-    """
     
     def darkness_flicker(self, dt: float) -> None:
         """

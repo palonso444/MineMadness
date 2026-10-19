@@ -40,6 +40,7 @@ class DarknessManager(EventDispatcher):
         self.flickering_torches: ClockEvent | None = None
 
         self.darkness_intensity: int = 150  # alpha intensity of the darkness. Must range from 0 to 255
+        self.flicker_ratio: int = 15  # times per second darkness flickers
         self.number_of_layers: int = 10  # number of darkness layers available in list
         self.darkness: DarknessLayer | None = None
         self.darkness_layers: list[DarknessLayer] | None = None
@@ -73,7 +74,8 @@ class DarknessManager(EventDispatcher):
         :return: None
         """
         if App.get_running_app().flickering_torches_on:
-            self.flickering_torches = Clock.schedule_interval(lambda dt: self.darkness_flicker(dt=dt), 1 / 15)
+            self.flickering_torches = Clock.schedule_interval(lambda dt: self.darkness_flicker(dt=dt),
+                                                              1 / self.flicker_ratio)
         else:
             self.darkness_flicker(dt=0)  # 0 is a placeholder here
 

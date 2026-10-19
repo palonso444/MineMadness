@@ -44,11 +44,6 @@ class DarknessManager(EventDispatcher):
         self.darkness: DarknessLayer | None = None
         self.darkness_layers: list[DarknessLayer] | None = None
 
-    @staticmethod
-    def on_light_areas(dm: DarknessManager, light_areas: list[LightArea]):
-        if not App.get_running_app().flickering_torches_on and dm.darkness_layers is not None:
-            dm.darkness_flicker(dt=0)
-
     def initialize(self) -> None:
         """
         Places, rotates and initializes the torches, generates the darkness layers and activates the switching
@@ -60,10 +55,22 @@ class DarknessManager(EventDispatcher):
         self.generate_darkness_layers()
         self.enable_darkness()
 
+    @staticmethod
+    def on_light_areas(dm: DarknessManager, light_areas: list[LightArea]) -> None:
+        """
+        On every update of DarknesManager.light_areas checks if flickering_torches is True and if not, refreshes
+        the darkness layer manually
+        :param dm: instance of DarknessManager
+        :param light_areas: light_areas list
+        :return: None
+        """
+        if not App.get_running_app().flickering_torches_on and dm.darkness_layers is not None:
+            dm.darkness_flicker(dt=0)
+
     def enable_darkness(self) -> None:
         """
         Enables the flickering of torches (if activated)
-        :return: None:
+        :return: None
         """
         if App.get_running_app().flickering_torches_on:
             self.flickering_torches = Clock.schedule_interval(lambda dt: self.darkness_flicker(dt=dt), 1 / 15)

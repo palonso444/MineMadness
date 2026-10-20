@@ -459,7 +459,7 @@ class Player(Character, ABC):
             character_attribute += 1
             setattr(self, f"{object_name}s", character_attribute)
 
-        tile.get_token("pickable").delete_token(tile)
+        tile.delete_token(tile.get_token("pickable"))
 
     def _pick_gem(self, tile:Tile)-> None:
         """
@@ -469,7 +469,7 @@ class Player(Character, ABC):
         """
         Player.gems += 1
         self.game.update_label("gems_label", Player.gems)
-        tile.get_token("treasure").delete_token(tile)
+        tile.delete_token(tile.get_token("treasure"))
 
     def fall_in_trap(self, tile:Tile) ->None:
         """
@@ -488,7 +488,7 @@ class Player(Character, ABC):
         """
         trap_token = tile.get_token("trap")
         trap_token.show_effect_token(effect="trap_out")
-        trap_token.delete_token(tile)
+        tile.delete_token(trap_token)
         self.remaining_moves -= 1
 
     def _dig(self, wall_tile: Tile) -> None:
@@ -505,7 +505,7 @@ class Player(Character, ABC):
                 self.shovels -= 1
 
         wall_tile.get_token("wall").show_digging()
-        wall_tile.get_token("wall").delete_token(wall_tile)
+        wall_tile.delete_token(wall_tile.get_token("wall"))
 
         self.remaining_moves -= self.stats.digging_moves
 

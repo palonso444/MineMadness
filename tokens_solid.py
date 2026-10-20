@@ -473,9 +473,9 @@ class PlayerToken(CharacterToken):
         :return: None
         """
         if self.green_bar is not None and self.red_bar is not None:
-            self._remove_health_bar()
+            self.remove_health_bar()
 
-    def _remove_health_bar(self) -> None:
+    def remove_health_bar(self) -> None:
         """
         Removes the health bar
         :return: None
@@ -535,16 +535,6 @@ class PlayerToken(CharacterToken):
         self.canvas_context.remove(self.circle)
         self.circle = None
         self.circle_color = None
-
-    def delete_token(self, tile: Tile) -> None:
-        """
-        Completely erases the PlayerToken from the board along with the health bar and the selection circle
-        :param tile: Tile in which the PlayerToken is located
-        :return: None
-        """
-        super().delete_token(tile)
-        self.unselect_token()
-        self._remove_health_bar()
 
 
 class MonsterToken(CharacterToken):

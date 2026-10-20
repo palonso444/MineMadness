@@ -90,6 +90,10 @@ class Tile(Button):
                 self.dungeon.dm.light_areas.remove(token.bright_area)
                 self.delete_token(token)
 
+        if token.kind == "player":
+            token.unselect_token()
+            token.remove_health_bar()
+
     def delete_all_tokens(self, delete_persistent: bool) -> None:
         """
         Clears the Tile of all its Tokens

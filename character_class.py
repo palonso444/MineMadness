@@ -269,5 +269,5 @@ class Character(ABC, EventDispatcher):
         :param tile:: tile in which the character to kill is located
         :return: None
         """
-        self.token.delete_token(tile)
+        tile.delete_token(self.token)
         self.state = "dead"

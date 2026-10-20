@@ -225,7 +225,7 @@ class DungeonStats:
 class WallStats(ABC):
     char: str | None = None
 
-    min_group_freq: ClassVar[float] = 0.15
+    min_group_freq: ClassVar[float] = 0.25
     max_group_freq: ClassVar[float] = 0.5
 
     @staticmethod
@@ -494,7 +494,7 @@ class MonsterStats(CharacterStats, ABC):
     remaining_attacks: int | None = None
 
     min_group_freq: ClassVar[float] = 0.075
-    max_group_freq: ClassVar[float] = 0.3
+    max_group_freq: ClassVar[float] = 0.2
 
     @staticmethod
     def calculate_frequency(seed: int) -> float:

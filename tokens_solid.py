@@ -51,11 +51,9 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.character: Character = character
         self.dungeon: DungeonLayout = dungeon_instance
         self.source: str = get_resource_path("./tokens/" + self.species + "token.png")
+        self.persistent = True if kind == "treasure" else False
 
-        if kind in ["wall", "light"]:
-            self.canvas_context = self.dungeon.canvas.after
-        else:
-            self.canvas_context = self.dungeon.canvas
+        self.canvas_context = self.dungeon.canvas.after if kind in ("wall", "light") else self.dungeon.canvas
         self.shape: Ellipse | Rectangle | None = None  # token.shape (canvas object) initialized in each subclass
 
         # size and pos attributes comes from the superclass
@@ -136,17 +134,6 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         if effect_in_queue in self.effect_queue:
             self.effect_queue.remove(effect_in_queue)
 
-    def delete_token(self, tile: Tile) -> None:
-        """
-        Completely erases the Token from the game
-        :param tile: Tile in which the Token is located
-        :return: None
-        """
-        tile.remove_token(self)
-        self.canvas_context.remove(self.shape)
-        self.shape = None
-        if self.character is not None:
-            self.character.token = None
 
 class SceneryToken(SolidToken):
     """
@@ -194,18 +181,6 @@ class SceneryToken(SolidToken):
         """
         with self.dungeon.canvas:
             DiggingToken(pos=self.pos, size=self.size)
-
-    def delete_token(self, tile: Tile) -> None:
-        """
-        Completely erases the Token from the game and all the torches that share tile with it
-        :return: None
-        """
-        super().delete_token(tile)
-        if tile.has_token("light"):
-            while len(tile.tokens["light"]) > 0:
-                token = tile.get_token("light")
-                self.dungeon.dm.light_areas.remove(token.bright_area)
-                token.delete_token(tile)
 
 
 class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):

@@ -293,7 +293,7 @@ class Pixie(Monster):
         :return: None
         """
         if tile.has_token("pickable"):
-            tile.get_token("pickable").delete_token(tile)
+            tile.delete_token(tile.get_token("pickable"))
             self.acted_on_tile = True
         super().act_on_tile(tile)
 
@@ -561,11 +561,11 @@ class ClawJaw(Monster):
                 self.token.steps = self.remaining_moves
 
         wall_tile.get_token("wall").show_digging()
-        wall_tile.get_token("wall").delete_token(wall_tile)
+        wall_tile.delete_token(wall_tile.get_token("wall"))
 
         if wall_tile.has_token("light"):
             while len(wall_tile.tokens["light"]) > 0:
-                wall_tile.get_token("light").delete_token(wall_tile)
+                wall_tile.delete_token(wall_tile.get_token("light"))
             self.get_dungeon().dm.update_bright_spots()
 
     def _move_across_walls(self, target: tuple[int,int]) -> None:

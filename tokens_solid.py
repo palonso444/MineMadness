@@ -51,11 +51,9 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         self.character: Character = character
         self.dungeon: DungeonLayout = dungeon_instance
         self.source: str = get_resource_path("./tokens/" + self.species + "token.png")
+        self.persistent = True if kind == "treasure" else False
 
-        if kind in ["wall", "light"]:
-            self.canvas_context = self.dungeon.canvas.after
-        else:
-            self.canvas_context = self.dungeon.canvas
+        self.canvas_context = self.dungeon.canvas.after if kind in ("wall", "light") else self.dungeon.canvas
         self.shape: Ellipse | Rectangle | None = None  # token.shape (canvas object) initialized in each subclass
 
         # size and pos attributes comes from the superclass

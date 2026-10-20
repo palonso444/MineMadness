@@ -72,14 +72,16 @@ class Tile(Button):
         """
         self.tokens[token.kind].remove(token)
 
-    def delete_all_tokens(self) -> None:
+    def delete_all_tokens(self, keep_persistent: bool) -> None:
         """
         Clears the Tile of all its Tokens
+        :param keep_persistent: if True, persistent Tokens are not deleted
         :return: None
         """
         for token_list in self.tokens.values():
             for token in token_list:
-                token.delete_token(self)
+                if not keep_persistent and not token.persistent:
+                    token.delete_token(self)
 
     @property
     def has_character(self) -> bool:
@@ -358,7 +360,7 @@ class Tile(Button):
         has_light: bool = self.has_token("light")
         for token in self.tokens["monster"]:
             token.character.kill_character(self)
-        self.delete_all_tokens()  # delete all pickables
+        self.delete_all_tokens(keep_persistent=True)  # delete all pickables
         if has_light:  # no need to check all dungeon if tile has no torch
             self.dungeon.dm.update_bright_spots()
 

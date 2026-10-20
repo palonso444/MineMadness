@@ -436,7 +436,7 @@ class Player(Character, ABC):
         Takes a Player out of a level
         :return: None
         """
-        self.token.delete_token(self.token.get_current_tile())
+        self.token.get_current_tile().delete_token(self.token)
         self.state = "exited"
 
     def _pick_object(self, tile: Tile) -> None:

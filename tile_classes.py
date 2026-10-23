@@ -84,15 +84,7 @@ class Tile(Button):
         if token.character is not None:
             token.character.token = None
 
-        if token.kind == "wall" and self.has_token("light"):
-            while len(self.tokens["light"]) > 0:
-                token = self.get_token("light")
-                self.dungeon.dm.light_areas.remove(token.bright_area)
-                self.delete_token(token)
-
-        if token.kind == "player":
-            token.unselect_token()
-            token.remove_health_bar()
+        token.on_deletion()
 
     def delete_all_tokens(self, delete_persistent: bool) -> None:
         """

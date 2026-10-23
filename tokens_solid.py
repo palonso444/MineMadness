@@ -77,6 +77,15 @@ class SolidToken(Widget, ABC, metaclass=WidgetABCMeta):
         #self.bright_int: float = bright_int
         #self.gradient: tuple [float, float] = gradient  # (min, max). If equals constant brightness, otherwise flickers
 
+    def on_deletion(self) -> None:
+        """
+        This is not a real event. Is just a function called by Tile.delete_token() when a Token is deleted,
+        so it behaves like an event. It is meant to delete Token associated elements like torches (for walls),
+        health bars (for players), etc.
+        :return: None
+        """
+        pass
+
     @staticmethod
     def update_pos(solid_token, solid_token_pos) -> None:
         """
@@ -157,6 +166,18 @@ class SceneryToken(SolidToken):
             self.shape = Rectangle(pos=self.pos, size=self.size, source=self.source)
 
         self.bind(pos=self.update_pos)
+
+    def on_deletion(self) -> None:
+        """
+        Deletes torches
+        :return: None
+        """
+        tile = self.get_current_tile()
+        if self.kind == "wall" and tile.has_token("light"):
+            while len(tile.tokens["light"]) > 0:
+                torch = tile.get_token("light")
+                tile.dungeon.dm.light_areas.remove(torch.bright_area)
+                tile.delete_token(torch)
 
     def rotate_token(self, degrees: int, axis: tuple[float,float]) -> None:
         """
@@ -408,6 +429,14 @@ class PlayerToken(CharacterToken):
         self.bar_length = (
                 self.character.stats.health / self.character.stats.natural_health
         )
+
+    def on_deletion(self) -> None:
+        """
+        Removes health bar and selection circle
+        :return: None
+        """
+        self.unselect_token()
+        self.remove_health_bar()
 
     def select_character(self) -> None:
         """

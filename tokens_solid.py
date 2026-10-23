@@ -172,12 +172,14 @@ class SceneryToken(SolidToken):
         Deletes torches
         :return: None
         """
-        tile = self.get_current_tile()
-        if self.kind == "wall" and tile.has_token("light"):
-            while len(tile.tokens["light"]) > 0:
-                torch = tile.get_token("light")
-                tile.dungeon.dm.light_areas.remove(torch.bright_area)
-                tile.delete_token(torch)
+        match self.kind:
+            case "wall":
+                tile = self.get_current_tile()
+                while len(tile.tokens["light"]) > 0:
+                    torch = tile.get_token("light")
+                    tile.delete_token(torch)
+            case "light":
+                self.dungeon.dm.light_areas.remove(self.bright_area)
 
     def rotate_token(self, degrees: int, axis: tuple[float,float]) -> None:
         """

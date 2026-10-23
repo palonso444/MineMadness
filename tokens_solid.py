@@ -183,7 +183,7 @@ class SceneryToken(SolidToken):
             case "trap":
                 pass
             case _:
-                raise NotImplementedError(f"Tokens of kind {self.kind} have no implemented on_deletion behavior")
+                raise NotImplementedError(f"SceneryTokens of kind {self.kind} have no implemented on_deletion behavior")
 
     def rotate_token(self, degrees: int, axis: tuple[float,float]) -> None:
         """

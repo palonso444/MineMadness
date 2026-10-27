@@ -87,7 +87,7 @@ class Player(Character, ABC):
             "coffee": 0,
             "tobacco": 0,
             "whisky": 0,
-            "talisman": 0
+            "talisman": 3
         }
 
         # exclusive of Player class
@@ -329,7 +329,7 @@ class Player(Character, ABC):
         """
         return random() < self.stats.trap_disarming_chance
 
-    def reset_objects(self) -> None:
+    def set_objects_to_zero(self) -> None:
         """
         Sets all inventory objects and special items to 0
         :return: None
@@ -563,9 +563,10 @@ class Player(Character, ABC):
             self.stats.__setattr__(key, value)
 
         # equals attributes to natural_attributes
-        self.stats.__post_init__()
-        self.reset_objects()
-        self.ability_active = False
+        # self.stats.__post_init__()
+        self.set_objects_to_zero()
+        self.setup_for_new_level()
+        self.stats.natural_health = self.stats.health  # setup_for_new_level does not reset health
 
         # resurrected playe must be accessible
         while True:

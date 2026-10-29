@@ -137,7 +137,9 @@ class DungeonLayout(GridLayout):
                     characters.append(character)
                 else:
                     character: Player = players.Player.data[0]
+                    character.remove_all_effects()
                     character.setup_for_new_level()
+                    character.recover()
                     characters.append(character)
                 token_kinds.append("player")
                 token_species.append("sawyer")
@@ -149,7 +151,9 @@ class DungeonLayout(GridLayout):
                     characters.append(character)
                 else:
                     character: Player = Player.data[1]
+                    character.remove_all_effects()
                     character.setup_for_new_level()
+                    character.recover()
                     characters.append(character)
                 token_kinds.append("player")
                 token_species.append("hawkins")
@@ -161,7 +165,9 @@ class DungeonLayout(GridLayout):
                     characters.append(character)
                 else:
                     character: Player = Player.data[2]
+                    character.remove_all_effects()
                     character.setup_for_new_level()
+                    character.recover()
                     characters.append(character)
                 token_kinds.append("player")
                 token_species.append("crusherjane")

@@ -193,11 +193,9 @@ class Player(Character, ABC):
         Sets up the Player to start a new level (not level 1)
         :return: None
         """
-        self.remove_all_effects()
         if self.is_hidden:  # there is no token at this state, we cannot call unhide()
             self.ignores.remove("pickable")
             self.ignores.remove("treasure")
-        self.recover()
         self.ability_active = False
         self.stats.moves = self.stats.natural_moves
         self.stats.strength = self.stats.natural_strength

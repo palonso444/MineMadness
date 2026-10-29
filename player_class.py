@@ -87,7 +87,7 @@ class Player(Character, ABC):
             "coffee": 0,
             "tobacco": 0,
             "whisky": 0,
-            "talisman": 3
+            "talisman": 0
         }
 
         # exclusive of Player class

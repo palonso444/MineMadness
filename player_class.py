@@ -551,10 +551,10 @@ class Player(Character, ABC):
         super().kill_character(tile)
         self.remove_all_effects()
 
-    def resurrect(self, dungeon: DungeonLayout) -> None:
+    def resurrect(self, location: Tile) -> None:
         """
         Brings a dead Player back to the game
-        :param dungeon: DungeonLayout were the Player should be resurrected
+        :param location: Tile were the Player should be resurrected
         :return: None
         """
         for key, value in self.level_track[self.player_level].items():
@@ -565,16 +565,7 @@ class Player(Character, ABC):
         self.set_objects_to_zero()
         self.setup_for_new_level()
         self.stats.natural_health = self.stats.health  # setup_for_new_level does not reset health
-
-        # resurrected playe must be accessible
-        while True:
-            location: Tile = dungeon.get_random_tile(free=True)
-            if len(dungeon.find_shortest_path(location.position,
-                                              self.game.active_character.get_position(),
-                                              self.blocked_by)) > 1:
-                break
         location.place_item(self.kind, self.species, character=self)
-        self.state = "in_game"
 
     def apply_toughness(self, damage):
         """

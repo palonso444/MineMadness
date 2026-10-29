@@ -87,7 +87,7 @@ class Player(Character, ABC):
             "coffee": 0,
             "tobacco": 0,
             "whisky": 0,
-            "talisman": 0
+            "talisman": 3
         }
 
         # exclusive of Player class
@@ -193,11 +193,9 @@ class Player(Character, ABC):
         Sets up the Player to start a new level (not level 1)
         :return: None
         """
-        self.remove_all_effects()
         if self.is_hidden:  # there is no token at this state, we cannot call unhide()
             self.ignores.remove("pickable")
             self.ignores.remove("treasure")
-        self.recover()
         self.ability_active = False
         self.stats.moves = self.stats.natural_moves
         self.stats.strength = self.stats.natural_strength
@@ -329,7 +327,7 @@ class Player(Character, ABC):
         """
         return random() < self.stats.trap_disarming_chance
 
-    def reset_objects(self) -> None:
+    def set_objects_to_zero(self) -> None:
         """
         Sets all inventory objects and special items to 0
         :return: None
@@ -553,29 +551,21 @@ class Player(Character, ABC):
         super().kill_character(tile)
         self.remove_all_effects()
 
-    def resurrect(self, dungeon: DungeonLayout) -> None:
+    def resurrect(self, location: Tile) -> None:
         """
         Brings a dead Player back to the game
-        :param dungeon: DungeonLayout were the Player should be resurrected
+        :param location: Tile were the Player should be resurrected
         :return: None
         """
         for key, value in self.level_track[self.player_level].items():
             self.stats.__setattr__(key, value)
 
         # equals attributes to natural_attributes
-        self.stats.__post_init__()
-        self.reset_objects()
-        self.ability_active = False
-
-        # resurrected playe must be accessible
-        while True:
-            location: Tile = dungeon.get_random_tile(free=True)
-            if len(dungeon.find_shortest_path(location.position,
-                                              self.game.active_character.get_position(),
-                                              self.blocked_by)) > 1:
-                break
+        # self.stats.__post_init__()
+        self.set_objects_to_zero()
+        self.setup_for_new_level()
+        self.stats.natural_health = self.stats.health  # setup_for_new_level does not reset health
         location.place_item(self.kind, self.species, character=self)
-        self.state = "in_game"
 
     def apply_toughness(self, damage):
         """

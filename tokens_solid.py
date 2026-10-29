@@ -181,7 +181,11 @@ class SceneryToken(SolidToken):
             case "light":
                 self.dungeon.dm.light_areas.remove(self.bright_area)
             case "trap":
-                pass
+                super().on_deletion()
+            case "treasure":
+                super().on_deletion()
+            case "pickable":
+                super().on_deletion()
             case _:
                 raise NotImplementedError(f"SceneryTokens of kind {self.kind} have no implemented on_deletion behavior")
 

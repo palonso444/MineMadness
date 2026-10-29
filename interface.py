@@ -170,7 +170,12 @@ class TalismanButton(Interfacebutton):
                 player = Player.data[0]
             else:
                 player = choice(Player.get_all_with_state("dead"))
-            player.resurrect(self.game.dungeon)
-            player.token.show_effect_token("resurrect")
 
-            self.apply_cost("talisman")
+            nearby_spaces: set[tuple[int, int]] = self.game.dungeon.get_nearby_spaces(
+                self.game.active_character.get_position(), player.cannot_share_tile_with)
+
+            if len(nearby_spaces) > 0:
+                resurrect_position: tuple[int, int] = choice(list(nearby_spaces))
+                player.resurrect(self.game.dungeon.get_tile(resurrect_position))
+                player.token.show_effect_token("resurrect")
+                self.apply_cost("talisman")

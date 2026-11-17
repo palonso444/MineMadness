@@ -204,16 +204,16 @@ class MineMadnessGame(Screen):  # initialized in kv file
         if turn is not None and not game.finish_game_or_finish_level():
             # monsters all dead and players starts turn with other than Sawyer
             if game.active_character is not None:
-                Player.reset_moves()
+                Player.reset_values()
                 c = game.active_character
                 game.active_character = None  # to ensure updating
                 game.active_character = c
             else:
                 if turn % 2 == 0 or Monster.all_dead():
-                    Player.reset_moves()
+                    Player.reset_values()
                     game.active_character = next(player for player in Player.data if player.state == "in_game")
                 else:
-                    Monster.reset_moves()
+                    Monster.reset_values()
                     game.active_character = next(monster for monster in Monster.data if monster.state == "in_game")
 
     @staticmethod
@@ -228,6 +228,12 @@ class MineMadnessGame(Screen):  # initialized in kv file
             # restores any color modifications from previous Characters (e.g. by hiding)
             game.dungeon.restore_canvas_color("canvas")
             game.dungeon.restore_canvas_color("after")
+
+            # TODO: move this within player turn
+            if character.first_turn_activation:
+                if character.kind == "player":
+                    character.detect_traps()
+                character.first_turn_activation = False
 
             # if no monsters and character is selected again after moves run out, a turn passes
             if Monster.all_dead() and not character.has_moves_left:

@@ -98,16 +98,18 @@ class Monster(Character, ABC):
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
 
     @classmethod
-    def reset_moves(cls) -> None:
+    def reset_values(cls) -> None:
         """
-        Resets remaining moves and attacks of all Monsters of the class back to the maximum
+        Resets values of all monsters of the class
         :return: None
         """
         for character in cls.data:
             if character.state == "in_game":
-                character.remaining_moves = character.stats.moves
-                character.stats.remaining_attacks = character.stats.max_attacks
+                character.first_turn_activation = True
                 character.acted_on_tile = False
+                character.stats.remaining_attacks = character.stats.max_attacks
+                character.remaining_moves = character.stats.moves
+
 
     def move_token_or_act_on_tile(self, path: list[tuple]) -> None:
         """

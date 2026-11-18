@@ -71,6 +71,17 @@ class Player(Character, ABC):
             # modify starting index because there is one less player in game
             game.activate_next_character(start_index_mod=-1)
 
+    @classmethod
+    def reset_values(cls)->None:
+        """
+        Resets values of all characters of the class
+        :return: None
+        """
+        for player in cls.data:
+            if player.is_alive:
+                player.first_activation = True
+                player.remaining_moves = player.stats.moves
+
 
     def __init__(self):
         super().__init__()
@@ -94,6 +105,7 @@ class Player(Character, ABC):
         self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
         self.level_track: dict[int,dict] = {}
+        self.first_activation: bool | None = None  # tracks if it's the first activation in the turn
 
 
     @abstractmethod

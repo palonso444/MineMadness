@@ -10,15 +10,13 @@ class Character(ABC, EventDispatcher):
     remaining_moves = NumericProperty(None)
 
     @classmethod
+    @abstractmethod
     def reset_values(cls) -> None:
         """
         Resets values of all characters of the class
         :return: None
         """
-        for character in cls.data:
-            if character.is_alive:
-                character.first_turn_activation = True
-                character.remaining_moves = character.stats.moves
+        pass
 
     @classmethod
     def all_dead(cls) -> bool:
@@ -78,7 +76,6 @@ class Character(ABC, EventDispatcher):
         self.step_transition: str | None = None  # defines kind of movement (walk, stomp, glide...)
         self.step_duration: float | None = None  # defines speed of movement, from 0 to 1
         self.inventory: dict[str:int] | None = None  # needed for MineMadnessGame_on_inv_object()
-        self.first_turn_activation: bool | None = None  # used by Players in trap detection
 
     @staticmethod
     def on_remaining_moves(character: Character, remaining_moves: int) -> None:

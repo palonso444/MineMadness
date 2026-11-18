@@ -229,12 +229,6 @@ class MineMadnessGame(Screen):  # initialized in kv file
             game.dungeon.restore_canvas_color("canvas")
             game.dungeon.restore_canvas_color("after")
 
-            # TODO: move this within player turn
-            if character.first_turn_activation:
-                if character.kind == "player":
-                    character.detect_traps()
-                character.first_turn_activation = False
-
             # if no monsters and character is selected again after moves run out, a turn passes
             if Monster.all_dead() and not character.has_moves_left:
                 # initialize moves here so on_turn() knows turn must start with this character
@@ -245,6 +239,9 @@ class MineMadnessGame(Screen):  # initialized in kv file
             elif game.turn % 2 == 0 or Monster.all_dead():
                 character.token.select_character()
                 game.update_interface()
+                if character.first_activation:
+                    print(f"{character.name}: DETECT TRAPS")
+                    character.first_activation = False
                 game.activate_accessible_tiles(game.active_character.remaining_moves)
 
             # monsters turn

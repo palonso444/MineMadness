@@ -12,6 +12,18 @@ class Monster(Character, ABC):
     # those lists are initialized before kivy even starts
     data: list[Character] = []
 
+    @classmethod
+    def reset_values(cls) -> None:
+        """
+        Resets values of all monsters of the class
+        :return: None
+        """
+        for monster in cls.data:
+            if monster.state == "in_game":
+                monster.acted_on_tile = False
+                monster.stats.remaining_attacks = monster.stats.max_attacks
+                monster.remaining_moves = monster.stats.moves
+
     def __init__(self):
         super().__init__()
         self.kind: str = "monster"
@@ -96,20 +108,6 @@ class Monster(Character, ABC):
         """
         nearby_spaces = self.get_dungeon().get_nearby_spaces(self.get_position(), self.cannot_share_tile_with)
         return randint(1, 10) + (4 - len(nearby_spaces)) <= self.stats.dodging_ability
-
-    @classmethod
-    def reset_values(cls) -> None:
-        """
-        Resets values of all monsters of the class
-        :return: None
-        """
-        for character in cls.data:
-            if character.state == "in_game":
-                character.first_turn_activation = True
-                character.acted_on_tile = False
-                character.stats.remaining_attacks = character.stats.max_attacks
-                character.remaining_moves = character.stats.moves
-
 
     def move_token_or_act_on_tile(self, path: list[tuple]) -> None:
         """
@@ -233,7 +231,7 @@ class Monster(Character, ABC):
             return None
             #raise Exception("There is nothing to flee from!")
 
-        position_stats: dict[tuple[int,int]: list] = {rf_position : [len(self.get_dungeon().find_shortest_path
+        position_stats: dict[tuple[int,int], list] = {rf_position : [len(self.get_dungeon().find_shortest_path
                                                                         (rf_position, av_position, exclude_blocked_by))
                                                                     for av_position in positions_to_avoid]
                                                       for rf_position in reach_free_positions}

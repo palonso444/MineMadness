@@ -80,7 +80,8 @@
     padding: "5dp", "0dp","5dp","5dp"
 
 <Tile>:
-    background_normal: ''   # sets the background default to white instead of predefined grey
+    background_normal: ""  # sets the background default to white instead of predefined grey
+    background_disabled_normal: ""
     background_color: 0.4, 0.8, 1, 1
     size_hint: None,None
     width: "55dp"
@@ -90,7 +91,7 @@
 
     canvas:
         Color:
-            rgba: (1,1,1,0.8) if not self.disabled else (1,1,1,1)
+            rgba: self.rgba
 
         Rectangle:  # draws the floor
             pos: self.pos

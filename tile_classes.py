@@ -47,7 +47,7 @@ class Tile(Button):
         if disabled:
             tile.alpha = 1.0
         else:
-            tile.alpha = 0.1
+            tile.alpha = 0.8
 
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:

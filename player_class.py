@@ -161,7 +161,7 @@ class Player(Character, ABC):
     @abstractmethod
     def upgrade_cost_trap_spotting_chance(self, level: int)-> int:
         """
-        Calculates the XP cost of upgrading trep detection
+        Calculates the XP cost of upgrading trap detection
         :param level: level trying to achieve. Defaults to next level
         :return: the cost
         """
@@ -323,21 +323,31 @@ class Player(Character, ABC):
         """
         return False
 
+    """
     @property
     def can_find_trap(self) -> bool:
-        """
+        
         Property defining if a Character is able to spot a trap
         :return: True if character is able to spot the trap, False otherwise
-        """
+        
         return random() < self.stats.trap_spotting_chance
 
     @property
     def can_disarm_trap(self) -> bool:
-        """
+        
         Property defining if a Character is able to disarm a trap
         :return: True if character is able to disarm the trap, False otherwise
-        """
+        
         return random() < self.stats.trap_disarming_chance
+    """
+
+    @property
+    def can_detect_traps(self) -> bool | None:
+        """
+        Property defining if a Character is able to detect traps
+        :return: True if character is able to detect traps, False otherwise
+        """
+        return self.first_activation
 
     def set_objects_to_zero(self) -> None:
         """

@@ -239,10 +239,10 @@ class MineMadnessGame(Screen):  # initialized in kv file
             elif game.turn % 2 == 0 or Monster.all_dead():
                 character.token.select_character()
                 game.update_interface()
-                if character.first_activation:
+                if character.can_detect_traps:
                     print(f"{character.name}: DETECT TRAPS")
-                    character.first_activation = False
                 game.activate_accessible_tiles(game.active_character.remaining_moves)
+                character.first_activation = False
 
             # monsters turn
             else:

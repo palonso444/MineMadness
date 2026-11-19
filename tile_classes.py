@@ -3,7 +3,7 @@ from __future__ import annotations
 from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.app import App
-from kivy.properties import ColorProperty
+from kivy.properties import NumericProperty
 
 from tokens_solid import SceneryToken, PlayerToken, MonsterToken, LightArea
 from tokens_fading import ExplosionToken
@@ -15,7 +15,7 @@ class Tile(Button):
     Class defining each one of the Tiles of the DungeonLayout grid
     """
 
-    rgba = ColorProperty((1.0, 1.0, 1.0, 1.0))
+    alpha = NumericProperty(1.0)
 
     def __init__(self, row: int, col:int, kind: str, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(**kwargs)
@@ -41,13 +41,13 @@ class Tile(Button):
     @staticmethod
     def on_disabled(tile: Tile, disabled: bool) -> None:
         """
-        Sets right rgba values of the Tile
+        Sets right alpha values of the Tile
         :return: None
         """
         if disabled:
-            tile.rgba = 1.0, 1.0, 1.0, 1.0
+            tile.alpha = 1.0
         else:
-            tile.rgba = 1.0, 1.0, 1.0, 0.8
+            tile.alpha = 0.8
 
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:

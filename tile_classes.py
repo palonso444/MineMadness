@@ -16,7 +16,7 @@ class Tile(Button):
     """
 
     alpha = NumericProperty(1.0)
-    backgr_color = ColorProperty((0.4, 0.8, 1.0, 1.0))  # defaults to blue (tile not checked)
+    backgr_color = ColorProperty((0.0, 0.0, 0.0, 1.0))  # defaults to black
     trap_checked = BooleanProperty(False)
 
     def __init__(self, row: int, col:int, kind: str, dungeon_instance: DungeonLayout, **kwargs):

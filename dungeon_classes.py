@@ -118,6 +118,14 @@ class DungeonLayout(GridLayout):
                 self.tiles_dict[tile.position] = tile
                 self.add_widget(tile)
 
+    @staticmethod
+    def _set_trap_checked(tile: Tile) -> None:
+        """
+        Sets if the tile is trap checked or not
+        :return: None
+        """
+        tile.trap_checked = True
+
     def _place_tokens(self) -> None:
         """
         Places the tokens according to the blueprint and sets up the Token.character (if any)
@@ -319,6 +327,8 @@ class DungeonLayout(GridLayout):
             for i in range(len(token_kinds)):
                 self.add_position_to_update(tile_position)
                 tile.place_item(token_kinds[i], token_species[i], characters[i] if characters else None)
+
+            self._set_trap_checked(tile)  # this depends on many conditions (level, if has players, etc).
 
     def build_level(self) -> None:
         """

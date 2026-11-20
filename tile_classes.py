@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from kivy.properties import NumericProperty
+from kivy.properties import NumericProperty, ColorProperty, BooleanProperty
 from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.app import App
@@ -16,6 +16,8 @@ class Tile(Button):
     """
 
     alpha = NumericProperty(1.0)
+    backgr_color = ColorProperty((0.4, 0.8, 1.0, 1.0))  # defaults to blue (tile not checked)
+    trap_checked = BooleanProperty(False)
 
     def __init__(self, row: int, col:int, kind: str, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(**kwargs)
@@ -24,7 +26,7 @@ class Tile(Button):
         self.col: int = col
         self.position: tuple[int,int] = row, col
         self.kind: str = kind
-        self.tokens: dict [str:list[Token]] = {
+        self.tokens: dict [str,list[Token]] = {
             "player": [],
             "monster": [],
             "trap": [],
@@ -48,6 +50,17 @@ class Tile(Button):
             tile.alpha = 1.0
         else:
             tile.alpha = 0.8
+
+    @staticmethod
+    def on_trap_checked(tile: Tile, checked: bool):
+        """
+        Sets right background color of the Tile
+        :return: None
+        """
+        if checked:
+            tile.backgr_color = 0.3, 1.0, 0.3, 1.0
+        else:
+            tile.backgr_color = 0.4, 0.8, 1.0, 1.0
 
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:

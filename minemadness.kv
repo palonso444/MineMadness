@@ -86,8 +86,7 @@
     size_hint: None,None
     width: "55dp"
     height: self.width
-    kind: None
-    disabled: True
+    disabled: None
 
     canvas:
         Color:
@@ -96,7 +95,7 @@
         Rectangle:  # draws the floor
             pos: self.pos
             size: self.size
-            source: get_resource_path("./backgrounds/" + self.kind + "background.png") if self.kind else None
+            source: get_resource_path("./backgrounds/" + self.kind + "background.png") if self.kind is not None else None
 
 <ScrollView>:
     effect_cls: "ScrollEffect"  # avoids bouncing when reaching end of scroll

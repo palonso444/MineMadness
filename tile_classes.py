@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from kivy.properties import NumericProperty, ColorProperty, BooleanProperty
+from kivy.properties import NumericProperty, ColorProperty, BooleanProperty, StringProperty
 from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.app import App
@@ -14,10 +14,10 @@ class Tile(Button):
     """
     Class defining each one of the Tiles of the DungeonLayout grid
     """
-
+    kind = StringProperty(None)
+    trap_checked = BooleanProperty(False)
     alpha = NumericProperty(1.0)
     backgr_color = ColorProperty((0.0, 0.0, 0.0, 1.0))  # defaults to black
-    trap_checked = BooleanProperty(False)
 
     def __init__(self, row: int, col:int, kind: str, dungeon_instance: DungeonLayout, **kwargs):
         super().__init__(**kwargs)

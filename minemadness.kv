@@ -107,7 +107,7 @@
         size_hint: 1,1
         id: main_layout
 
-        # HEADER LABELS: CHARACTER NAME AND ABILITY BUTTON
+        # HEADER LABELS: CHARACTER NAME, ABILITY AND TRAP DETECTION BUTTONS
         BoxLayout:
             padding: "5dp"
             orientation: "horizontal"
@@ -118,13 +118,19 @@
                 size_hint: 0.6, 1
                 font_size: "30sp"
 
-            AbilityButton:
-                id: ability_button
+            BoxLayout:
+                orientation: "vertical"
                 size_hint: 0.4, 1
-                font_size: "30sp"
-                game: root
+                spacing: "4dp"
+                AbilityButton:
+                    id: ability_button
+                    size_hint: 1.0 , 0.5
+                    game: root
+                GameButton:
+                    size_hint: 1.0 , 0.5
+                    text: "Traps"
 
-        # GUI: CHARACTER STATS AND INVENTORY
+        # UI: CHARACTER STATS AND INVENTORY
         BoxLayout:
             orientation: "horizontal"
             size_hint: 1, 0.2

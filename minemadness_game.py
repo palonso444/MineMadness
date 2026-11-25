@@ -240,7 +240,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
                 character.token.select_character()
                 game.update_interface()
                 if character.can_detect_traps:
-                    print(f"{character.name}: DETECT TRAPS")
+                    character.detect_traps(character.stats.trap_detection_range)
                 game.activate_accessible_tiles(game.active_character.remaining_moves)
                 character.first_activation = False
 

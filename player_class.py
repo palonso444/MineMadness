@@ -323,31 +323,13 @@ class Player(Character, ABC):
         """
         return False
 
-    """
-    @property
-    def can_find_trap(self) -> bool:
-        
-        Property defining if a Character is able to spot a trap
-        :return: True if character is able to spot the trap, False otherwise
-        
-        return random() < self.stats.trap_spotting_chance
-
-    @property
-    def can_disarm_trap(self) -> bool:
-        
-        Property defining if a Character is able to disarm a trap
-        :return: True if character is able to disarm the trap, False otherwise
-        
-        return random() < self.stats.trap_disarming_chance
-    """
-
     @property
     def can_detect_traps(self) -> bool | None:
         """
         Property defining if a Character is able to detect traps
         :return: True if character is able to detect traps, False otherwise
         """
-        return self.first_activation
+        return self.first_activation and self.remaining_moves >= self.stats.trap_detection_time
 
     def set_objects_to_zero(self) -> None:
         """
@@ -404,14 +386,21 @@ class Player(Character, ABC):
 
     def perform_passive_action(self) -> None:
         """
-        Method defining the passive action that Players perform when turn is skipped (double-click on them)
+        For now is empty. Something may be implemented here in the future
+        """
+        pass
+
+    def detect_traps(self, detection_range: int) -> None:
+        """
+        Detects traps within a range
+        :param detection_range: detection range (tiles away from the Player)
         :return: None
         """
         dungeon: DungeonLayout = self.get_dungeon()
         hidden_traps_in_range: set[tuple[int,int]] = {position for position in dungeon.get_range(self.get_position(),
-                                                                            self.remaining_moves)
-                                                if dungeon.get_tile(position).has_token("trap")
-                                                and dungeon.get_tile(position).get_token("trap").character.is_hidden}
+                                                                            detection_range)
+                                                if dungeon.get_tile(position).has_token("trap")}
+                                                #and dungeon.get_tile(position).get_token("trap").character.is_hidden}
 
         for position in hidden_traps_in_range:
 
@@ -419,11 +408,13 @@ class Player(Character, ABC):
                                                      position,
                                                      [token_kind for token_kind in self.blocked_by
                                                       if token_kind != "trap"],
-                                                     self.remaining_moves) and self.can_find_trap:
+                                                     detection_range):
 
                 trap_token = dungeon.get_tile(position).get_token("trap")
                 trap_token.character.unhide()
                 trap_token.show_effect_token("trap")
+
+        self.remaining_moves -= self.stats.trap_detection_time
 
     def act_on_tile(self, tile:Tile) -> None:
         """

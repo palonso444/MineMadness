@@ -432,10 +432,11 @@ class PlayerStats(CharacterStats, ABC):
     initial_shovels: int = 3
     digging_moves: int = 1
     initial_weapons: int = 3
+    trap_detection_time: int = 1
     advantage_strength_incr: int | None = None
     shooting_range: int | None = None
     recovery: float | None = None
-    percent_critical: float | None = None
+    trap_detection_range: int | None = None
     upgrade_track: dict[str, int] | None = None  # tracks the level of each stat
 
     def __post_init__(self):
@@ -452,22 +453,18 @@ class SawyerStats(PlayerStats): # BALANCED
     advantage_strength_incr: int = 5
     moves: int = 4
     digging_moves: int = 3
-    trap_spotting_chance: float = 0.2
-    trap_disarming_chance: float = 0.5
     recovery: float = 0.0
-    percent_critical: float = 0.05
+    trap_detection_range: int = 0
 
 
 @dataclass
 class HawkinsStats(PlayerStats):  # BALANCED
     health: int = 8
-    strength: list[int] = 2
+    strength: int = 2
     moves: int = 3
     shooting_range: int = 2
-    trap_spotting_chance: float = 0.3
-    trap_disarming_chance: float = 1
     recovery: float = 0.0
-    percent_critical: float = 0.05
+    trap_detection_range: int = 10
 
 
 @dataclass
@@ -477,10 +474,8 @@ class CrusherJaneStats(PlayerStats):  # BALANCED
     strength: int = 3
     advantage_strength_incr: int = 2
     moves: int = 3
-    trap_spotting_chance: float = 0.1
-    trap_disarming_chance: float = 0.0
     recovery: float = 0.0
-    percent_critical: float = 0.1
+    trap_detection_range: int = 0
 
 
 @dataclass

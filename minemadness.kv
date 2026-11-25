@@ -129,6 +129,9 @@
                 GameButton:
                     size_hint: 1.0 , 0.5
                     text: "Traps"
+                    game: root
+                    on_release: root.active_character.detect_traps(root.active_character.stats.trap_detection_range)
+
 
         # UI: CHARACTER STATS AND INVENTORY
         BoxLayout:

@@ -22,6 +22,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
         self.level: int = 1
         self.advanced_start: bool = False  # for testing, set to True and change level attribute
         self.ability_button_active: bool | None = None  # activated and deactivates button (no effect if pressed)
+        self.trap_detection_button_active: bool | None = None  # activated and deactivates button (no effect if pressed)
 
         self.bind(dungeon=self.start_level)
 
@@ -83,6 +84,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.update_label("main_menu_button", None)
 
         self.update_ability_button()
+        self.update_trap_detection_button()
 
     def update_label(self, label_id: str, value: int | str | None) -> None:
         """
@@ -159,6 +161,25 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.ids.ability_button.state = "down" if self.active_character.ability_active else "normal"
 
         self.ability_button_active = True
+
+    def update_trap_detection_button(self) -> None:
+        """
+        Updates the display of the trap detection button
+        :return: None
+        """
+        self.trap_detection_button_active = False
+
+        if self.active_character.kind == "monster":
+            self.ids.trap_detection_button.text = ""
+            self.ids.trap_detection_button.disabled = True
+            self.ids.trap_detection_button.state = "normal"
+
+        elif self.active_character.kind == "player":
+            self.ids.trap_detection_button.text = "Traps"
+            self.ids.trap_detection_button.disabled = not self.ids.trap_detection_button.condition_active
+            self.ids.trap_detection_button.state = "down" if self.active_character.is_detecting_traps else "normal"
+
+        self.trap_detection_button_active = True
 
     def add_dungeon_to_game(self, dungeon: DungeonLayout | None = None) -> None:
         """
@@ -239,7 +260,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             elif game.turn % 2 == 0 or Monster.all_dead():
                 character.token.select_character()
                 game.update_interface()
-                if character.can_detect_traps:
+                if character.first_activation and character.can_detect_traps:
                     character.detect_traps(character.stats.trap_detection_range)
                 game.activate_accessible_tiles(game.active_character.remaining_moves)
                 character.first_activation = False

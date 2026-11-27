@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from random import choice
 import widget_classes as wdg
 
@@ -13,7 +15,7 @@ class AbilityButton(wdg.StateButton):
                 or self.game.active_character.ability_active)
 
     @staticmethod
-    def on_state(instance, value):
+    def on_state(instance: AbilityButton, value: str) -> None:
 
         if instance.game.ability_button_active:
             # TODO: when button unbinding in self.game.on_ability_button() works this has to go
@@ -53,15 +55,23 @@ class AbilityButton(wdg.StateButton):
 
 class TrapDetectionButton(wdg.StateButton):
 
-    @staticmethod
-    def on_state(instance, value):
-        character = instance.game.active_character
+    @property
+    def condition_active(self) -> bool:
+        character = self.game.active_character
+        return character.remaining_moves >= character.stats.trap_detection_time
 
-        if value == "down":
-            character.detect_traps(character.stats.trap_detection_range)
-            character.detecting_traps = True
-        if value == "normal":
-            character.detecting_traps = False
+    @staticmethod
+    def on_state(instance: TrapDetectionButton, value: str) -> None:
+
+        if instance.game.trap_detection_button_active:
+
+            character = instance.game.active_character
+
+            if value == "down":
+                character.detect_traps(character.stats.trap_detection_range)
+                character.is_detecting_traps = True
+            if value == "normal":
+                character.is_detecting_traps = False
 
 class Interfacebutton(wdg.GameButton):
 

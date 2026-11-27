@@ -399,22 +399,24 @@ class Player(Character, ABC):
         :return: None
         """
         dungeon: DungeonLayout = self.get_dungeon()
-        hidden_traps_in_range: set[tuple[int,int]] = {position for position in dungeon.get_range(self.get_position(),
-                                                                            detection_range)
-                                                if dungeon.get_tile(position).has_token("trap")}
-                                                #and dungeon.get_tile(position).get_token("trap").character.is_hidden}
 
-        for position in hidden_traps_in_range:
+        # positions in range
+        checked_positions: list = dungeon.get_range(self.get_position(), detection_range)
 
-            if dungeon.check_if_connexion(self.get_position(),
+        # accessible positions
+        checked_positions: set[tuple[int, int]] = {position for position in checked_positions
+                                                if dungeon.check_if_connexion(self.get_position(),
                                                      position,
                                                      [token_kind for token_kind in self.blocked_by
                                                       if token_kind != "trap"],
-                                                     detection_range):
-
+                                                     detection_range)}
+        for position in checked_positions:
+            tile = dungeon.get_tile(position)
+            if tile.has_token("trap") and not tile.trap_checked:
                 trap_token = dungeon.get_tile(position).get_token("trap")
                 trap_token.character.unhide()
                 trap_token.show_effect_token("trap")
+            tile.trap_checked = True
 
         self.remaining_moves -= self.stats.trap_detection_time
 

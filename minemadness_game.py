@@ -156,7 +156,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.ids.ability_button.state = "normal"
 
         elif self.active_character.kind == "player":
-            self.ids.ability_button.text = self.active_character.ability_display
+            self.ids.ability_button.set_button_text()
             self.ids.ability_button.disabled = not self.ids.ability_button.condition_active
             self.ids.ability_button.state = "down" if self.active_character.ability_active else "normal"
 
@@ -175,7 +175,7 @@ class MineMadnessGame(Screen):  # initialized in kv file
             self.ids.trap_detection_button.state = "normal"
 
         elif self.active_character.kind == "player":
-            self.ids.trap_detection_button.text = "Traps"
+            self.ids.trap_detection_button.set_button_text()
             self.ids.trap_detection_button.disabled = not self.ids.trap_detection_button.condition_active
             self.ids.trap_detection_button.state = "down" if self.active_character.is_detecting_traps else "normal"
 

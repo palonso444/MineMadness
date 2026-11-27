@@ -7,6 +7,9 @@ from player_class import Player
 
 class AbilityButton(wdg.StateButton):
 
+    def set_button_text(self) -> None:
+        self.text = self.game.active_character.ability_display
+
     @property
     def condition_active(self):
         character = self.game.active_character
@@ -54,6 +57,9 @@ class AbilityButton(wdg.StateButton):
                         character.ability_active = False
 
 class TrapDetectionButton(wdg.StateButton):
+
+    def set_button_text(self) -> None:
+        self.text = "Traps"
 
     @property
     def condition_active(self) -> bool:

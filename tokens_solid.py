@@ -396,6 +396,7 @@ class CharacterToken(SolidToken, ABC, metaclass=WidgetABCMeta):
                         # monsters move only once per turn
                         self.skip_moves()
                 else:
+                    current_tile.trap_checked = True  # stepping on a tile also checks for traps
                     # subtract steps from remaining moves and ready to move again
                     self.character.remaining_moves -= self.steps
                     self.steps = 0

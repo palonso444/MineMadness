@@ -15,7 +15,7 @@ class Tile(Button):
     Class defining each one of the Tiles of the DungeonLayout grid
     """
     kind = StringProperty(None)
-    trap_checked = BooleanProperty(False)
+    trap_checked = BooleanProperty(None)
     alpha = NumericProperty(1.0)
     backgr_color = ColorProperty((0.0, 0.0, 0.0, 1.0))  # defaults to black
 
@@ -49,7 +49,7 @@ class Tile(Button):
         if disabled:
             tile.alpha = 1.0
         else:
-            tile.alpha = 0.8
+            tile.alpha = 0.85
 
     @staticmethod
     def on_trap_checked(tile: Tile, checked: bool):
@@ -58,9 +58,9 @@ class Tile(Button):
         :return: None
         """
         if checked:
-            tile.backgr_color = 0.3, 1.0, 0.3, 1.0
+            tile.backgr_color = 0.2, 1.0, 0.2, 1.0
         else:
-            tile.backgr_color = 0.4, 0.8, 1.0, 1.0
+            tile.backgr_color = 0.0, 0.0, 1.0, 1.0
 
     @staticmethod
     def update_tokens_pos(tile, tile_pos) -> None:

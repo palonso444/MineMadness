@@ -31,13 +31,16 @@
     background_color: 0.19, 0.075, 0.02, 1  # dark brown
     background_normal:""
 
-<AbilityButton>
+<StateButton>
     font_name: "duality"
     font_size: "25sp"
     halign: "center"
     color: 0.85, 0.65, 0.5, 1  # very light brown
     background_color: 0.19, 0.075, 0.02, 1  # dark brown
     background_normal:""
+
+<TrapDetectionButton>
+    text: "Traps"
 
 <TitleLabel@GameLabel>
     font_name: "edmunds"
@@ -126,11 +129,10 @@
                     id: ability_button
                     size_hint: 1.0 , 0.5
                     game: root
-                GameButton:
+                TrapDetectionButton:
+                    id: trap_detection_button
                     size_hint: 1.0 , 0.5
-                    text: "Traps"
                     game: root
-                    on_release: root.active_character.detect_traps(root.active_character.stats.trap_detection_range)
 
 
         # UI: CHARACTER STATS AND INVENTORY

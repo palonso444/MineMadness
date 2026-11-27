@@ -1,10 +1,9 @@
-from kivy.uix.togglebutton import ToggleButton
 from random import choice
 import widget_classes as wdg
 
 from player_class import Player
 
-class AbilityButton(ToggleButton):
+class AbilityButton(wdg.StateButton):
 
     @property
     def condition_active(self):
@@ -13,12 +12,13 @@ class AbilityButton(ToggleButton):
         return (character.special_items[list(character.special_items.keys())[0]] > 0
                 or self.game.active_character.ability_active)
 
-    def on_state(self, instance, value):
+    @staticmethod
+    def on_state(instance, value):
 
-        if self.game.ability_button_active:
+        if instance.game.ability_button_active:
             # TODO: when button unbinding in self.game.on_ability_button() works this has to go
 
-            character = self.game.active_character
+            character = instance.game.active_character
 
             if value == "down":
                 match character.species:
@@ -29,7 +29,7 @@ class AbilityButton(ToggleButton):
                     case "hawkins":
                         character.token.show_effect_token("dynamite")
                         character.ability_active = True
-                        self.game.activate_accessible_tiles(character.stats.shooting_range)
+                        instance.game.activate_accessible_tiles(character.stats.shooting_range)
 
                     case "crusherjane":
                         character.token.show_effect_token("armed")
@@ -41,15 +41,27 @@ class AbilityButton(ToggleButton):
 
                     case "sawyer":
                         character.unhide()
-                        self.game.activate_accessible_tiles(character.remaining_moves)  # can dig again
+                        instance.game.activate_accessible_tiles(character.remaining_moves)  # can dig again
 
                     case "hawkins":
                         character.ability_active = False
-                        self.game.activate_accessible_tiles(character.remaining_moves)
+                        instance.game.activate_accessible_tiles(character.remaining_moves)
 
                     case "crusherjane":
                         character.token.show_effect_token("armed", effect_ends=True)
                         character.ability_active = False
+
+class TrapDetectionButton(wdg.StateButton):
+
+    @staticmethod
+    def on_state(instance, value):
+        character = instance.game.active_character
+
+        if value == "down":
+            character.detect_traps(character.stats.trap_detection_range)
+            character.detecting_traps = True
+        if value == "normal":
+            character.detecting_traps = False
 
 class Interfacebutton(wdg.GameButton):
 

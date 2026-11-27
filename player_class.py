@@ -105,8 +105,9 @@ class Player(Character, ABC):
         self.effects: dict[str,list] = {"moves": [], "toughness": [], "strength": []}
         self.state: str | None = None
         self.level_track: dict[int,dict] = {}
-        self.first_activation: bool | None = None  # tracks if it's the first activation in the turn
 
+        self.first_activation: bool | None = None  # tracks if it's the first activation in the turn
+        self.is_detecting_traps: bool = False
 
     @abstractmethod
     def upgrade_cost_natural_strength(self, level: int)-> int:
@@ -209,6 +210,7 @@ class Player(Character, ABC):
             self.ignores.remove("pickable")
             self.ignores.remove("treasure")
         self.ability_active = False
+        self.is_detecting_traps = False
         self.stats.moves = self.stats.natural_moves
         self.stats.strength = self.stats.natural_strength
         self.remaining_moves = 0
@@ -329,7 +331,7 @@ class Player(Character, ABC):
         Property defining if a Character is able to detect traps
         :return: True if character is able to detect traps, False otherwise
         """
-        return self.first_activation and self.remaining_moves >= self.stats.trap_detection_time
+        return self.is_detecting_traps and self.remaining_moves >= self.stats.trap_detection_time
 
     def set_objects_to_zero(self) -> None:
         """
